@@ -6,7 +6,21 @@ using System.Threading.Tasks;
 
 namespace Articuno
 {
-    interface DatabaseInterface
+    class DatabaseInterface
     {
+        internal String[] getTurbineList()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal String getOPCServer()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal String[] getmetTower()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
