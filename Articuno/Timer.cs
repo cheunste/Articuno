@@ -6,10 +6,7 @@ using System.Threading.Tasks;
 
 namespace Articuno
 {
-    class Program
+    class Timer
     {
-        static void Main(string[] args)
-        {
-        }
     }
 }

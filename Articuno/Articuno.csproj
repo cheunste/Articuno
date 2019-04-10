@@ -33,6 +33,15 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="OpcLabs.BaseLib, Version=5.54.1151.1, Culture=neutral, PublicKeyToken=6faddca41dacb409, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpcLabs.QuickOpc.5.54.1151\lib\net462\OpcLabs.BaseLib.dll</HintPath>
+    </Reference>
+    <Reference Include="OpcLabs.EasyOpcClassic, Version=5.54.1151.1, Culture=neutral, PublicKeyToken=6faddca41dacb409, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpcLabs.QuickOpc.5.54.1151\lib\net462\OpcLabs.EasyOpcClassic.dll</HintPath>
+    </Reference>
+    <Reference Include="OpcLabs.EasyOpcUA, Version=5.54.1151.1, Culture=neutral, PublicKeyToken=6faddca41dacb409, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpcLabs.QuickOpc.5.54.1151\lib\net462\OpcLabs.EasyOpcUA.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -43,11 +52,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.cs" />
+    <Compile Include="Articuno.cs" />
+    <Compile Include="DatabaseInterface.cs" />
+    <Compile Include="Logging.cs" />
+    <Compile Include="MetTower.cs" />
+    <Compile Include="OpcServer.cs" />
+    <Compile Include="Setup.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Timer.cs" />
+    <Compile Include="Turbine.cs" />
+    <Compile Include="TurbineFactory.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
