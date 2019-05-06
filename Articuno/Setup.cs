@@ -20,11 +20,15 @@ namespace Articuno
      * 3) Create a turbine factory instance and have it create turbines
      * 4) Create a met tower based on how many are in the database
      * 5) Set up the Timer class (CTR)
-     * 6) Execute the main Articuno program
+     * 6) Load turbines in the  'PausedByArticuno' table from the database.
+     * 7) For each turbine already in the 'PausedByArticuno', check to see if any of the current turbines are now running 
+     * or if they're throwing a different alarm.
+     * 8) Execute the main Articuno program
      */
 
     class Setup
     {
+        private Hashtable performanceHash;
 
         static void Main(string[] args)
         {
@@ -32,6 +36,10 @@ namespace Articuno
             //Create instance to the Database
             DatabaseInterface di = new DatabaseInterface();
 
+            //Check to see if the DB exists. Exit if it doesn't exist
+            if (di.databaseNotFound()) { return; }
+
+              
             //Create instance to the Logging class
             Logging logger = new Logging();
 
@@ -48,10 +56,15 @@ namespace Articuno
             //Execute Articuno
         }
 
-        public void queryDatabase() { }
-        public  void databaseToHash() { }
+        public Hashtable PerformanceHash { get; set; }
+        public void queryDatabase(string query) { }
+        public void databaseToHash() { }
         public void createMetTower() { }
         public void startTimer() { }
+        public Boolean databaseCheck()
+        {
+            return false;
+        }
 
         private void Articuno(Turbine[] turbineArray, MetTower metTower) { }
     }
