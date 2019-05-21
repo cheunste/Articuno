@@ -9,22 +9,13 @@ namespace Articuno
 {
     class DatabaseInterface
     {
+
+        private string SYSTEM_TABLE             = "SystemParameters";
+        private string MET_TOWER_TABLE          = "MetTower";
+        private string TURBINE_OPC_TABLE        = "TurbineOpcTag";
+        private string PERFORMANCE_FILTER_TABLE = "PerformanceTable";
+        
         SQLiteConnection articunoDBConnection;
-
-        internal String[] getTurbineList()
-        {
-            throw new NotImplementedException();
-        }
-
-        internal String getOPCServer()
-        {
-            throw new NotImplementedException();
-        }
-
-        internal String[] getmetTower()
-        {
-            throw new NotImplementedException();
-        }
 
         //Returns true if the Articuno sqlite database is not found 
         public Boolean databaseNotFound()
@@ -32,7 +23,7 @@ namespace Articuno
             try
             {
                 openConnection();
-                closeConnect();
+                closeConnection();
             }
             catch (Exception e)
             {
@@ -49,40 +40,50 @@ namespace Articuno
         }
 
         //Close connection to the SQLLite DB file
-        private void closeConnect()
+        private void closeConnection()
         {
             articunoDBConnection.Close();
         }
 
-        //Used for executing read queries
+        //Used for executing read queries. Doesn't check to see if artiunoDBConnection is null or not
         public SQLiteDataReader readCommand(string command)
         {
             SQLiteCommand cmd = new SQLiteCommand(command, articunoDBConnection);
             return cmd.ExecuteReader();
         }
 
-        //Used for update queries. 
+        //Used for update queries. Doesn't check to see if artiunoDBConnection is null or no
         public int updateCommand(string command)
         {
             SQLiteCommand cmd = new SQLiteCommand(command, articunoDBConnection);
             return cmd.ExecuteNonQuery();
         }
 
-        public List<Turbine> getTurbines()
+        public List<Turbine> getTurbineList()
         {
             //TODO: Implement
             return null;
         }
 
+        /// <summary>
+        /// Gets the name of the OPC Server
+        /// </summary>
+        /// <returns></returns>
         public string getOpcServer()
         {
             //TODO: Implement
+            openConnection();
+            SQLiteDataReader result =readCommand("SELECT Description from "+SYSTEM_TABLE);
+            closeConnection();
             return "";
         }
 
         public string getMetTower()
         {
-            //TODO: IMplement
+            //TODO: check query
+            openConnection();
+            SQLiteDataReader result =readCommand("SELECT * FROM"+ MET_TOWER_TABLE);
+            closeConnection();
             return "";
         }
     }

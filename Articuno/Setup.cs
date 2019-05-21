@@ -36,28 +36,39 @@ namespace Articuno
             //Create instance to the Database
             DatabaseInterface di = new DatabaseInterface();
 
-            //Check to see if the DB exists. Exit if it doesn't exist
-            if (di.databaseNotFound()) { return; }
-
-              
             //Create instance to the Logging class
             Logging logger = new Logging();
 
+            //Check to see if the DB exists. Exit if it doesn't exist
+            if (di.databaseNotFound()) {
+                //TODO: Add Log "Error: SQLite DB not found"
+                return;
+            }
+
+
             //Pull required information from the database
             di.getTurbineList();
-            di.getOPCServer();
-            di.getmetTower();
+            String opcServer =di.getOpcServer();
+            String metTower =di.getMetTower();
 
             //Create Articuno instance
-            Articuno artic = new Articuno();
-
-            //Close the database
+            Articuno artic = new Articuno(opcServer, metTower, di.getTurbineList());
 
             //Execute Articuno
+            artic.start();
         }
 
         public Hashtable PerformanceHash { get; set; }
+        /// <summary>
+        /// Function used to 
+        /// </summary>
+        /// <param name="query"></param>
         public void queryDatabase(string query) { }
+        /// <summary>
+        /// Function used to perform an update to the database
+        /// </summary>
+        /// <param name="query">A String query used to update the DB </param>
+        public void updateDatabase(string query) { }
         public void databaseToHash() { }
         public void createMetTower() { }
         public void startTimer() { }
