@@ -33,14 +33,14 @@ namespace Articuno
         }
 
         //Open connection to the SQLLite DB file
-        private void openConnection()
+        public void openConnection()
         {
-            this.articunoDBConnection = new SQLiteConnection("Data Source = Articuno.sqlite;Version=3;");
+            this.articunoDBConnection = new SQLiteConnection("Data Source = Articuno.db;Version=3;");
             articunoDBConnection.Open();
         }
 
         //Close connection to the SQLLite DB file
-        private void closeConnection()
+        public void closeConnection()
         {
             articunoDBConnection.Close();
         }

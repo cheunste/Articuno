@@ -8,5 +8,14 @@ namespace Articuno
 {
     class OpcServer
     {
+        public OpcServer()
+        {
+
+        }
+        //TODO: Implement
+        public static String readTags(string tags)
+        {
+            return "";
+        }
     }
 }
