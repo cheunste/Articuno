@@ -186,6 +186,7 @@ namespace Articuno
         /// <returns>The dew point temperature in double format </returns>
         public double calculateDewPoint(double rh, double ambTemp)
         {
+            //The following formula is given by Nick Johansen, ask him for more details
             return Math.Pow(rh, 1.0 / 8.0) * (112 + (0.9 * ambTemp)) + (0.1 * ambTemp) - 112;
         }
 
@@ -215,7 +216,7 @@ namespace Articuno
         /// Checks the quality of the relative humidity of the current met tower. 
         /// Returns true if quality is good. False otherwise
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Returns True if good quality, False if bad</returns>
         public bool rhQualityCheck()
         {
             double rh = Convert.ToDouble(getRelativeHumidityValue());
@@ -226,18 +227,75 @@ namespace Articuno
             if(rh < 0.0 || rh > 100.0)
             {
                 //Cap it off and throw an alarm
-                opcServer.setTag("", ((rh < 0.0) ? 0.0 : 100.0) );
+                //Set primay relative humidty to either 0 (if below 0) or 100 (if above zero)
+                opcServer.setTag(getPrimTemperatureTag(), ((rh < 0.0) ? 0.0 : 100.0) );
+                throw new NotImplementedException();
+                return false;
             }
-            //Normal operation
+            //Normal operation 
             else
             {
+                return true;
+            }
+        }
 
+        /// <summary>
+        /// Checks the quality of the temperature of the current met tower. 
+        /// Returns true if quality is good. False otherwise
+        /// </summary>
+        /// <param name="temperatureTag">The OPC tag for temperature (either prim or sec)</param>
+        /// <returns>Returns True if good quality, False if bad</returns>
+        private bool tempQualityCheck(string temperatureTag)
+        {
+            double tempValue = Convert.ToDouble(temperatureTag);
+            double minValue = -20.0;
+            double maxValue = 60.0;
+            //Bad Quality
+            if  (tempValue < minValue || tempValue > maxValue)
+            {
+                //Cap it off and throw an alarm
+                //Set primay relative humidty to either 0 (if below 0) or 100 (if above zero)
+                opcServer.setTag(temperatureTag, ((tempValue < minValue) ? -20.0 : 60.0));
+
+                throw new NotImplementedException();
+                return false;
+            }
+            else
+            {
+                return true;
             }
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Check the temperature quality of both the primary and secondary sensors
+        /// </summary>
+        /// <returns>Returns True if good quality, False if bad</returns>
         public bool tempQualityCheck()
         {
+            //If both cases are true, then both sensors are working correctly
+
+            bool primTempCheck = tempQualityCheck(getPrimTemperatureTag());
+            bool secTempCheck = tempQualityCheck(getSecTemperatureTag());
+            //normal operaiton
+            if(primTempCheck && secTempCheck){
+                return true;
+            }
+            //only the secondary Temperature value is suspect
+            else if(primTempCheck && !secTempCheck)
+            {
+
+            }
+            //only the primary Temperature value is suspect
+            else if(!primTempCheck && secTempCheck)
+            {
+
+            }
+            //If both sensors are bad.  Use turbine data
+            else
+            {
+                return false;
+            }
             throw new NotImplementedException();
         }
 
