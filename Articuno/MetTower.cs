@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
+[assembly: InternalsVisibleTo("ArticunoTest")]
 namespace Articuno
 {
     /// <summary>
@@ -13,29 +15,30 @@ namespace Articuno
     /// Calculates: Dew Point, Delta Temp threshold
     /// Errors: Thrwos errors if values are bad 
     /// </summary>
-    class MetTower
+
+    internal class MetTower
     {
         //Constants. Can't Fully Capitalize these ones. Too hard to read. Note the staritng capital letter though
         //Temperature table columns
-        private static string PrimTempValueTag         = "PrimTempValueTag";
-        private static string SecTempValueTag          = "SecTempValueTag";
-        private static string TempBadQualityTag        ="TempBadQualityTag";
-        private static string TempOutOfRangeTag        ="TempOutOfRangeTag" ;
+        private static string PrimTempValueTag = "PrimTempValueTag";
+        private static string SecTempValueTag = "SecTempValueTag";
+        private static string TempBadQualityTag = "TempBadQualityTag";
+        private static string TempOutOfRangeTag = "TempOutOfRangeTag";
 
         //Humidity table columns
-        private static string PrimHumidityValueTag         = "PrimHumidityValueTag";
-        private static string SecHumidityValueTag          = "SecHumidityValueTag";
-        private static string HumidityBadQualityTag        ="HumidityBadQualityTag";
-        private static string HumidityOutOfRangeTag        ="HumidityOutOfRangeTag" ;
+        private static string PrimHumidityValueTag = "PrimHumidityValueTag";
+        private static string SecHumidityValueTag = "SecHumidityValueTag";
+        private static string HumidityBadQualityTag = "HumidityBadQualityTag";
+        private static string HumidityOutOfRangeTag = "HumidityOutOfRangeTag";
 
         //Other table column 
-        private static string NoDataAlarmTag        ="NoDataAlarmTag" ;
-        private static string IceIndicationTag        ="IceIndicationTag" ;
+        private static string NoDataAlarmTag = "NoDataAlarmTag";
+        private static string IceIndicationTag = "IceIndicationTag";
 
         //Query constants
-        String TEMPERATURE_QUERY = "SELECT " + PrimTempValueTag + "," + SecTempValueTag + "," + TempBadQualityTag + ","+TempOutOfRangeTag+" FROM MetTower";
-        String RH_QUERY = "SELECT " + PrimHumidityValueTag + "," + SecHumidityValueTag + "," + HumidityBadQualityTag + ","+HumidityOutOfRangeTag+" FROM MetTower";
-        String OTHER_PARAM_QUERY = "SELECT "+NoDataAlarmTag+", "+IceIndicationTag+" FROM MetTower";
+        String TEMPERATURE_QUERY = "SELECT " + PrimTempValueTag + "," + SecTempValueTag + "," + TempBadQualityTag + "," + TempOutOfRangeTag + " FROM MetTower";
+        String RH_QUERY = "SELECT " + PrimHumidityValueTag + "," + SecHumidityValueTag + "," + HumidityBadQualityTag + "," + HumidityOutOfRangeTag + " FROM MetTower";
+        String OTHER_PARAM_QUERY = "SELECT " + NoDataAlarmTag + ", " + IceIndicationTag + " FROM MetTower";
 
         //Member variables;
         //Member doubles 
@@ -62,21 +65,24 @@ namespace Articuno
         private string rhOutOfRangeTag;
 
         //For other tags relating to the met tower 
-        private string nodataAlarmTag;
+        private string noDataAlarmTag;
         private string iceIndicationTag;
+
+        //opc server
+        private OpcServer opcServer;
 
         /// <summary>
         /// Constructor for the Met Tower Class. Takes in a Met Id. Using  the met Id, the constructor will then query
         /// the DB for all the relevant values
         /// </summary>
         /// <param name="MetId"></param>
-        public MetTower(string MetId, double ambTempThreshold, double deltaTempThreshold)
+        public MetTower(string MetId, double ambTempThreshold, double deltaTempThreshold, OpcServer opcServer)
         {
             //Open a connection to the DB
             DatabaseInterface dbi = new DatabaseInterface();
             dbi.openConnection();
             //Get everything relating to the Temperaturea
-            SQLiteDataReader reader= dbi.readCommand(TEMPERATURE_QUERY +" WHERE MetId="+MetId);
+            SQLiteDataReader reader = dbi.readCommand(TEMPERATURE_QUERY + " WHERE MetId=" + MetId);
             reader.Read();
             this.primTempTag = reader[PrimTempValueTag].ToString();
             this.secTempTag = reader[SecTempValueTag].ToString();
@@ -84,7 +90,7 @@ namespace Articuno
             this.tempOutOfRangeTag = reader[TempOutOfRangeTag].ToString();
 
             //Get everything relating to the Humidity
-            reader =dbi.readCommand(RH_QUERY +" WHERE MetId="+MetId);
+            reader = dbi.readCommand(RH_QUERY + " WHERE MetId=" + MetId);
             reader.Read();
             this.primRHTag = reader[PrimHumidityValueTag].ToString();
             this.secRHTag = reader[SecHumidityValueTag].ToString();
@@ -92,25 +98,27 @@ namespace Articuno
             this.rhOutOfRangeTag = reader[HumidityOutOfRangeTag].ToString();
 
             //Get the other tags relating to the met tower
-            reader =dbi.readCommand(OTHER_PARAM_QUERY +" WHERE MetId="+MetId);
-            this.nodataAlarmTag =reader[NoDataAlarmTag].ToString();
-            this.iceIndicationTag =reader[IceIndicationTag].ToString();
+            reader = dbi.readCommand(OTHER_PARAM_QUERY + " WHERE MetId=" + MetId);
+            this.noDataAlarmTag = reader[NoDataAlarmTag].ToString();
+            this.iceIndicationTag = reader[IceIndicationTag].ToString();
             dbi.closeConnection();
 
             //set the member thresholds
             this.ambTempThreshold = ambTempThreshold;
             this.deltaTempThreshold = deltaTempThreshold;
 
+            //Set OPC Server
+            opcServer = new OpcServer();
+
         }
 
         /// <summary>
         /// Get Relative Humidity from OPC Server
         /// </summary>
-        /// <param name="opcServer">the OpcServer you'll be looking the value from</param>
         /// <returns></returns>
-        public string getRelativeHumidity(OpcServer opcServer)
+        public string getRelativeHumidity()
         {
-            return OpcServer.readTags(primRHTag).ToString();
+            return opcServer.readTags(primRHTag).ToString();
         }
         /// <summary>
         /// Set the Relativie Humidity Tag
@@ -124,16 +132,15 @@ namespace Articuno
         /// <summary>
         /// Get the Primary Temperature value from the met tower
         /// </summary>
-        /// <param name="opcServer">the OpcServer you'll be looking the value from</param>
         /// <returns></returns>
-        public string getPrimTemperature(OpcServer opcServer)
+        public string getPrimTemperature()
         {
-            return OpcServer.readTags(primTempTag).ToString();
+            return opcServer.readTags(primTempTag).ToString();
         }
         /// <summary>
         /// Set the primary temperature tag.
         /// </summary>
-        public void setPrimTemperature(string tag)
+        public void setPrimTemperatureTag(string tag)
         {
             this.primTempTag = tag;
         }
@@ -141,19 +148,17 @@ namespace Articuno
         /// <summary>
         /// Get the SEcondary Temperature value from the met tower
         /// </summary>
-        /// <param name="opcServer">the OpcServer you'll be looking the value from</param>
         /// <returns></returns>
-        public string getSecTemperature(OpcServer opcServer)
+        public string getSecTemperature()
         {
-            return OpcServer.readTags(secTempTag).ToString();
+            return opcServer.readTags(secTempTag).ToString();
         }
         /// <summary>
         /// Set the secondary temperature tag.
         /// </summary>
-        public void setSecTemperature(string tag)
+        public void setSecTemperatureTag(string tag)
         {
             this.secTempTag = tag;
-
         }
 
         /// <summary>
@@ -173,7 +178,7 @@ namespace Articuno
         /// <param name="ambTemp">The ambient temperature value (Celcius) from the met tower in double format</param>
         /// <param name="dewPointTemp">The dew point temperature from calculateDewPoint</param>
         /// <returns></returns>
-        public double calculateDelta(double ambTemp,double dewPointTemp)
+        public double calculateDelta(double ambTemp, double dewPointTemp)
         {
             return Math.Abs(ambTemp - dewPointTemp);
         }
@@ -184,18 +189,42 @@ namespace Articuno
         /// <param name="ambTemp"></param>
         /// <param name="rh"></param>
         /// <returns></returns>
+        //todo: Implement
         public bool checkMetTower(double ambTemp, double rh)
         {
-
-            return false;
+            throw new NotImplementedException();
         }
+
         /// <summary>
         /// Checks the quality of the relative humidity of the current met tower
         /// </summary>
         /// <returns></returns>
-        public bool metRHCheck()
+        public bool rhQualityCheck()
         {
-            return false;
+            string whatever =opcServer.readTags("");
+            throw new NotImplementedException();
         }
+
+        public bool tempQualityCheck()
+        {
+            throw new NotImplementedException();
+        }
+
+        //Getters for System OPC Tag indicators
+        /// <summary>
+        /// Gets the  NoDataAlaarmValue OPC value
+        /// </summary>
+        /// <returns></returns>
+        public string getNoDataAlarmValue() { return noDataAlarmTag;}
+        /// <summary>
+        /// Gets the IceIndicationValue OPC Value
+        /// </summary>
+        /// <returns></returns>
+        public string getIceIndicationValue() { return iceIndicationTag;}
+
+        //Threshold setters and getters
+        public double AmbTempThreshold { get; set; }
+        public double DeltaTempThreshold { get; set; }
+
     }
 }
