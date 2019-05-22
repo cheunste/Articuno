@@ -116,57 +116,74 @@ namespace Articuno
         /// Get Relative Humidity from OPC Server
         /// </summary>
         /// <returns></returns>
-        public string getRelativeHumidity()
-        {
-            return opcServer.readTags(primRHTag).ToString();
-        }
-        /// <summary>
-        /// Set the Relativie Humidity Tag
-        /// </summary>
-        public void setRelativeHumidityTag(string tag)
-        {
-            this.primRHTag = tag;
-        }
+        public string getRelativeHumidityValue() { return opcServer.readTags(primRHTag).ToString(); }
 
+        /// <summary>
+        /// Set the field of relative humidty 
+        /// </summary>
+        /// <param name="value"></param>
+        public void setRelativeHumityValue(double value) { opcServer.setTag(getRelativeHumidityTag(), value); }
+
+        /// <summary>
+        /// Get the prim relative humidity tag
+        /// </summary>
+        /// <returns></returns>
+        public string getRelativeHumidityTag() { return this.primRHTag; }
+
+        /// <summary>
+        /// Set the Relativie Humidity Tag. Used only internally to this program
+        /// </summary>
+        public void setRelativeHumidityTag(string tag) { this.primRHTag = tag; }
 
         /// <summary>
         /// Get the Primary Temperature value from the met tower
         /// </summary>
         /// <returns></returns>
-        public string getPrimTemperature()
-        {
-            return opcServer.readTags(primTempTag).ToString();
-        }
+        public string getPrimTemperatureValue() { return opcServer.readTags(primTempTag).ToString(); }
+        /// <summary>
+        /// Sets the primary temperature field. Used for this program only
+        /// </summary>
+        public void setPrimTemperatureValue(double value) { opcServer.setTag(getPrimTemperatureTag(),value); }
+
+        /// <summary>
+        /// Returns the OpcTag for the primary temperature tag
+        /// </summary>
+        /// <returns></returns>
+        public string getPrimTemperatureTag() { return this.primTempTag; }
+
         /// <summary>
         /// Set the primary temperature tag.
         /// </summary>
-        public void setPrimTemperatureTag(string tag)
-        {
-            this.primTempTag = tag;
-        }
+        public void setPrimTemperatureTag(string tag) { this.primTempTag = tag; }
 
         /// <summary>
         /// Get the SEcondary Temperature value from the met tower
         /// </summary>
         /// <returns></returns>
-        public string getSecTemperature()
-        {
-            return opcServer.readTags(secTempTag).ToString();
-        }
+        public string getSecTemperatureValue() { return opcServer.readTags(secTempTag).ToString(); }
+
+        /// <summary>
+        /// Sets the primary temperature field. Used for this program only
+        /// </summary>
+        public void setSecTemperatureValue(double value) { opcServer.setTag(getSecTemperatureTag(), value); }
+
+        /// <summary>
+        /// Returns the OpcTag for the primary temperature tag
+        /// </summary>
+        /// <returns></returns>
+        public string getSecTemperatureTag() { return this.secTempTag; }
+
         /// <summary>
         /// Set the secondary temperature tag.
         /// </summary>
-        public void setSecTemperatureTag(string tag)
-        {
-            this.secTempTag = tag;
-        }
+        public void setSecTemperatureTag(string tag) { this.secTempTag = tag; }
 
         /// <summary>
         /// Calculates the Dew Point Temperature given the ambient temperature and the the relative humidity
         /// </summary>
         /// <param name="ambTemp">The ambient temperature value (Celcius) from the met tower in double format</param>
         /// <param name="rh">The relative humidity in double format</param>
-        /// <returns></returns>
+        /// <returns>The dew point temperature in double format </returns>
         public double calculateDewPoint(double rh, double ambTemp)
         {
             return Math.Pow(rh, 1.0 / 8.0) * (112 + (0.9 * ambTemp)) + (0.1 * ambTemp) - 112;
@@ -177,7 +194,7 @@ namespace Articuno
         /// </summary>
         /// <param name="ambTemp">The ambient temperature value (Celcius) from the met tower in double format</param>
         /// <param name="dewPointTemp">The dew point temperature from calculateDewPoint</param>
-        /// <returns></returns>
+        /// <returns>The delta temperature in double format</returns>
         public double calculateDelta(double ambTemp, double dewPointTemp)
         {
             return Math.Abs(ambTemp - dewPointTemp);
@@ -189,19 +206,33 @@ namespace Articuno
         /// <param name="ambTemp"></param>
         /// <param name="rh"></param>
         /// <returns></returns>
-        //todo: Implement
         public bool checkMetTower(double ambTemp, double rh)
         {
             throw new NotImplementedException();
         }
 
         /// <summary>
-        /// Checks the quality of the relative humidity of the current met tower
+        /// Checks the quality of the relative humidity of the current met tower. 
+        /// Returns true if quality is good. False otherwise
         /// </summary>
         /// <returns></returns>
         public bool rhQualityCheck()
         {
-            string whatever =opcServer.readTags("");
+            double rh = Convert.ToDouble(getRelativeHumidityValue());
+            double minValue = 0.0;
+            double maxValue = 100.0;
+
+            //Bad Quality
+            if(rh < 0.0 || rh > 100.0)
+            {
+                //Cap it off and throw an alarm
+                opcServer.setTag("", ((rh < 0.0) ? 0.0 : 100.0) );
+            }
+            //Normal operation
+            else
+            {
+
+            }
             throw new NotImplementedException();
         }
 
