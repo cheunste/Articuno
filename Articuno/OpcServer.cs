@@ -6,16 +6,27 @@ using System.Threading.Tasks;
 
 namespace Articuno
 {
-    class OpcServer
+    internal class OpcServer
     {
-        public OpcServer()
+        public OpcServer(String serverName)
         {
 
         }
         //TODO: Implement
-        public static String readTags(string tags)
+        /// <summary>
+        /// The readTags function reads an OPC tag value given an OPC Tag. This always returns a String.
+        /// Mainly because I don't trust what the server is returning. 
+        /// </summary>
+        /// <param name="tags"></param>
+        /// <returns></returns>
+        public string readTag(string tag)
         {
-            return "";
+            throw new NotImplementedException();
+        }
+
+        public void setTag(string tag,Object value)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -51,6 +51,10 @@ namespace Articuno
             String opcServer =di.getOpcServer();
             String metTower =di.getMetTower();
 
+
+            //Create Met Tower References
+            MetTower met1 = new MetTower(metTower, 0.00, 0.00,null);
+
             //Create Articuno instance
             Articuno artic = new Articuno(opcServer, metTower, di.getTurbineList());
 

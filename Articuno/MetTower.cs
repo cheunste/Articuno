@@ -76,7 +76,7 @@ namespace Articuno
         /// the DB for all the relevant values
         /// </summary>
         /// <param name="MetId"></param>
-        public MetTower(string MetId, double ambTempThreshold, double deltaTempThreshold, OpcServer opcServer)
+        public MetTower(string MetId, double ambTempThreshold, double deltaTempThreshold, OpcServer opcServerInstance)
         {
             //Open a connection to the DB
             DatabaseInterface dbi = new DatabaseInterface();
@@ -108,7 +108,7 @@ namespace Articuno
             this.deltaTempThreshold = deltaTempThreshold;
 
             //Set OPC Server
-            opcServer = new OpcServer();
+            opcServer = opcServerInstance;
 
         }
 
@@ -116,7 +116,7 @@ namespace Articuno
         /// Get Relative Humidity from OPC Server
         /// </summary>
         /// <returns></returns>
-        public string getRelativeHumidityValue() { return opcServer.readTags(primRHTag).ToString(); }
+        public string getRelativeHumidityValue() { return opcServer.readTag(primRHTag).ToString(); }
 
         /// <summary>
         /// Set the field of relative humidty 
@@ -139,7 +139,7 @@ namespace Articuno
         /// Get the Primary Temperature value from the met tower
         /// </summary>
         /// <returns></returns>
-        public string getPrimTemperatureValue() { return opcServer.readTags(primTempTag).ToString(); }
+        public string getPrimTemperatureValue() { return opcServer.readTag(primTempTag).ToString(); }
         /// <summary>
         /// Sets the primary temperature field. Used for this program only
         /// </summary>
@@ -160,7 +160,7 @@ namespace Articuno
         /// Get the SEcondary Temperature value from the met tower
         /// </summary>
         /// <returns></returns>
-        public string getSecTemperatureValue() { return opcServer.readTags(secTempTag).ToString(); }
+        public string getSecTemperatureValue() { return opcServer.readTag(secTempTag).ToString(); }
 
         /// <summary>
         /// Sets the primary temperature field. Used for this program only
