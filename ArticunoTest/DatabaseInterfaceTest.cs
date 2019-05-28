@@ -108,23 +108,5 @@ namespace ArticunoTest
             Assert.Fail(); 
         }
 
-        [TestMethod]
-        public void getTurbineListTest()
-        {
-            Assert.Fail(); 
-        }
-
-        [TestMethod]
-        public void getOpcServerTest()
-        {
-            Assert.Fail(); 
-        }
-        [TestMethod]
-        public void getMetTowerTest()
-        {
-
-            Assert.Fail(); 
-        }
-
-    }
+   }
 }
