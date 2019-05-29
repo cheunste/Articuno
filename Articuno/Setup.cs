@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using log4net;
+using log4net.Config;
 
 namespace Articuno
 {
@@ -30,6 +32,8 @@ namespace Articuno
     {
         private Hashtable performanceHash;
 
+        private static readonly ILog log = LogManager.GetLogger(typeof(Setup));
+
         static void Main(string[] args)
         {
 
@@ -37,7 +41,6 @@ namespace Articuno
             DatabaseInterface di = new DatabaseInterface();
 
             //Create instance to the Logging class
-            Logging logger = new Logging();
 
             //Check to see if the DB exists. Exit if it doesn't exist
             if (di.databaseNotFound()) {

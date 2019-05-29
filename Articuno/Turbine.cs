@@ -1,4 +1,5 @@
-﻿using System;
+﻿using log4net;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,5 +9,6 @@ namespace Articuno
 {
     class Turbine
     {
+        private static readonly ILog log = LogManager.GetLogger(typeof(Setup));
     }
 }

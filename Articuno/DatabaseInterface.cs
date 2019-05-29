@@ -1,4 +1,5 @@
-﻿using System;
+﻿using log4net;
+using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Linq;
@@ -16,6 +17,9 @@ namespace Articuno
         private string PERFORMANCE_FILTER_TABLE = "PerformanceTable";
         
         SQLiteConnection articunoDBConnection;
+
+        //Log
+        private static readonly ILog log = LogManager.GetLogger(typeof(Articuno));
 
         //Returns true if the Articuno sqlite database is not found 
         public Boolean databaseNotFound()
