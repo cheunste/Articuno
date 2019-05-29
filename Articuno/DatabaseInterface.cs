@@ -36,6 +36,8 @@ namespace Articuno
         public SQLiteConnection openConnection()
         {
             string dataSource = "C:\\Users\\Stephen\\Desktop\\articuno.db";
+            dataSource = ".\\articuno.db";
+            
             //this.articunoDBConnection = new SQLiteConnection("Data Source = Articuno.db;Version=3;");
             this.articunoDBConnection = new SQLiteConnection("Data Source ="+dataSource+";Version=3;");
 

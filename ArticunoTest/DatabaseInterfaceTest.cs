@@ -12,6 +12,7 @@ namespace ArticunoTest
         DatabaseInterface dbi;
         public DatabaseInterfaceTest()
         {
+            dbi = new DatabaseInterface();
         }
 
         [TestMethod]
@@ -24,19 +25,6 @@ namespace ArticunoTest
             dbi.closeConnection(testConnection);
             test = testConnection.State;
             Assert.AreEqual(test.ToString().ToLower(), "closed");
-        }
-
-        [TestMethod]
-        public void readTest()
-        {
-            SQLiteConnection testConnection = dbi.openConnection();
-            ConnectionState test = testConnection.State;
-            Assert.AreEqual(test.ToString().ToLower(), "open");
-
-            dbi.closeConnection(testConnection);
-            test = testConnection.State;
-            Assert.AreEqual(test.ToString().ToLower(), "closed");
-
         }
 
         [TestMethod]
