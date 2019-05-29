@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using OpcLabs.EasyOpc.DataAccess;
 
 namespace Articuno
 {
@@ -11,9 +12,13 @@ namespace Articuno
     /// </summary>
     internal class OpcServer
     {
+        //member variables
+        EasyDAClient client = new EasyDAClient();
+        private string serverName;
         //Constructor. Tages in a server name and sets the 
         public OpcServer(String serverName)
         {
+            this.serverName = serverName;
             throw new NotImplementedException();
 
         }
@@ -23,9 +28,11 @@ namespace Articuno
         /// </summary>
         /// <param name="tags"></param>
         /// <returns></returns>
-        public string readTag(string tag)
+        public string readTagValue(string tag)
         {
-            throw new NotImplementedException();
+            var value = client.ReadItemValue("", serverName,tag );
+            return value.ToString();
+            //throw new NotImplementedException();
         }
 
         /// <summary>
@@ -34,9 +41,10 @@ namespace Articuno
         /// <param name="tag">the name of hte OPC tag</param>
         /// <param name="value">the value to set to</param>
         //This method is used to set the value of an OPC tag to some value. mainly used for the sensors in the met tower so it doesn't go out of range 
-        public void setTag(string tag,Object value)
+        public void setTagValue(string tag,Object value)
         {
-            throw new NotImplementedException();
+            client.WriteItemValue(serverName, tag, value);
+            //throw new NotImplementedException();
         }
 
         /// <summary>
@@ -47,7 +55,7 @@ namespace Articuno
         //This method reads in an array of tagnames (in String) and returns an array of string values (relative to the tagname's position)
         //It returns a string array as depending on the OPC tag, it could return a boolean, a text, or a double. Mind as well cast them all to a string
         //to prevent parameter guessing 
-        public string[] readTags(string[] tagNames)
+        public string[] readTagsValues(string[] tagNames)
         {
             throw new NotImplementedException();
         }
