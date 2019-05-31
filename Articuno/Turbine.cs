@@ -51,7 +51,7 @@ namespace Articuno
         private bool articunoParicipation;
 
         //Log
-        private static readonly ILog log = LogManager.GetLogger(typeof(Setup));
+        private static readonly ILog log = LogManager.GetLogger(typeof(Turbine));
 
         public Turbine(string prefix,OpcServer server)
         {
@@ -62,15 +62,15 @@ namespace Articuno
         public string operatingStateChanged() { throw new NotImplementedException(); }
 
         //Getters to get the value for the wind speed, rotor speed, etc. value from the OPC Server
-        public double getWindSpeedValue() { throw new NotImplementedException(); }
-        public double getrotorSpeedValue() { throw new NotImplementedException(); }
-        public double getOperatinStateValue() { throw new NotImplementedException(); }
-        public double getNrsStateValue() { throw new NotImplementedException(); }
-        public double getTemperatureValue() { throw new NotImplementedException(); }
-        public double getTurbineCtrValue() {  throw new NotImplementedException(); }
-        public double getTurbineTemperatureValue() { throw new NotImplementedException(); }
-        public double getTurbineHumidityValue() { throw new NotImplementedException(); }
-        public double getTurbineSFValue() {throw new NotImplementedException(); }
+        public double getWindSpeedValue() {return Convert.ToDouble(server.readTagValue(this.nacelleWindSpeed)); }
+        public double getRotorSpeedValue() { return Convert.ToDouble(server.readTagValue(this.rotorSpeed)); }
+        public double getOperatinStateValue() {return Convert.ToDouble(server.readTagValue(this.operatingState));}
+        public double getNrsStateValue() { return Convert.ToDouble(server.readTagValue(this.nrsState));}
+        public double getTemperatureValue() {return Convert.ToDouble(server.readTagValue(this.turbineTemperature));}
+        public double getTurbineCtrValue() {return Convert.ToDouble(server.readTagValue(this.turbineCtrTag));}
+        public double getTurbineTemperatureValue() {return Convert.ToDouble(server.readTagValue(this.turbineTemperature));}
+        public double getTurbineHumidityValue() {return Convert.ToDouble(server.readTagValue(this.turbineHumidity));}
+        public double getTurbineSFValue() {return Convert.ToDouble(server.readTagValue(this.turbineScalingFactor));}
 
         //Setters to set the member variables to the  OPC tag
         //THESE ARE USED TO SET OPC TAG NAME TO MEMBER FIELD VARIABLES
