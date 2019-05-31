@@ -19,6 +19,9 @@ namespace Articuno
     class Turbine
     {
 
+        //Instance of OPC server
+        OpcServer server;
+
         //Member variables for OPC Tags in the turbine
         private string turbinePrefix;
         private string operatingState;
@@ -31,6 +34,8 @@ namespace Articuno
         private string loadShutDown;
         private string turbineCtrTag;
         private string turbineScalingFactor;
+        private string turbineTemperature;
+        private string turbineHumidity;
 
         //Member variables for algorithm
         private bool temperatureConditionMet;
@@ -48,50 +53,55 @@ namespace Articuno
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(Setup));
 
-        public Turbine(string prefix)
+        public Turbine(string prefix,OpcServer server)
         {
-
+            this.server = server;
         }
 
         //Detects when operating state (run, pause, etc.) changes
         public string operatingStateChanged() { throw new NotImplementedException(); }
 
         //Getters to get the value for the wind speed, rotor speed, etc. value from the OPC Server
-        public double getWindSpeedValue(OpcServer server) { throw new NotImplementedException(); }
-        public double getrotorSpeedValue(OpcServer server) { throw new NotImplementedException(); }
-        public double getOperatinStateValue(OpcServer server) { throw new NotImplementedException(); }
-        public double getNrsStateValue(OpcServer server) { throw new NotImplementedException(); }
-        public double getTemperatureValue(OpcServer server) { throw new NotImplementedException(); }
-        public double getTurbineCtrValue(OpcServer server) {  throw new NotImplementedException(); }
-        public double getTurbineTemperatureValue(OpcServer server) { throw new NotImplementedException(); }
-        public double getTurbineHumidityValue(OpcServer server) { throw new NotImplementedException(); }
+        public double getWindSpeedValue() { throw new NotImplementedException(); }
+        public double getrotorSpeedValue() { throw new NotImplementedException(); }
+        public double getOperatinStateValue() { throw new NotImplementedException(); }
+        public double getNrsStateValue() { throw new NotImplementedException(); }
+        public double getTemperatureValue() { throw new NotImplementedException(); }
+        public double getTurbineCtrValue() {  throw new NotImplementedException(); }
+        public double getTurbineTemperatureValue() { throw new NotImplementedException(); }
+        public double getTurbineHumidityValue() { throw new NotImplementedException(); }
         public double getTurbineSFValue() {throw new NotImplementedException(); }
 
-        //Load shutdown is a bit different as it is a command
-        public double sentLoadShutdownCmd(OpcServer server) {
+        //Setters to set the member variables to the  OPC tag
+        //THESE ARE USED TO SET OPC TAG NAME TO MEMBER FIELD VARIABLES
+        public void setWindSpeedTag(string tag) { this.nacelleWindSpeed = tag; }
+        public void setRotorSpeedTag(string tag) { this.rotorSpeed = tag; }
+        public void setOperatinStateTag(string tag) { this.operatingState = tag; }
+        public void setNrsStateTag(string tag) { this.nrsState = tag; }
+        public void setTemperatureTag(string tag) { this.turbineTemperature = tag; }
+        public void setLoadShutdownTag(string tag) { this.loadShutDown = tag; }
+        public void setTurbineCtrTag(string tag) { this.turbineCtrTag = tag; }
+        public void setTurbineTemperatureTag(string tag) { this.turbineTemperature = tag; }
+        public void setTurbineHumidityTag(string tag) { this.turbineHumidity = tag; }
+
+
+        //The setters to set the OPC Tag Values.  There shouldn't be too many of these
+        // THESE ARE USED TO SET THE OPC TAG VALUES
+        public void setTurbineCtrValue(int ctrValue) { server.setTagValue(this.turbineCtrTag,ctrValue); }
+        //Scalign factor is unique as it is not used in the OPC Server and only used internally in this program
+        public void setTurbineSFValue(int scalingFactor) { this.currentTurbSF = scalingFactor; }
+        //Load shutdown function. 
+        //This a bit different as it needs to 'feel' more like a command, but at the same time, it is more of a value setter
+        // I am assuming this to be true, so I'll keep the NIE for now
+        public double sentLoadShutdownCmd() {
             log.Info("Shutdown command for "+this.turbinePrefix + " has been sent");
+            server.setTagValue(loadShutDown, true);
             throw new NotImplementedException();
         }
 
-        //Setters to set the member variables to the  OPC tag
-        // THESE ARE NOT USED TO SET OPC VALUE
-        public void setWindSpeedTag(string tag) { throw new NotImplementedException(); }
-        public void setrotorSpeedTag(string tag) { throw new NotImplementedException(); }
-        public void setOperatinStateTag(string tag) { throw new NotImplementedException(); }
-        public void setNrsStateTag(string tag) { throw new NotImplementedException(); }
-        public void setTemperatureTag(string tag) { throw new NotImplementedException(); }
-        public void setLoadShutdownTag(string tag) { throw new NotImplementedException(); }
-        public void setTurbineCtrTag(string tag) { throw new NotImplementedException(); }
-        public void setTurbineTemperatureTag(string tag) { throw new NotImplementedException(); }
-        public void setTurbineHumidityTag(string tag) { throw new NotImplementedException(); }
-
-        //The setters to set the OPC Tag Values. There shouldn't be too many of these
-        public string setTurbineCtrValue() {   throw new NotImplementedException(); }
-        public void setTurbineSFValue(int scalingFactor) { this.currentTurbSF = scalingFactor; }
         //Misc functions
         public string getTurbinePrefixValue() { return this.turbinePrefix; }
         public string isDerated() { return this.deRate; }
-
 
         //The following five fucntions are set by the main Articuno class. They show if each of the four/five 
         //algorithms are true
@@ -100,7 +110,8 @@ namespace Articuno
         public void setNrsCondition(bool state) { this.nrsConditionMet = state; }
         public void setTurbinePerformanceCondition(bool state) { turbinePerformanceConditionMet = state; }
         public void setDeRateCondition(bool state) { derateConditionMet = state; }
-        
+
+       
 
         //Met Tower References for turbines. One sets the met tower reference (upon create) and the other gets it. 
         //These can be set to another reference  if/when they fail
