@@ -18,7 +18,6 @@ namespace Articuno
 
     class Turbine
     {
-
         //Instance of OPC server
         OpcServer server;
 
@@ -49,6 +48,12 @@ namespace Articuno
         private int currentTurbSF;
         //this determines if the turbine is participating in Articuno or not. This must be a 'high priority check'  
         private bool articunoParicipation;
+
+        //Met Tower Fields
+        private MetTower primaryMet;
+        private MetTower secondaryMet;
+        private bool isMetTowerBackup;
+
 
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(Turbine));
@@ -90,7 +95,7 @@ namespace Articuno
         public void setTurbineCtrValue(int ctrValue) { server.setTagValue(this.turbineCtrTag,ctrValue); }
         //Scalign factor is unique as it is not used in the OPC Server and only used internally in this program
         public void setTurbineSFValue(int scalingFactor) { this.currentTurbSF = scalingFactor; }
-        //Load shutdown function. 
+        //Load shutdown function. Probably the most important function
         //This a bit different as it needs to 'feel' more like a command, but at the same time, it is more of a value setter
         // I am assuming this to be true, so I'll keep the NIE for now
         public double sentLoadShutdownCmd() {
@@ -111,11 +116,22 @@ namespace Articuno
         public void setTurbinePerformanceCondition(bool state) { turbinePerformanceConditionMet = state; }
         public void setDeRateCondition(bool state) { derateConditionMet = state; }
 
-       
-
-        //Met Tower References for turbines. One sets the met tower reference (upon create) and the other gets it. 
+        //Met Tower related methods for turbines. One sets the met tower reference (upon create) and the other gets it. 
         //These can be set to another reference  if/when they fail
-        public void setMetReference() {    throw new NotImplementedException(); }
-        public int getMetReference() {    throw new NotImplementedException(); }
+        //The set Met Reference takes in a MetTower object
+        public void setPrimaryMetReference(MetTower metTower) { this.primaryMet = metTower; }
+        public void setSecondaryMetReference(MetTower metTower) { this.secondaryMet = metTower; }
+        public MetTower getPrimaryMetReference() { return this.primaryMet; }
+        public MetTower getSecondaryMetReference() { return this.secondaryMet; }
+
+        //This is an odd method. This is essentually subscribing to another class (Met Tower observer) and monitor if there has been a change in met tower status. 
+        //As in, if one or both met towers are down.
+        //Probably should be separate into another class, but man, I rather not have another class to manage
+        //Not implemented yet. Have to go back to the design board on this one
+        public void useMetTower()
+        {
+            throw new NotImplementedException();
+        }
+
     }
 }
