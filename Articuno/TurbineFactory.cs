@@ -17,11 +17,19 @@ namespace Articuno
     {
         private static readonly ILog log = LogManager.GetLogger(typeof(TurbineFactory));
         private List<Turbine> turbineList;
+        private List<string> turbinePrefixList;
 
-        public TurbineFactory(List<string> turbinePrefixList)
+        private OpcServer server;
+
+        /// <summary>
+        /// Constructor for the turbine factory class. Takes in a string list of Turbine prefixes (ie T001). Probably should be called only once
+        /// </summary>
+        /// <param name="turbinePrefixList"></param>
+        public TurbineFactory(List<string> turbinePrefixList,OpcServer server)
         {
             turbineList = new List<Turbine>();
-
+            this.turbinePrefixList = turbinePrefixList;
+            this.server = server;
         }
 
         /// <summary>
@@ -32,36 +40,60 @@ namespace Articuno
         public void createTurbines()
         {
             log.Info("Creating turbine lists");
-            throw new NotImplementedException();
+            turbineList = new List<Turbine>();
+            foreach (string turbinePrefix in turbinePrefixList)
+            {
+                this.turbineList.Add(new Turbine(turbinePrefix, server));
+            }
         }
 
+        /// <summary>
+        /// Command to pause a turbine given a Turbine object. Also known as loadshutdown
+        /// </summary>
+        /// <param name="turbine"></param>
         public void pauseTurbine(Turbine turbine)
         {
-            throw new NotImplementedException();
+            foreach(Turbine turbineInList in turbineList)
+            {
+                if (turbineInList.Equals(turbine))
+                {
+                    log.Info("Attempting to pause turbine "+turbine.getTurbinePrefixValue()+" from the factory");
+                    turbine.sentLoadShutdownCmd();
+                }
+            }
         }
 
-        private void addTurbineToList(Turbine turbine)
-        {
-            throw new NotImplementedException();
-        }
-        
         /// <summary>
-        /// Method to get a turbine object given a turbine prefix
+        /// Command to pause a turbine given a Turbine prefix. Also known as loadshutdown
+        /// </summary>
+        /// <param name="turbine"></param>
+        public void pauseTurbine(string turbinePrefix)
+        {
+            foreach(Turbine turbineInList in turbineList)
+            {
+                if (turbineInList.getTurbinePrefixValue().Equals(turbinePrefix))
+                {
+                    log.Info("Attempting to pause turbine "+turbineInList.getTurbinePrefixValue()+" from the factory");
+                    turbineInList.sentLoadShutdownCmd();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Method to get a turbine object given a turbine prefix (ie T001)
         /// </summary>
         /// <param name="prefix"></param>
         /// <returns></returns>
         public Turbine getTurbine(string prefix)
         {
-            throw new NotImplementedException();
-        }
-        /// <summary>
-        /// Method to get turbine object given a turbine 
-        /// </summary>
-        /// <param name="turbine"></param>
-        /// <returns></returns>
-        public Turbine getTurbine(Turbine turbine)
-        {
-            throw new NotImplementedException();
+            foreach(Turbine turbine in turbineList)
+            {
+                if (turbine.getTurbinePrefixValue().Equals(prefix))
+                {
+                    return turbine;
+                }
+            }
+            return null;
         }
 
         /// <summary>
