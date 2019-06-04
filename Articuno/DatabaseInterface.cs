@@ -1,4 +1,5 @@
-﻿using System;
+﻿using log4net;
+using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Linq;
@@ -17,6 +18,9 @@ namespace Articuno
         
         SQLiteConnection articunoDBConnection;
 
+        //Log
+        private static readonly ILog log = LogManager.GetLogger(typeof(Articuno));
+
         //Returns true if the Articuno sqlite database is not found 
         public Boolean databaseNotFound()
         {
@@ -33,10 +37,17 @@ namespace Articuno
         }
 
         //Open connection to the SQLLite DB file
-        public void openConnection()
+        public SQLiteConnection openConnection()
         {
-            this.articunoDBConnection = new SQLiteConnection("Data Source = Articuno.db;Version=3;");
+            string dataSource = "C:\\Users\\Stephen\\Desktop\\articuno.db";
+            dataSource = ".\\articuno.db";
+            
+            //this.articunoDBConnection = new SQLiteConnection("Data Source = Articuno.db;Version=3;");
+            this.articunoDBConnection = new SQLiteConnection("Data Source ="+dataSource+";Version=3;");
+
             articunoDBConnection.Open();
+
+            return articunoDBConnection;
         }
 
         //Close connection to the SQLLite DB file
@@ -44,6 +55,13 @@ namespace Articuno
         {
             articunoDBConnection.Close();
         }
+
+        public void closeConnection(SQLiteConnection connection)
+        {
+            connection.Close();
+        }
+
+
 
         //Used for executing read queries. Doesn't check to see if artiunoDBConnection is null or not
         public SQLiteDataReader readCommand(string command)
@@ -62,7 +80,7 @@ namespace Articuno
         public List<Turbine> getTurbineList()
         {
             //TODO: Implement
-            return null;
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -75,6 +93,7 @@ namespace Articuno
             openConnection();
             SQLiteDataReader result =readCommand("SELECT Description from "+SYSTEM_TABLE);
             closeConnection();
+            throw new NotImplementedException();
             return "";
         }
 
@@ -84,6 +103,7 @@ namespace Articuno
             openConnection();
             SQLiteDataReader result =readCommand("SELECT * FROM"+ MET_TOWER_TABLE);
             closeConnection();
+            //throw new NotImplementedException();
             return "";
         }
     }

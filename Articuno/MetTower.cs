@@ -1,4 +1,5 @@
-﻿using System;
+﻿using log4net;
+using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Linq;
@@ -71,6 +72,9 @@ namespace Articuno
         //opc server
         private OpcServer opcServer;
 
+        //log
+        private static readonly ILog log = LogManager.GetLogger(typeof(MetTower));
+
         /// <summary>
         /// Constructor for the Met Tower Class. Takes in a Met Id. Using  the met Id, the constructor will then query
         /// the DB for all the relevant values
@@ -116,13 +120,13 @@ namespace Articuno
         /// Get Relative Humidity from OPC Server
         /// </summary>
         /// <returns></returns>
-        public string getRelativeHumidityValue() { return opcServer.readTag(primRHTag).ToString(); }
+        public string getRelativeHumidityValue() { return opcServer.readTagValue(primRHTag).ToString(); }
 
         /// <summary>
         /// Set the field of relative humidty 
         /// </summary>
         /// <param name="value"></param>
-        public void setRelativeHumityValue(double value) { opcServer.setTag(getRelativeHumidityTag(), value); }
+        public void setRelativeHumityValue(double value) { opcServer.setTagValue(getRelativeHumidityTag(), value); }
 
         /// <summary>
         /// Get the prim relative humidity tag
@@ -139,11 +143,11 @@ namespace Articuno
         /// Get the Primary Temperature value from the met tower
         /// </summary>
         /// <returns></returns>
-        public string getPrimTemperatureValue() { return opcServer.readTag(primTempTag).ToString(); }
+        public string getPrimTemperatureValue() { return opcServer.readTagValue(primTempTag).ToString(); }
         /// <summary>
         /// Sets the primary temperature field. Used for this program only
         /// </summary>
-        public void setPrimTemperatureValue(double value) { opcServer.setTag(getPrimTemperatureTag(),value); }
+        public void setPrimTemperatureValue(double value) { opcServer.setTagValue(getPrimTemperatureTag(),value); }
 
         /// <summary>
         /// Returns the OpcTag for the primary temperature tag
@@ -160,12 +164,12 @@ namespace Articuno
         /// Get the SEcondary Temperature value from the met tower
         /// </summary>
         /// <returns></returns>
-        public string getSecTemperatureValue() { return opcServer.readTag(secTempTag).ToString(); }
+        public string getSecTemperatureValue() { return opcServer.readTagValue(secTempTag).ToString(); }
 
         /// <summary>
         /// Sets the primary temperature field. Used for this program only
         /// </summary>
-        public void setSecTemperatureValue(double value) { opcServer.setTag(getSecTemperatureTag(), value); }
+        public void setSecTemperatureValue(double value) { opcServer.setTagValue(getSecTemperatureTag(), value); }
 
         /// <summary>
         /// Returns the OpcTag for the primary temperature tag
@@ -228,7 +232,7 @@ namespace Articuno
             {
                 //Cap it off and throw an alarm
                 //Set primay relative humidty to either 0 (if below 0) or 100 (if above zero)
-                opcServer.setTag(getPrimTemperatureTag(), ((rh < 0.0) ? 0.0 : 100.0) );
+                opcServer.setTagValue(getPrimTemperatureTag(), ((rh < 0.0) ? 0.0 : 100.0) );
                 throw new NotImplementedException();
                 return false;
             }
@@ -255,7 +259,7 @@ namespace Articuno
             {
                 //Cap it off and throw an alarm
                 //Set primay relative humidty to either 0 (if below 0) or 100 (if above zero)
-                opcServer.setTag(temperatureTag, ((tempValue < minValue) ? -20.0 : 60.0));
+                opcServer.setTagValue(temperatureTag, ((tempValue < minValue) ? -20.0 : 60.0));
 
                 throw new NotImplementedException();
                 return false;

@@ -26,7 +26,7 @@ namespace ArticunoTest
             //Insert some test data into Articuno.db
             DatabaseInterface dbi = new DatabaseInterface();
             //Create a new OPC Server instance
-            opcServer = new OpcServer();
+            opcServer = new OpcServer("");
 
             //Create new met tower
             metTowerTest = new MetTower("99", DEFAULT_AMB_TEMP_THRESHOLD, DEFAULT_DELTA_THRESHOLD,opcServer);
