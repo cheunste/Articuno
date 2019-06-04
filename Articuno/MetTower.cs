@@ -126,7 +126,7 @@ namespace Articuno
         /// Set the field of relative humidty 
         /// </summary>
         /// <param name="value"></param>
-        public void setRelativeHumityValue(double value) { opcServer.setTagValue(getRelativeHumidityTag(), value); }
+        public void setRelativeHumityValue(double value) { opcServer.writeTagValue(getRelativeHumidityTag(), value); }
 
         /// <summary>
         /// Get the prim relative humidity tag
@@ -147,7 +147,7 @@ namespace Articuno
         /// <summary>
         /// Sets the primary temperature field. Used for this program only
         /// </summary>
-        public void setPrimTemperatureValue(double value) { opcServer.setTagValue(getPrimTemperatureTag(),value); }
+        public void setPrimTemperatureValue(double value) { opcServer.writeTagValue(getPrimTemperatureTag(),value); }
 
         /// <summary>
         /// Returns the OpcTag for the primary temperature tag
@@ -169,7 +169,7 @@ namespace Articuno
         /// <summary>
         /// Sets the primary temperature field. Used for this program only
         /// </summary>
-        public void setSecTemperatureValue(double value) { opcServer.setTagValue(getSecTemperatureTag(), value); }
+        public void setSecTemperatureValue(double value) { opcServer.writeTagValue(getSecTemperatureTag(), value); }
 
         /// <summary>
         /// Returns the OpcTag for the primary temperature tag
@@ -232,7 +232,7 @@ namespace Articuno
             {
                 //Cap it off and throw an alarm
                 //Set primay relative humidty to either 0 (if below 0) or 100 (if above zero)
-                opcServer.setTagValue(getPrimTemperatureTag(), ((rh < 0.0) ? 0.0 : 100.0) );
+                opcServer.writeTagValue(getPrimTemperatureTag(), ((rh < 0.0) ? 0.0 : 100.0) );
                 throw new NotImplementedException();
                 return false;
             }
@@ -259,7 +259,7 @@ namespace Articuno
             {
                 //Cap it off and throw an alarm
                 //Set primay relative humidty to either 0 (if below 0) or 100 (if above zero)
-                opcServer.setTagValue(temperatureTag, ((tempValue < minValue) ? -20.0 : 60.0));
+                opcServer.writeTagValue(temperatureTag, ((tempValue < minValue) ? -20.0 : 60.0));
 
                 throw new NotImplementedException();
                 return false;

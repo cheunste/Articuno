@@ -92,7 +92,7 @@ namespace Articuno
 
         //The setters to set the OPC Tag Values.  There shouldn't be too many of these
         // THESE ARE USED TO SET THE OPC TAG VALUES
-        public void setTurbineCtrValue(int ctrValue) { server.setTagValue(this.turbineCtrTag,ctrValue); }
+        public void setTurbineCtrValue(int ctrValue) { server.writeTagValue(this.turbineCtrTag,ctrValue); }
         //Scalign factor is unique as it is not used in the OPC Server and only used internally in this program
         public void setTurbineSFValue(int scalingFactor) { this.currentTurbSF = scalingFactor; }
         //Load shutdown function. Probably the most important function
@@ -100,7 +100,7 @@ namespace Articuno
         // I am assuming this to be true, so I'll keep the NIE for now
         public double sentLoadShutdownCmd() {
             log.Info("Shutdown command for "+this.turbinePrefix + " has been sent");
-            server.setTagValue(loadShutDown, true);
+            server.writeTagValue(loadShutDown, true);
             throw new NotImplementedException();
         }
 
