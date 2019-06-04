@@ -19,7 +19,6 @@ namespace Articuno
         public OpcServer(String serverName)
         {
             this.serverName = serverName;
-
         }
         /// <summary>
         /// The readTags function reads an OPC tag value given an OPC Tag. This always returns a String.
@@ -52,9 +51,15 @@ namespace Articuno
         //This method reads in an array of tagnames (in String) and returns an array of string values (relative to the tagname's position)
         //It returns a string array as depending on the OPC tag, it could return a boolean, a text, or a double. Mind as well cast them all to a string
         //to prevent parameter guessing 
-        public string[] readTagsValues(string[] tagNames)
+        public List<String> readTagsValues(string[] tagNames)
         {
-            throw new NotImplementedException();
+            List<String> tagValueList = new List<string>();
+
+            foreach(string tag in tagNames)
+            {
+                tagValueList.Add(readTagValue(tag).ToString());
+            }
+            return tagValueList;
         }
     }
 }
