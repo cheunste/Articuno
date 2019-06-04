@@ -16,18 +16,16 @@ namespace ArticunoTest
 
         public OpcServerTest()
         {
-            opcServer = new OpcServer("");
+            opcServer = new OpcServer("SV.OPCDAServer.1");
         }
 
         [TestMethod ]
         //Test to see if tags will read from the server 
         public void readTagTest()
         {
-            Assert.Fail();
-
-            string opcStringTestTag = "";
-            string opcBoolTestTag = "";
-            string opcIntTestTag = "";
+            string opcStringTestTag = "Folder1.StringItem";
+            string opcBoolTestTag = "Folder1.BooleanItem";
+            string opcIntTestTag = "Folder1.IntegerItem";
 
             string result = opcServer.readTagValue(opcStringTestTag);
             Assert.IsNotNull(opcStringTestTag);
@@ -45,25 +43,33 @@ namespace ArticunoTest
         public void setTagTest()
         {
 
-            Assert.Fail();
-
             //Opc Tags These 
-            string opcStringTestTag = "";
-            string opcBoolTestTag = "";
-            string opcIntTestTag = "";
+            string opcStringTestTag = "Folder1.StringItem";
+            string opcBoolTestTag = "Folder1.BooleanItem";
+            string opcIntTestTag = "Folder1.IntegerItem";
 
-            opcServer.setTagValue(opcStringTestTag, "");
+            string stringTestValue = "Fuck this shit";
+            int intTestValue = 1234512345;
+            bool boolTestValue = false;
+
+            opcServer.setTagValue(opcStringTestTag, stringTestValue);
             string result = opcServer.readTagValue(opcStringTestTag);
-            Assert.AreEqual(result, "");
+            Assert.AreEqual(result, stringTestValue);
 
-            opcServer.setTagValue(opcBoolTestTag, "");
-            result = opcServer.readTagValue(opcStringTestTag);
-            Assert.AreEqual(result, "");
+            opcServer.setTagValue(opcBoolTestTag,boolTestValue);
+            result = opcServer.readTagValue(opcBoolTestTag);
+            Assert.AreEqual(result.ToString(), boolTestValue.ToString());
 
-            opcServer.setTagValue(opcIntTestTag, "");
-            result = opcServer.readTagValue(opcStringTestTag);
-            Assert.AreEqual(result, "");
+            opcServer.setTagValue(opcIntTestTag, intTestValue);
+            result = opcServer.readTagValue(opcIntTestTag);
+            Assert.AreEqual(result,intTestValue.ToString());
 
+        }
+
+        [TestMethod]
+        //Test to read from turbine input tags and write to turbine output tags 
+        public void turbineTagTest()
+        {
         }
 
     }

@@ -36,7 +36,7 @@ namespace ArticunoTest
 
             //Get all the columns from the SystemParemeters
             //NOTE: To see the output, click the output in 'Test Explorer' after the test is executed.
-            string sqlcmd = "Select * from SystemParameters";
+            string sqlcmd = "Select * from SystemInputTags";
             SQLiteDataReader reader = dbi.readCommand(sqlcmd);
 
             while (reader.Read())
@@ -62,8 +62,8 @@ namespace ArticunoTest
                 );
             }
 
-            //Get everything from the MetTower table
-            sqlcmd = "Select * from MetTower";
+            //Get everything from the MetTower tables
+            sqlcmd = "Select * from MetTowerInputTags";
             reader = dbi.readCommand(sqlcmd);
 
             while (reader.Read())
@@ -74,8 +74,30 @@ namespace ArticunoTest
                 );
             }
 
-            //Get the Turbine Ids from the TurbineOpcTag table
-            sqlcmd = "Select TurbineId from TurbineOpcTag";
+            sqlcmd = "Select * from MetTowerOutputTags";
+            reader = dbi.readCommand(sqlcmd);
+
+            while (reader.Read())
+            {
+                Assert.IsNotNull(reader["MetId"]);
+                Console.WriteLine(
+                    reader["MetId"]
+                );
+            }
+
+            //Get the Turbine Ids from the TurbineINputTags and TurbineOutputTable table
+            sqlcmd = "Select TurbineId from TurbineInputTags";
+            reader = dbi.readCommand(sqlcmd);
+
+            while (reader.Read())
+            {
+                Assert.IsNotNull(reader["TurbineId"]);
+                Console.WriteLine(
+                    reader["TurbineId"]
+                );
+            }
+
+            sqlcmd = "Select TurbineId from TurbineOutputTags";
             reader = dbi.readCommand(sqlcmd);
 
             while (reader.Read())
@@ -91,10 +113,31 @@ namespace ArticunoTest
         }
 
         [TestMethod]
+        //Test to see if you are able to write to the database. 
+        //You'll only be writing to the XXXXXOuputTags tables
         public void updateTest()
         {
-            Assert.Fail(); 
-        }
+            //For simplicity, write to the SystemOutputTgas table
+            //Open the DB
+            SQLiteConnection testConnection = dbi.openConnection();
 
+            //generate a random int
+            Random rnd = new Random();
+            int randomNumber = rnd.Next();
+            //testConnection.Update
+            string sqlcmd = "UPDATE SystemOutputTags SET 'Default' ='"+randomNumber+"' WHERE Description = 'Heartbeat'";
+            dbi.updateCommand(sqlcmd);
+
+            SQLiteDataReader reader = dbi.readCommand(sqlcmd);
+            sqlcmd = "Select Default from SystemOutputTags where Description='Heartbeat'";
+            while (reader.Read())
+            {
+                Assert.AreEqual(reader["Default"], randomNumber);
+                Console.WriteLine("Random Number: " + randomNumber);
+                Console.WriteLine("Value in DB: "+ reader["Default"] );
+            }
+            //Close the DB
+            dbi.closeConnection(testConnection);
+        }
    }
 }

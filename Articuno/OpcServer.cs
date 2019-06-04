@@ -19,7 +19,6 @@ namespace Articuno
         public OpcServer(String serverName)
         {
             this.serverName = serverName;
-            throw new NotImplementedException();
 
         }
         /// <summary>
@@ -32,7 +31,6 @@ namespace Articuno
         {
             var value = client.ReadItemValue("", serverName,tag );
             return value.ToString();
-            //throw new NotImplementedException();
         }
 
         /// <summary>
@@ -44,7 +42,6 @@ namespace Articuno
         public void setTagValue(string tag,Object value)
         {
             client.WriteItemValue(serverName, tag, value);
-            //throw new NotImplementedException();
         }
 
         /// <summary>
