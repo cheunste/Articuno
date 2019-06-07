@@ -41,9 +41,19 @@ namespace Articuno
         {
             log.Info("Creating turbine lists");
             turbineList = new List<Turbine>();
+            DatabaseInterface dbi = new DatabaseInterface();
+            throw new NotImplementedException();
             foreach (string turbinePrefix in turbinePrefixList)
             {
-                this.turbineList.Add(new Turbine(turbinePrefix, server));
+                Turbine turbine = new Turbine(turbinePrefix,"");
+                turbine.setLoadShutdownTag(dbi.readCommand("SELECT Pause from TurbineInputTags WHERE TurbineId="+turbinePrefix).ToString());
+                turbine.setNrsStateTag(dbi.readCommand("SELECT NrsMode from TurbineInputTags WHERE TurbineId="+turbinePrefix).ToString());
+                turbine.setOperatinStateTag(dbi.readCommand("SELECT OperatingState from TurbineInputTags WHERE TurbineId="+turbinePrefix).ToString());
+                turbine.setRotorSpeedTag(dbi.readCommand("SELECT RotorSpeed from TurbineInputTags WHERE TurbineId="+turbinePrefix).ToString());
+                turbine.setTemperatureTag(dbi.readCommand("SELECT Temperature from TurbineInputTags WHERE TurbineId="+turbinePrefix).ToString());
+                //turbine.setTurbineCtrTag(dbi.readCommand("SELECT Turbine from TurbineInputTags WHERE TurbineId="+turbinePrefix).ToString());
+                turbine.setWindSpeedTag(dbi.readCommand("SELECT WindSpeed from TurbineInputTags WHERE TurbineId="+turbinePrefix).ToString());
+                this.turbineList.Add(turbine);
             }
         }
 
@@ -58,7 +68,7 @@ namespace Articuno
                 if (turbineInList.Equals(turbine))
                 {
                     log.Info("Attempting to pause turbine "+turbine.getTurbinePrefixValue()+" from the factory");
-                    turbine.sentLoadShutdownCmd();
+                    turbine.writeLoadShutdownCmd();
                 }
             }
         }
@@ -74,7 +84,7 @@ namespace Articuno
                 if (turbineInList.getTurbinePrefixValue().Equals(turbinePrefix))
                 {
                     log.Info("Attempting to pause turbine "+turbineInList.getTurbinePrefixValue()+" from the factory");
-                    turbineInList.sentLoadShutdownCmd();
+                    turbineInList.writeLoadShutdownCmd();
                 }
             }
         }
