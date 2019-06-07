@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using OpcLabs.EasyOpc.DataAccess;
+using OpcLabs.EasyOpc.OperationModel;
 
 namespace Articuno
 {
@@ -20,6 +22,7 @@ namespace Articuno
     {
         //Instance of OPC server
         OpcServer server;
+        string OpcServerName;
 
         //Member variables for OPC Tags in the turbine
         private string turbinePrefix;
@@ -63,19 +66,24 @@ namespace Articuno
             this.server = server;
         }
 
+        public Turbine(string prefix, String OpcServerName)
+        {
+            this.OpcServerName = OpcServerName;
+        }
+
         //Detects when operating state (run, pause, etc.) changes
         public string operatingStateChanged() { throw new NotImplementedException(); }
 
         //Getters to get the value for the wind speed, rotor speed, etc. value from the OPC Server
-        public double getWindSpeedValue() {return Convert.ToDouble(server.readTagValue(this.nacelleWindSpeed)); }
-        public double getRotorSpeedValue() { return Convert.ToDouble(server.readTagValue(this.rotorSpeed)); }
-        public double getOperatinStateValue() {return Convert.ToDouble(server.readTagValue(this.operatingState));}
-        public double getNrsStateValue() { return Convert.ToDouble(server.readTagValue(this.nrsState));}
-        public double getTemperatureValue() {return Convert.ToDouble(server.readTagValue(this.turbineTemperature));}
-        public double getTurbineCtrValue() {return Convert.ToDouble(server.readTagValue(this.turbineCtrTag));}
-        public double getTurbineTemperatureValue() {return Convert.ToDouble(server.readTagValue(this.turbineTemperature));}
-        public double getTurbineHumidityValue() {return Convert.ToDouble(server.readTagValue(this.turbineHumidity));}
-        public double getTurbineSFValue() {return Convert.ToDouble(server.readTagValue(this.turbineScalingFactor));}
+        public Object getWindSpeedValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, this.nacelleWindSpeed); }
+        public Object getRotorSpeedValue() { return new EasyDAClient().ReadItemValue("",OpcServerName,this.rotorSpeed); }
+        public Object getOperatinStateValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,this.operatingState);}
+        public Object getNrsStateValue() { return new EasyDAClient().ReadItemValue("",OpcServerName,this.nrsState);}
+        public Object getTemperatureValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,this.turbineTemperature);}
+        public Object getTurbineCtrValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,this.turbineCtrTag);}
+        public Object getTurbineTemperatureValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,this.turbineTemperature);}
+        public Object getTurbineHumidityValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,turbineHumidity);}
+        public Object getTurbineScalingFactorValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,turbineScalingFactor);}
 
         //Setters to set the member variables to the  OPC tag
         //THESE ARE USED TO SET OPC TAG NAME TO MEMBER FIELD VARIABLES
@@ -90,15 +98,12 @@ namespace Articuno
         public void setTurbineHumidityTag(string tag) { this.turbineHumidity = tag; }
 
 
-        //The setters to set the OPC Tag Values.  There shouldn't be too many of these
-        // THESE ARE USED TO SET THE OPC TAG VALUES
-        public void setTurbineCtrValue(int ctrValue) { server.setTagValue(this.turbineCtrTag,ctrValue); }
+        //Theses are used to write to the OP Tag Values.  There shouldn't be too many of these
+        public void writeTurbineCtrValue(int ctrValue) { server.setTagValue(this.turbineCtrTag,ctrValue); }
         //Scalign factor is unique as it is not used in the OPC Server and only used internally in this program
-        public void setTurbineSFValue(int scalingFactor) { this.currentTurbSF = scalingFactor; }
+        public void writeTurbineSFValue(int scalingFactor) { this.currentTurbSF = scalingFactor; }
         //Load shutdown function. Probably the most important function
-        //This a bit different as it needs to 'feel' more like a command, but at the same time, it is more of a value setter
-        // I am assuming this to be true, so I'll keep the NIE for now
-        public double sentLoadShutdownCmd() {
+        public double writeLoadShutdownCmd() {
             log.Info("Shutdown command for "+this.turbinePrefix + " has been sent");
             server.setTagValue(loadShutDown, true);
             throw new NotImplementedException();
