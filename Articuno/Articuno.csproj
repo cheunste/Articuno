@@ -82,6 +82,7 @@
     <Compile Include="Timer.cs" />
     <Compile Include="Turbine.cs" />
     <Compile Include="TurbineFactory.cs" />
+    <Compile Include="TurbineInterface.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
