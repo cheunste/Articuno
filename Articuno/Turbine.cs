@@ -15,9 +15,11 @@ namespace Articuno
     /// You can set the tags via the setXXXXXTag method and get the value of said tag via the getXXXXXXValue method
     /// </summary>
 
-    //IMPORTANT: Getters and Setters MUST specify whether they're SETting the OPC Tag name to the field or SETting the OPC Value
-    // Getters don't really have this problem as it just GETs the OPC Value. 
 
+        /*
+         * This is the turbine class. It represents a turbine object in Articuno 
+         * It probably should be an interface...but having an interface to create just one type of turbine seems kinda redundant. That's why I have a factory class
+         */
     class Turbine
     {
         //Instance of OPC server
@@ -61,32 +63,40 @@ namespace Articuno
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(Turbine));
 
+        //Constructors
         public Turbine(string prefix,OpcServer server)
         {
+            this.turbinePrefix = prefix;
             this.server = server;
         }
 
         public Turbine(string prefix, String OpcServerName)
         {
+            this.turbinePrefix = prefix;
             this.OpcServerName = OpcServerName;
+        }
+
+        public Turbine(string prefix)
+        {
+            this.turbinePrefix = prefix;
         }
 
         //Detects when operating state (run, pause, etc.) changes
         public string operatingStateChanged() { throw new NotImplementedException(); }
 
-        //Getters to get the value for the wind speed, rotor speed, etc. value from the OPC Server
-        public Object getWindSpeedValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, this.nacelleWindSpeed); }
-        public Object getRotorSpeedValue() { return new EasyDAClient().ReadItemValue("",OpcServerName,this.rotorSpeed); }
-        public Object getOperatinStateValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,this.operatingState);}
-        public Object getNrsStateValue() { return new EasyDAClient().ReadItemValue("",OpcServerName,this.nrsState);}
-        public Object getTemperatureValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,this.turbineTemperature);}
-        public Object getTurbineCtrValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,this.turbineCtrTag);}
-        public Object getTurbineTemperatureValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,this.turbineTemperature);}
-        public Object getTurbineHumidityValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,turbineHumidity);}
-        public Object getTurbineScalingFactorValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,turbineScalingFactor);}
+        //Methods to get the value for the wind speed, rotor speed, etc. value from the OPC Server
+        public Object readWindSpeedValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, this.nacelleWindSpeed); }
+        public Object readRotorSpeedValue() { return new EasyDAClient().ReadItemValue("",OpcServerName,this.rotorSpeed); }
+        public Object readOperatinStateValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,this.operatingState);}
+        public Object readNrsStateValue() { return new EasyDAClient().ReadItemValue("",OpcServerName,this.nrsState);}
+        public Object readTemperatureValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,this.turbineTemperature);}
+        public Object readTurbineCtrValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,this.turbineCtrTag);}
+        public Object readTurbineTemperatureValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,this.turbineTemperature);}
+        public Object readTurbineHumidityValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,turbineHumidity);}
+        public Object readTurbineScalingFactorValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,turbineScalingFactor);}
 
         //Setters to set the member variables to the  OPC tag
-        //THESE ARE USED TO SET OPC TAG NAME TO MEMBER FIELD VARIABLES
+        //These are used to set the tag name to the member variable
         public void setWindSpeedTag(string tag) { this.nacelleWindSpeed = tag; }
         public void setRotorSpeedTag(string tag) { this.rotorSpeed = tag; }
         public void setOperatinStateTag(string tag) { this.operatingState = tag; }
@@ -96,6 +106,18 @@ namespace Articuno
         public void setTurbineCtrTag(string tag) { this.turbineCtrTag = tag; }
         public void setTurbineTemperatureTag(string tag) { this.turbineTemperature = tag; }
         public void setTurbineHumidityTag(string tag) { this.turbineHumidity = tag; }
+
+        //Getters to get the Name of the OPC Tags.
+        //These are mainly used by the factory class's other methods to get multiple OPC values at once
+        public string getWindSpeedTag() { return this.nacelleWindSpeed; }
+        public string getRotorSpeedTag() { return this.rotorSpeed; }
+        public string getOperatinStateTag() { return this.operatingState; }
+        public string getNrsStateTag() { return this.nrsState; }
+        public string getTemperatureTag() { return this.turbineTemperature; }
+        public string getLoadShutdownTag() { return this.loadShutDown; }
+        public string getTurbineCtrTag() { return this.turbineCtrTag; }
+        public string getTurbineTemperatureTag() { return this.turbineTemperature; }
+        public string getTurbineHumidityTag() { return this.turbineHumidity; }
 
 
         //Theses are used to write to the OP Tag Values.  There shouldn't be too many of these
