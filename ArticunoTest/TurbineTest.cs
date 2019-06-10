@@ -2,6 +2,7 @@
 using System.Text;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Articuno;
 
 namespace ArticunoTest
 {
@@ -11,29 +12,14 @@ namespace ArticunoTest
     [TestClass]
     public class TurbineTest
     {
+        private TurbineFactory tf;
+
         public TurbineTest()
         {
-            //
-            // TODO: Add constructor logic here
-            //
-        }
+            List<string> newList = new List<string>();
+            newList.Add("T001");
+            this.tf = new TurbineFactory(newList,"SV.OPCDAServer.1");
 
-        private TestContext testContextInstance;
-
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext
-        {
-            get
-            {
-                return testContextInstance;
-            }
-            set
-            {
-                testContextInstance = value;
-            }
         }
 
         #region Additional test attributes
@@ -61,9 +47,6 @@ namespace ArticunoTest
         [TestMethod]
         public void TestMethod1()
         {
-            //
-            // TODO: Add test logic here
-            //
         }
     }
 }
