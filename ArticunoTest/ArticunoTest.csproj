@@ -75,6 +75,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArticunoTest.cs" />
     <Compile Include="MetTowerUnitTest.cs" />
     <Compile Include="OpcServerTest.cs" />
     <Compile Include="DatabaseInterfaceTest.cs" />
