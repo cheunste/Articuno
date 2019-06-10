@@ -58,7 +58,7 @@ namespace ArticunoTest
                 Assert.IsNotNull(reader["RotorSpeedNrs"]);
                 Assert.IsNotNull(reader["StdDevNrs"]);
                 Console.WriteLine(
-                    reader["id"] +" " + reader["WindSpeed"]+  " " + reader["RotorSpeed"]+  " " + reader["RotorSpeedNrs"]+  " " + reader["StdDevNrs"]
+                    reader["id"] + " " + reader["WindSpeed"] + " " + reader["RotorSpeed"] + " " + reader["RotorSpeedNrs"] + " " + reader["StdDevNrs"]
                 );
             }
 
@@ -125,7 +125,7 @@ namespace ArticunoTest
             Random rnd = new Random();
             int randomNumber = rnd.Next();
             //testConnection.Update
-            string sqlcmd = "UPDATE SystemOutputTags SET 'Default' ='"+randomNumber+"' WHERE Description = 'Heartbeat'";
+            string sqlcmd = "UPDATE SystemOutputTags SET 'Default' ='" + randomNumber + "' WHERE Description = 'Heartbeat'";
             dbi.updateCommand(sqlcmd);
 
             SQLiteDataReader reader = dbi.readCommand(sqlcmd);
@@ -134,10 +134,71 @@ namespace ArticunoTest
             {
                 Assert.AreEqual(reader["Default"], randomNumber);
                 Console.WriteLine("Random Number: " + randomNumber);
-                Console.WriteLine("Value in DB: "+ reader["Default"] );
+                Console.WriteLine("Value in DB: " + reader["Default"]);
             }
             //Close the DB
             dbi.closeConnection(testConnection);
         }
-   }
+
+        [TestMethod]
+        //Test to see if it is able to get items from the turbineInput tables
+        public void turbineTableTest()
+        {
+            SQLiteConnection testConnection = dbi.openConnection();
+            string sqlcmd = "";
+            string turbinePrefix = "'T001'";
+
+            sqlcmd = "SELECT Pause from TurbineInputTags WHERE TurbineId=" + turbinePrefix;
+            SQLiteDataReader reader = dbi.readCommand(sqlcmd);
+            while (reader.Read())
+            {
+                Assert.IsNotNull(reader[0]);
+                Console.WriteLine(reader[0]);
+
+            }
+
+            sqlcmd = "SELECT NrsMode from TurbineInputTags WHERE TurbineId=" + turbinePrefix;
+            reader = dbi.readCommand(sqlcmd);
+            while (reader.Read())
+            {
+                Assert.IsNotNull(reader[0]);
+                Console.WriteLine(reader[0]);
+            }
+
+            sqlcmd = "SELECT OperatingState from TurbineInputTags WHERE TurbineId=" + turbinePrefix;
+            reader = dbi.readCommand(sqlcmd);
+            while (reader.Read())
+            {
+                Assert.IsNotNull(reader[0]);
+                Console.WriteLine(reader[0]);
+            }
+
+            sqlcmd = "SELECT RotorSpeed from TurbineInputTags WHERE TurbineId=" + turbinePrefix;
+            reader = dbi.readCommand(sqlcmd);
+            while (reader.Read())
+            {
+                Assert.IsNotNull(reader[0]);
+                Console.WriteLine(reader[0]);
+            }
+
+            sqlcmd = "SELECT Temperature from TurbineInputTags WHERE TurbineId=" + turbinePrefix;
+            reader = dbi.readCommand(sqlcmd);
+            while (reader.Read())
+            {
+                Assert.IsNotNull(reader[0]);
+                Console.WriteLine(reader[0]);
+            }
+
+            sqlcmd = "SELECT WindSpeed from TurbineInputTags WHERE TurbineId=" + turbinePrefix;
+            reader = dbi.readCommand(sqlcmd);
+            while (reader.Read())
+            {
+                Assert.IsNotNull(reader[0]);
+                Console.WriteLine(reader[0]);
+            }
+
+            //Close the DB
+            dbi.closeConnection(testConnection);
+        }
+    }
 }
