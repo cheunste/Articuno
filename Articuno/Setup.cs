@@ -59,7 +59,7 @@ namespace Articuno
             MetTower met1 = new MetTower(metTower, 0.00, 0.00,null);
 
             //Create Articuno instance
-            Articuno artic = new Articuno(opcServer, metTower, di.getTurbineList());
+            ArticunoMain artic = new ArticunoMain(opcServer, metTower, di.getTurbineList());
 
             //Execute Articuno
             artic.start();
