@@ -13,13 +13,13 @@ namespace Articuno
 
         private string SYSTEM_TABLE             = "SystemParameters";
         private string MET_TOWER_TABLE          = "MetTower";
-        private string TURBINE_OPC_TABLE        = "TurbineOpcTag";
+        private string TURBINE_INPUT_TABLE        = "TurbineINputTags";
         private string PERFORMANCE_FILTER_TABLE = "PerformanceTable";
         
         SQLiteConnection articunoDBConnection;
 
         //Log
-        private static readonly ILog log = LogManager.GetLogger(typeof(Articuno));
+        private static readonly ILog log = LogManager.GetLogger(typeof(ArticunoMain));
 
         //Returns true if the Articuno sqlite database is not found 
         public Boolean databaseNotFound()
@@ -80,6 +80,10 @@ namespace Articuno
         public List<Turbine> getTurbineList()
         {
             //TODO: Implement
+            openConnection();
+            SQLiteDataReader result =readCommand("SELECT TurbineId from "+TURBINE_INPUT_TABLE);
+            closeConnection();
+
             throw new NotImplementedException();
         }
 
