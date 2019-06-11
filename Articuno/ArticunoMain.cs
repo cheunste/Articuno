@@ -7,6 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Articuno
@@ -14,10 +15,16 @@ namespace Articuno
     class ArticunoMain
     {
 
-        public static Queue<Turbine> turbinesInDeRateList { get; set; }
-        public static Queue<Turbine> turbinesExcludedList { get; set; }
-        public static Queue<Turbine> turbinesInParticipationList { get; set; }
-        public static Queue<Turbine> turbinesPausedByArticuno { get; set; }
+        //public static Queue<Turbine> turbinesInDeRateList { get; set; }
+        //public static Queue<Turbine> turbinesExcludedList { get; set; }
+        //public static Queue<Turbine> turbinesInParticipationList { get; set; }
+        //public static Queue<Turbine> turbinesPausedByArticuno { get; set; }
+
+        public static List<Turbine> turbinesInDeRateList { get; set; }
+        public static List<Turbine> turbinesExcludedList { get; set; }
+        public static List<Turbine> turbinesInParticipationList { get; set; }
+        public static List<Turbine> turbinesPausedByArticuno { get; set; }
+
         private static bool articunoEnable;
         private Queue<double> temperatureQueue;
 
@@ -39,10 +46,16 @@ namespace Articuno
         public ArticunoMain(string opcServer, string metTower, List<Turbine> list)
         {
             this.turbineList = list;
-            turbinesInDeRateList = new Queue<Turbine>();
-            turbinesExcludedList = new Queue<Turbine>();
-            turbinesInParticipationList = new Queue<Turbine>();
-            turbinesPausedByArticuno = new Queue<Turbine>();
+            //turbinesInDeRateList = new Queue<Turbine>();
+            //turbinesExcludedList = new Queue<Turbine>();
+            //turbinesInParticipationList = new Queue<Turbine>();
+            //turbinesPausedByArticuno = new Queue<Turbine>();
+
+            turbinesInDeRateList = new List<Turbine>();
+            turbinesExcludedList = new List<Turbine>();
+            turbinesInParticipationList = new List<Turbine>();
+            turbinesPausedByArticuno = new List<Turbine>();
+
             temperatureQueue = new Queue<double>();
         }
 
@@ -52,7 +65,7 @@ namespace Articuno
             //These should be polling every second and should include  tags like turbine participation
             using (var inputClient = new EasyDAClient())
             {
-                inputClient.ItemChanged += inputTagOnChanged;
+                inputClient.ItemChanged += SystemInputOnChanged;
                 inputClient.SubscribeMultipleItems(
                     new[] {
                             new DAItemGroupArguments("", "OPCLabs.KitServer.2", "Simulation.Random", 1000, null),
@@ -76,6 +89,7 @@ namespace Articuno
         /// <param name="sender"></param>
         /// <param name="e"></param>
         /*
+         * Event Handler that is executed whenever  the system input tags changed
          * System input tags are the following:
          *  - ICE.TmpThreshold
          *  - ICE.CurtailEna
@@ -83,13 +97,12 @@ namespace Articuno
          *  - ICE.TmpDelta
          *  - ICE.TmpDew
          *  
-         *  Turbine input tags are the following:
-         *  - ArticunoParticipation (Participation)
-         *  
-         *  The only one that matters the most is the CurtailEna, which enables Articuno. Everythign else requires the Met Tower class to do an update
+         *  CurtailEna is the most important one, which enables Articuno. 
+         *  Thresholds requires the Met Tower class to do an update 
+         *  CTR Period should be updated in both the ArticunoMain and the Turbine classes
          * 
          */
-        static void inputTagOnChanged(object sender, EasyDAItemChangedEventArgs e)
+        static void SystemInputOnChanged(object sender, EasyDAItemChangedEventArgs e)
         {
             throw new NotImplementedException();
             if (e.Succeeded)
@@ -108,11 +121,16 @@ namespace Articuno
         }
 
         /// <summary>
-        /// method called upon NRS or turbine Operating Status change
+        /// method called upon NRS or turbine Operating Status or participation change
         /// </summary>
         /// <param name="sender"></param>
         /// <param name=""></param>
-        /*
+        /**
+         * Event handler executed when turbine input tags are changed by the user
+         *  Turbine input tags are the following:
+         *  - ArticunoParticipation (Participation)
+         *  - NrsMode (Noise Level - Not used at all site)
+         * 
          * This method is used to monitor the tag change from a turbine's NRS state or a turbine's oeprating state 
          * What happens is that once either state changes, Articuno will remove them from its internal queue
          * until Operating state is back to 100 (Run status) or when NRS is 5. Remove it from the queue otherwise
@@ -125,45 +143,68 @@ namespace Articuno
          * - 
          * 
          */
-        static void turbineStatusInputChanged(object sender, EasyDAItemChangedEventArgs e)
+        static void TurbineInputOnChanged(object sender, EasyDAItemChangedEventArgs e)
         {
-            //TODO: The following
-            //get the turbine prefix
-            //get thte turbine object from the prefix
-            //update the turbine's NRS status (calling the writeNRS function in turbine object)
-            //
+            //get the turbine prefix from tag
+            string tag = e.Arguments.ItemDescriptor.ItemId;
+            string pattern = "(\\w\\d+)";
+
+            //Regex to find the prefix
+            Regex rgxLookup = new Regex(pattern, RegexOptions.Singleline, TimeSpan.FromSeconds(1));
+            Match mLookup = rgxLookup.Match(tag);
+            string prefix = mLookup.Groups[1].Value;
+
+            //TODO: Get the turbine based on the prefix
+            Turbine currentTurbine = null;
 
             //If it is NRS that changed
             if (e.Arguments.ItemDescriptor.ItemId.ToString().ToUpper().Contains(NRS_TAG))
             {
-
-                throw new NotImplementedException();
-                //If it isn't equivalent to the noise level (5) remove from the NRS queue
-                if (Convert.ToInt16(e.Vtq.DisplayValue()) != NOISE_LEV)
-                {
-
-                }
-                //Add it back to the NRS queue otherwise
-                else
-                {
-
-                }
-
+                string noiseLev = e.Vtq.DisplayValue();
+                log.InfoFormat("Noise level for {0} is now: {1}", prefix, noiseLev);
+                //Nrs condition is false if the noise level is not 5
+                bool nrsCondition = Convert.ToInt16(noiseLev) == NOISE_LEV ? true : false;
+                log.InfoFormat("NRS Condition for {0} setting to: {1}", prefix, nrsCondition);
+                currentTurbine.setNrsCondition(nrsCondition);
             }
-            //If it is an operating State that changed AND the turbine is 
+
+            //If it is an operating State that changed, throw it into derate queue
             else if (e.Arguments.ItemDescriptor.ItemId.ToString().ToUpper().Contains(OPERATING_TAG))
             {
-                throw new NotImplementedException();
-                //If it isn't equivalent to the run status (100), then remove it from the queu
-                if (Convert.ToInt16(e.Vtq.DisplayValue()) != NOISE_LEV)
+                string operatingStatus = e.Vtq.DisplayValue();
+                log.InfoFormat("Turbine {0} is in {1}", prefix, operatingStatus);
+                //If not in run (100), then that means it is derated
+                if (Convert.ToInt16(operatingStatus) != RUN_STATE)
                 {
-
+                    currentTurbine.setDeRateCondition(true);
+                    log.InfoFormat("Adding {0} to Derate List", prefix);
+                    turbinesInDeRateList.Add(currentTurbine);
                 }
-                //Add it back to the NRS queue otherwise
                 else
                 {
-
+                    currentTurbine.setDeRateCondition(false);
+                    log.InfoFormat("Removing {0} to Derate List", prefix);
+                    turbinesInDeRateList.Remove(currentTurbine);
                 }
+            }
+            //If participation status changed
+            else
+            {
+                bool participationStatus = Convert.ToBoolean(e.Vtq.DisplayValue());
+                log.InfoFormat("Turbine {0} Participation Status: {1}", prefix, participationStatus);
+                //Add or remove turbine from the participation queue
+                if (participationStatus)
+                {
+
+                    log.InfoFormat("Adding Turbine {0} to Participation List", prefix);
+                    turbinesInParticipationList.Add(currentTurbine);
+                }
+                else
+                {
+                    log.InfoFormat("Removing Turbine {0} to Participation List", prefix);
+                    turbinesInParticipationList.Remove(currentTurbine);
+                }
+                currentTurbine.setParticipation(participationStatus);
             }
         }
 
