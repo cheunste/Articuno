@@ -155,8 +155,14 @@ namespace Articuno
             string prefix = mLookup.Groups[1].Value;
 
             //TODO: Get the turbine based on the prefix
-            Turbine currentTurbine = null;
+            Turbine currentTurbine = TurbineFactory.getTurbine(prefix);
 
+            //If it is null, then something bad happened
+            if(currentTurbine is null)
+            {
+                log.ErrorFormat("Error. Turbine {0} cannot be found in the factory class (getTurbine). No further action executed", prefix);
+                return;
+            }
             //If it is NRS that changed
             if (e.Arguments.ItemDescriptor.ItemId.ToString().ToUpper().Contains(NRS_TAG))
             {

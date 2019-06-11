@@ -33,7 +33,7 @@ namespace Articuno
         private static readonly ILog log = LogManager.GetLogger(typeof(TurbineFactory));
 
         //List of turbine related lists
-        private List<Turbine> turbineList;
+        private static  List<Turbine> turbineList;
         private List<string> turbinePrefixList;
 
         //These are temp lists that are used for read and get functions in the class 
@@ -88,7 +88,7 @@ namespace Articuno
                 turbine.setRotorSpeedTag(dbi.readCommand("SELECT RotorSpeed from TurbineInputTags WHERE TurbineId=" + turbinePrefix).ToString());
                 turbine.setTemperatureTag(dbi.readCommand("SELECT Temperature from TurbineInputTags WHERE TurbineId=" + turbinePrefix).ToString());
                 turbine.setWindSpeedTag(dbi.readCommand("SELECT WindSpeed from TurbineInputTags WHERE TurbineId=" + turbinePrefix).ToString());
-                this.turbineList.Add(turbine);
+                turbineList.Add(turbine);
             }
         }
 
@@ -129,7 +129,7 @@ namespace Articuno
         /// </summary>
         /// <param name="prefix"></param>
         /// <returns></returns>
-        public Turbine getTurbine(string prefix)
+        public static Turbine getTurbine(string prefix)
         {
             foreach (Turbine turbine in turbineList)
             {
@@ -147,7 +147,7 @@ namespace Articuno
         /// <returns></returns>
         public List<Turbine> getTurbineList()
         {
-            return this.turbineList;
+            return turbineList;
         }
 
         /*
@@ -157,7 +157,7 @@ namespace Articuno
         public List<string> getTurbineWindSpeedTag()
         {
             tempList.Clear();
-            foreach (Turbine turbine in this.turbineList)
+            foreach (Turbine turbine in turbineList)
             {
                 tempList.Add(turbine.getTurbinePrefixValue() + turbine.getWindSpeedTag());
             }
@@ -167,7 +167,7 @@ namespace Articuno
         public List<string> getRotorSpeedTag()
         {
             tempList.Clear();
-            foreach (Turbine turbine in this.turbineList)
+            foreach (Turbine turbine in turbineList)
             {
                 tempList.Add(turbine.getTurbinePrefixValue() + turbine.getRotorSpeedTag());
             }
@@ -176,7 +176,7 @@ namespace Articuno
         public List<string> getOperatingStateTag()
         {
             tempList.Clear();
-            foreach (Turbine turbine in this.turbineList)
+            foreach (Turbine turbine in turbineList)
             {
                 tempList.Add(turbine.getTurbinePrefixValue() + turbine.getOperatinStateTag());
             }
@@ -185,7 +185,7 @@ namespace Articuno
         public List<string> getNrsStateTag()
         {
             tempList.Clear();
-            foreach (Turbine turbine in this.turbineList)
+            foreach (Turbine turbine in turbineList)
             {
                 tempList.Add(turbine.getTurbinePrefixValue() + turbine.getNrsStateTag());
             }
@@ -194,7 +194,7 @@ namespace Articuno
         public List<string> getTemperatureTag()
         {
             tempList.Clear();
-            foreach (Turbine turbine in this.turbineList)
+            foreach (Turbine turbine in turbineList)
             {
                 tempList.Add(turbine.getTurbinePrefixValue() + turbine.getTemperatureTag());
             }
@@ -203,7 +203,7 @@ namespace Articuno
         public List<string> getLoadShutdownTag()
         {
             tempList.Clear();
-            foreach (Turbine turbine in this.turbineList)
+            foreach (Turbine turbine in turbineList)
             {
                 tempList.Add(turbine.getTurbinePrefixValue() + turbine.getLoadShutdownTag());
             }
@@ -211,7 +211,7 @@ namespace Articuno
         }
         public List<string> getTurbineCtrTag()
         {
-            foreach (Turbine turbine in this.turbineList)
+            foreach (Turbine turbine in turbineList)
             {
                 tempList.Add(turbine.getTurbinePrefixValue() + turbine.getTurbineCtrTag());
             }
@@ -220,7 +220,7 @@ namespace Articuno
         public List<string> getHumidityTag()
         {
             tempList.Clear();
-            foreach (Turbine turbine in this.turbineList)
+            foreach (Turbine turbine in turbineList)
             {
                 tempList.Add(turbine.getTurbinePrefixValue() + turbine.getTurbineHumidityTag());
             }
@@ -247,7 +247,7 @@ namespace Articuno
 
             return vtqResults;
             //tempObjectList.Clear();
-            //foreach (Turbine turbine in this.turbineList)
+            //foreach (Turbine turbine in turbineList)
             //{
             //    tempObjectList.Add(turbine.readWindSpeedValue());
             //}
