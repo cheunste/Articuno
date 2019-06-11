@@ -121,13 +121,13 @@ namespace Articuno
 
 
         //Theses are used to write to the OP Tag Values.  There shouldn't be too many of these
-        public void writeTurbineCtrValue(int ctrValue) { server.setTagValue(this.turbineCtrTag,ctrValue); }
+        public void writeTurbineCtrValue(int ctrValue) { server.writeTagValue(this.turbineCtrTag,ctrValue); }
         //Scalign factor is unique as it is not used in the OPC Server and only used internally in this program
         public void writeTurbineSFValue(int scalingFactor) { this.currentTurbSF = scalingFactor; }
         //Load shutdown function. Probably the most important function
         public double writeLoadShutdownCmd() {
             log.Info("Shutdown command for "+this.turbinePrefix + " has been sent");
-            server.setTagValue(loadShutDown, true);
+            server.writeTagValue(loadShutDown, true);
             throw new NotImplementedException();
         }
 
@@ -159,6 +159,10 @@ namespace Articuno
         {
             throw new NotImplementedException();
         }
+
+        //Function to determine participation
+        public  void setParticipation(bool participationStatus) { articunoParicipation = participationStatus; }
+        public bool getParticipation() { return articunoParicipation; }
 
     }
 }
