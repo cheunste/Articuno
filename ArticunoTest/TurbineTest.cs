@@ -45,40 +45,35 @@ namespace ArticunoTest
         #endregion
 
         [TestMethod]
-        public void getValueFromTurbine()
+        public void getTagValueFromTurbine()
         {
-            //List<string> newList = new List<string>();
-            //newList.Add("T001");
-            //string serverName = "SV.OPCDAServer.1";
-            //tf = new TurbineFactory(newList,serverName);
-            //tf.createTurbines();
-
+           
             //Write some random values to known tags in the test server. Hard coding is fine in this case 
             // AS LONG AS YOU HAVE THE NAME OF THE OPC TAG RIGHT
             // Note that OPC Tag is case sensative...apparently.
             var testValue = 8.12;
 
             //Read 
-            List<Object> derp = (List<Object>)tf.readTurbineWindSpeedTag();
-            foreach (object foo in derp)
+            List<Object> bar = (List<Object>)tf.readTurbineWindSpeedTag();
+            foreach (object foo in bar)
             {
                 Console.WriteLine(Convert.ToDouble(foo));
                 Assert.AreEqual(Convert.ToDouble(foo), testValue, 0.002);
             }
 
-            derp.Clear();
+            bar.Clear();
             testValue = 0;
-            derp = (List<Object>)tf.readRotorSpeedTag();
-            foreach (object foo in derp)
+            bar = (List<Object>)tf.readRotorSpeedTag();
+            foreach (object foo in bar)
             {
                 Console.WriteLine(Convert.ToDouble(foo));
                 Assert.AreEqual(Convert.ToDouble(foo), testValue, 0.002);
             }
 
-            derp.Clear();
+            bar.Clear();
             testValue = 100;
-            derp = (List<Object>)tf.readOperatingStateTag();
-            foreach (object foo in derp)
+            bar = (List<Object>)tf.readOperatingStateTag();
+            foreach (object foo in bar)
             {
                 Console.WriteLine(Convert.ToDouble(foo));
                 Assert.AreEqual(Convert.ToDouble(foo), testValue, 0.002);
@@ -106,8 +101,6 @@ namespace ArticunoTest
             printOutTags(temp);
             temp= tf.getRotorSpeedTag();
             printOutTags(temp);
-
-
         }
 
         [TestMethod]
@@ -130,6 +123,8 @@ namespace ArticunoTest
             foreach(var item in printOutList)
             {
                 Console.WriteLine(item);
+                //Assert.IsNotNull(item);
+
             }
 
         }
