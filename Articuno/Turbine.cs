@@ -99,7 +99,7 @@ namespace Articuno
         //These are used to set the tag name to the member variable
         public void setWindSpeedTag(string tag) { this.nacelleWindSpeed = tag; }
         public void setRotorSpeedTag(string tag) { this.rotorSpeed = tag; }
-        public void setOperatinStateTag(string tag) { this.operatingState = tag; }
+        public void setOperatingStateTag(string tag) { this.operatingState = tag; }
         public void setNrsStateTag(string tag) { this.nrsState = tag; }
         public void setTemperatureTag(string tag) { this.turbineTemperature = tag; }
         public void setLoadShutdownTag(string tag) { this.loadShutDown = tag; }

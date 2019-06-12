@@ -3,6 +3,7 @@ using OpcLabs.EasyOpc.DataAccess;
 using OpcLabs.EasyOpc.DataAccess.OperationModel;
 using System;
 using System.Collections.Generic;
+using System.Data.SQLite;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -33,7 +34,7 @@ namespace Articuno
         private static readonly ILog log = LogManager.GetLogger(typeof(TurbineFactory));
 
         //List of turbine related lists
-        private static  List<Turbine> turbineList;
+        private static List<Turbine> turbineList;
         private List<string> turbinePrefixList;
 
         //These are temp lists that are used for read and get functions in the class 
@@ -43,6 +44,7 @@ namespace Articuno
         //Instance of OpcServer. Might not be needed
         private OpcServer server;
         private string opcServerName;
+        private EasyDAClient client = new EasyDAClient();
 
         /// <summary>
         /// Constructor for the turbine factory class. Takes in a string list of Turbine prefixes (ie T001). Probably should be called only once
@@ -58,7 +60,7 @@ namespace Articuno
             this.server = server;
 
         }
-        public TurbineFactory(List<string> turbinePrefixList,string opcServerName)
+        public TurbineFactory(List<string> turbinePrefixList, string opcServerName)
         {
             turbineList = new List<Turbine>();
             tempList = new List<string>();
@@ -79,17 +81,33 @@ namespace Articuno
             turbineList = new List<Turbine>();
             turbineList.Clear();
             DatabaseInterface dbi = new DatabaseInterface();
+            dbi.openConnection();
             foreach (string turbinePrefix in turbinePrefixList)
             {
                 Turbine turbine = new Turbine(turbinePrefix, "");
-                turbine.setLoadShutdownTag(dbi.readCommand("SELECT Pause from TurbineInputTags WHERE TurbineId=" + turbinePrefix).ToString());
-                turbine.setNrsStateTag(dbi.readCommand("SELECT NrsMode from TurbineInputTags WHERE TurbineId=" + turbinePrefix).ToString());
-                turbine.setOperatinStateTag(dbi.readCommand("SELECT OperatingState from TurbineInputTags WHERE TurbineId=" + turbinePrefix).ToString());
-                turbine.setRotorSpeedTag(dbi.readCommand("SELECT RotorSpeed from TurbineInputTags WHERE TurbineId=" + turbinePrefix).ToString());
-                turbine.setTemperatureTag(dbi.readCommand("SELECT Temperature from TurbineInputTags WHERE TurbineId=" + turbinePrefix).ToString());
-                turbine.setWindSpeedTag(dbi.readCommand("SELECT WindSpeed from TurbineInputTags WHERE TurbineId=" + turbinePrefix).ToString());
+                string cmd =
+                    String.Format("SELECT * " +
+                    "from TurbineInputTags WHERE TurbineId='{0}'", turbinePrefix);
+                SQLiteDataReader reader = dbi.readCommand(cmd);
+                reader.Read();
+                turbine.setLoadShutdownTag(reader["Pause"].ToString());
+                turbine.setNrsStateTag(reader["NrsMode"].ToString());
+                turbine.setOperatingStateTag(reader["OperatingState"].ToString());
+                turbine.setRotorSpeedTag(reader["RotorSpeed"].ToString());
+                turbine.setTemperatureTag(reader["Temperature"].ToString());
+                turbine.setWindSpeedTag(reader["WindSpeed"].ToString());
+                //turbine.setPrimaryMetReference(reader["MetReference"].ToString());
+
+
+                //turbine.setLoadShutdownTag(dbi.readCommand("SELECT Pause from TurbineInputTags WHERE TurbineId='" + turbinePrefix+"'").ToString());
+                //turbine.setNrsStateTag(dbi.readCommand("SELECT NrsMode from TurbineInputTags WHERE TurbineId='" + turbinePrefix+"'").ToString());
+                //turbine.setOperatinStateTag(dbi.readCommand("SELECT OperatingState from TurbineInputTags WHERE TurbineId='" + turbinePrefix+"'").ToString());
+                //turbine.setRotorSpeedTag(dbi.readCommand("SELECT RotorSpeed from TurbineInputTags WHERE TurbineId='" + turbinePrefix+"'").ToString());
+                //turbine.setTemperatureTag(dbi.readCommand("SELECT Temperature from TurbineInputTags WHERE TurbineId='" + turbinePrefix+"'").ToString());
+                //turbine.setWindSpeedTag(dbi.readCommand("SELECT WindSpeed from TurbineInputTags WHERE TurbineId='" + turbinePrefix+"'").ToString());
                 turbineList.Add(turbine);
             }
+            dbi.closeConnection();
         }
 
         /// <summary>
@@ -159,7 +177,7 @@ namespace Articuno
             tempList.Clear();
             foreach (Turbine turbine in turbineList)
             {
-                tempList.Add(turbine.getTurbinePrefixValue() + turbine.getWindSpeedTag());
+                tempList.Add(turbine.getWindSpeedTag());
             }
             return tempList;
         }
@@ -169,7 +187,7 @@ namespace Articuno
             tempList.Clear();
             foreach (Turbine turbine in turbineList)
             {
-                tempList.Add(turbine.getTurbinePrefixValue() + turbine.getRotorSpeedTag());
+                tempList.Add(turbine.getRotorSpeedTag());
             }
             return tempList;
         }
@@ -178,7 +196,7 @@ namespace Articuno
             tempList.Clear();
             foreach (Turbine turbine in turbineList)
             {
-                tempList.Add(turbine.getTurbinePrefixValue() + turbine.getOperatinStateTag());
+                tempList.Add(turbine.getOperatinStateTag());
             }
             return tempList;
         }
@@ -187,7 +205,7 @@ namespace Articuno
             tempList.Clear();
             foreach (Turbine turbine in turbineList)
             {
-                tempList.Add(turbine.getTurbinePrefixValue() + turbine.getNrsStateTag());
+                tempList.Add(turbine.getNrsStateTag());
             }
             return tempList;
         }
@@ -196,7 +214,7 @@ namespace Articuno
             tempList.Clear();
             foreach (Turbine turbine in turbineList)
             {
-                tempList.Add(turbine.getTurbinePrefixValue() + turbine.getTemperatureTag());
+                tempList.Add(turbine.getTemperatureTag());
             }
             return tempList;
         }
@@ -205,15 +223,16 @@ namespace Articuno
             tempList.Clear();
             foreach (Turbine turbine in turbineList)
             {
-                tempList.Add(turbine.getTurbinePrefixValue() + turbine.getLoadShutdownTag());
+                tempList.Add(turbine.getLoadShutdownTag());
             }
             return tempList;
         }
         public List<string> getTurbineCtrTag()
         {
+            tempList.Clear();
             foreach (Turbine turbine in turbineList)
             {
-                tempList.Add(turbine.getTurbinePrefixValue() + turbine.getTurbineCtrTag());
+                tempList.Add(turbine.getTurbineCtrTag());
             }
             return tempList;
         }
@@ -222,7 +241,7 @@ namespace Articuno
             tempList.Clear();
             foreach (Turbine turbine in turbineList)
             {
-                tempList.Add(turbine.getTurbinePrefixValue() + turbine.getTurbineHumidityTag());
+                tempList.Add(turbine.getTurbineHumidityTag());
             }
             return tempList;
         }
@@ -234,49 +253,37 @@ namespace Articuno
          * 
          */
         //public List<Object> readTurbineWindSpeedTag()
-        public Object readTurbineWindSpeedTag()
-        {
-            var client = new EasyDAClient();
-            DAItemDescriptor temp = new DAItemDescriptor();
+        public Object readTurbineWindSpeedTag() { return readMutlipleOpcTags(getTurbineWindSpeedTag()); }
+        public Object readRotorSpeedTag() { return readMutlipleOpcTags(getRotorSpeedTag()); }
+        public Object readOperatingStateTag() { return readMutlipleOpcTags(getOperatingStateTag()); }
+        public Object readNrsStateTag() { return readMutlipleOpcTags(getNrsStateTag()); }
+        public Object readTemperatureTag() { return readMutlipleOpcTags(getTemperatureTag()); }
+        public Object readTurbineCtrTag() { return readMutlipleOpcTags(getTurbineCtrTag()); }
+        public Object readHumidityTag() { return readMutlipleOpcTags(getHumidityTag()); }
 
-            DAVtqResult[] vtqResults = client.ReadMultipleItems(this.opcServerName,
-                new DAItemDescriptor[]
-                { this.getTurbineWindSpeedTag().ToString()
-                } 
-            );
+        private Object readMutlipleOpcTags(List<string> tempList)
+        {
 
-            return vtqResults;
-            //tempObjectList.Clear();
-            //foreach (Turbine turbine in turbineList)
-            //{
-            //    tempObjectList.Add(turbine.readWindSpeedValue());
-            //}
-            //return tempObjectList;
-        }
+            List<Object> valueList = new List<Object>();
+            var itemDescriptors = new DAItemDescriptor[tempList.Count];
+            int index = 0;
 
-        public Object readRotorSpeedTag()
-        {
-            throw new NotImplementedException();
-        }
-        public Object readOperatingStateTag()
-        {
-            throw new NotImplementedException();
-        }
-        public Object readNrsStateTag()
-        {
-            throw new NotImplementedException();
-        }
-        public Object readTemperatureTag()
-        {
-            throw new NotImplementedException();
-        }
-        public Object readTurbineCtrTag()
-        {
-            throw new NotImplementedException();
-        }
-        public Object readHumidityTag()
-        {
-            throw new NotImplementedException();
+            for (int i = 0; i < tempList.Count; i++)
+            {
+                Console.WriteLine(tempList.ElementAt(i));
+                itemDescriptors[i] = new DAItemDescriptor(tempList.ElementAt(i));
+            }
+
+            DAVtqResult[] vtqResults = this.client.ReadMultipleItems(this.opcServerName, itemDescriptors);
+
+
+            for (int i = 0; i < vtqResults.Length; i++)
+            {
+                //Console.WriteLine(vtqResults[i].Vtq.Value);
+                valueList.Add(vtqResults[i].Vtq.Value);
+            }
+            //return vtqResults;
+            return valueList;
         }
 
     }
