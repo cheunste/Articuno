@@ -42,6 +42,7 @@ namespace Articuno
         private string turbineTemperature;
         private string turbineHumidity;
         private string turbineParticipationTag;
+        private string turbineAlarmTag;
 
         //Member variables for algorithm
         private bool temperatureConditionMet;
@@ -96,6 +97,8 @@ namespace Articuno
         public Object readTurbineTemperatureValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,this.turbineTemperature);}
         public Object readTurbineHumidityValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,turbineHumidity);}
         public Object readTurbineScalingFactorValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,turbineScalingFactor);}
+        public Object readParticipationValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,turbineParticipationTag);}
+        public Object readAlarmValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,turbineAlarmTag);}
 
         //Setters to set the member variables to the  OPC tag
         //These are used to set the tag name to the member variable
@@ -109,6 +112,7 @@ namespace Articuno
         public void setTurbineTemperatureTag(string tag) { this.turbineTemperature = tag; }
         public void setTurbineHumidityTag(string tag) { this.turbineHumidity = tag; }
         public void setParticipationTag(string tag) { this.turbineParticipationTag = tag; }
+        public void setAlarmTag(string tag) { this.turbineAlarmTag = tag; }
 
         //Getters to get the Name of the OPC Tags.
         //These are mainly used by the factory class's other methods to get multiple OPC values at once
@@ -122,6 +126,7 @@ namespace Articuno
         public string getTurbineTemperatureTag() { return this.turbineTemperature; }
         public string getTurbineHumidityTag() { return this.turbineHumidity; }
         public string getParticipationTag() { return this.turbineParticipationTag; }
+        public string getAlarmTag() { return this.turbineAlarmTag; }
 
 
         //Theses are used to write to the OP Tag Values.  There shouldn't be too many of these
