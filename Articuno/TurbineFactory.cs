@@ -85,27 +85,34 @@ namespace Articuno
             foreach (string turbinePrefix in turbinePrefixList)
             {
                 Turbine turbine = new Turbine(turbinePrefix, opcServerName);
+
+                //For Turbine tags from the  TurbineInputTags Table
                 string cmd =
                     String.Format("SELECT * " +
                     "from TurbineInputTags WHERE TurbineId='{0}'", turbinePrefix);
                 SQLiteDataReader reader = dbi.readCommand(cmd);
                 reader.Read();
-                turbine.setLoadShutdownTag(reader["Pause"].ToString());
-                turbine.setNrsStateTag(reader["NrsMode"].ToString());
-                turbine.setOperatingStateTag(reader["OperatingState"].ToString());
+                //turbine.setLoadShutdownTag(reader["Pause"].ToString());
+                //turbine.setNrsStateTag(reader["NrsMode"].ToString());
+                //turbine.setOperatingStateTag(reader["OperatingState"].ToString());
                 turbine.setRotorSpeedTag(reader["RotorSpeed"].ToString());
                 turbine.setTemperatureTag(reader["Temperature"].ToString());
                 turbine.setWindSpeedTag(reader["WindSpeed"].ToString());
+                //turbine.setParticipationTag(reader["Participation"].ToString());
+
+                //For Turbine tags from the TurbineOutputTags Table There might be duplicates
+                cmd = String.Format("SELECT * " +
+                    "from TurbineOutputTags WHERE TurbineId='{0}'", turbinePrefix);
+                reader = dbi.readCommand(cmd);
+                reader.Read();
+
+                turbine.setAlarmTag(reader["Alarm"].ToString());
+                turbine.setNrsStateTag(reader["NrsMode"].ToString());
+                turbine.setOperatingStateTag(reader["OperatingState"].ToString());
                 turbine.setParticipationTag(reader["Participation"].ToString());
-                //turbine.setPrimaryMetReference(reader["MetReference"].ToString());
+                turbine.setLoadShutdownTag(reader["Pause"].ToString());
 
-
-                //turbine.setLoadShutdownTag(dbi.readCommand("SELECT Pause from TurbineInputTags WHERE TurbineId='" + turbinePrefix+"'").ToString());
-                //turbine.setNrsStateTag(dbi.readCommand("SELECT NrsMode from TurbineInputTags WHERE TurbineId='" + turbinePrefix+"'").ToString());
-                //turbine.setOperatinStateTag(dbi.readCommand("SELECT OperatingState from TurbineInputTags WHERE TurbineId='" + turbinePrefix+"'").ToString());
-                //turbine.setRotorSpeedTag(dbi.readCommand("SELECT RotorSpeed from TurbineInputTags WHERE TurbineId='" + turbinePrefix+"'").ToString());
-                //turbine.setTemperatureTag(dbi.readCommand("SELECT Temperature from TurbineInputTags WHERE TurbineId='" + turbinePrefix+"'").ToString());
-                //turbine.setWindSpeedTag(dbi.readCommand("SELECT WindSpeed from TurbineInputTags WHERE TurbineId='" + turbinePrefix+"'").ToString());
+                //Add turbine to the turbine list
                 turbineList.Add(turbine);
             }
             dbi.closeConnection();
