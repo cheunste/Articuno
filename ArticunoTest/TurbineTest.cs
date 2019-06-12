@@ -18,8 +18,8 @@ namespace ArticunoTest
         {
             List<string> newList = new List<string>();
             newList.Add("T001");
-            this.tf = new TurbineFactory(newList,"SV.OPCDAServer.1");
-
+            tf = new TurbineFactory(newList, "SV.OPCDAServer.1");
+            tf.createTurbines();
         }
 
         #region Additional test attributes
@@ -45,8 +45,78 @@ namespace ArticunoTest
         #endregion
 
         [TestMethod]
-        public void TestMethod1()
+        public void getValueFromTurbine()
         {
+            //List<string> newList = new List<string>();
+            //newList.Add("T001");
+            //string serverName = "SV.OPCDAServer.1";
+            //tf = new TurbineFactory(newList,serverName);
+            //tf.createTurbines();
+
+            //Write some random values to known tags in the test server. Hard coding is fine in this case 
+            // AS LONG AS YOU HAVE THE NAME OF THE OPC TAG RIGHT
+            // Note that OPC Tag is case sensative...apparently.
+            var testValue = 8.12;
+
+            //Read 
+            List<Object> derp = (List<Object>)tf.readTurbineWindSpeedTag();
+            foreach (object foo in derp)
+            {
+                Console.WriteLine(Convert.ToDouble(foo));
+                Assert.AreEqual(Convert.ToDouble(foo), testValue, 0.002);
+            }
+
+            derp.Clear();
+            testValue = 0;
+            derp = (List<Object>)tf.readRotorSpeedTag();
+            foreach (object foo in derp)
+            {
+                Console.WriteLine(Convert.ToDouble(foo));
+                Assert.AreEqual(Convert.ToDouble(foo), testValue, 0.002);
+            }
+
+            derp.Clear();
+            testValue = 100;
+            derp = (List<Object>)tf.readOperatingStateTag();
+            foreach (object foo in derp)
+            {
+                Console.WriteLine(Convert.ToDouble(foo));
+                Assert.AreEqual(Convert.ToDouble(foo), testValue, 0.002);
+            }
+
+        }
+
+        [TestMethod]
+        public  void getTagNameFromTurbine()
+        {
+            List<string> temp;
+            temp = tf.getTurbineWindSpeedTag();
+            printOutTags(temp);
+            temp= tf.getOperatingStateTag();
+            printOutTags(temp);
+            temp= tf.getNrsStateTag();
+            printOutTags(temp);
+            temp= tf.getHumidityTag();
+            printOutTags(temp);
+            temp= tf.getTemperatureTag();
+            printOutTags(temp);
+            temp= tf.getLoadShutdownTag();
+            printOutTags(temp);
+            temp= tf.getTurbineCtrTag();
+            printOutTags(temp);
+            temp= tf.getRotorSpeedTag();
+            printOutTags(temp);
+
+
+        }
+
+        private void printOutTags(List<string> printOutList)
+        {
+            foreach(var item in printOutList)
+            {
+                Console.WriteLine(item);
+            }
+
         }
     }
 }

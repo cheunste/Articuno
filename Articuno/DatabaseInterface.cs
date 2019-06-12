@@ -62,15 +62,22 @@ namespace Articuno
         }
 
 
-
-        //Used for executing read queries. Doesn't check to see if artiunoDBConnection is null or not
+        /// <summary>
+        /// Used for executing read queries. Doesn't check to see if artiunoDBConnection is null or not 
+        /// </summary>
+        /// <param name="command"></param>
+        /// <returns></returns>
         public SQLiteDataReader readCommand(string command)
         {
             SQLiteCommand cmd = new SQLiteCommand(command, articunoDBConnection);
             return cmd.ExecuteReader();
         }
 
-        //Used for update queries. Doesn't check to see if artiunoDBConnection is null or no
+        /// <summary>
+        /// Used for update queries. Doesn't check to see if artiunoDBConnection is null or no
+        /// </summary>
+        /// <param name="command"></param>
+        /// <returns></returns>
         public int updateCommand(string command)
         {
             SQLiteCommand cmd = new SQLiteCommand(command, articunoDBConnection);
