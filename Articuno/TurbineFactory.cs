@@ -96,6 +96,7 @@ namespace Articuno
                 turbine.setRotorSpeedTag(reader["RotorSpeed"].ToString());
                 turbine.setTemperatureTag(reader["Temperature"].ToString());
                 turbine.setWindSpeedTag(reader["WindSpeed"].ToString());
+                turbine.setParticipationTag(reader["Participation"].ToString());
                 //turbine.setPrimaryMetReference(reader["MetReference"].ToString());
 
 

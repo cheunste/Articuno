@@ -40,6 +40,7 @@ namespace Articuno
         private string turbineScalingFactor;
         private string turbineTemperature;
         private string turbineHumidity;
+        private string turbineParticipationTag;
 
         //Member variables for algorithm
         private bool temperatureConditionMet;
@@ -106,6 +107,7 @@ namespace Articuno
         public void setTurbineCtrTag(string tag) { this.turbineCtrTag = tag; }
         public void setTurbineTemperatureTag(string tag) { this.turbineTemperature = tag; }
         public void setTurbineHumidityTag(string tag) { this.turbineHumidity = tag; }
+        public void setParticipationTag(string tag) { this.turbineParticipationTag = tag; }
 
         //Getters to get the Name of the OPC Tags.
         //These are mainly used by the factory class's other methods to get multiple OPC values at once
@@ -118,6 +120,7 @@ namespace Articuno
         public string getTurbineCtrTag() { return this.turbineCtrTag; }
         public string getTurbineTemperatureTag() { return this.turbineTemperature; }
         public string getTurbineHumidityTag() { return this.turbineHumidity; }
+        public string getParticipationTag() { return this.turbineParticipationTag; }
 
 
         //Theses are used to write to the OP Tag Values.  There shouldn't be too many of these
