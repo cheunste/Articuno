@@ -25,6 +25,7 @@ namespace Articuno
         //Instance of OPC server
         OpcServer server;
         string OpcServerName;
+        private EasyDAClient client = new EasyDAClient();
 
         //Member variables for OPC Tags in the turbine
         private string turbinePrefix;
@@ -129,9 +130,19 @@ namespace Articuno
         public void writeTurbineSFValue(int scalingFactor) { this.currentTurbSF = scalingFactor; }
         //Load shutdown function. Probably the most important function
         public double writeLoadShutdownCmd() {
-            log.Info("Shutdown command for "+this.turbinePrefix + " has been sent");
-            server.writeTagValue(loadShutDown, true);
-            throw new NotImplementedException();
+            log.InfoFormat("Shutdown command for {0} has been sent",this.turbinePrefix);
+            //server.writeTagValue(loadShutDown, true);
+            try
+            {
+                client.WriteItemValue("", OpcServerName, getLoadShutdownTag(),1.00);
+                return 1.0;
+            }
+            catch (OpcException opcException)
+            {
+                log.ErrorFormat("Error stropping {0}: {1}", this.turbinePrefix,opcException.GetBaseException().Message);
+                return -1.0;
+            }
+            //throw new NotImplementedException();
         }
 
         //Misc functions

@@ -84,7 +84,7 @@ namespace Articuno
             dbi.openConnection();
             foreach (string turbinePrefix in turbinePrefixList)
             {
-                Turbine turbine = new Turbine(turbinePrefix, "");
+                Turbine turbine = new Turbine(turbinePrefix, opcServerName);
                 string cmd =
                     String.Format("SELECT * " +
                     "from TurbineInputTags WHERE TurbineId='{0}'", turbinePrefix);
