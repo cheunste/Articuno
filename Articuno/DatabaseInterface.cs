@@ -13,13 +13,13 @@ namespace Articuno
 
         private string SYSTEM_TABLE             = "SystemParameters";
         private string MET_TOWER_TABLE          = "MetTower";
-        private string TURBINE_OPC_TABLE        = "TurbineOpcTag";
+        private string TURBINE_INPUT_TABLE        = "TurbineINputTags";
         private string PERFORMANCE_FILTER_TABLE = "PerformanceTable";
         
         SQLiteConnection articunoDBConnection;
 
         //Log
-        private static readonly ILog log = LogManager.GetLogger(typeof(Articuno));
+        private static readonly ILog log = LogManager.GetLogger(typeof(ArticunoMain));
 
         //Returns true if the Articuno sqlite database is not found 
         public Boolean databaseNotFound()
@@ -62,15 +62,22 @@ namespace Articuno
         }
 
 
-
-        //Used for executing read queries. Doesn't check to see if artiunoDBConnection is null or not
+        /// <summary>
+        /// Used for executing read queries. Doesn't check to see if artiunoDBConnection is null or not 
+        /// </summary>
+        /// <param name="command"></param>
+        /// <returns></returns>
         public SQLiteDataReader readCommand(string command)
         {
             SQLiteCommand cmd = new SQLiteCommand(command, articunoDBConnection);
             return cmd.ExecuteReader();
         }
 
-        //Used for update queries. Doesn't check to see if artiunoDBConnection is null or no
+        /// <summary>
+        /// Used for update queries. Doesn't check to see if artiunoDBConnection is null or no
+        /// </summary>
+        /// <param name="command"></param>
+        /// <returns></returns>
         public int updateCommand(string command)
         {
             SQLiteCommand cmd = new SQLiteCommand(command, articunoDBConnection);
@@ -80,6 +87,10 @@ namespace Articuno
         public List<Turbine> getTurbineList()
         {
             //TODO: Implement
+            openConnection();
+            SQLiteDataReader result =readCommand("SELECT TurbineId from "+TURBINE_INPUT_TABLE);
+            closeConnection();
+
             throw new NotImplementedException();
         }
 

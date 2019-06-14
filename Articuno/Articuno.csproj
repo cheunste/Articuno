@@ -73,7 +73,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Articuno.cs" />
+    <Compile Include="ArticunoMain.cs" />
     <Compile Include="DatabaseInterface.cs" />
     <Compile Include="MetTower.cs" />
     <Compile Include="OpcServer.cs" />
@@ -82,6 +82,7 @@
     <Compile Include="Timer.cs" />
     <Compile Include="Turbine.cs" />
     <Compile Include="TurbineFactory.cs" />
+    <Compile Include="TurbineInterface.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
