@@ -47,7 +47,7 @@ namespace ArticunoTest
         [TestMethod]
         public void getTagValueFromTurbine()
         {
-           
+
             //Write some random values to known tags in the test server. Hard coding is fine in this case 
             // AS LONG AS YOU HAVE THE NAME OF THE OPC TAG RIGHT
             // Note that OPC Tag is case sensative...apparently.
@@ -82,39 +82,50 @@ namespace ArticunoTest
         }
 
         [TestMethod]
-        public  void getTagNameFromTurbine()
+        public void getTagNameFromTurbine()
         {
             List<string> temp;
             temp = tf.getTurbineWindSpeedTag();
             printOutTags(temp);
-            temp= tf.getOperatingStateTag();
+            temp = tf.getOperatingStateTag();
             printOutTags(temp);
-            temp= tf.getNrsStateTag();
+            temp = tf.getNrsStateTag();
             printOutTags(temp);
-            temp= tf.getHumidityTag();
+            temp = tf.getHumidityTag();
             printOutTags(temp);
-            temp= tf.getTemperatureTag();
+            temp = tf.getTemperatureTag();
             printOutTags(temp);
-            temp= tf.getLoadShutdownTag();
+            temp = tf.getLoadShutdownTag();
             printOutTags(temp);
-            temp= tf.getTurbineCtrTag();
+            temp = tf.getTurbineCtrTag();
             printOutTags(temp);
-            temp= tf.getRotorSpeedTag();
+            temp = tf.getRotorSpeedTag();
             printOutTags(temp);
         }
 
         [TestMethod]
         public void writeLoadShutDown()
         {
-            List<Turbine> turbineList =(List<Turbine>)tf.getTurbineList();
+            List<Turbine> turbineList = (List<Turbine>)tf.getTurbineList();
 
-            foreach(Turbine turbine in turbineList)
+            foreach (Turbine turbine in turbineList)
             {
                 double temp = turbine.writeLoadShutdownCmd();
                 //Console.WriteLine(turbine.writeLoadShutdownCmd());
                 Assert.AreEqual(temp, 1.00, 1.001);
             }
+        }
 
+        [TestMethod]
+        public void testAlarm()
+        {
+            List<Turbine> turbineList = (List<Turbine>)tf.getTurbineList();
+
+            foreach (Turbine turbine in turbineList)
+            {
+                turbine.writeAlarmTagValue(5);
+                Assert.AreEqual(turbine.readAlarmValue(),5.00);
+            }
 
         }
 

@@ -149,6 +149,10 @@ namespace Articuno
             }
             //throw new NotImplementedException();
         }
+        public void writeAlarmTagValue(Object value)
+        {
+            client.WriteItemValue("", OpcServerName, turbineAlarmTag, Convert.ToDouble(value));
+        }
 
         //Misc functions
         public string getTurbinePrefixValue() { return this.turbinePrefix; }

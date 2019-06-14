@@ -94,11 +94,11 @@ namespace Articuno
                 reader.Read();
                 //turbine.setLoadShutdownTag(reader["Pause"].ToString());
                 //turbine.setNrsStateTag(reader["NrsMode"].ToString());
-                //turbine.setOperatingStateTag(reader["OperatingState"].ToString());
+                turbine.setOperatingStateTag(reader["OperatingState"].ToString());
                 turbine.setRotorSpeedTag(reader["RotorSpeed"].ToString());
                 turbine.setTemperatureTag(reader["Temperature"].ToString());
                 turbine.setWindSpeedTag(reader["WindSpeed"].ToString());
-                //turbine.setParticipationTag(reader["Participation"].ToString());
+                turbine.setParticipationTag(reader["Participation"].ToString());
 
                 //For Turbine tags from the TurbineOutputTags Table There might be duplicates
                 cmd = String.Format("SELECT * " +
@@ -108,8 +108,6 @@ namespace Articuno
 
                 turbine.setAlarmTag(reader["Alarm"].ToString());
                 turbine.setNrsStateTag(reader["NrsMode"].ToString());
-                turbine.setOperatingStateTag(reader["OperatingState"].ToString());
-                turbine.setParticipationTag(reader["Participation"].ToString());
                 turbine.setLoadShutdownTag(reader["Pause"].ToString());
 
                 //Add turbine to the turbine list
@@ -128,7 +126,7 @@ namespace Articuno
             {
                 if (turbineInList.Equals(turbine))
                 {
-                    log.Info("Attempting to pause turbine " + turbine.getTurbinePrefixValue() + " from the factory");
+                    log.InfoFormat("Attempting to pause turbine {0} from the factory",turbine.getTurbinePrefixValue());
                     turbine.writeLoadShutdownCmd();
                 }
             }
@@ -144,7 +142,7 @@ namespace Articuno
             {
                 if (turbineInList.getTurbinePrefixValue().Equals(turbinePrefix))
                 {
-                    log.Info("Attempting to pause turbine " + turbineInList.getTurbinePrefixValue() + " from the factory");
+                    log.InfoFormat("Attempting to pause turbine {0} from the factory",turbineInList.getTurbinePrefixValue());
                     turbineInList.writeLoadShutdownCmd();
                 }
             }
