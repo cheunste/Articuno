@@ -129,21 +129,6 @@ namespace ArticunoTest
 
         }
 
-        [TestMethod]
-        public void writeLoadShutDown()
-        {
-            List<Turbine> turbineList =(List<Turbine>)tf.getTurbineList();
-
-            foreach(Turbine turbine in turbineList)
-            {
-                double temp = turbine.writeLoadShutdownCmd();
-                //Console.WriteLine(turbine.writeLoadShutdownCmd());
-                Assert.AreEqual(temp, 1.00, 1.001);
-            }
-
-
-        }
-
         private void printOutTags(List<string> printOutList)
         {
             foreach(var item in printOutList)
