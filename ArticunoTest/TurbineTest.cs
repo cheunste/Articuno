@@ -2,6 +2,7 @@
 using System.Text;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Articuno;
 
 namespace ArticunoTest
 {
@@ -11,29 +12,14 @@ namespace ArticunoTest
     [TestClass]
     public class TurbineTest
     {
+        private TurbineFactory tf;
+
         public TurbineTest()
         {
-            //
-            // TODO: Add constructor logic here
-            //
-        }
-
-        private TestContext testContextInstance;
-
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext
-        {
-            get
-            {
-                return testContextInstance;
-            }
-            set
-            {
-                testContextInstance = value;
-            }
+            List<string> newList = new List<string>();
+            newList.Add("T001");
+            tf = new TurbineFactory(newList, "SV.OPCDAServer.1");
+            tf.createTurbines();
         }
 
         #region Additional test attributes
@@ -59,11 +45,114 @@ namespace ArticunoTest
         #endregion
 
         [TestMethod]
-        public void TestMethod1()
+        public void getTagValueFromTurbine()
         {
-            //
-            // TODO: Add test logic here
-            //
+
+            //Write some random values to known tags in the test server. Hard coding is fine in this case 
+            // AS LONG AS YOU HAVE THE NAME OF THE OPC TAG RIGHT
+            // Note that OPC Tag is case sensative...apparently.
+            var testValue = 8.12;
+
+            //Read 
+            List<Object> bar = (List<Object>)tf.readTurbineWindSpeedTag();
+            foreach (object foo in bar)
+            {
+                Console.WriteLine(Convert.ToDouble(foo));
+                Assert.AreEqual(Convert.ToDouble(foo), testValue, 0.002);
+            }
+
+            bar.Clear();
+            testValue = 0;
+            bar = (List<Object>)tf.readRotorSpeedTag();
+            foreach (object foo in bar)
+            {
+                Console.WriteLine(Convert.ToDouble(foo));
+                Assert.AreEqual(Convert.ToDouble(foo), testValue, 0.002);
+            }
+
+            bar.Clear();
+            testValue = 100;
+            bar = (List<Object>)tf.readOperatingStateTag();
+            foreach (object foo in bar)
+            {
+                Console.WriteLine(Convert.ToDouble(foo));
+                Assert.AreEqual(Convert.ToDouble(foo), testValue, 0.002);
+            }
+
+        }
+
+        [TestMethod]
+        public void getTagNameFromTurbine()
+        {
+            List<string> temp;
+            temp = tf.getTurbineWindSpeedTag();
+            printOutTags(temp);
+            temp = tf.getOperatingStateTag();
+            printOutTags(temp);
+            temp = tf.getNrsStateTag();
+            printOutTags(temp);
+            temp = tf.getHumidityTag();
+            printOutTags(temp);
+            temp = tf.getTemperatureTag();
+            printOutTags(temp);
+            temp = tf.getLoadShutdownTag();
+            printOutTags(temp);
+            temp = tf.getTurbineCtrTag();
+            printOutTags(temp);
+            temp = tf.getRotorSpeedTag();
+            printOutTags(temp);
+        }
+
+        [TestMethod]
+        public void writeLoadShutDown()
+        {
+            List<Turbine> turbineList = (List<Turbine>)tf.getTurbineList();
+
+            foreach (Turbine turbine in turbineList)
+            {
+                double temp = turbine.writeLoadShutdownCmd();
+                //Console.WriteLine(turbine.writeLoadShutdownCmd());
+                Assert.AreEqual(temp, 1.00, 1.001);
+            }
+        }
+
+        [TestMethod]
+        public void testAlarm()
+        {
+            List<Turbine> turbineList = (List<Turbine>)tf.getTurbineList();
+
+            foreach (Turbine turbine in turbineList)
+            {
+                turbine.writeAlarmTagValue(5);
+                Assert.AreEqual(turbine.readAlarmValue(),5.00);
+            }
+
+        }
+
+        [TestMethod]
+        public void writeLoadShutDown()
+        {
+            List<Turbine> turbineList =(List<Turbine>)tf.getTurbineList();
+
+            foreach(Turbine turbine in turbineList)
+            {
+                double temp = turbine.writeLoadShutdownCmd();
+                //Console.WriteLine(turbine.writeLoadShutdownCmd());
+                Assert.AreEqual(temp, 1.00, 1.001);
+            }
+
+
+        }
+
+        private void printOutTags(List<string> printOutList)
+        {
+            foreach(var item in printOutList)
+            {
+                Console.WriteLine(item);
+                //Assert.IsNotNull(item);
+
+            }
+
         }
     }
 }
