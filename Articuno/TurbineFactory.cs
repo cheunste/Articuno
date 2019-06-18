@@ -100,6 +100,9 @@ namespace Articuno
                 turbine.setWindSpeedTag(reader["WindSpeed"].ToString());
                 turbine.setParticipationTag(reader["Participation"].ToString());
 
+                string primMetTower = reader["MetReference"].ToString();
+                 
+
                 //For Turbine tags from the TurbineOutputTags Table There might be duplicates
                 cmd = String.Format("SELECT * " +
                     "from TurbineOutputTags WHERE TurbineId='{0}'", turbinePrefix);
