@@ -154,32 +154,20 @@ namespace Articuno
         {
             MetTower met = getMetTower(metId);
             var tuple = tempQualityCheck(met, met.getPrimTemperatureTag(), met.getSecTemperatureTag());
-            if (tuple.Item1)
-            {
-                return tuple.Item2;
-            }
-            else
-            {
-                return null;
-            }
+            if (tuple.Item1) { return tuple.Item2; }
+            else { return null; }
+
         }
 
         public double getHumidity(string metId)
         {
             MetTower met = getMetTower(metId);
-            var rhQuality = rhQualityCheck((Double)met.readRelativeHumidityValue());
+            var rhQuality = rhQualityCheck(met);
 
             //If the quality for the  humidty value is bad then an alarm should trigger
             //The value is already capped off at 0.00% or 100%
-            if (!rhQuality.Item1)
-            {
-                //Raise RH out of range alarm and log it
-                raiseAlarm(met, MetTowerEnum.HumidityOutOfRange);
-            }
-            else
-            {
-                clearAlarm(met, MetTowerEnum.HumidityOutOfRange);
-            }
+            if (!rhQuality.Item1) { raiseAlarm(met, MetTowerEnum.HumidityOutOfRange); }
+            else { clearAlarm(met, MetTowerEnum.HumidityOutOfRange); }
             return rhQuality.Item2;
         }
 
@@ -201,10 +189,7 @@ namespace Articuno
         /// <param name="ambTemp">The ambient temperature value (Celcius) from the met tower in double format</param>
         /// <param name="dewPointTemp">The dew point temperature from calculateDewPoint</param>
         /// <returns>The delta temperature in double format</returns>
-        public double calculateDelta(double ambTemp, double dewPointTemp)
-        {
-            return Math.Abs(ambTemp - dewPointTemp);
-        }
+        public double calculateDelta(double ambTemp, double dewPointTemp) { return Math.Abs(ambTemp - dewPointTemp); }
 
         /// <summary>
         /// Check the quality of the met tower
@@ -214,6 +199,7 @@ namespace Articuno
         /// <returns></returns>
         public bool checkMetTower(double ambTemp, double rh)
         {
+            //Todo: Implement
             throw new NotImplementedException();
         }
 
@@ -222,22 +208,32 @@ namespace Articuno
         /// Returns true if quality is good. False otherwise
         /// </summary>
         /// <returns>Returns True if good quality, False if bad</returns>
-        public Tuple<bool, double> rhQualityCheck(double rh)
+        public Tuple<bool, double> rhQualityCheck(MetTower met)
         {
+
+            var rhOpcObject = met.readRelativeHumidityValue();
+            double rh = (Double)rhOpcObject;
             double minValue = 0.0;
             double maxValue = 100.0;
 
+            bool state = true;
+
+
             //Bad Quality
+            //Set primay relative humidty to either 0 (if below 0) or 100 (if above zero)
             if (rh < 0.0 || rh > 100.0)
             {
-                //Cap it off and throw an alarm
-                //Set primay relative humidty to either 0 (if below 0) or 100 (if above zero)
-                return new Tuple<bool, double>(false, ((rh < 0.0) ? 0.0 : 100.0));
+                state = false;
+                rh = ((Math.Abs(0.0 - rh) > 0.0001) ? 0.0 : 100.0);
             }
-            //Normal operation 
-            else { return new Tuple<bool, double>(true, rh); }
-        }
+            if (!(met.isQualityGood(met.getRelativeHumidityTag())))
+            {
+                state = false;
+            }
 
+            return new Tuple<bool, double>(state, rh);
+
+        }
         /// <summary>
         /// Checks the quality of the temperature of the current met tower. 
         /// Returns true if quality is good. False otherwise
@@ -250,15 +246,9 @@ namespace Articuno
             double minValue = -20.0;
             double maxValue = 60.0;
             //Bad Quality
-            if (tempValue < minValue || tempValue > maxValue)
-            {
-                return new Tuple<bool, double>(false, ((tempValue < minValue) ? minValue : maxValue));
-            }
+            if (tempValue < minValue || tempValue > maxValue) { return new Tuple<bool, double>(false, ((tempValue < minValue) ? minValue : maxValue)); }
             //Normal oepration
-            else
-            {
-                return new Tuple<bool, double>(true, tempValue);
-            }
+            else { return new Tuple<bool, double>(true, tempValue); }
         }
 
         /// <summary>
@@ -267,37 +257,37 @@ namespace Articuno
         /// <returns>Returns True if good quality, False if bad</returns>
         private Tuple<bool, double, double> tempQualityCheck(MetTower met, string primTempTag, string secTempTag)
         {
-            //If both cases are true, then both sensors are working correctly
 
             //call the ValueQuatliyCheck method to verify
-            var primTempCheck = tempValueQualityCheck(primTempTag);
-            var secTempCheck = tempValueQualityCheck(secTempTag);
+            var primTempCheckTuple = tempValueQualityCheck(primTempTag);
+            var secTempCheckTuple = tempValueQualityCheck(secTempTag);
 
             //normal operaiton
-            if ((primTempCheck.Item1) && (secTempCheck.Item1))
+            //If both cases are true, then both sensors are working correctly
+            if ((primTempCheckTuple.Item1) && (secTempCheckTuple.Item1))
             {
                 clearAlarm(met, MetTowerEnum.PrimSensorQuality);
                 clearAlarm(met, MetTowerEnum.SecSensorQuality);
-                return new Tuple<bool, double, double>(true, primTempCheck.Item2, secTempCheck.Item2);
+                return new Tuple<bool, double, double>(true, primTempCheckTuple.Item2, secTempCheckTuple.Item2);
             }
             //only the secondary Temperature value is suspect. Raise temperature out of range alarm for Temp sensor 1  
-            else if (primTempCheck.Item1 && !secTempCheck.Item1)
+            else if (primTempCheckTuple.Item1 && !secTempCheckTuple.Item1)
             {
                 raiseAlarm(met, MetTowerEnum.PrimSensorQuality);
-                return new Tuple<bool, double, double>(true, primTempCheck.Item2, secTempCheck.Item2);
+                return new Tuple<bool, double, double>(true, primTempCheckTuple.Item2, secTempCheckTuple.Item2);
             }
             //only the primary Temperature value is suspect Raise temperature out of range alarm for Temp sensor 2  
-            else if (!primTempCheck.Item1 && secTempCheck.Item1)
+            else if (!primTempCheckTuple.Item1 && secTempCheckTuple.Item1)
             {
                 raiseAlarm(met, MetTowerEnum.SecSensorQuality);
-                return new Tuple<bool, double, double>(true, primTempCheck.Item2, secTempCheck.Item2);
+                return new Tuple<bool, double, double>(true, primTempCheckTuple.Item2, secTempCheckTuple.Item2);
             }
             //If both sensors are bad.  Use turbine data. Raise alarm
             else
             {
                 raiseAlarm(met, MetTowerEnum.PrimSensorQuality);
                 raiseAlarm(met, MetTowerEnum.SecSensorQuality);
-                return new Tuple<bool, double, double>(false, primTempCheck.Item2, secTempCheck.Item2);
+                return new Tuple<bool, double, double>(false, primTempCheckTuple.Item2, secTempCheckTuple.Item2);
             }
         }
 
@@ -366,7 +356,8 @@ namespace Articuno
             switch (metTowerEnum)
             {
                 case MetTowerEnum.HumidityOutOfRange:
-                    if ((bool)mt.readHumidityOutOfRng() != GOOD_QUALITY) {
+                    if ((bool)mt.readHumidityOutOfRng() != GOOD_QUALITY)
+                    {
                         log.InfoFormat("{0} Humidity sensor out of range alarm cleared", mt.getMetTowerPrefix);
                         mt.writeHumidityOutOfRng(GOOD_QUALITY);
                     }
