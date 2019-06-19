@@ -101,6 +101,8 @@ namespace Articuno
                 turbine.setParticipationTag(reader["Participation"].ToString());
 
                 string primMetTower = reader["MetReference"].ToString();
+                MetTowerMediator.getMetTower(primMetTower);
+
                 try
                 {
                     //If the RedundancyForMet is not empty, then that means
