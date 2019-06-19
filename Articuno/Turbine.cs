@@ -166,22 +166,20 @@ namespace Articuno
         public void setTurbinePerformanceCondition(bool state) { turbinePerformanceConditionMet = state; }
         public void setDeRateCondition(bool state) { derateConditionMet = state; }
 
-        //Met Tower related methods for turbines. One sets the met tower reference (upon create) and the other gets it. 
-        //These can be set to another reference  if/when they fail
-        //The set Met Reference takes in a MetTower object
+        /*
+         * Met Tower related methods for turbines. 
+         * One sets the met tower reference (upon create) and the other gets it. 
+         * These can be set to another reference  if/when they fail 
+         * The set Met Reference takes in a MetTower object
+         */
+
         public void setPrimaryMetReference(MetTower metTower) { this.primaryMet = metTower; }
         public void setSecondaryMetReference(MetTower metTower) { this.secondaryMet = metTower; }
         public MetTower getPrimaryMetReference() { return this.primaryMet; }
         public MetTower getSecondaryMetReference() { return this.secondaryMet; }
-
-        //This is an odd method. This is essentually subscribing to another class (Met Tower observer) and monitor if there has been a change in met tower status. 
-        //As in, if one or both met towers are down.
-        //Probably should be separate into another class, but man, I rather not have another class to manage
-        //Not implemented yet. Have to go back to the design board on this one
-        public void useMetTower()
-        {
-            throw new NotImplementedException();
-        }
+        
+        public void setMetBackup(bool tag) { isMetTowerBackup = tag; }
+        public bool getMetTowerBackup() { return isMetTowerBackup; }
 
         //Function to determine participation
         public  void setParticipation(bool participationStatus) { articunoParicipation = participationStatus; }

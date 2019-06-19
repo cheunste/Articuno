@@ -22,12 +22,13 @@ namespace Articuno
         private string SERVER_NAME_QUERY =
             "SELECT OpcTag FROM SystemInputTags WHERE Description ='OpcServerName'";
         private string opcServerName;
-        private List<MetTower> metTowerList = new List<MetTower>();
+        private static List<MetTower> metTowerList = new List<MetTower>();
         private EasyDAClient client = new EasyDAClient();
 
         //constant doubles for quality
         private bool BAD_QUALITY = false;
         private bool GOOD_QUALITY = true;
+
 
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(TurbineFactory));
@@ -88,7 +89,7 @@ namespace Articuno
         /// Get the Met tower given an metTowerId (ie Met1, Met2)
         /// </summary>
         /// <param name="metTowerId"></param>
-        /// <returns>A Met Tower Object</returns>
+        /// <returns>A Met Tower Object if exist. Null otherwise</returns>
         public MetTower getMetTower(string metTowerId)
         {
             if (metTowerList.Count == 0)
@@ -107,6 +108,7 @@ namespace Articuno
         }
 
 
+
         /// <summary>
         /// Returns a tuple containing an ambient Temperature, a relative humidity, calculated dew point and a temperature delta given a met tower id
         /// </summary>
@@ -116,16 +118,15 @@ namespace Articuno
         {
             var temperature = getTemperature(metId);
             double ambTemp;
-            //Check if the value returned from getTemperature is null or now
-            if (temperature == null)
+            //Check if the value returned from getTemperature is null or not
+            if (temperature != null)
             {
                 ambTemp = (Double)temperature;
             }
-            //If null, then that means you need to get the temperature from the turbines. TurbineMediator have a function to do this
+            //If null, then that means you need to get the temperature from the turbines. 
             else
             {
-                //TODO: Implement
-                throw new NotImplementedException();
+                ambTemp = (double) getMetTower(metId).getNearestTurbine().readTurbineTemperatureValue();
             }
             double rh = getHumidity(metId);
             double dew = calculateDewPoint(rh, ambTemp);
@@ -397,6 +398,17 @@ namespace Articuno
                         mt.writeTemperatureSecOutOfRange(GOOD_QUALITY);
                     }
                     break;
+            }
+        }
+
+        public static void setTurbineBackup(string metId, Turbine turbine)
+        {
+            for (int i = 0; i <= metTowerList.Count; i++)
+            {
+                if (metTowerList.ElementAt(i).getMetTowerPrefix.Equals(metId))
+                {
+                    metTowerList.ElementAt(i).setNearestTurbine(turbine);
+                }
             }
         }
 
