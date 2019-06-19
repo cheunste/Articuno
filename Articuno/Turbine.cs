@@ -16,10 +16,10 @@ namespace Articuno
     /// </summary>
 
 
-        /*
-         * This is the turbine class. It represents a turbine object in Articuno 
-         * It probably should be an interface...but having an interface to create just one type of turbine seems kinda redundant. That's why I have a factory class
-         */
+    /*
+     * This is the turbine class. It represents a turbine object in Articuno 
+     * It probably should be an interface...but having an interface to create just one type of turbine seems kinda redundant. That's why I have a factory class
+     */
     class Turbine
     {
         //Instance of OPC server
@@ -60,6 +60,7 @@ namespace Articuno
         //Met Tower Fields
         private MetTower primaryMet;
         private MetTower secondaryMet;
+        private MetTower currentMetTower;
         private bool isMetTowerBackup;
 
 
@@ -67,7 +68,7 @@ namespace Articuno
         private static readonly ILog log = LogManager.GetLogger(typeof(Turbine));
 
         //Constructors
-        public Turbine(string prefix,OpcServer server)
+        public Turbine(string prefix, OpcServer server)
         {
             this.turbinePrefix = prefix;
             this.server = server;
@@ -89,16 +90,16 @@ namespace Articuno
 
         //Methods to get the value for the wind speed, rotor speed, etc. value from the OPC Server
         public Object readWindSpeedValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, this.nacelleWindSpeed); }
-        public Object readRotorSpeedValue() { return new EasyDAClient().ReadItemValue("",OpcServerName,this.rotorSpeed); }
-        public Object readOperatinStateValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,this.operatingState);}
-        public Object readNrsStateValue() { return new EasyDAClient().ReadItemValue("",OpcServerName,this.nrsState);}
-        public Object readTemperatureValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,this.turbineTemperature);}
-        public Object readTurbineCtrValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,this.turbineCtrTag);}
-        public Object readTurbineTemperatureValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,this.turbineTemperature);}
-        public Object readTurbineHumidityValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,turbineHumidity);}
-        public Object readTurbineScalingFactorValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,turbineScalingFactor);}
-        public Object readParticipationValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,turbineParticipationTag);}
-        public Object readAlarmValue() {return new EasyDAClient().ReadItemValue("",OpcServerName,turbineAlarmTag);}
+        public Object readRotorSpeedValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, this.rotorSpeed); }
+        public Object readOperatinStateValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, this.operatingState); }
+        public Object readNrsStateValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, this.nrsState); }
+        public Object readTemperatureValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, this.turbineTemperature); }
+        public Object readTurbineCtrValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, this.turbineCtrTag); }
+        public Object readTurbineTemperatureValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, this.turbineTemperature); }
+        public Object readTurbineHumidityValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, turbineHumidity); }
+        public Object readTurbineScalingFactorValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, turbineScalingFactor); }
+        public Object readParticipationValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, turbineParticipationTag); }
+        public Object readAlarmValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, turbineAlarmTag); }
 
         //Setters to set the member variables to the  OPC tag
         //These are used to set the tag name to the member variable
@@ -130,21 +131,22 @@ namespace Articuno
 
 
         //Theses are used to write to the OP Tag Values.  There shouldn't be too many of these
-        public void writeTurbineCtrValue(int ctrValue) { server.writeTagValue(this.turbineCtrTag,ctrValue); }
+        public void writeTurbineCtrValue(int ctrValue) { server.writeTagValue(this.turbineCtrTag, ctrValue); }
         //Scalign factor is unique as it is not used in the OPC Server and only used internally in this program
         public void writeTurbineSFValue(int scalingFactor) { this.currentTurbSF = scalingFactor; }
         //Load shutdown function. Probably the most important function
-        public double writeLoadShutdownCmd() {
-            log.InfoFormat("Shutdown command for {0} has been sent",this.turbinePrefix);
+        public double writeLoadShutdownCmd()
+        {
+            log.InfoFormat("Shutdown command for {0} has been sent", this.turbinePrefix);
             //server.writeTagValue(loadShutDown, true);
             try
             {
-                client.WriteItemValue("", OpcServerName, getLoadShutdownTag(),1.00);
+                client.WriteItemValue("", OpcServerName, getLoadShutdownTag(), 1.00);
                 return 1.0;
             }
             catch (OpcException opcException)
             {
-                log.ErrorFormat("Error stropping {0}: {1}", this.turbinePrefix,opcException.GetBaseException().Message);
+                log.ErrorFormat("Error stropping {0}: {1}", this.turbinePrefix, opcException.GetBaseException().Message);
                 return -1.0;
             }
             //throw new NotImplementedException();
@@ -177,13 +179,16 @@ namespace Articuno
         public void setSecondaryMetReference(MetTower metTower) { this.secondaryMet = metTower; }
         public MetTower getPrimaryMetReference() { return this.primaryMet; }
         public MetTower getSecondaryMetReference() { return this.secondaryMet; }
-        
+
         public void setMetBackup(bool tag) { isMetTowerBackup = tag; }
         public bool getMetTowerBackup() { return isMetTowerBackup; }
 
         //Function to determine participation
-        public  void setParticipation(bool participationStatus) { articunoParicipation = participationStatus; }
+        public void setParticipation(bool participationStatus) { articunoParicipation = participationStatus; }
         public bool getParticipation() { return articunoParicipation; }
+
+        public void setMetTower(MetTower met) { currentMetTower = met; }
+        public MetTower getMetTower() { return currentMetTower; }
 
     }
 }
