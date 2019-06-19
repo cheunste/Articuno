@@ -265,6 +265,13 @@ namespace Articuno
         public Object readTemperatureSecBadQuality() { return new EasyDAClient().ReadItemValue("", opcServerName, tempSecOutOfRangeTag); }
         public void writeTemperatureSecBadQuality(bool value) { client.WriteItemValue("", opcServerName, tempSecOutOfRangeTag, value); }
 
+
+        public bool isQualityGood(string opcTag)
+        {
+            DAVtq vtq = client.ReadItem(opcServerName,opcTag);
+            return vtq.Quality.IsGood ? true : false;
+        }
+
         //Met Id methods
         public string getMetTowerPrefix
         {
