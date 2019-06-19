@@ -21,27 +21,29 @@ namespace Articuno
 
     internal class MetTower
     {
-        //Constants. Can't Fully Capitalize these ones. Too hard to read. Note the staritng capital letter though
+        //Constants. The following are SQL lite table column
         //Temperature table columns
-        private static string PrimTempValueTag = "PrimTempValueTag";
-        private static string SecTempValueTag = "SecTempValueTag";
-        private static string TempBadQualityTag = "TempBadQualityTag";
-        private static string TempOutOfRangeTag = "TempOutOfRangeTag";
+        private static string PrimTempValueTagColumn = "PrimTempValueTag";
+        private static string SecTempValueColumn = "SecTempValueTag";
+        private static string TempPrimBadQualityColumn = "TempPrimBadQualityTag";
+        private static string TempPrimOutOfRangeColumn = "TempPrimOutOfRangeTag";
+        private static string TempSecBadQualityColumn = "TempSecBadQualityTag";
+        private static string TempSecOutOfRangeColumn = "TempSecOutOfRangeTag";
 
         //Humidity table columns
-        private static string PrimHumidityValueTag = "PrimHumidityValueTag";
-        private static string SecHumidityValueTag = "SecHumidityValueTag";
-        private static string HumidityBadQualityTag = "HumidityBadQualityTag";
-        private static string HumidityOutOfRangeTag = "HumidityOutOfRangeTag";
+        private static string PrimHumidityValueColumn = "PrimHumidityValueTag";
+        private static string SecHumidityValueColumn = "SecHumidityValueTag";
+        private static string HumidityBadQualityColumn = "HumidityBadQualityTag";
+        private static string HumidityOutOfRangeColumn = "HumidityOutOfRangeTag";
 
         //Other table column 
-        private static string NoDataAlarmTag = "NoDataAlarmTag";
-        private static string IceIndicationTag = "IceIndicationTag";
+        private static string NoDataAlarmColumn = "NoDataAlarmTag";
+        private static string IceIndicationColumn = "IceIndicationTag";
 
         //Query constants
-        String TEMPERATURE_QUERY = "SELECT " + PrimTempValueTag + "," + SecTempValueTag + "," + TempBadQualityTag + "," + TempOutOfRangeTag + " FROM MetTower";
-        String RH_QUERY = "SELECT " + PrimHumidityValueTag + "," + SecHumidityValueTag + "," + HumidityBadQualityTag + "," + HumidityOutOfRangeTag + " FROM MetTower";
-        String OTHER_PARAM_QUERY = "SELECT " + NoDataAlarmTag + ", " + IceIndicationTag + " FROM MetTower";
+        String TEMPERATURE_QUERY = "SELECT " + PrimTempValueTagColumn + "," + SecTempValueColumn + "," + TempPrimBadQualityColumn + "," + TempPrimOutOfRangeColumn + " FROM MetTower";
+        String RH_QUERY = "SELECT " + PrimHumidityValueColumn + "," + SecHumidityValueColumn + "," + HumidityBadQualityColumn + "," + HumidityOutOfRangeColumn + " FROM MetTower";
+        String OTHER_PARAM_QUERY = "SELECT " + NoDataAlarmColumn + ", " + IceIndicationColumn + " FROM MetTower";
 
         String INPUT_TAG_QUERY = "SELECT * FROM MetTowerInputTags";
         String OTUPUT_TAG_QUERY = "SELECT * FROM MetTowerOutputTags";
@@ -64,8 +66,10 @@ namespace Articuno
         //For temperature
         private string primTempTag;
         private string secTempTag;
-        private string tempBadQualityTag;
-        private string tempOutOfRangeTag;
+        private string tempPrimBadQualityTag;
+        private string tempPrimOutOfRangeTag;
+        private string tempSecBadQualityTag;
+        private string tempSecOutOfRangeTag;
 
         //For humidity
         private string primRHTag;
@@ -137,20 +141,20 @@ namespace Articuno
             //Get everything relating to the MetTowerInputTags table
             SQLiteDataReader reader = dbi.readCommand(INPUT_TAG_QUERY + " HWERE MetId=" + MetId);
             reader.Read();
-            this.primTempTag = reader[PrimTempValueTag].ToString();
-            this.secTempTag = reader[SecTempValueTag].ToString();
-            this.primRHTag = reader[PrimHumidityValueTag].ToString();
-            this.secRHTag = reader[SecHumidityValueTag].ToString();
+            this.primTempTag = reader[PrimTempValueTagColumn].ToString();
+            this.secTempTag = reader[SecTempValueColumn].ToString();
+            this.primRHTag = reader[PrimHumidityValueColumn].ToString();
+            this.secRHTag = reader[SecHumidityValueColumn].ToString();
 
             //Get everything relating to the MetTowerOutputTags table
             reader = dbi.readCommand(OTUPUT_TAG_QUERY + " WHERE MetId=" + MetId);
             reader.Read();
-            this.tempBadQualityTag = reader[TempBadQualityTag].ToString();
-            this.tempOutOfRangeTag = reader[TempOutOfRangeTag].ToString();
-            this.iceIndicationTag = reader[IceIndicationTag].ToString();
-            this.rhOutOfRangeTag = reader[HumidityOutOfRangeTag].ToString();
-            this.rhBadQualityTag = reader[HumidityBadQualityTag].ToString();
-            this.noDataAlarmTag = reader[NoDataAlarmTag].ToString();
+            this.tempPrimBadQualityTag = reader[TempPrimBadQualityColumn].ToString();
+            this.tempPrimOutOfRangeTag = reader[TempPrimOutOfRangeColumn].ToString();
+            this.iceIndicationTag = reader[IceIndicationColumn].ToString();
+            this.rhOutOfRangeTag = reader[HumidityOutOfRangeColumn].ToString();
+            this.rhBadQualityTag = reader[HumidityBadQualityColumn].ToString();
+            this.noDataAlarmTag = reader[NoDataAlarmColumn].ToString();
 
             dbi.closeConnection();
         }
@@ -243,6 +247,23 @@ namespace Articuno
         //Threshold setters and getters
         public double AmbTempThreshold { get; set; }
         public double DeltaTempThreshold { get; set; }
+
+        //The following are for humidity out of range, bad quality, etc.
+        public Object readHumidityOutOfRng() { return new EasyDAClient().ReadItemValue("", opcServerName, rhOutOfRangeTag); }
+        public void writeHumidityOutOfRng(double value) { client.WriteItemValue("", opcServerName, rhOutOfRangeTag, value); }
+        public Object readHumidityBadQuality() { return new EasyDAClient().ReadItemValue("", opcServerName, rhBadQualityTag); }
+        public void writeHumidityBadQuality(double value) { client.WriteItemValue("", opcServerName, rhBadQualityTag, value); }
+
+        //The following are for temperature out of range, bad quality
+        public Object readTemperaturePrimOutOfRange() { return new EasyDAClient().ReadItemValue("", opcServerName, tempPrimOutOfRangeTag); }
+        public void writeTemperaturePrimOutOfRange(double value) { client.WriteItemValue("", opcServerName, tempPrimOutOfRangeTag, value); }
+        public Object readTemperaturePrimBadQuality() { return new EasyDAClient().ReadItemValue("", opcServerName, tempPrimOutOfRangeTag); }
+        public void writeTemperaturePrimBadQuality(double value) { client.WriteItemValue("", opcServerName, tempPrimOutOfRangeTag, value); }
+
+        public Object readTemperatureSecOutOfRange() { return new EasyDAClient().ReadItemValue("", opcServerName, tempSecOutOfRangeTag); }
+        public void writeTemperatureSecOutOfRange(double value) { client.WriteItemValue("", opcServerName, tempSecOutOfRangeTag, value); }
+        public Object readTemperatureSecBadQuality() { return new EasyDAClient().ReadItemValue("", opcServerName, tempSecOutOfRangeTag); }
+        public void writeTemperatureSecBadQuality(double value) { client.WriteItemValue("", opcServerName, tempSecOutOfRangeTag, value); }
 
         //Met Id methods
         public string getMetTowerPrefix
