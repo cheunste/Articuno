@@ -23,30 +23,30 @@ namespace Articuno
     {
         //Constants. The following are SQL lite table column
         //Temperature table columns
-        private static string PrimTempValueTagColumn = "PrimTempValueTag";
-        private static string SecTempValueColumn = "SecTempValueTag";
-        private static string TempPrimBadQualityColumn = "TempPrimBadQualityTag";
-        private static string TempPrimOutOfRangeColumn = "TempPrimOutOfRangeTag";
-        private static string TempSecBadQualityColumn = "TempSecBadQualityTag";
-        private static string TempSecOutOfRangeColumn = "TempSecOutOfRangeTag";
+        private static readonly string PrimTempValueTagColumn = "PrimTempValueTag";
+        private static readonly string SecTempValueColumn = "SecTempValueTag";
+        private static readonly string TempPrimBadQualityColumn = "TempPrimBadQualityTag";
+        private static readonly string TempPrimOutOfRangeColumn = "TempPrimOutOfRangeTag";
+        private static readonly string TempSecBadQualityColumn = "TempSecBadQualityTag";
+        private static readonly string TempSecOutOfRangeColumn = "TempSecOutOfRangeTag";
 
         //Humidity table columns
-        private static string PrimHumidityValueColumn = "PrimHumidityValueTag";
-        private static string SecHumidityValueColumn = "SecHumidityValueTag";
-        private static string HumidityBadQualityColumn = "HumidityBadQualityTag";
-        private static string HumidityOutOfRangeColumn = "HumidityOutOfRangeTag";
+        private static readonly string PrimHumidityValueColumn = "PrimHumidityValueTag";
+        private static readonly string SecHumidityValueColumn = "SecHumidityValueTag";
+        private static readonly string HumidityBadQualityColumn = "HumidityBadQualityTag";
+        private static readonly string HumidityOutOfRangeColumn = "HumidityOutOfRangeTag";
 
         //Other table column 
-        private static string NoDataAlarmColumn = "NoDataAlarmTag";
-        private static string IceIndicationColumn = "IceIndicationTag";
+        private static readonly string NoDataAlarmColumn = "NoDataAlarmTag";
+        private static readonly string IceIndicationColumn = "IceIndicationTag";
 
         //Query constants
-        String TEMPERATURE_QUERY = "SELECT " + PrimTempValueTagColumn + "," + SecTempValueColumn + "," + TempPrimBadQualityColumn + "," + TempPrimOutOfRangeColumn + " FROM MetTower";
-        String RH_QUERY = "SELECT " + PrimHumidityValueColumn + "," + SecHumidityValueColumn + "," + HumidityBadQualityColumn + "," + HumidityOutOfRangeColumn + " FROM MetTower";
-        String OTHER_PARAM_QUERY = "SELECT " + NoDataAlarmColumn + ", " + IceIndicationColumn + " FROM MetTower";
+        readonly String TEMPERATURE_QUERY = "SELECT " + PrimTempValueTagColumn + "," + SecTempValueColumn + "," + TempPrimBadQualityColumn + "," + TempPrimOutOfRangeColumn + " FROM MetTower";
+        readonly String RH_QUERY = "SELECT " + PrimHumidityValueColumn + "," + SecHumidityValueColumn + "," + HumidityBadQualityColumn + "," + HumidityOutOfRangeColumn + " FROM MetTower";
+        readonly String OTHER_PARAM_QUERY = "SELECT " + NoDataAlarmColumn + ", " + IceIndicationColumn + " FROM MetTower";
 
-        String INPUT_TAG_QUERY = "SELECT * FROM MetTowerInputTags";
-        String OTUPUT_TAG_QUERY = "SELECT * FROM MetTowerOutputTags";
+        readonly String INPUT_TAG_QUERY = "SELECT * FROM MetTowerInputTags";
+        readonly String OTUPUT_TAG_QUERY = "SELECT * FROM MetTowerOutputTags";
 
         //Member variables;
         //Member doubles 
@@ -250,20 +250,20 @@ namespace Articuno
 
         //The following are for humidity out of range, bad quality, etc.
         public Object readHumidityOutOfRng() { return new EasyDAClient().ReadItemValue("", opcServerName, rhOutOfRangeTag); }
-        public void writeHumidityOutOfRng(double value) { client.WriteItemValue("", opcServerName, rhOutOfRangeTag, value); }
+        public void writeHumidityOutOfRng(bool value) { client.WriteItemValue("", opcServerName, rhOutOfRangeTag, value); }
         public Object readHumidityBadQuality() { return new EasyDAClient().ReadItemValue("", opcServerName, rhBadQualityTag); }
-        public void writeHumidityBadQuality(double value) { client.WriteItemValue("", opcServerName, rhBadQualityTag, value); }
+        public void writeHumidityBadQuality(bool value) { client.WriteItemValue("", opcServerName, rhBadQualityTag, value); }
 
         //The following are for temperature out of range, bad quality
         public Object readTemperaturePrimOutOfRange() { return new EasyDAClient().ReadItemValue("", opcServerName, tempPrimOutOfRangeTag); }
-        public void writeTemperaturePrimOutOfRange(double value) { client.WriteItemValue("", opcServerName, tempPrimOutOfRangeTag, value); }
+        public void writeTemperaturePrimOutOfRange(bool value) { client.WriteItemValue("", opcServerName, tempPrimOutOfRangeTag, value); }
         public Object readTemperaturePrimBadQuality() { return new EasyDAClient().ReadItemValue("", opcServerName, tempPrimOutOfRangeTag); }
-        public void writeTemperaturePrimBadQuality(double value) { client.WriteItemValue("", opcServerName, tempPrimOutOfRangeTag, value); }
+        public void writeTemperaturePrimBadQuality(bool value) { client.WriteItemValue("", opcServerName, tempPrimOutOfRangeTag, value); }
 
         public Object readTemperatureSecOutOfRange() { return new EasyDAClient().ReadItemValue("", opcServerName, tempSecOutOfRangeTag); }
-        public void writeTemperatureSecOutOfRange(double value) { client.WriteItemValue("", opcServerName, tempSecOutOfRangeTag, value); }
+        public void writeTemperatureSecOutOfRange(bool value) { client.WriteItemValue("", opcServerName, tempSecOutOfRangeTag, value); }
         public Object readTemperatureSecBadQuality() { return new EasyDAClient().ReadItemValue("", opcServerName, tempSecOutOfRangeTag); }
-        public void writeTemperatureSecBadQuality(double value) { client.WriteItemValue("", opcServerName, tempSecOutOfRangeTag, value); }
+        public void writeTemperatureSecBadQuality(bool value) { client.WriteItemValue("", opcServerName, tempSecOutOfRangeTag, value); }
 
         //Met Id methods
         public string getMetTowerPrefix
