@@ -81,6 +81,9 @@ namespace Articuno
         private string noDataAlarmTag;
         private string iceIndicationTag;
 
+        //Turbine reference (for backup)
+        private Turbine nearestTurbine;
+
         //opc server
         private OpcServer opcServer;
         private string opcServerName;
@@ -268,7 +271,7 @@ namespace Articuno
 
         public bool isQualityGood(string opcTag)
         {
-            DAVtq vtq = client.ReadItem(opcServerName,opcTag);
+            DAVtq vtq = client.ReadItem(opcServerName, opcTag);
             return vtq.Quality.IsGood ? true : false;
         }
 
@@ -280,5 +283,8 @@ namespace Articuno
 
         }
 
+        //turbien methods for measurement reduedancy
+        public void setNearestTurbine(Turbine turbine) { nearestTurbine = turbine; }
+        public Turbine getNearestTurbine() { return nearestTurbine; }
     }
 }

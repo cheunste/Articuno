@@ -100,6 +100,22 @@ namespace Articuno
                 turbine.setWindSpeedTag(reader["WindSpeed"].ToString());
                 turbine.setParticipationTag(reader["Participation"].ToString());
 
+                string primMetTower = reader["MetReference"].ToString();
+                try
+                {
+                    //If the RedundancyForMet is not empty, then that means
+                    //The met tower is noted to be used as a temperature measurement source
+                    //In case a met tower fails
+                    if (reader["RedundancyForMet"].ToString() != null) {
+                        string backupMetTower = reader["RedundancyForMet"].ToString();
+                        MetTowerMediator.setTurbineBackup(backupMetTower,turbine);
+                    }
+                }
+                catch (Exception e)
+                {
+                    //no operation. Reaching here implies this met tower isn't set up for redundancy 
+                }
+
                 //For Turbine tags from the TurbineOutputTags Table There might be duplicates
                 cmd = String.Format("SELECT * " +
                     "from TurbineOutputTags WHERE TurbineId='{0}'", turbinePrefix);
@@ -126,7 +142,7 @@ namespace Articuno
             {
                 if (turbineInList.Equals(turbine))
                 {
-                    log.InfoFormat("Attempting to pause turbine {0} from the factory",turbine.getTurbinePrefixValue());
+                    log.InfoFormat("Attempting to pause turbine {0} from the factory", turbine.getTurbinePrefixValue());
                     turbine.writeLoadShutdownCmd();
                 }
             }
@@ -142,7 +158,7 @@ namespace Articuno
             {
                 if (turbineInList.getTurbinePrefixValue().Equals(turbinePrefix))
                 {
-                    log.InfoFormat("Attempting to pause turbine {0} from the factory",turbineInList.getTurbinePrefixValue());
+                    log.InfoFormat("Attempting to pause turbine {0} from the factory", turbineInList.getTurbinePrefixValue());
                     turbineInList.writeLoadShutdownCmd();
                 }
             }
