@@ -119,6 +119,7 @@ namespace Articuno
         /// <returns>Tuple of doubles</returns>
         public Tuple<double, double, double, double> getAllMeasurements(string metId)
         {
+            metId = isMetTowerSwiched(metId);
             var temperature = getTemperature(metId);
             double ambTemp;
             //Check if the value returned from getTemperature is null or not
@@ -181,6 +182,7 @@ namespace Articuno
         /// <returns>A double if the quality is good for either the primary or secondary sensor. Null otherwise. This MUST be handled by the supporting class</returns>
         public Object getTemperature(string metId)
         {
+            metId = isMetTowerSwiched(metId);
             MetTower met = getMetTower(metId);
             var tuple = tempQualityCheck(met, met.getPrimTemperatureTag(), met.getSecTemperatureTag());
             if (tuple.Item1) { return tuple.Item2; }
@@ -190,6 +192,7 @@ namespace Articuno
 
         public double getHumidity(string metId)
         {
+            metId = isMetTowerSwiched(metId);
             MetTower met = getMetTower(metId);
             var rhQuality = rhQualityCheck(met);
 
