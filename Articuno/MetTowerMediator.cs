@@ -25,9 +25,13 @@ namespace Articuno
         private static List<MetTower> metTowerList = new List<MetTower>();
         private EasyDAClient client = new EasyDAClient();
 
-        //constant doubles for quality
+        //constant bool for quality
         private bool BAD_QUALITY = false;
         private bool GOOD_QUALITY = true;
+
+        //constant bool for managing switched mettower 
+        private bool met1Switched = false;
+        private bool met2Switched = false;
 
 
         //Log
@@ -89,14 +93,13 @@ namespace Articuno
         /// Get the Met tower given an metTowerId (ie Met1, Met2)
         /// </summary>
         /// <param name="metTowerId"></param>
-        /// <returns>A Met Tower Object if exist. Null otherwise</returns>
+        /// <returns>A Met Tower Object if exist. Null otherwise. createMetTower() must be called before using this fucntion</returns>
         public static MetTower getMetTower(string metTowerId)
         {
             //if (metTowerList.Count == 0)
             //{
             //    createMetTower();
             //}
-
             for (int i = 0; i <= metTowerList.Count; i++)
             {
                 if (metTowerList.ElementAt(i).getMetTowerPrefix.Equals(metTowerId))
@@ -137,13 +140,38 @@ namespace Articuno
         /// <summary>
         /// This function switches the met tower to use the backup met tower.
         /// For example, if Met1 is passed in, then it will use Met2 and vice versa.
+        /// 
         /// </summary>
-        /// <returns>A true for success or false for failed </returns>
-        //
-        public bool switchMetTower(string metId)
+        /// <param name="metId"></param>
+        public void switchMetTower(string metId)
         {
-            //TODO: Implement
-            throw new NotImplementedException();
+            switch (metId.ToUpper())
+            {
+                case "MET1":
+                    met1Switched = !met1Switched;
+                    break;
+                case "MET2":
+                    met2Switched = !met2Switched;
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// This function returns the metId of the backup met tower if the met tower has been switched to do so
+        /// </summary>
+        /// <param name="metId">The metid checked to see if it is swtiched</param>
+        /// <returns>A metId. Returns the original metId if it is not switched. Returns a the backup metId otherwise</returns>
+        private string isMetTowerSwiched(string metId)
+        {
+            switch (metId.ToUpper())
+            {
+                case "MET1":
+                    return (met1Switched ? "Met2" : metId);
+                case "MET2":
+                    return (met2Switched ? "Met1" : metId);
+                default:
+                    return "";
+            }
         }
 
         /// <summary>
