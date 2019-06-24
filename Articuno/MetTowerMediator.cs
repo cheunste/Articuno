@@ -30,8 +30,8 @@ namespace Articuno
         private bool GOOD_QUALITY = true;
 
         //constant bool for managing switched mettower 
-        private bool met1Switched = false;
-        private bool met2Switched = false;
+        private bool met1Switched;
+        private bool met2Switched;
 
 
         //Log
@@ -39,6 +39,8 @@ namespace Articuno
 
         public MetTowerMediator()
         {
+            met1Switched = false;
+            met2Switched = false;
         }
 
         /// <summary>
@@ -119,7 +121,7 @@ namespace Articuno
         /// <returns>Tuple of doubles</returns>
         public Tuple<double, double, double, double> getAllMeasurements(string metId)
         {
-            metId = isMetTowerSwiched(metId);
+            metId = isMetTowerSwitched(metId);
             var temperature = getTemperature(metId);
             double ambTemp;
             //Check if the value returned from getTemperature is null or not
@@ -130,7 +132,7 @@ namespace Articuno
             //If null, then that means you need to get the temperature from the turbines. 
             else
             {
-                ambTemp = (double) getMetTower(metId).getNearestTurbine().readTurbineTemperatureValue();
+                ambTemp = (double)getMetTower(metId).getNearestTurbine().readTurbineTemperatureValue();
             }
             double rh = getHumidity(metId);
             double dew = calculateDewPoint(rh, ambTemp);
@@ -149,9 +151,11 @@ namespace Articuno
             switch (metId.ToUpper())
             {
                 case "MET1":
+                    log.InfoFormat("met1 switched state from {0} to {1}", met1Switched, !met1Switched);
                     met1Switched = !met1Switched;
                     break;
                 case "MET2":
+                    log.InfoFormat("met2 switched state from {0} to {1}", met2Switched, !met2Switched);
                     met2Switched = !met2Switched;
                     break;
             }
@@ -162,15 +166,18 @@ namespace Articuno
         /// </summary>
         /// <param name="metId">The metid checked to see if it is swtiched</param>
         /// <returns>A metId. Returns the original metId if it is not switched. Returns a the backup metId otherwise</returns>
-        private string isMetTowerSwiched(string metId)
+        private string isMetTowerSwitched(string metId)
         {
             switch (metId.ToUpper())
             {
                 case "MET1":
+                    log.InfoFormat("currently using : {0}", met1Switched ? "Met2" : metId);
                     return (met1Switched ? "Met2" : metId);
                 case "MET2":
+                    log.InfoFormat("currently using : {0}", met1Switched ? "Met1" : metId);
                     return (met2Switched ? "Met1" : metId);
                 default:
+                    log.ErrorFormat("Something went wrong in isMetTOwerSwitched(), metId: {0}", metId);
                     return "";
             }
         }
@@ -182,7 +189,7 @@ namespace Articuno
         /// <returns>A double if the quality is good for either the primary or secondary sensor. Null otherwise. This MUST be handled by the supporting class</returns>
         public Object getTemperature(string metId)
         {
-            metId = isMetTowerSwiched(metId);
+            metId = isMetTowerSwitched(metId);
             MetTower met = getMetTower(metId);
             var tuple = tempQualityCheck(met, met.getPrimTemperatureTag(), met.getSecTemperatureTag());
             if (tuple.Item1) { return tuple.Item2; }
@@ -192,7 +199,7 @@ namespace Articuno
 
         public double getHumidity(string metId)
         {
-            metId = isMetTowerSwiched(metId);
+            metId = isMetTowerSwitched(metId);
             MetTower met = getMetTower(metId);
             var rhQuality = rhQualityCheck(met);
 
