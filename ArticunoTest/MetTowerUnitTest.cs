@@ -76,8 +76,8 @@ namespace ArticunoTest
         //Test the temperature values and see if they match the database
         public void tempGetValueTest()
         {
-            metTowerTest.getPrimTemperatureValue();
-            metTowerTest.getSecTemperatureValue();
+            metTowerTest.readPrimTemperatureValue();
+            metTowerTest.readSecTemperatureValue();
 
             //Manually set the tags
 

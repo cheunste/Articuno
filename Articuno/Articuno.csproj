@@ -76,6 +76,7 @@
     <Compile Include="ArticunoMain.cs" />
     <Compile Include="DatabaseInterface.cs" />
     <Compile Include="MetTower.cs" />
+    <Compile Include="MetTowerMediator.cs" />
     <Compile Include="OpcServer.cs" />
     <Compile Include="Setup.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -89,7 +90,9 @@
     <None Include="articuno.db">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Log4Net.config" />
+    <None Include="Log4Net.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
