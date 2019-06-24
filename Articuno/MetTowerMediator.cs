@@ -90,12 +90,12 @@ namespace Articuno
         /// </summary>
         /// <param name="metTowerId"></param>
         /// <returns>A Met Tower Object if exist. Null otherwise</returns>
-        public MetTower getMetTower(string metTowerId)
+        public static MetTower getMetTower(string metTowerId)
         {
-            if (metTowerList.Count == 0)
-            {
-                createMetTower();
-            }
+            //if (metTowerList.Count == 0)
+            //{
+            //    createMetTower();
+            //}
 
             for (int i = 0; i <= metTowerList.Count; i++)
             {
