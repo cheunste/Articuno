@@ -174,21 +174,13 @@ namespace Articuno
          * These can be set to another reference  if/when they fail 
          * The set Met Reference takes in a MetTower object
          */
-
-        public void setPrimaryMetReference(MetTower metTower) { this.primaryMet = metTower; }
-        public void setSecondaryMetReference(MetTower metTower) { this.secondaryMet = metTower; }
-        public MetTower getPrimaryMetReference() { return this.primaryMet; }
-        public MetTower getSecondaryMetReference() { return this.secondaryMet; }
-
-        public void setMetBackup(bool tag) { isMetTowerBackup = tag; }
-        public bool getMetTowerBackup() { return isMetTowerBackup; }
+        public void setMetTower(MetTower met) { currentMetTower = met; }
+        public MetTower getMetTower() { return currentMetTower; }
 
         //Function to determine participation
         public void setParticipation(bool participationStatus) { articunoParicipation = participationStatus; }
         public bool getParticipation() { return articunoParicipation; }
 
-        public void setMetTower(MetTower met) { currentMetTower = met; }
-        public MetTower getMetTower() { return currentMetTower; }
 
     }
 }

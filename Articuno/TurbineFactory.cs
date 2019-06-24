@@ -39,6 +39,8 @@ namespace Articuno
 
         //These are temp lists that are used for read and get functions in the class 
         private List<Object> tempObjectList;
+
+        //This is just an unused List that is used temporary. Used so that I don't have to instantiate an object everytime I need a list
         private List<string> tempList;
 
         //Instance of OpcServer. Might not be needed
@@ -101,16 +103,18 @@ namespace Articuno
                 turbine.setParticipationTag(reader["Participation"].ToString());
 
                 string primMetTower = reader["MetReference"].ToString();
-                MetTowerMediator.getMetTower(primMetTower);
+                MetTower metTower = MetTowerMediator.getMetTower(primMetTower);
+                turbine.setMetTower(metTower);
 
                 try
                 {
                     //If the RedundancyForMet is not empty, then that means
                     //The met tower is noted to be used as a temperature measurement source
                     //In case a met tower fails
-                    if (reader["RedundancyForMet"].ToString() != null) {
+                    if (reader["RedundancyForMet"].ToString() != null)
+                    {
                         string backupMetTower = reader["RedundancyForMet"].ToString();
-                        MetTowerMediator.setTurbineBackup(backupMetTower,turbine);
+                        MetTowerMediator.setTurbineBackup(backupMetTower, turbine);
                     }
                 }
                 catch (Exception e)
@@ -187,10 +191,7 @@ namespace Articuno
         /// Returns the list of turbines for the site
         /// </summary>
         /// <returns></returns>
-        public List<Turbine> getTurbineList()
-        {
-            return turbineList;
-        }
+        public List<Turbine> getTurbineList() { return turbineList; }
 
         /*
          * The next several methods will be returning the OPC tag name for the turbine List
@@ -199,84 +200,56 @@ namespace Articuno
         public List<string> getTurbineWindSpeedTag()
         {
             tempList.Clear();
-            foreach (Turbine turbine in turbineList)
-            {
-                tempList.Add(turbine.getWindSpeedTag());
-            }
+            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.getWindSpeedTag()); }
             return tempList;
         }
 
         public List<string> getRotorSpeedTag()
         {
             tempList.Clear();
-            foreach (Turbine turbine in turbineList)
-            {
-                tempList.Add(turbine.getRotorSpeedTag());
-            }
+            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.getRotorSpeedTag()); }
             return tempList;
         }
         public List<string> getOperatingStateTag()
         {
             tempList.Clear();
-            foreach (Turbine turbine in turbineList)
-            {
-                tempList.Add(turbine.getOperatinStateTag());
-            }
+            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.getOperatinStateTag()); }
             return tempList;
         }
         public List<string> getNrsStateTag()
         {
             tempList.Clear();
-            foreach (Turbine turbine in turbineList)
-            {
-                tempList.Add(turbine.getNrsStateTag());
-            }
+            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.getNrsStateTag()); }
             return tempList;
         }
         public List<string> getTemperatureTag()
         {
             tempList.Clear();
-            foreach (Turbine turbine in turbineList)
-            {
-                tempList.Add(turbine.getTemperatureTag());
-            }
+            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.getTemperatureTag()); }
             return tempList;
         }
         public List<string> getLoadShutdownTag()
         {
             tempList.Clear();
-            foreach (Turbine turbine in turbineList)
-            {
-                tempList.Add(turbine.getLoadShutdownTag());
-            }
+            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.getLoadShutdownTag()); }
             return tempList;
         }
         public List<string> getTurbineCtrTag()
         {
             tempList.Clear();
-            foreach (Turbine turbine in turbineList)
-            {
-                tempList.Add(turbine.getTurbineCtrTag());
-            }
+            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.getTurbineCtrTag()); }
             return tempList;
         }
         public List<string> getHumidityTag()
         {
             tempList.Clear();
-            foreach (Turbine turbine in turbineList)
-            {
-                tempList.Add(turbine.getTurbineHumidityTag());
-            }
+            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.getTurbineHumidityTag()); }
             return tempList;
         }
 
         /*
          * The following methods will return the list containing the vlaue  of the opcTag
-         * 
-         * 
-         * 
          */
-        //public List<Object> readTurbineWindSpeedTag()
         public Object readTurbineWindSpeedTag() { return readMutlipleOpcTags(getTurbineWindSpeedTag()); }
         public Object readRotorSpeedTag() { return readMutlipleOpcTags(getRotorSpeedTag()); }
         public Object readOperatingStateTag() { return readMutlipleOpcTags(getOperatingStateTag()); }
@@ -290,7 +263,6 @@ namespace Articuno
 
             List<Object> valueList = new List<Object>();
             var itemDescriptors = new DAItemDescriptor[tempList.Count];
-            int index = 0;
 
             for (int i = 0; i < tempList.Count; i++)
             {
@@ -299,7 +271,6 @@ namespace Articuno
             }
 
             DAVtqResult[] vtqResults = this.client.ReadMultipleItems(this.opcServerName, itemDescriptors);
-
 
             for (int i = 0; i < vtqResults.Length; i++)
             {
