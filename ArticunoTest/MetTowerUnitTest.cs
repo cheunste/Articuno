@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Articuno;
 
-namespace ArticunoTest 
+namespace ArticunoTest
 {
     /// <summary>
     /// Summary description for MetTowerUnitTest
@@ -13,11 +13,40 @@ namespace ArticunoTest
     public class MetTowerUnitTest
     {
         MetTower metTowerTest;
+        MetTowerMediator metMediator;
         OpcServer opcServer;
 
         //Test contants
         public double DEFAULT_AMB_TEMP_THRESHOLD = 0.00;
         public double DEFAULT_DELTA_THRESHOLD = 1.00;
+
+        //These are tags for met tower1
+        string[] met1Tags ={
+            "Met1.AmbTmp1",
+            "Met1.AmbTmp2",
+            "Met1.TempAlm",
+            "Met1.TmpHiDispAlm",
+            "Met1.RH1",
+            "Met1.RH2",
+            "Met1.IcePossible",
+            "Met1.RHS1OutRngAlm",
+            "Met1.RHAlm",
+            "Met1.TowerAlm"};
+
+        string[] met2Tags = {
+            "Met2.AmbTmp1",
+            "Met2.AmbTmp2",
+            "Met2.TempAlm",
+            "Met2.TmpHiDispAlm",
+            "Met2.RH1",
+            "Met2.RH2",
+            "Met2.IcePossible",
+            "Met2.RHS1OutRngAlm",
+            "Met2.RHAlm",
+            "Met2.TowerAlm"};
+
+        string siteName;
+
 
         //Create a Met Tower Class
         public MetTowerUnitTest()
@@ -25,11 +54,11 @@ namespace ArticunoTest
 
             //Insert some test data into Articuno.db
             DatabaseInterface dbi = new DatabaseInterface();
-            //Create a new OPC Server instance
-            opcServer = new OpcServer("");
-
-            //Create new met tower
-            metTowerTest = new MetTower("99", DEFAULT_AMB_TEMP_THRESHOLD, DEFAULT_DELTA_THRESHOLD,opcServer);
+            //Create new met tower mediator
+            metMediator = new MetTowerMediator();
+            MetTowerMediatorSingleton.Instance.createMetTower();
+            opcServer = new OpcServer("SV.OPCDAServer.1");
+            siteName = "SCRAB";
         }
 
         private TestContext testContextInstance;
@@ -48,6 +77,18 @@ namespace ArticunoTest
             {
                 testContextInstance = value;
             }
+        }
+
+        [TestMethod]
+        public void createNewMetTower()
+        {
+            //var derp = MetTowerMediatorSingleton.Instance.getAllMeasurements("Met1");
+            MetTower met1 = MetTowerMediatorSingleton.Instance.getMetTower("Met1");
+            MetTower met2 = MetTowerMediatorSingleton.Instance.getMetTower("Met2");
+            Assert.IsNotNull(met1);
+            Assert.IsNotNull(met2);
+
+
         }
 
         #region Additional test attributes
@@ -76,39 +117,39 @@ namespace ArticunoTest
         //Test the temperature values and see if they match the database
         public void tempGetValueTest()
         {
-            metTowerTest.readPrimTemperatureValue();
-            metTowerTest.readSecTemperatureValue();
+            var met1Values = MetTowerMediatorSingleton.Instance.getAllMeasurements("Met1");
+            var met2Values = MetTowerMediatorSingleton.Instance.getAllMeasurements("Met2");
 
-            //Manually set the tags
-
-            metTowerTest.setPrimTemperatureTag("");
-            metTowerTest.setSecTemperatureTag("");
-
-            
+            Console.WriteLine(met1Values.Item1);
+            Console.WriteLine(met1Values.Item2);
+            Console.WriteLine(met1Values.Item3);
+            Console.WriteLine(met1Values.Item4);
         }
 
         [TestMethod]
         //Test the threshold values
         public void testThresholds()
         {
+
+            MetTower met = MetTowerMediatorSingleton.Instance.getMetTower("Met1");
             //Get the thresholds
-            double tempThreshold = metTowerTest.AmbTempThreshold;
-            double deltaThreshold = metTowerTest.DeltaTempThreshold;
+            double tempThreshold = met.AmbTempThreshold;
+            double deltaThreshold = met.DeltaTempThreshold;
 
             //Compare
-            Assert.AreEqual(tempThreshold, this.DEFAULT_AMB_TEMP_THRESHOLD,0.001,"Temperature Threshold compared with default are not equal");
-            Assert.AreEqual(deltaThreshold, this.DEFAULT_DELTA_THRESHOLD,0.001,"Delta Threshold compared with default are not equal");
+            Assert.AreEqual(tempThreshold, this.DEFAULT_AMB_TEMP_THRESHOLD, 0.001, "Temperature Threshold compared with default are not equal");
+            Assert.AreEqual(deltaThreshold, this.DEFAULT_DELTA_THRESHOLD, 0.001, "Delta Threshold compared with default are not equal");
 
             //Set the Threshold 
             double testValue = 2.999;
-            metTowerTest.AmbTempThreshold = testValue;
-            metTowerTest.DeltaTempThreshold = testValue;
-            tempThreshold = metTowerTest.AmbTempThreshold;
-            deltaThreshold = metTowerTest.DeltaTempThreshold;
+            met.AmbTempThreshold = testValue;
+            met.DeltaTempThreshold = testValue;
+            tempThreshold = met.AmbTempThreshold;
+            deltaThreshold = met.DeltaTempThreshold;
 
             //Compare new values with test values
-            Assert.AreEqual(tempThreshold, testValue,0.001,"Temperature Threshold compared with default are not equal");
-            Assert.AreEqual(deltaThreshold, testValue,0.001,"Delta Threshold compared with default are not equal");
+            Assert.AreEqual(tempThreshold, testValue, 0.001, "Temperature Threshold compared with default are not equal");
+            Assert.AreEqual(deltaThreshold, testValue, 0.001, "Delta Threshold compared with default are not equal");
 
         }
 
@@ -117,6 +158,32 @@ namespace ArticunoTest
         public void checkMetTower()
         {
 
+        }
+
+        [TestMethod]
+        //Test to see what happens when the met tower is switched from the default.
+        public void swtichMetTowers()
+        {
+
+        }
+
+        public void resetMetTowerValues()
+        {
+            foreach(string tag in met1Tags)
+            {
+                writeValue(siteName + tag, 0);
+            }
+
+            foreach(string tag in met2Tags)
+            {
+                writeValue(siteName + tag, 0);
+            }
+
+        }
+
+        public void writeValue(string tag, double value)
+        {
+            opcServer.writeTagValue(tag, value);
         }
     }
 }

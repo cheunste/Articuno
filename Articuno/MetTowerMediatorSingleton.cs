@@ -33,6 +33,9 @@ namespace Articuno
         private bool met1Switched;
         private bool met2Switched;
 
+        //thresholds 
+        private double deltaThreshold;
+        private double ambTempThreshold;
 
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(TurbineFactory));
@@ -90,8 +93,8 @@ namespace Articuno
                     temp2
                 });
 
-            double ambTempThreshold = Convert.ToDouble(vtqResults[0].Vtq.Value);
-            double deltaThreshold = Convert.ToDouble(vtqResults[1].Vtq.Value);
+            ambTempThreshold = Convert.ToDouble(vtqResults[0].Vtq.Value);
+            deltaThreshold = Convert.ToDouble(vtqResults[1].Vtq.Value);
 
 
             dbi.closeConnection();

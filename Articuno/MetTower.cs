@@ -253,8 +253,8 @@ namespace Articuno
         public string getIceIndicationValue() { return iceIndicationTag; }
 
         //Threshold setters and getters
-        public double AmbTempThreshold { get; set; }
-        public double DeltaTempThreshold { get; set; }
+        public double AmbTempThreshold { get { return ambTempThreshold; } set { ambTempThreshold = value; } }
+        public double DeltaTempThreshold { get { return deltaTempThreshold; } set { deltaTempThreshold = value; } }
 
         //The following are for humidity out of range, bad quality, etc.
         public Object readHumidityOutOfRng() { return new EasyDAClient().ReadItemValue("", opcServerName, rhOutOfRangeTag); }
