@@ -46,7 +46,7 @@ namespace Articuno
         readonly String OTHER_PARAM_QUERY = "SELECT " + NoDataAlarmColumn + ", " + IceIndicationColumn + " FROM MetTower";
 
         readonly String INPUT_TAG_QUERY = "SELECT * FROM MetTowerInputTags";
-        readonly String OTUPUT_TAG_QUERY = "SELECT * FROM MetTowerOutputTags";
+        readonly String OUTPUT_TAG_QUERY = "SELECT * FROM MetTowerOutputTags";
 
         //Member variables;
         //Member doubles 
@@ -118,6 +118,7 @@ namespace Articuno
         {
             //Open a connection to the DB
             DatabaseInterface dbi = new DatabaseInterface();
+            dbi.openConnection();
             //Set up the query
             metTowerQuerySetup(MetId);
             //Set OPC Server Name
@@ -131,6 +132,7 @@ namespace Articuno
 
             //Set up met id
             this.metTowerPrefix = MetId;
+            dbi.closeConnection();
         }
 
         //This method queries the sqlite table and then sets the tags in the table to the members of the class
@@ -142,7 +144,7 @@ namespace Articuno
 
             dbi.openConnection();
             //Get everything relating to the MetTowerInputTags table
-            SQLiteDataReader reader = dbi.readCommand(INPUT_TAG_QUERY + " HWERE MetId=" + MetId);
+            SQLiteDataReader reader = dbi.readCommand(INPUT_TAG_QUERY + String.Format(" WHERE MetId='{0}'",MetId));
             reader.Read();
             this.primTempTag = reader[PrimTempValueTagColumn].ToString();
             this.secTempTag = reader[SecTempValueColumn].ToString();
@@ -150,10 +152,13 @@ namespace Articuno
             this.secRHTag = reader[SecHumidityValueColumn].ToString();
 
             //Get everything relating to the MetTowerOutputTags table
-            reader = dbi.readCommand(OTUPUT_TAG_QUERY + " WHERE MetId=" + MetId);
+            reader = dbi.readCommand(OUTPUT_TAG_QUERY + String.Format(" WHERE MetId='{0}'", MetId));
             reader.Read();
             this.tempPrimBadQualityTag = reader[TempPrimBadQualityColumn].ToString();
             this.tempPrimOutOfRangeTag = reader[TempPrimOutOfRangeColumn].ToString();
+            this.tempSecBadQualityTag = reader[TempSecBadQualityColumn].ToString();
+            this.tempSecOutOfRangeTag = reader[TempSecOutOfRangeColumn].ToString();
+
             this.iceIndicationTag = reader[IceIndicationColumn].ToString();
             this.rhOutOfRangeTag = reader[HumidityOutOfRangeColumn].ToString();
             this.rhBadQualityTag = reader[HumidityBadQualityColumn].ToString();
