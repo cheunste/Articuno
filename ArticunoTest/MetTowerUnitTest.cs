@@ -13,7 +13,6 @@ namespace ArticunoTest
     public class MetTowerUnitTest
     {
         MetTower metTowerTest;
-        MetTowerMediator metMediator;
         OpcServer opcServer;
 
         //Test contants
@@ -55,8 +54,7 @@ namespace ArticunoTest
             //Insert some test data into Articuno.db
             DatabaseInterface dbi = new DatabaseInterface();
             //Create new met tower mediator
-            metMediator = new MetTowerMediator();
-            MetTowerMediatorSingleton.Instance.createMetTower();
+            MetTowerMediator.Instance.createMetTower();
             opcServer = new OpcServer("SV.OPCDAServer.1");
             siteName = "SCRAB";
         }
@@ -83,8 +81,8 @@ namespace ArticunoTest
         public void createNewMetTower()
         {
             //var derp = MetTowerMediatorSingleton.Instance.getAllMeasurements("Met1");
-            MetTower met1 = MetTowerMediatorSingleton.Instance.getMetTower("Met1");
-            MetTower met2 = MetTowerMediatorSingleton.Instance.getMetTower("Met2");
+            MetTower met1 = MetTowerMediator.Instance.getMetTower("Met1");
+            MetTower met2 = MetTowerMediator.Instance.getMetTower("Met2");
             Assert.IsNotNull(met1);
             Assert.IsNotNull(met2);
 
@@ -117,8 +115,8 @@ namespace ArticunoTest
         //Test the temperature values and see if they match the database
         public void tempGetValueTest()
         {
-            var met1Values = MetTowerMediatorSingleton.Instance.getAllMeasurements("Met1");
-            var met2Values = MetTowerMediatorSingleton.Instance.getAllMeasurements("Met2");
+            var met1Values = MetTowerMediator.Instance.getAllMeasurements("Met1");
+            var met2Values = MetTowerMediator.Instance.getAllMeasurements("Met2");
 
             Console.WriteLine(met1Values.Item1);
             Console.WriteLine(met1Values.Item2);
@@ -131,7 +129,7 @@ namespace ArticunoTest
         public void testThresholds()
         {
 
-            MetTower met = MetTowerMediatorSingleton.Instance.getMetTower("Met1");
+            MetTower met = MetTowerMediator.Instance.getMetTower("Met1");
             //Get the thresholds
             double tempThreshold = met.AmbTempThreshold;
             double deltaThreshold = met.DeltaTempThreshold;
@@ -167,6 +165,7 @@ namespace ArticunoTest
 
         }
 
+        //method to set all the input met tags to zero
         public void resetMetTowerValues()
         {
             foreach(string tag in met1Tags)
