@@ -103,7 +103,8 @@ namespace Articuno
                 turbine.setParticipationTag(reader["Participation"].ToString());
 
                 string primMetTower = reader["MetReference"].ToString();
-                MetTower metTower = MetTowerMediator.getMetTower(primMetTower);
+                //MetTower metTower = MetTowerMediator.getMetTower(primMetTower);
+                MetTower metTower = MetTowerMediator.Instance.getMetTower(primMetTower);
                 turbine.setMetTower(metTower);
 
                 try
@@ -114,7 +115,7 @@ namespace Articuno
                     if (reader["RedundancyForMet"].ToString() != null)
                     {
                         string backupMetTower = reader["RedundancyForMet"].ToString();
-                        MetTowerMediator.setTurbineBackup(backupMetTower, turbine);
+                        MetTowerMediator.Instance.setTurbineBackup(backupMetTower, turbine);
                     }
                 }
                 catch (Exception e)

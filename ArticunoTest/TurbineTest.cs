@@ -16,6 +16,9 @@ namespace ArticunoTest
 
         public TurbineTest()
         {
+
+            //Must create the MetTowersingleton first
+            MetTowerMediator.Instance.createMetTower();
             List<string> newList = new List<string>();
             newList.Add("T001");
             tf = new TurbineFactory(newList, "SV.OPCDAServer.1");
