@@ -101,7 +101,7 @@ namespace Articuno
 
             for (int i = 1; i <= getNumMetTower(); i++)
             {
-                MetTower metTower = new MetTower("Met"+i.ToString(),
+                MetTower metTower = new MetTower("Met" + i.ToString(),
                     ambTempThreshold,
                     deltaThreshold,
                     opcServerName);
@@ -141,22 +141,11 @@ namespace Articuno
         public Tuple<double, double, double, double> getAllMeasurements(string metId)
         {
             metId = isMetTowerSwitched(metId);
-            var temperature = getTemperature(metId);
-            double ambTemp;
-            //Check if the value returned from getTemperature is null or not
-            if (temperature != null)
-            {
-                ambTemp = (Double)temperature;
-            }
-            //If null, then that means you need to get the temperature from the turbines. 
-            else
-            {
-                ambTemp = (double)getMetTower(metId).getNearestTurbine().readTurbineTemperatureValue();
-            }
-            double rh = getHumidity(metId);
-            double dew = calculateDewPoint(rh, ambTemp);
-            double delta = calculateDelta(ambTemp, dew);
-            return new Tuple<double, double, double, double>(ambTemp, rh, dew, delta);
+            double temperature = (double)readTemperature(metId);
+            double rh = readHumidity(metId);
+            double dew = calculateDewPoint(rh, temperature);
+            double delta = calculateDelta(temperature, dew);
+            return new Tuple<double, double, double, double>(temperature, rh, dew, delta);
         }
 
         /// <summary>
@@ -205,18 +194,30 @@ namespace Articuno
         ///  Gets the one minute average temperature of a met tower primary or secondary sensor. 
         /// </summary>
         /// <param name="metId"></param>
-        /// <returns>A double if the quality is good for either the primary or secondary sensor. Null otherwise. This MUST be handled by the supporting class</returns>
-        public Object getTemperature(string metId)
+        /// <returns>A double if the quality is good for either the primary or secondary sensor. Returns the turbine temperature otherwise
+        /// </returns>
+        public Object readTemperature(string metId)
         {
             metId = isMetTowerSwitched(metId);
             MetTower met = getMetTower(metId);
             var tuple = tempQualityCheck(met, met.getPrimTemperatureTag(), met.getSecTemperatureTag());
             if (tuple.Item1) { return tuple.Item2; }
-            else { return null; }
-
+            else { return getMetTower(metId).getNearestTurbine().readTurbineTemperatureValue(); }
         }
 
-        public double getHumidity(string metId)
+        public void writePrimTemperature(string metId, double value)
+        {
+            MetTower met = getMetTower(metId);
+            met.writePrimTemperatureValue(value);
+        }
+
+        public void writeSecTemperature(string metId, double value)
+        {
+            MetTower met = getMetTower(metId);
+            met.writeSecTemperatureValue(value);
+        }
+
+        public double readHumidity(string metId)
         {
             metId = isMetTowerSwitched(metId);
             MetTower met = getMetTower(metId);
@@ -227,6 +228,11 @@ namespace Articuno
             if (!rhQuality.Item1) { raiseAlarm(met, MetTowerEnum.HumidityOutOfRange); }
             else { clearAlarm(met, MetTowerEnum.HumidityOutOfRange); }
             return rhQuality.Item2;
+        }
+        public void writeHumidity(string metId, double value)
+        {
+            MetTower met = getMetTower(metId);
+            met.writeRelativeHumityValue(value);
         }
 
         /// <summary>
@@ -300,7 +306,7 @@ namespace Articuno
         /// <returns>Returns True if good quality, False if bad</returns>
         private Tuple<bool, double> tempValueQualityCheck(string temperatureTag)
         {
-            var temp = client.ReadItemValue("",opcServerName,temperatureTag);
+            var temp = client.ReadItemValue("", opcServerName, temperatureTag);
             double tempValue = Convert.ToDouble(temp);
             double minValue = -20.0;
             double maxValue = 60.0;
@@ -443,7 +449,7 @@ namespace Articuno
                     }
                     break;
                 case MetTowerEnum.SecSensorQuality:
-                    if (Convert.ToBoolean(mt.readTemperatureSecBadQuality())!= GOOD_QUALITY)
+                    if (Convert.ToBoolean(mt.readTemperatureSecBadQuality()) != GOOD_QUALITY)
                     {
                         log.InfoFormat("{0} Secondary Temperature sensor quality alarm cleared", mt.getMetTowerPrefix);
                         mt.writeTemperaturePrimBadQuality(GOOD_QUALITY);
