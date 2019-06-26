@@ -460,6 +460,11 @@ namespace Articuno
             }
         }
 
+        /// <summary>
+        /// Method used to set a met tower to a turbine
+        /// </summary>
+        /// <param name="metId">The met id. Met1 or Met2</param>
+        /// <param name="turbine">The turbine id (ie T001)</param>
         public void setTurbineBackup(string metId, Turbine turbine)
         {
             for (int i = 0; i <= metTowerList.Count; i++)

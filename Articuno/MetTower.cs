@@ -53,6 +53,7 @@ namespace Articuno
         private double ambientTemperature;
         private double relativeHumidity;
         private double dewPointTemperature;
+
         private double ambTempThreshold;
         private double deltaTempThreshold;
 
@@ -245,12 +246,18 @@ namespace Articuno
         /// Gets the  NoDataAlaarmValue OPC value
         /// </summary>
         /// <returns></returns>
-        public string getNoDataAlarmValue() { return noDataAlarmTag; }
+        public string getNoDataAlarmTag() { return noDataAlarmTag; }
+        public void setNoDataAlarmTag(string tag) { noDataAlarmTag = tag; }
+        public Object readNoDataAlarmValue() { return new EasyDAClient().ReadItemValue("", opcServerName, getNoDataAlarmTag()); }
+        public void writeNoDataAlarmValue(double value ) { client.WriteItemValue("", opcServerName, getNoDataAlarmTag(), value); }
         /// <summary>
         /// Gets the IceIndicationValue OPC Value
         /// </summary>
         /// <returns></returns>
-        public string getIceIndicationValue() { return iceIndicationTag; }
+        public string getIceIndicationTag() { return iceIndicationTag; }
+        public void setIceIndicationTag(string tag) { iceIndicationTag = tag; }
+        public Object readIceIndicationValue() { return new EasyDAClient().ReadItemValue("", opcServerName, getIceIndicationTag()); }
+        public void writeIceIndicationValue(double value) { client.WriteItemValue("", opcServerName, getIceIndicationTag(), value); }
 
         //Threshold setters and getters
         public double AmbTempThreshold { get { return ambTempThreshold; } set { ambTempThreshold = value; } }
