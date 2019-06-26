@@ -14,7 +14,6 @@ namespace ArticunoTest
     public class MetTowerUnitTest
     {
         OpcServer opcServer;
-        DatabaseInterface dbi;
 
         //Test contants
         public double DEFAULT_AMB_TEMP_THRESHOLD = 0.00;
@@ -222,11 +221,12 @@ namespace ArticunoTest
         [TestMethod]
         [DataTestMethod]
         [DataRow("Met1", -50.0, -50.0)]
-        public void turbineValueTest(string metId, double tempSensor1Val, double tempSensor2Val)
+        public void useTurbineTempTest(string metId, double tempSensor1Val, double tempSensor2Val)
         {
             //Needs imporvement. The database is getting locked and I'm not sure why
             Assert.Fail();
 
+            DatabaseInterface dbi;
             dbi = new DatabaseInterface();
             SQLiteConnection testConnection=dbi.openConnection();
             //Set the redundancy for T001 to be Met1
@@ -271,18 +271,13 @@ namespace ArticunoTest
 
             Assert.AreEqual(expectedTempQual, tempTuple.Item1, "No Data alarm is still showing true (good quality)");
             Assert.AreEqual(expectedHumiQual, humidTuple.Item1, "Temperature alarm is still showing true (good quality)");
-
             Assert.AreEqual(MetTowerMediator.Instance.checkMetTowerQuality(metId),nodata,"No data alarm status not equal");
-
-
         }
 
         [TestCleanup]
         public void cleanup()
         {
             resetMetTowerValues();
-            dbi = null;
-
         }
 
         //method to set all the input met tags to zero
