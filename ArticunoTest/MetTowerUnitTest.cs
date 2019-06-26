@@ -3,6 +3,7 @@ using System.Text;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Articuno;
+using System.Data.SQLite;
 
 namespace ArticunoTest
 {
@@ -12,8 +13,8 @@ namespace ArticunoTest
     [TestClass]
     public class MetTowerUnitTest
     {
-        MetTower metTowerTest;
         OpcServer opcServer;
+        DatabaseInterface dbi;
 
         //Test contants
         public double DEFAULT_AMB_TEMP_THRESHOLD = 0.00;
@@ -44,18 +45,32 @@ namespace ArticunoTest
             "Met2.RHAlm",
             "Met2.TowerAlm"};
 
+        string[] ArticunoMetTags = {
+            "Articuno.Met1.IcePossible",
+            "Articuno.Met1.RHAlm",
+            "Articuno.Met1.RHS1OutRngAlm",
+            "Articuno.Met1.TempAlm",
+            "Articuno.Met1.TmpHiDispAlm",
+            "Articuno.Met1.TowerAlm",
+            "Articuno.Met2.IcePossible",
+            "Articuno.Met2.RHAlm",
+            "Articuno.Met2.RHS1OutRngAlm",
+            "Articuno.Met2.TempAlm",
+            "Articuno.Met2.TmpHiDispAlm",
+            "Articuno.Met2.TowerAlm"
+        };
         string siteName;
-
+        string opcServerName = "SV.OPCDAServer.1";
 
         //Create a Met Tower Class
         public MetTowerUnitTest()
         {
 
             //Insert some test data into Articuno.db
-            DatabaseInterface dbi = new DatabaseInterface();
+            //dbi = new DatabaseInterface();
             //Create new met tower mediator
             MetTowerMediator.Instance.createMetTower();
-            opcServer = new OpcServer("SV.OPCDAServer.1");
+            opcServer = new OpcServer(opcServerName);
             siteName = "SCRAB";
         }
 
@@ -179,8 +194,8 @@ namespace ArticunoTest
 
             //switch met tower 
             MetTowerMediator.Instance.switchMetTower(metId);
-            double tempAfterSwitch = Convert.ToDouble(MetTowerMediator.Instance.getTemperature(metId));
-            double humdAfterSwitch = Convert.ToDouble(MetTowerMediator.Instance.getHumidity(metId));
+            double tempAfterSwitch = Convert.ToDouble(MetTowerMediator.Instance.readTemperature(metId));
+            double humdAfterSwitch = Convert.ToDouble(MetTowerMediator.Instance.readHumidity(metId));
             switch (metId)
             {
                 case "Met1":
@@ -197,16 +212,66 @@ namespace ArticunoTest
 
             //Switch back the met tower to the original
             MetTowerMediator.Instance.switchMetTower(metId);
-            tempAfterSwitch = Convert.ToDouble(MetTowerMediator.Instance.getTemperature(metId));
-            humdAfterSwitch = Convert.ToDouble(MetTowerMediator.Instance.getHumidity(metId));
+            tempAfterSwitch = Convert.ToDouble(MetTowerMediator.Instance.readTemperature(metId));
+            humdAfterSwitch = Convert.ToDouble(MetTowerMediator.Instance.readHumidity(metId));
 
             Assert.AreEqual(tempAfterSwitch, tempBeforeSwitch, 0.001, "Temperature is not equal after switching back");
             Assert.AreEqual(humdAfterSwitch, humdBeforeSwitch, 0.001, "Humidity is not equal after switching back");
         }
 
         [TestMethod]
-        public void turbineValueTest()
+        [DataTestMethod]
+        [DataRow("Met1", -50.0, -50.0)]
+        public void turbineValueTest(string metId, double tempSensor1Val, double tempSensor2Val)
         {
+            //Needs imporvement. The database is getting locked and I'm not sure why
+            Assert.Fail();
+
+            dbi = new DatabaseInterface();
+            SQLiteConnection testConnection=dbi.openConnection();
+            //Set the redundancy for T001 to be Met1
+            string query = String.Format("UPDATE TurbineInputTags SET RedundancyForMet = {0} WHERE TurbineId = {1}","'Met1'","'T001'");
+            dbi.updateCommand(query);
+            dbi.closeConnection(testConnection);
+
+            List<string> temp = new List<string>();
+            temp.Add("T001");
+            TurbineFactory tf = new TurbineFactory(temp, opcServerName);
+            tf.createTurbines();
+
+            MetTowerMediator.Instance.writePrimTemperature(metId, tempSensor1Val);
+            MetTowerMediator.Instance.writeSecTemperature(metId, tempSensor2Val);
+
+            var metValue = MetTowerMediator.Instance.getAllMeasurements(metId);
+            Assert.AreEqual(metValue.Item1, 0, 0.001, "Temperaure isn't from T001");
+
+            testConnection=dbi.openConnection();
+            query = String.Format("UPDATE TurbineInputTags SET RedundancyForMet = {0} WHERE TurbineId = {1}","null","'T001'");
+            dbi.updateCommand(query);
+            dbi.closeConnection(testConnection);
+
+
+        }
+
+        [TestMethod]
+        [DataTestMethod]
+        [DataRow("Met1", -50.0, -50.0,110.0,false,false)]
+        [DataRow("Met1", 10.0, 10.0,60.0,true,true)]
+        [DataRow("Met1", 10.0, -50.0,60.0,true,true)]
+        public void noDataTest(string metId, double tempVal1, double tempVal2, double hmdVal, bool expectedTempQual, bool expectedHumiQual)
+        {
+            MetTowerMediator.Instance.writePrimTemperature(metId, tempVal1);
+            MetTowerMediator.Instance.writeSecTemperature(metId, tempVal2);
+            MetTowerMediator.Instance.writeHumidity(metId, hmdVal);
+
+            MetTowerMediator.Instance.rhQualityCheck(metId);
+
+            var tempTuple = MetTowerMediator.Instance.tempQualityCheck(metId);
+            var humidTuple = MetTowerMediator.Instance.rhQualityCheck(metId);
+
+            Assert.AreEqual(expectedTempQual, tempTuple.Item1, "No Data alarm is still showing true (good quality)");
+            Assert.AreEqual(expectedHumiQual, humidTuple.Item1, "Temperature alarm is still showing true (good quality)");
+
 
         }
 
@@ -214,6 +279,7 @@ namespace ArticunoTest
         public void cleanup()
         {
             resetMetTowerValues();
+            dbi = null;
 
         }
 
@@ -222,12 +288,16 @@ namespace ArticunoTest
         {
             foreach (string tag in met1Tags)
             {
-                writeValue(siteName + tag, 0);
+                writeValue(String.Format("{0}.{1}", siteName, tag), 0);
             }
 
             foreach (string tag in met2Tags)
             {
-                writeValue(siteName + tag, 0);
+                writeValue(String.Format("{0}.{1}", siteName, tag), 0);
+            }
+            foreach (string tag in ArticunoMetTags)
+            {
+                writeValue(String.Format("{0}.{1}", siteName, tag), 0);
             }
 
         }
