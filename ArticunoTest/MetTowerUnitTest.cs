@@ -160,20 +160,61 @@ namespace ArticunoTest
 
         [TestMethod]
         //Test to see what happens when the met tower is switched from the default.
-        public void swtichMetTowers()
+        [DataTestMethod]
+        [DataRow("Met1", 20.0, 60.0, 10.0, 50.0)]
+        [DataRow("Met2", 20.0, 60.0, 50.0, 90.0)]
+        public void swtichMetTowers(string metId, double tempVal1, double tempVal2, double hmdVal1, double hmdVal2)
         {
+            double tempBeforeSwitch;
+            double humdBeforeSwitch;
+            MetTower met1 = MetTowerMediator.Instance.getMetTower("Met1");
+            MetTower met2 = MetTowerMediator.Instance.getMetTower("Met2");
 
+            //Write Values to the tags
+            met1.writeRelativeHumityValue(hmdVal1);
+            met1.writePrimTemperatureValue(tempVal1);
+            met1.writeSecTemperatureValue(tempVal1);
+
+            met2.writeRelativeHumityValue(hmdVal2);
+            met2.writePrimTemperatureValue(tempVal2);
+            met2.writeSecTemperatureValue(tempVal2);
+
+            //switch met tower 
+            MetTowerMediator.Instance.switchMetTower(metId);
+            double tempAfterSwitch = Convert.ToDouble(MetTowerMediator.Instance.getTemperature(metId));
+            double humdAfterSwitch = Convert.ToDouble(MetTowerMediator.Instance.getHumidity(metId));
+            switch (metId)
+            {
+                case "Met1":
+                    tempBeforeSwitch = tempVal1;
+                    humdBeforeSwitch = hmdVal1;
+                    break;
+                default:
+                    tempBeforeSwitch = tempVal2;
+                    humdBeforeSwitch = hmdVal2;
+                    break;
+            }
+            Assert.AreNotEqual(tempAfterSwitch, tempBeforeSwitch, 0.001, "Temperature is equal after switching met towers");
+            Assert.AreNotEqual(humdAfterSwitch, tempBeforeSwitch, 0.001, "Humidity is equal after switching met towers");
+
+            //Switch back the met tower to the original
+            MetTowerMediator.Instance.switchMetTower(metId);
+            tempAfterSwitch = Convert.ToDouble(MetTowerMediator.Instance.getTemperature(metId));
+            humdAfterSwitch = Convert.ToDouble(MetTowerMediator.Instance.getHumidity(metId));
+            
+            Assert.AreEqual(tempAfterSwitch, tempBeforeSwitch, 0.001, "Temperature is not equal after switching back");
+            Assert.AreEqual(humdAfterSwitch, humdBeforeSwitch, 0.001, "Humidity is not equal after switching back");
         }
 
         //method to set all the input met tags to zero
         public void resetMetTowerValues()
         {
-            foreach(string tag in met1Tags)
+            foreach (string tag in met1Tags)
             {
                 writeValue(siteName + tag, 0);
             }
 
-            foreach(string tag in met2Tags)
+            foreach (string tag in met2Tags)
             {
                 writeValue(siteName + tag, 0);
             }
