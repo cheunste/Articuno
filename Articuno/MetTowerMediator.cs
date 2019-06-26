@@ -38,7 +38,7 @@ namespace Articuno
         private double ambTempThreshold;
 
         //Log
-        private static readonly ILog log = LogManager.GetLogger(typeof(TurbineFactory));
+        private static readonly ILog log = LogManager.GetLogger(typeof(MetTowerMediator));
 
         private MetTowerMediator()
         {
@@ -200,7 +200,7 @@ namespace Articuno
         {
             metId = isMetTowerSwitched(metId);
             MetTower met = getMetTower(metId);
-            var tuple = tempQualityCheck(met, met.getPrimTemperatureTag(), met.getSecTemperatureTag());
+            var tuple = tempQualityCheck(metId);
             if (tuple.Item1) { return tuple.Item2; }
             else { return getMetTower(metId).getNearestTurbine().readTurbineTemperatureValue(); }
         }
@@ -221,7 +221,7 @@ namespace Articuno
         {
             metId = isMetTowerSwitched(metId);
             MetTower met = getMetTower(metId);
-            var rhQuality = rhQualityCheck(met);
+            var rhQuality = rhQualityCheck(metId);
 
             //If the quality for the  humidty value is bad then an alarm should trigger
             //The value is already capped off at 0.00% or 100%
@@ -272,9 +272,9 @@ namespace Articuno
         /// Returns true if quality is good. False otherwise
         /// </summary>
         /// <returns>Returns True if good quality, False if bad</returns>
-        public Tuple<bool, double> rhQualityCheck(MetTower met)
+        public Tuple<bool, double> rhQualityCheck(string metId)
         {
-
+            MetTower met = getMetTower(metId);
             var rhOpcObject = met.readRelativeHumidityValue();
             double rh = (Double)rhOpcObject;
             double minValue = 0.0;
@@ -296,8 +296,8 @@ namespace Articuno
             }
 
             return new Tuple<bool, double>(state, rh);
-
         }
+
         /// <summary>
         /// Checks the quality of the temperature of the current met tower. 
         /// Returns true if quality is good. False otherwise
@@ -320,9 +320,11 @@ namespace Articuno
         /// Check the temperature quality of both the primary and secondary sensors
         /// </summary>
         /// <returns>Returns True if good quality, False if bad</returns>
-        private Tuple<bool, double, double> tempQualityCheck(MetTower met, string primTempTag, string secTempTag)
+        public Tuple<bool, double, double> tempQualityCheck(string metId)
         {
-
+            MetTower met = getMetTower(metId);
+            string primTempTag = met.getPrimTemperatureTag();
+            string secTempTag = met.getSecTemperatureTag();
             //call the ValueQuatliyCheck method to verify
             var primTempCheckTuple = tempValueQualityCheck(primTempTag);
             var secTempCheckTuple = tempValueQualityCheck(secTempTag);
