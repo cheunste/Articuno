@@ -255,22 +255,24 @@ namespace ArticunoTest
 
         [TestMethod]
         [DataTestMethod]
-        [DataRow("Met1", -50.0, -50.0,110.0,false,false)]
-        [DataRow("Met1", 10.0, 10.0,60.0,true,true)]
-        [DataRow("Met1", 10.0, -50.0,60.0,true,true)]
-        public void noDataTest(string metId, double tempVal1, double tempVal2, double hmdVal, bool expectedTempQual, bool expectedHumiQual)
+        [DataRow("Met1", -50.0, -50.0,110.0,false,false,true)]
+        [DataRow("Met1", 10.0, 10.0,60.0,true,true,false)]
+        [DataRow("Met1", 10.0, -50.0,60.0,true,true,false)]
+        public void noDataTest(string metId, double tempVal1, double tempVal2, double hmdVal, bool expectedTempQual, bool expectedHumiQual,bool nodata)
         {
             MetTowerMediator.Instance.writePrimTemperature(metId, tempVal1);
             MetTowerMediator.Instance.writeSecTemperature(metId, tempVal2);
             MetTowerMediator.Instance.writeHumidity(metId, hmdVal);
 
-            MetTowerMediator.Instance.rhQualityCheck(metId);
+            MetTowerMediator.Instance.humidQualityCheck(metId);
 
             var tempTuple = MetTowerMediator.Instance.tempQualityCheck(metId);
-            var humidTuple = MetTowerMediator.Instance.rhQualityCheck(metId);
+            var humidTuple = MetTowerMediator.Instance.humidQualityCheck(metId);
 
             Assert.AreEqual(expectedTempQual, tempTuple.Item1, "No Data alarm is still showing true (good quality)");
             Assert.AreEqual(expectedHumiQual, humidTuple.Item1, "Temperature alarm is still showing true (good quality)");
+
+            Assert.AreEqual(MetTowerMediator.Instance.checkMetTowerQuality(metId),nodata,"No data alarm status not equal");
 
 
         }

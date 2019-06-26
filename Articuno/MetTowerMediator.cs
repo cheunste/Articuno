@@ -117,21 +117,12 @@ namespace Articuno
         /// <returns>A Met Tower Object if exist. Null otherwise. createMetTower() must be called before using this fucntion</returns>
         public MetTower getMetTower(string metTowerId)
         {
-            //if (metTowerList.Count == 0)
-            //{
-            //    createMetTower();
-            //}
             for (int i = 0; i <= metTowerList.Count; i++)
             {
-                if (metTowerList.ElementAt(i).getMetTowerPrefix.Equals(metTowerId))
-                {
-                    return metTowerList.ElementAt(i);
-                }
+                if (metTowerList.ElementAt(i).getMetTowerPrefix.Equals(metTowerId)) { return metTowerList.ElementAt(i); }
             }
             return null;
         }
-
-
 
         /// <summary>
         /// Returns a tuple containing an ambient Temperature, a relative humidity, calculated dew point and a temperature delta given a met tower id
@@ -221,7 +212,7 @@ namespace Articuno
         {
             metId = isMetTowerSwitched(metId);
             MetTower met = getMetTower(metId);
-            var rhQuality = rhQualityCheck(metId);
+            var rhQuality = humidQualityCheck(metId);
 
             //If the quality for the  humidty value is bad then an alarm should trigger
             //The value is already capped off at 0.00% or 100%
@@ -258,13 +249,27 @@ namespace Articuno
         /// <summary>
         /// Check the quality of the met tower
         /// </summary>
-        /// <param name="ambTemp"></param>
-        /// <param name="rh"></param>
         /// <returns></returns>
-        public bool checkMetTower(double ambTemp, double rh)
+        public bool checkMetTowerQuality(string metId) 
         {
             //Todo: Implement
-            throw new NotImplementedException();
+            var tempTuple = tempQualityCheck(metId);
+            var humidTuple = humidQualityCheck(metId);
+            bool noData = false;
+            MetTower met = getMetTower(metId);
+            //If both the temperature quality and the humidity quality is bad quality (aka false), then there will be no data
+            //Note that unlike the quality, noData does NOT imply quality, so if there really is no data, then it will be True, False otherwise
+            if (tempTuple.Item1 == false && humidTuple.Item1 == false) {
+                noData = true;
+                raiseAlarm(met,MetTowerEnum.NoData);
+            }
+            else
+            {
+                noData = false;
+                clearAlarm(met,MetTowerEnum.NoData);
+            }
+
+            return noData;
         }
 
         /// <summary>
@@ -272,7 +277,7 @@ namespace Articuno
         /// Returns true if quality is good. False otherwise
         /// </summary>
         /// <returns>Returns True if good quality, False if bad</returns>
-        public Tuple<bool, double> rhQualityCheck(string metId)
+        public Tuple<bool, double> humidQualityCheck(string metId)
         {
             MetTower met = getMetTower(metId);
             var rhOpcObject = met.readRelativeHumidityValue();
@@ -410,6 +415,14 @@ namespace Articuno
                         mt.writeTemperatureSecOutOfRange(BAD_QUALITY);
                     }
                     break;
+                case MetTowerEnum.NoData:
+                    if (Convert.ToBoolean(mt.readNoDataAlarmValue()) != BAD_QUALITY)
+                    {
+                        log.InfoFormat("{0} No Data alarm raised ", mt.getMetTowerPrefix);
+                        mt.writeNoDataAlarmValue(BAD_QUALITY);
+                    }
+                    break;
+
             }
         }
 
@@ -465,6 +478,13 @@ namespace Articuno
                         mt.writeTemperatureSecOutOfRange(GOOD_QUALITY);
                     }
                     break;
+                case MetTowerEnum.NoData:
+                    if (Convert.ToBoolean(mt.readNoDataAlarmValue()) != GOOD_QUALITY)
+                    {
+                        log.InfoFormat("{0} No Data alarm cleared ", mt.getMetTowerPrefix);
+                        mt.writeNoDataAlarmValue(GOOD_QUALITY);
+                    }
+                    break;
             }
         }
 
@@ -491,7 +511,8 @@ namespace Articuno
             PrimSensorQuality,
             PrimSensorOutOfRange,
             SecSensorQuality,
-            SecSensorOutOfRange
+            SecSensorOutOfRange,
+            NoData
         }
     }
 }

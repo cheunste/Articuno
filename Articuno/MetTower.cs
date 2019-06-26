@@ -249,7 +249,7 @@ namespace Articuno
         public string getNoDataAlarmTag() { return noDataAlarmTag; }
         public void setNoDataAlarmTag(string tag) { noDataAlarmTag = tag; }
         public Object readNoDataAlarmValue() { return new EasyDAClient().ReadItemValue("", opcServerName, getNoDataAlarmTag()); }
-        public void writeNoDataAlarmValue(double value ) { client.WriteItemValue("", opcServerName, getNoDataAlarmTag(), value); }
+        public void writeNoDataAlarmValue(object value ) { client.WriteItemValue("", opcServerName, getNoDataAlarmTag(), value); }
         /// <summary>
         /// Gets the IceIndicationValue OPC Value
         /// </summary>
