@@ -18,7 +18,7 @@ namespace ArticunoTest
             //
             // TODO: Add constructor logic here
             //
-            articuno = new ArticunoMain(null,null,null);
+            articuno = new ArticunoMain(null, null, null);
         }
 
         private TestContext testContextInstance;
@@ -63,6 +63,16 @@ namespace ArticunoTest
 
         [TestMethod]
         public void TestMethod1()
+        {
+            //
+            // TODO: Add test logic here
+            //
+            this.articuno.start();
+
+        }
+
+        [TestMethod]
+        public void IcedTowerTest()
         {
             //
             // TODO: Add test logic here

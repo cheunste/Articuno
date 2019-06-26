@@ -204,8 +204,21 @@ namespace ArticunoTest
             Assert.AreEqual(humdAfterSwitch, humdBeforeSwitch, 0.001, "Humidity is not equal after switching back");
         }
 
+        [TestMethod]
+        public void turbineValueTest()
+        {
+
+        }
+
+        [TestCleanup]
+        public void cleanup()
+        {
+            resetMetTowerValues();
+
+        }
+
         //method to set all the input met tags to zero
-        public void resetMetTowerValues()
+        private void resetMetTowerValues()
         {
             foreach (string tag in met1Tags)
             {
@@ -219,7 +232,8 @@ namespace ArticunoTest
 
         }
 
-        public void writeValue(string tag, double value)
+        //Method used in this class to write values 
+        private void writeValue(string tag, double value)
         {
             opcServer.writeTagValue(tag, value);
         }

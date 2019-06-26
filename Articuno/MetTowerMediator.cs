@@ -202,7 +202,7 @@ namespace Articuno
         }
 
         /// <summary>
-        ///  Gets the one minute average temperature of a met tower primary or secondary sensor
+        ///  Gets the one minute average temperature of a met tower primary or secondary sensor. 
         /// </summary>
         /// <param name="metId"></param>
         /// <returns>A double if the quality is good for either the primary or secondary sensor. Null otherwise. This MUST be handled by the supporting class</returns>
