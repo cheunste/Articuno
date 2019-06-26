@@ -16,6 +16,9 @@ namespace ArticunoTest
 
         public TurbineTest()
         {
+
+            //Must create the MetTowersingleton first
+            MetTowerMediator.Instance.createMetTower();
             List<string> newList = new List<string>();
             newList.Add("T001");
             tf = new TurbineFactory(newList, "SV.OPCDAServer.1");
@@ -126,21 +129,6 @@ namespace ArticunoTest
                 turbine.writeAlarmTagValue(5);
                 Assert.AreEqual(turbine.readAlarmValue(),5.00);
             }
-
-        }
-
-        [TestMethod]
-        public void writeLoadShutDown()
-        {
-            List<Turbine> turbineList =(List<Turbine>)tf.getTurbineList();
-
-            foreach(Turbine turbine in turbineList)
-            {
-                double temp = turbine.writeLoadShutdownCmd();
-                //Console.WriteLine(turbine.writeLoadShutdownCmd());
-                Assert.AreEqual(temp, 1.00, 1.001);
-            }
-
 
         }
 

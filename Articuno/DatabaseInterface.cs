@@ -13,7 +13,7 @@ namespace Articuno
 
         private string SYSTEM_TABLE             = "SystemParameters";
         private string MET_TOWER_TABLE          = "MetTower";
-        private string TURBINE_INPUT_TABLE        = "TurbineINputTags";
+        private string TURBINE_INPUT_TABLE        = "TurbineInputTags";
         private string PERFORMANCE_FILTER_TABLE = "PerformanceTable";
         
         SQLiteConnection articunoDBConnection;

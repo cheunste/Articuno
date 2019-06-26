@@ -56,7 +56,7 @@ namespace Articuno
 
 
             //Create Met Tower References
-            MetTower met1 = new MetTower(metTower, 0.00, 0.00,null);
+            MetTower met1 = new MetTower(metTower, 0.00, 0.00,"SV.OPCDAServer.1");
 
             //Create Articuno instance
             ArticunoMain artic = new ArticunoMain(opcServer, metTower, di.getTurbineList());
