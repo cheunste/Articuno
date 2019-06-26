@@ -59,24 +59,6 @@ namespace ArticunoTest
             siteName = "SCRAB";
         }
 
-        private TestContext testContextInstance;
-
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext
-        {
-            get
-            {
-                return testContextInstance;
-            }
-            set
-            {
-                testContextInstance = value;
-            }
-        }
-
         [TestMethod]
         public void createNewMetTower()
         {
@@ -113,15 +95,31 @@ namespace ArticunoTest
 
         [TestMethod]
         //Test the temperature values and see if they match the database
-        public void tempGetValueTest()
+        [DataTestMethod]
+        [DataRow("Met1", 20.0, 60.0, 10.0)]
+        [DataRow("Met2", 40.0, 60.0, 50.0)]
+
+        public void GetValueTest(string metId, double tempVal1, double tempVal2, double hmdVal)
         {
-            var met1Values = MetTowerMediator.Instance.getAllMeasurements("Met1");
-            var met2Values = MetTowerMediator.Instance.getAllMeasurements("Met2");
+            MetTower met = MetTowerMediator.Instance.getMetTower(metId);
+            met.writeRelativeHumityValue(hmdVal);
+            met.writePrimTemperatureValue(tempVal1);
+            met.writeSecTemperatureValue(tempVal1);
+
+            var met1Values = MetTowerMediator.Instance.getAllMeasurements(metId);
 
             Console.WriteLine(met1Values.Item1);
             Console.WriteLine(met1Values.Item2);
             Console.WriteLine(met1Values.Item3);
             Console.WriteLine(met1Values.Item4);
+
+            Assert.AreEqual(met1Values.Item1, tempVal1, 0.001, "temperature value not equal");
+            Assert.AreEqual(met1Values.Item2, hmdVal, 0.001, "Humidty values are not equal");
+
+            //Warning, all I can do for the dew point and delta calcs are check if they're not null. Mainly because I didn't come up with the formula for this
+            Assert.IsNotNull(met1Values.Item3);
+            Assert.IsNotNull(met1Values.Item4);
+
         }
 
         [TestMethod]
@@ -201,7 +199,7 @@ namespace ArticunoTest
             MetTowerMediator.Instance.switchMetTower(metId);
             tempAfterSwitch = Convert.ToDouble(MetTowerMediator.Instance.getTemperature(metId));
             humdAfterSwitch = Convert.ToDouble(MetTowerMediator.Instance.getHumidity(metId));
-            
+
             Assert.AreEqual(tempAfterSwitch, tempBeforeSwitch, 0.001, "Temperature is not equal after switching back");
             Assert.AreEqual(humdAfterSwitch, humdBeforeSwitch, 0.001, "Humidity is not equal after switching back");
         }
