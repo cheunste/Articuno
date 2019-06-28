@@ -61,11 +61,13 @@ namespace ArticunoTest
         string siteName;
         string opcServerName = "SV.OPCDAServer.1";
 
+        DatabaseInterface dbi;
+
         //Create a Met Tower Class
         public MetTowerUnitTest()
         {
             //Insert some test data into Articuno.db
-            //dbi = new DatabaseInterface();
+            dbi = DatabaseInterface.Instance;
             //Create new met tower mediator
             MetTowerMediator.Instance.createMetTower();
             opcServer = new OpcServer(opcServerName);

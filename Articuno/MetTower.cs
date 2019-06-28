@@ -90,6 +90,9 @@ namespace Articuno
         private string opcServerName;
         private EasyDAClient client = new EasyDAClient();
 
+        //database
+        private DatabaseInterface dbi;
+
         //log
         private static readonly ILog log = LogManager.GetLogger(typeof(MetTower));
 
@@ -101,7 +104,7 @@ namespace Articuno
         public MetTower(string MetId, double ambTempThreshold, double deltaTempThreshold, OpcServer opcServerInstance)
         {
             //Open a connection to the DB
-            DatabaseInterface dbi = new DatabaseInterface();
+            dbi = DatabaseInterface.Instance;
             //Set up the query
             metTowerQuerySetup(MetId);
             //Set OPC Server
@@ -118,8 +121,7 @@ namespace Articuno
         public MetTower(string MetId, double ambTempThreshold, double deltaTempThreshold, string opcServerName)
         {
             //Open a connection to the DB
-            DatabaseInterface dbi = new DatabaseInterface();
-            dbi.openConnection();
+            DatabaseInterface dbi = DatabaseInterface.Instance;
             //Set up the query
             metTowerQuerySetup(MetId);
             //Set OPC Server Name
@@ -133,17 +135,14 @@ namespace Articuno
 
             //Set up met id
             this.metTowerPrefix = MetId;
-            dbi.closeConnection();
         }
 
         //This method queries the sqlite table and then sets the tags in the table to the members of the class
         private void metTowerQuerySetup(string MetId)
         {
             //Open a connection to the DB
-            DatabaseInterface dbi = new DatabaseInterface();
-            dbi.openConnection();
+            //DatabaseInterface dbi = new DatabaseInterface();
 
-            dbi.openConnection();
             //Get everything relating to the MetTowerInputTags table
             SQLiteDataReader reader = dbi.readCommand(INPUT_TAG_QUERY + String.Format(" WHERE MetId='{0}'",MetId));
             reader.Read();
@@ -165,7 +164,6 @@ namespace Articuno
             this.rhBadQualityTag = reader[HumidityBadQualityColumn].ToString();
             this.noDataAlarmTag = reader[NoDataAlarmColumn].ToString();
 
-            dbi.closeConnection();
         }
 
 

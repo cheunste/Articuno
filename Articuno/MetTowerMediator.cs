@@ -40,10 +40,16 @@ namespace Articuno
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(MetTowerMediator));
 
+        //Database
+        DatabaseInterface dbi;
+
+
         private MetTowerMediator()
         {
             met1Switched = false;
             met2Switched = false;
+            dbi = DatabaseInterface.Instance;
+
         }
 
         public static MetTowerMediator Instance { get { return Nested.instance; } }
@@ -63,20 +69,15 @@ namespace Articuno
         {
             if (numMetTower == 0)
             {
-                DatabaseInterface dbi = new DatabaseInterface();
-                dbi.openConnection();
                 SQLiteDataReader reader = dbi.readCommand("SELECT Count(*) as num FROM MetTowerInputTags");
                 reader.Read();
                 numMetTower = Convert.ToInt16(reader["num"]);
-                dbi.closeConnection();
             }
             return numMetTower;
         }
 
         public void createMetTower()
         {
-            DatabaseInterface dbi = new DatabaseInterface();
-            dbi.openConnection();
             SQLiteDataReader reader = dbi.readCommand(THRESHOLD_QUERY);
             reader.Read();
             string temp1 = reader["OpcTag"].ToString();
@@ -97,7 +98,6 @@ namespace Articuno
             deltaThreshold = Convert.ToDouble(vtqResults[1].Vtq.Value);
 
 
-            dbi.closeConnection();
 
             for (int i = 1; i <= getNumMetTower(); i++)
             {
