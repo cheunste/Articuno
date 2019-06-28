@@ -38,7 +38,7 @@ namespace Articuno
         {
 
             //Create instance to the Database
-            DatabaseInterface di = new DatabaseInterface();
+            DatabaseInterface di = DatabaseInterface.Instance;
 
             //Create instance to the Logging class
 

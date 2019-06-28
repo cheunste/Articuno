@@ -41,7 +41,7 @@ namespace Articuno
 
 
         //Returns true if the Articuno sqlite database is not found 
-        public static Boolean databaseNotFound()
+        public Boolean databaseNotFound()
         {
             try
             {
