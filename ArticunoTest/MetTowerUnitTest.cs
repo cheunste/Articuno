@@ -182,6 +182,7 @@ namespace ArticunoTest
         public void swtichMetTowers(string metId, double tempVal1, double tempVal2, double hmdVal1, double hmdVal2)
         {
 
+            setValidMetData();
             double tempBeforeSwitch;
             double humdBeforeSwitch;
             MetTower met1 = MetTowerMediator.Instance.getMetTower("Met1");
@@ -287,15 +288,15 @@ namespace ArticunoTest
         private void setValidMetData()
         {
             //Met1
-            writeValue(String.Format("{0}.Articuno.Met1.AmbTmp1", siteName), 60.00);
-            writeValue(String.Format("{0}.Articuno.Met1.AmbTmp2", siteName), 52.00);
-            writeValue(String.Format("{0}.Articuno.Met1.RH1", siteName), 30);
-            writeValue(String.Format("{0}.Articuno.Met1.RH2", siteName), 25);
+            writeValue(String.Format("{0}.Met1.AmbTmp1", siteName), 60.00);
+            writeValue(String.Format("{0}.Met1.AmbTmp2", siteName), 52.00);
+            writeValue(String.Format("{0}.Met1.RH1", siteName), 30);
+            writeValue(String.Format("{0}.Met1.RH2", siteName), 25);
             //Met2
-            writeValue(String.Format("{0}.Articuno.Met2.AmbTmp1", siteName), 80.00);
-            writeValue(String.Format("{0}.Articuno.Met2.AmbTmp2", siteName), 75.00);
-            writeValue(String.Format("{0}.Articuno.Met2.RH1", siteName), 50);
-            writeValue(String.Format("{0}.Articuno.Met2.RH2", siteName), 45);
+            writeValue(String.Format("{0}.Met2.AmbTmp1", siteName), 80.00);
+            writeValue(String.Format("{0}.Met2.AmbTmp2", siteName), 75.00);
+            writeValue(String.Format("{0}.Met2.RH1", siteName), 50);
+            writeValue(String.Format("{0}.Met2.RH2", siteName), 45);
         }
 
         //Method used in this class to write values 

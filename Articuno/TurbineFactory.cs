@@ -3,6 +3,7 @@ using OpcLabs.EasyOpc.DataAccess;
 using OpcLabs.EasyOpc.DataAccess.OperationModel;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SQLite;
 using System.Linq;
 using System.Text;
@@ -91,17 +92,19 @@ namespace Articuno
                 string cmd =
                     String.Format("SELECT * " +
                     "from TurbineInputTags WHERE TurbineId='{0}'", turbinePrefix);
-                SQLiteDataReader reader = dbi.readCommand(cmd);
-                reader.Read();
+                //Dictionary<string, object> reader = dbi.readCommand2(cmd);
+                //Dictionary<string, object> reader = null;
+                DataTable reader = dbi.readCommand2(cmd);
+                //DataTable reader = dbi.readCommand2(cmd);
                 //turbine.setLoadShutdownTag(reader["Pause"].ToString());
-                turbine.setNrsStateTag(reader["NrsMode"].ToString());
-                turbine.setOperatingStateTag(reader["OperatingState"].ToString());
-                turbine.setRotorSpeedTag(reader["RotorSpeed"].ToString());
-                turbine.setTemperatureTag(reader["Temperature"].ToString());
-                turbine.setWindSpeedTag(reader["WindSpeed"].ToString());
-                turbine.setParticipationTag(reader["Participation"].ToString());
+                turbine.setNrsStateTag(reader.Rows[0]["NrsMode"].ToString());
+                turbine.setOperatingStateTag(reader.Rows[0]["OperatingState"].ToString());
+                turbine.setRotorSpeedTag(reader.Rows[0]["RotorSpeed"].ToString());
+                turbine.setTemperatureTag(reader.Rows[0]["Temperature"].ToString());
+                turbine.setWindSpeedTag(reader.Rows[0]["WindSpeed"].ToString());
+                turbine.setParticipationTag(reader.Rows[0]["Participation"].ToString());
 
-                string primMetTower = reader["MetReference"].ToString();
+                string primMetTower = reader.Rows[0]["MetReference"].ToString();
                 //MetTower metTower = MetTowerMediator.getMetTower(primMetTower);
                 MetTower metTower = MetTowerMediator.Instance.getMetTower(primMetTower);
                 turbine.setMetTower(metTower);
@@ -111,9 +114,9 @@ namespace Articuno
                     //If the RedundancyForMet is not empty, then that means
                     //The met tower is noted to be used as a temperature measurement source
                     //In case a met tower fails
-                    if (reader["RedundancyForMet"].ToString() != null)
+                    if (reader.Rows[0]["RedundancyForMet"].ToString() != null)
                     {
-                        string backupMetTower = reader["RedundancyForMet"].ToString();
+                        string backupMetTower = reader.Rows[0]["RedundancyForMet"].ToString();
                         MetTowerMediator.Instance.setTurbineBackup(backupMetTower, turbine);
                     }
                 }
@@ -125,11 +128,11 @@ namespace Articuno
                 //For Turbine tags from the TurbineOutputTags Table There might be duplicates
                 cmd = String.Format("SELECT * " +
                     "from TurbineOutputTags WHERE TurbineId='{0}'", turbinePrefix);
-                reader = dbi.readCommand(cmd);
-                reader.Read();
+                //reader = dbi.readCommand2(cmd);
+                reader = null;
 
-                turbine.setAlarmTag(reader["Alarm"].ToString());
-                turbine.setLoadShutdownTag(reader["Pause"].ToString());
+                turbine.setAlarmTag(reader.Rows[0]["Alarm"].ToString());
+                turbine.setLoadShutdownTag(reader.Rows[0]["Pause"].ToString());
 
                 //Add turbine to the turbine list
                 turbineList.Add(turbine);

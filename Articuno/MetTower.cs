@@ -3,6 +3,7 @@ using OpcLabs.EasyOpc.DataAccess;
 using OpcLabs.EasyOpc.OperationModel;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SQLite;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -121,7 +122,7 @@ namespace Articuno
         public MetTower(string MetId, double ambTempThreshold, double deltaTempThreshold, string opcServerName)
         {
             //Open a connection to the DB
-            DatabaseInterface dbi = DatabaseInterface.Instance;
+            dbi = DatabaseInterface.Instance;
             //Set up the query
             metTowerQuerySetup(MetId);
             //Set OPC Server Name
@@ -144,25 +145,23 @@ namespace Articuno
             //DatabaseInterface dbi = new DatabaseInterface();
 
             //Get everything relating to the MetTowerInputTags table
-            SQLiteDataReader reader = dbi.readCommand(INPUT_TAG_QUERY + String.Format(" WHERE MetId='{0}'",MetId));
-            reader.Read();
-            this.primTempTag = reader[PrimTempValueTagColumn].ToString();
-            this.secTempTag = reader[SecTempValueColumn].ToString();
-            this.primRHTag = reader[PrimHumidityValueColumn].ToString();
-            this.secRHTag = reader[SecHumidityValueColumn].ToString();
+            DataTable reader = dbi.readCommand2(INPUT_TAG_QUERY + String.Format(" WHERE MetId='{0}'",MetId));
+            this.primTempTag = reader.Rows[0][PrimTempValueTagColumn].ToString();
+            this.secTempTag = reader.Rows[0][SecTempValueColumn].ToString();
+            this.primRHTag = reader.Rows[0][PrimHumidityValueColumn].ToString();
+            this.secRHTag = reader.Rows[0][SecHumidityValueColumn].ToString();
 
             //Get everything relating to the MetTowerOutputTags table
-            reader = dbi.readCommand(OUTPUT_TAG_QUERY + String.Format(" WHERE MetId='{0}'", MetId));
-            reader.Read();
-            this.tempPrimBadQualityTag = reader[TempPrimBadQualityColumn].ToString();
-            this.tempPrimOutOfRangeTag = reader[TempPrimOutOfRangeColumn].ToString();
-            this.tempSecBadQualityTag = reader[TempSecBadQualityColumn].ToString();
-            this.tempSecOutOfRangeTag = reader[TempSecOutOfRangeColumn].ToString();
+            reader = dbi.readCommand2(OUTPUT_TAG_QUERY + String.Format(" WHERE MetId='{0}'", MetId));
+            this.tempPrimBadQualityTag = reader.Rows[0][TempPrimBadQualityColumn].ToString();
+            this.tempPrimOutOfRangeTag = reader.Rows[0][TempPrimOutOfRangeColumn].ToString();
+            this.tempSecBadQualityTag = reader.Rows[0][TempSecBadQualityColumn].ToString();
+            this.tempSecOutOfRangeTag = reader.Rows[0][TempSecOutOfRangeColumn].ToString();
 
-            this.iceIndicationTag = reader[IceIndicationColumn].ToString();
-            this.rhOutOfRangeTag = reader[HumidityOutOfRangeColumn].ToString();
-            this.rhBadQualityTag = reader[HumidityBadQualityColumn].ToString();
-            this.noDataAlarmTag = reader[NoDataAlarmColumn].ToString();
+            this.iceIndicationTag = reader.Rows[0][IceIndicationColumn].ToString();
+            this.rhOutOfRangeTag = reader.Rows[0][HumidityOutOfRangeColumn].ToString();
+            this.rhBadQualityTag = reader.Rows[0][HumidityBadQualityColumn].ToString();
+            this.noDataAlarmTag = reader.Rows[0][NoDataAlarmColumn].ToString();
 
         }
 

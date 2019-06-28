@@ -4,6 +4,7 @@ using OpcLabs.EasyOpc.DataAccess.Generic;
 using OpcLabs.EasyOpc.DataAccess.OperationModel;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SQLite;
 using System.Linq;
 using System.Text;
@@ -69,24 +70,20 @@ namespace Articuno
         {
             if (numMetTower == 0)
             {
-                SQLiteDataReader reader = dbi.readCommand("SELECT Count(*) as num FROM MetTowerInputTags");
-                reader.Read();
-                numMetTower = Convert.ToInt16(reader["num"]);
+                DataTable reader = dbi.readCommand2("SELECT Count(*) as num FROM MetTowerInputTags");
+                numMetTower = Convert.ToInt16(reader.Rows[0]["num"]);
             }
             return numMetTower;
         }
 
         public void createMetTower()
         {
-            SQLiteDataReader reader = dbi.readCommand(THRESHOLD_QUERY);
-            reader.Read();
-            string temp1 = reader["OpcTag"].ToString();
-            reader.Read();
-            string temp2 = reader["OpcTag"].ToString();
+            DataTable reader = dbi.readCommand2(THRESHOLD_QUERY);
+            string temp1 = reader.Rows[0]["OpcTag"].ToString();
+            string temp2 = reader.Rows[1]["OpcTag"].ToString();
 
-            reader = dbi.readCommand(SERVER_NAME_QUERY);
-            reader.Read();
-            opcServerName = reader["OpcTag"].ToString();
+            reader = dbi.readCommand2(SERVER_NAME_QUERY);
+            opcServerName = reader.Rows[0]["OpcTag"].ToString();
 
             DAVtqResult[] vtqResults = client.ReadMultipleItems(opcServerName,
                 new DAItemDescriptor[]{

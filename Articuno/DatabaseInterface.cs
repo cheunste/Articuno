@@ -1,6 +1,7 @@
 ﻿using log4net;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SQLite;
 using System.Linq;
 using System.Text;
@@ -17,7 +18,7 @@ namespace Articuno
         private static readonly string PERFORMANCE_FILTER_TABLE = "PerformanceTable";
 
         static string dataSource = ".\\articuno.db";
-        static string ConnectionString = String.Format("Data Source ={0};Version=3;",dataSource);
+        static string ConnectionString = String.Format("Data Source ={0};Version=3;", dataSource);
 
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(ArticunoMain));
@@ -58,19 +59,48 @@ namespace Articuno
         /// </summary>
         /// <param name="command"></param>
         /// <returns></returns>
-        public SQLiteDataReader readCommand(string command)
+        //public SQLiteDataReader readCommand(string command)
+        //{
+        //    var content = new Dictionary<string, string>();
+        //    using (SQLiteConnection c = new SQLiteConnection(ConnectionString))
+        //    {
+        //        c.Open();
+        //        using (SQLiteCommand cmd = new SQLiteCommand(command, c))
+        //        {
+        //            // return cmd.ExecuteReader();
+        //            using (SQLiteDataReader reader = cmd.ExecuteReader())
+        //            {
+        //                int i = 0;
+        //                while (reader.Read())
+        //                {
+        //                    content.Add(reader.GetOriginalName(i), reader.GetString(i));
+        //                    i++;
+        //                }
+        //            }
+
+        //        }
+        //    }
+        //    return null;
+        //    //SQLiteCommand cmd = new SQLiteCommand(command, articunoDBConnection);
+        //}
+        public DataTable readCommand2(string command)
         {
-            using (SQLiteConnection c = new SQLiteConnection(ConnectionString))
+            List<List<object>> content = new List<List<object>>();
+            List<object> sublist = new List<object>();
+            DataTable dt = new DataTable();
+            using (SQLiteConnection connection = new SQLiteConnection(ConnectionString))
             {
-                c.Open();
-                using (SQLiteCommand cmd = new SQLiteCommand(command, c))
+                connection.Open();
+                using (SQLiteCommand cmd = new SQLiteCommand(command, connection))
                 {
-                    using (SQLiteDataReader rdr = cmd.ExecuteReader())
+                    using (SQLiteDataReader reader = cmd.ExecuteReader())
                     {
-                        return cmd.ExecuteReader();
+                        //You do things here
+                        dt.Load(reader);
                     }
                 }
             }
+            return dt;
             //SQLiteCommand cmd = new SQLiteCommand(command, articunoDBConnection);
         }
 
@@ -81,10 +111,10 @@ namespace Articuno
         /// <returns></returns>
         public int updateCommand(string command)
         {
-            using(SQLiteConnection c = new SQLiteConnection(ConnectionString))
+            using (SQLiteConnection connection = new SQLiteConnection(ConnectionString))
             {
-                c.Open();
-                using(SQLiteCommand cmd = new SQLiteCommand(command,c))
+                connection.Open();
+                using (SQLiteCommand cmd = new SQLiteCommand(command, connection))
                 {
                     return cmd.ExecuteNonQuery();
                 }
@@ -94,7 +124,7 @@ namespace Articuno
         public List<Turbine> getTurbineList()
         {
             //TODO: Implement
-            SQLiteDataReader result = readCommand("SELECT TurbineId from " + TURBINE_INPUT_TABLE);
+            DataTable result = readCommand2("SELECT TurbineId from " + TURBINE_INPUT_TABLE);
 
             throw new NotImplementedException();
         }
@@ -106,7 +136,7 @@ namespace Articuno
         public string getOpcServer()
         {
             //TODO: Implement
-            SQLiteDataReader result = readCommand("SELECT Description from " + SYSTEM_TABLE);
+            DataTable result = readCommand2("SELECT Description from " + SYSTEM_TABLE);
             throw new NotImplementedException();
             return "";
         }
@@ -114,7 +144,7 @@ namespace Articuno
         public string getMetTower()
         {
             //TODO: check query
-            SQLiteDataReader result = readCommand("SELECT * FROM" + MET_TOWER_TABLE);
+            DataTable result = readCommand2("SELECT * FROM" + MET_TOWER_TABLE);
             //throw new NotImplementedException();
             return "";
         }
