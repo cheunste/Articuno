@@ -11,23 +11,40 @@ namespace Articuno
     class DatabaseInterface
     {
 
-        private string SYSTEM_TABLE             = "SystemParameters";
-        private string MET_TOWER_TABLE          = "MetTower";
-        private string TURBINE_INPUT_TABLE        = "TurbineInputTags";
-        private string PERFORMANCE_FILTER_TABLE = "PerformanceTable";
-        
-        SQLiteConnection articunoDBConnection;
+        private static readonly string SYSTEM_TABLE = "SystemParameters";
+        private static readonly string MET_TOWER_TABLE = "MetTower";
+        private static readonly string TURBINE_INPUT_TABLE = "TurbineInputTags";
+        private static readonly string PERFORMANCE_FILTER_TABLE = "PerformanceTable";
+
+        static string dataSource = ".\\articuno.db";
+        static string ConnectionString = String.Format("Data Source ={0};Version=3;",dataSource);
 
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(ArticunoMain));
 
+        private DatabaseInterface()
+        {
+
+        }
+
+        public static DatabaseInterface Instance { get { return Nested.instance; } }
+
+        private class Nested
+        {
+            static Nested()
+            {
+
+            }
+            internal static readonly DatabaseInterface instance = new DatabaseInterface();
+        }
+
+
+
         //Returns true if the Articuno sqlite database is not found 
-        public Boolean databaseNotFound()
+        public static Boolean databaseNotFound()
         {
             try
             {
-                openConnection();
-                closeConnection();
             }
             catch (Exception e)
             {
@@ -36,32 +53,6 @@ namespace Articuno
             return false;
         }
 
-        //Open connection to the SQLLite DB file
-        public SQLiteConnection openConnection()
-        {
-            string dataSource = "C:\\Users\\Stephen\\Desktop\\articuno.db";
-            dataSource = ".\\articuno.db";
-            
-            //this.articunoDBConnection = new SQLiteConnection("Data Source = Articuno.db;Version=3;");
-            this.articunoDBConnection = new SQLiteConnection("Data Source ="+dataSource+";Version=3;");
-
-            articunoDBConnection.Open();
-
-            return articunoDBConnection;
-        }
-
-        //Close connection to the SQLLite DB file
-        public void closeConnection()
-        {
-            articunoDBConnection.Close();
-        }
-
-        public void closeConnection(SQLiteConnection connection)
-        {
-            connection.Close();
-        }
-
-
         /// <summary>
         /// Used for executing read queries. Doesn't check to see if artiunoDBConnection is null or not 
         /// </summary>
@@ -69,8 +60,18 @@ namespace Articuno
         /// <returns></returns>
         public SQLiteDataReader readCommand(string command)
         {
-            SQLiteCommand cmd = new SQLiteCommand(command, articunoDBConnection);
-            return cmd.ExecuteReader();
+            using (SQLiteConnection c = new SQLiteConnection(ConnectionString))
+            {
+                c.Open();
+                using (SQLiteCommand cmd = new SQLiteCommand(command, c))
+                {
+                    using (SQLiteDataReader rdr = cmd.ExecuteReader())
+                    {
+                        return cmd.ExecuteReader();
+                    }
+                }
+            }
+            //SQLiteCommand cmd = new SQLiteCommand(command, articunoDBConnection);
         }
 
         /// <summary>
@@ -80,16 +81,20 @@ namespace Articuno
         /// <returns></returns>
         public int updateCommand(string command)
         {
-            SQLiteCommand cmd = new SQLiteCommand(command, articunoDBConnection);
-            return cmd.ExecuteNonQuery();
+            using(SQLiteConnection c = new SQLiteConnection(ConnectionString))
+            {
+                c.Open();
+                using(SQLiteCommand cmd = new SQLiteCommand(command,c))
+                {
+                    return cmd.ExecuteNonQuery();
+                }
+            }
         }
 
         public List<Turbine> getTurbineList()
         {
             //TODO: Implement
-            openConnection();
-            SQLiteDataReader result =readCommand("SELECT TurbineId from "+TURBINE_INPUT_TABLE);
-            closeConnection();
+            SQLiteDataReader result = readCommand("SELECT TurbineId from " + TURBINE_INPUT_TABLE);
 
             throw new NotImplementedException();
         }
@@ -101,9 +106,7 @@ namespace Articuno
         public string getOpcServer()
         {
             //TODO: Implement
-            openConnection();
-            SQLiteDataReader result =readCommand("SELECT Description from "+SYSTEM_TABLE);
-            closeConnection();
+            SQLiteDataReader result = readCommand("SELECT Description from " + SYSTEM_TABLE);
             throw new NotImplementedException();
             return "";
         }
@@ -111,9 +114,7 @@ namespace Articuno
         public string getMetTower()
         {
             //TODO: check query
-            openConnection();
-            SQLiteDataReader result =readCommand("SELECT * FROM"+ MET_TOWER_TABLE);
-            closeConnection();
+            SQLiteDataReader result = readCommand("SELECT * FROM" + MET_TOWER_TABLE);
             //throw new NotImplementedException();
             return "";
         }

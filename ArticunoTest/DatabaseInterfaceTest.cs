@@ -12,28 +12,13 @@ namespace ArticunoTest
         DatabaseInterface dbi;
         public DatabaseInterfaceTest()
         {
-            dbi = new DatabaseInterface();
-        }
-
-        [TestMethod]
-        public void connectionTest()
-        {
-            SQLiteConnection testConnection = dbi.openConnection();
-            ConnectionState test = testConnection.State;
-            Assert.AreEqual(test.ToString().ToLower(), "open");
-
-            dbi.closeConnection(testConnection);
-            test = testConnection.State;
-            Assert.AreEqual(test.ToString().ToLower(), "closed");
+            dbi = DatabaseInterface.Instance;
         }
 
         [TestMethod]
         //Test to get the description column from various tables
         public void readFromDBTest()
         {
-            //Open the DB
-            SQLiteConnection testConnection = dbi.openConnection();
-
             //Get all the columns from the SystemParemeters
             //NOTE: To see the output, click the output in 'Test Explorer' after the test is executed.
             string sqlcmd = "Select * from SystemInputTags";
@@ -107,9 +92,6 @@ namespace ArticunoTest
                     reader["TurbineId"]
                 );
             }
-
-            //Close the DB
-            dbi.closeConnection(testConnection);
         }
 
         [TestMethod]
@@ -119,7 +101,6 @@ namespace ArticunoTest
         {
             //For simplicity, write to the SystemOutputTgas table
             //Open the DB
-            SQLiteConnection testConnection = dbi.openConnection();
 
             //generate a random int
             Random rnd = new Random();
@@ -136,15 +117,12 @@ namespace ArticunoTest
                 Console.WriteLine("Random Number: " + randomNumber);
                 Console.WriteLine("Value in DB: " + reader["Default"]);
             }
-            //Close the DB
-            dbi.closeConnection(testConnection);
         }
 
         [TestMethod]
         //Test to see if it is able to get items from the turbineInput tables
         public void turbineTableTest()
         {
-            SQLiteConnection testConnection = dbi.openConnection();
             string sqlcmd = "";
             string turbinePrefix = "'T001'";
 
@@ -196,9 +174,6 @@ namespace ArticunoTest
                 Assert.IsNotNull(reader[0]);
                 Console.WriteLine(reader[0]);
             }
-
-            //Close the DB
-            dbi.closeConnection(testConnection);
         }
     }
 }
