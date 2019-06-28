@@ -95,7 +95,7 @@ namespace Articuno
                 SQLiteDataReader reader = dbi.readCommand(cmd);
                 reader.Read();
                 //turbine.setLoadShutdownTag(reader["Pause"].ToString());
-                //turbine.setNrsStateTag(reader["NrsMode"].ToString());
+                turbine.setNrsStateTag(reader["NrsMode"].ToString());
                 turbine.setOperatingStateTag(reader["OperatingState"].ToString());
                 turbine.setRotorSpeedTag(reader["RotorSpeed"].ToString());
                 turbine.setTemperatureTag(reader["Temperature"].ToString());
@@ -130,7 +130,6 @@ namespace Articuno
                 reader.Read();
 
                 turbine.setAlarmTag(reader["Alarm"].ToString());
-                turbine.setNrsStateTag(reader["NrsMode"].ToString());
                 turbine.setLoadShutdownTag(reader["Pause"].ToString());
 
                 //Add turbine to the turbine list

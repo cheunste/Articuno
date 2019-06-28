@@ -64,13 +64,15 @@ namespace ArticunoTest
         //Create a Met Tower Class
         public MetTowerUnitTest()
         {
-
             //Insert some test data into Articuno.db
             //dbi = new DatabaseInterface();
             //Create new met tower mediator
             MetTowerMediator.Instance.createMetTower();
             opcServer = new OpcServer(opcServerName);
             siteName = "SCRAB";
+            //set default met tower Data
+            setValidMetData();
+
         }
 
         [TestMethod]
@@ -177,6 +179,7 @@ namespace ArticunoTest
         [DataRow("Met2", 20.0, 60.0, 50.0, 90.0)]
         public void swtichMetTowers(string metId, double tempVal1, double tempVal2, double hmdVal1, double hmdVal2)
         {
+
             double tempBeforeSwitch;
             double humdBeforeSwitch;
             MetTower met1 = MetTowerMediator.Instance.getMetTower("Met1");
@@ -216,6 +219,10 @@ namespace ArticunoTest
 
             Assert.AreEqual(tempAfterSwitch, tempBeforeSwitch, 0.001, "Temperature is not equal after switching back");
             Assert.AreEqual(humdAfterSwitch, humdBeforeSwitch, 0.001, "Humidity is not equal after switching back");
+
+            //Call the default good values. God knows what happened in the rpevious tests
+            setValidMetData();
+
         }
 
         [TestMethod]
@@ -223,42 +230,16 @@ namespace ArticunoTest
         [DataRow("Met1", -50.0, -50.0)]
         public void useTurbineTempTest(string metId, double tempSensor1Val, double tempSensor2Val)
         {
-            //Needs imporvement. The database is getting locked and I'm not sure why
+            //Needs imporvement. The database is getting locked. FIgure this out after a DB refactor
             Assert.Fail();
-
-            DatabaseInterface dbi;
-            dbi = new DatabaseInterface();
-            SQLiteConnection testConnection=dbi.openConnection();
-            //Set the redundancy for T001 to be Met1
-            string query = String.Format("UPDATE TurbineInputTags SET RedundancyForMet = {0} WHERE TurbineId = {1}","'Met1'","'T001'");
-            dbi.updateCommand(query);
-            dbi.closeConnection(testConnection);
-
-            List<string> temp = new List<string>();
-            temp.Add("T001");
-            TurbineFactory tf = new TurbineFactory(temp, opcServerName);
-            tf.createTurbines();
-
-            MetTowerMediator.Instance.writePrimTemperature(metId, tempSensor1Val);
-            MetTowerMediator.Instance.writeSecTemperature(metId, tempSensor2Val);
-
-            var metValue = MetTowerMediator.Instance.getAllMeasurements(metId);
-            Assert.AreEqual(metValue.Item1, 0, 0.001, "Temperaure isn't from T001");
-
-            testConnection=dbi.openConnection();
-            query = String.Format("UPDATE TurbineInputTags SET RedundancyForMet = {0} WHERE TurbineId = {1}","null","'T001'");
-            dbi.updateCommand(query);
-            dbi.closeConnection(testConnection);
-
-
         }
 
         [TestMethod]
         [DataTestMethod]
-        [DataRow("Met1", -50.0, -50.0,110.0,false,false,true)]
-        [DataRow("Met1", 10.0, 10.0,60.0,true,true,false)]
-        [DataRow("Met1", 10.0, -50.0,60.0,true,true,false)]
-        public void noDataTest(string metId, double tempVal1, double tempVal2, double hmdVal, bool expectedTempQual, bool expectedHumiQual,bool nodata)
+        [DataRow("Met1", -50.0, -50.0, 110.0, false, false, true)]
+        [DataRow("Met1", 10.0, 10.0, 60.0, true, true, false)]
+        [DataRow("Met1", 10.0, -50.0, 60.0, true, true, false)]
+        public void noDataTest(string metId, double tempVal1, double tempVal2, double hmdVal, bool expectedTempQual, bool expectedHumiQual, bool nodata)
         {
             MetTowerMediator.Instance.writePrimTemperature(metId, tempVal1);
             MetTowerMediator.Instance.writeSecTemperature(metId, tempVal2);
@@ -271,17 +252,18 @@ namespace ArticunoTest
 
             Assert.AreEqual(expectedTempQual, tempTuple.Item1, "No Data alarm is still showing true (good quality)");
             Assert.AreEqual(expectedHumiQual, humidTuple.Item1, "Temperature alarm is still showing true (good quality)");
-            Assert.AreEqual(MetTowerMediator.Instance.checkMetTowerQuality(metId),nodata,"No data alarm status not equal");
+            Assert.AreEqual(MetTowerMediator.Instance.checkMetTowerQuality(metId), nodata, "No data alarm status not equal");
         }
 
         [TestCleanup]
         public void cleanup()
         {
-            resetMetTowerValues();
+            resetTagsToZero();
+            setValidMetData();
         }
 
         //method to set all the input met tags to zero
-        private void resetMetTowerValues()
+        private void resetTagsToZero()
         {
             foreach (string tag in met1Tags)
             {
@@ -299,10 +281,26 @@ namespace ArticunoTest
 
         }
 
+        //Sets the met tower data to normal parameters. Needs to be hard coded so I can see a value difference between the two mets
+        private void setValidMetData()
+        {
+            //Met1
+            writeValue(String.Format("{0}.Articuno.Met1.AmbTmp1", siteName), 60.00);
+            writeValue(String.Format("{0}.Articuno.Met1.AmbTmp2", siteName), 52.00);
+            writeValue(String.Format("{0}.Articuno.Met1.RH1", siteName), 30);
+            writeValue(String.Format("{0}.Articuno.Met1.RH2", siteName), 25);
+            //Met2
+            writeValue(String.Format("{0}.Articuno.Met2.AmbTmp1", siteName), 80.00);
+            writeValue(String.Format("{0}.Articuno.Met2.AmbTmp2", siteName), 75.00);
+            writeValue(String.Format("{0}.Articuno.Met2.RH1", siteName), 50);
+            writeValue(String.Format("{0}.Articuno.Met2.RH2", siteName), 45);
+        }
+
         //Method used in this class to write values 
         private void writeValue(string tag, double value)
         {
             opcServer.writeTagValue(tag, value);
         }
+
     }
 }

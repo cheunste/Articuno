@@ -48,14 +48,15 @@ namespace ArticunoTest
         #endregion
 
         [TestMethod]
-        public void getTagValueFromTurbine()
+        [DataTestMethod]
+        [DataRow(8.12)]
+        [DataRow(0)]
+        [DataRow(100)]
+        public void getTagValueFromTurbine(double testValue)
         {
-
             //Write some random values to known tags in the test server. Hard coding is fine in this case 
             // AS LONG AS YOU HAVE THE NAME OF THE OPC TAG RIGHT
             // Note that OPC Tag is case sensative...apparently.
-            var testValue = 8.12;
-
             //Read 
             List<Object> bar = (List<Object>)tf.readTurbineWindSpeedTag();
             foreach (object foo in bar)
@@ -63,25 +64,7 @@ namespace ArticunoTest
                 Console.WriteLine(Convert.ToDouble(foo));
                 Assert.AreEqual(Convert.ToDouble(foo), testValue, 0.002);
             }
-
             bar.Clear();
-            testValue = 0;
-            bar = (List<Object>)tf.readRotorSpeedTag();
-            foreach (object foo in bar)
-            {
-                Console.WriteLine(Convert.ToDouble(foo));
-                Assert.AreEqual(Convert.ToDouble(foo), testValue, 0.002);
-            }
-
-            bar.Clear();
-            testValue = 100;
-            bar = (List<Object>)tf.readOperatingStateTag();
-            foreach (object foo in bar)
-            {
-                Console.WriteLine(Convert.ToDouble(foo));
-                Assert.AreEqual(Convert.ToDouble(foo), testValue, 0.002);
-            }
-
         }
 
         [TestMethod]

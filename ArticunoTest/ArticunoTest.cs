@@ -67,7 +67,8 @@ namespace ArticunoTest
             //
             // TODO: Add test logic here
             //
-            this.articuno.start();
+            //this.articuno.start();
+            throw new NotImplementedException();
 
         }
 
@@ -77,8 +78,8 @@ namespace ArticunoTest
             //
             // TODO: Add test logic here
             //
-            this.articuno.start();
-
+            //this.articuno.start();
+            throw new NotImplementedException();
         }
     }
 }
