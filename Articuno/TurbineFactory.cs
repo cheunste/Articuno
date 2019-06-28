@@ -82,8 +82,7 @@ namespace Articuno
             log.Info("Creating turbine lists");
             turbineList = new List<Turbine>();
             turbineList.Clear();
-            DatabaseInterface dbi = new DatabaseInterface();
-            dbi.openConnection();
+            DatabaseInterface dbi = DatabaseInterface.Instance;
             foreach (string turbinePrefix in turbinePrefixList)
             {
                 Turbine turbine = new Turbine(turbinePrefix, opcServerName);
@@ -135,7 +134,6 @@ namespace Articuno
                 //Add turbine to the turbine list
                 turbineList.Add(turbine);
             }
-            dbi.closeConnection();
         }
 
         /// <summary>

@@ -41,7 +41,7 @@ namespace Articuno
         private static readonly ILog log = LogManager.GetLogger(typeof(MetTowerMediator));
 
         //Database
-        DatabaseInterface dbi;
+        static DatabaseInterface dbi;
 
 
         private MetTowerMediator()
