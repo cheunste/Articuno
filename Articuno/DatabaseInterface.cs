@@ -54,36 +54,7 @@ namespace Articuno
             return false;
         }
 
-        /// <summary>
-        /// Used for executing read queries. Doesn't check to see if artiunoDBConnection is null or not 
-        /// </summary>
-        /// <param name="command"></param>
-        /// <returns></returns>
-        //public SQLiteDataReader readCommand(string command)
-        //{
-        //    var content = new Dictionary<string, string>();
-        //    using (SQLiteConnection c = new SQLiteConnection(ConnectionString))
-        //    {
-        //        c.Open();
-        //        using (SQLiteCommand cmd = new SQLiteCommand(command, c))
-        //        {
-        //            // return cmd.ExecuteReader();
-        //            using (SQLiteDataReader reader = cmd.ExecuteReader())
-        //            {
-        //                int i = 0;
-        //                while (reader.Read())
-        //                {
-        //                    content.Add(reader.GetOriginalName(i), reader.GetString(i));
-        //                    i++;
-        //                }
-        //            }
-
-        //        }
-        //    }
-        //    return null;
-        //    //SQLiteCommand cmd = new SQLiteCommand(command, articunoDBConnection);
-        //}
-        public DataTable readCommand2(string command)
+        public DataTable readCommand(string command)
         {
             List<List<object>> content = new List<List<object>>();
             List<object> sublist = new List<object>();
@@ -117,7 +88,7 @@ namespace Articuno
                 using (SQLiteCommand cmd = new SQLiteCommand(command, connection))
                 {
                     //return cmd.ExecuteNonQuery();
-                     cmd.ExecuteNonQuery();
+                    cmd.ExecuteNonQuery();
                 }
             }
             return 0;
@@ -126,7 +97,7 @@ namespace Articuno
         public List<Turbine> getTurbineList()
         {
             //TODO: Implement
-            DataTable result = readCommand2("SELECT TurbineId from " + TURBINE_INPUT_TABLE);
+            DataTable result = readCommand("SELECT TurbineId from " + TURBINE_INPUT_TABLE);
 
             throw new NotImplementedException();
         }
@@ -138,7 +109,7 @@ namespace Articuno
         public string getOpcServer()
         {
             //TODO: Implement
-            DataTable result = readCommand2("SELECT Description from " + SYSTEM_TABLE);
+            DataTable result = readCommand("SELECT Description from " + SYSTEM_TABLE);
             throw new NotImplementedException();
             return "";
         }
@@ -146,7 +117,7 @@ namespace Articuno
         public string getMetTower()
         {
             //TODO: check query
-            DataTable result = readCommand2("SELECT * FROM" + MET_TOWER_TABLE);
+            DataTable result = readCommand("SELECT * FROM" + MET_TOWER_TABLE);
             //throw new NotImplementedException();
             return "";
         }

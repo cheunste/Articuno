@@ -30,7 +30,7 @@ namespace ArticunoTest
         {
             //Get all the columns from the SystemParemeters
             //NOTE: To see the output, click the output in 'Test Explorer' after the test is executed.
-            DataTable reader = dbi.readCommand2(sqlcmd);
+            DataTable reader = dbi.readCommand(sqlcmd);
             var derp = reader.Columns["OpcTag"];
             Console.WriteLine(reader.Rows[0]["OpcTag"].ToString());
 
@@ -60,7 +60,7 @@ namespace ArticunoTest
             dbi.updateCommand(sqlcmd);
 
             sqlcmd = "Select DefaultValue from SystemOutputTags where Description='Heartbeat'";
-            DataTable reader = dbi.readCommand2(sqlcmd);
+            DataTable reader = dbi.readCommand(sqlcmd);
             int readHeartbeat = Convert.ToInt32(reader.Rows[0]["DefaultValue"]);
             Assert.AreEqual(readHeartbeat, randomNumber);
             Console.WriteLine("Random Number: {0}",randomNumber);
@@ -80,7 +80,7 @@ namespace ArticunoTest
         public void turbineTableTest(string cmd, string turbinePrefix)
         {
             string sqlcmd = cmd + turbinePrefix;
-            DataTable reader = dbi.readCommand2(sqlcmd);
+            DataTable reader = dbi.readCommand(sqlcmd);
             Assert.IsNotNull(reader.Rows[0][0]);
             Console.WriteLine(reader.Rows[0][0]);
 

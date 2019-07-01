@@ -145,14 +145,14 @@ namespace Articuno
             //DatabaseInterface dbi = new DatabaseInterface();
 
             //Get everything relating to the MetTowerInputTags table
-            DataTable reader = dbi.readCommand2(INPUT_TAG_QUERY + String.Format(" WHERE MetId='{0}'",MetId));
+            DataTable reader = dbi.readCommand(INPUT_TAG_QUERY + String.Format(" WHERE MetId='{0}'",MetId));
             this.primTempTag = reader.Rows[0][PrimTempValueTagColumn].ToString();
             this.secTempTag = reader.Rows[0][SecTempValueColumn].ToString();
             this.primRHTag = reader.Rows[0][PrimHumidityValueColumn].ToString();
             this.secRHTag = reader.Rows[0][SecHumidityValueColumn].ToString();
 
             //Get everything relating to the MetTowerOutputTags table
-            reader = dbi.readCommand2(OUTPUT_TAG_QUERY + String.Format(" WHERE MetId='{0}'", MetId));
+            reader = dbi.readCommand(OUTPUT_TAG_QUERY + String.Format(" WHERE MetId='{0}'", MetId));
             this.tempPrimBadQualityTag = reader.Rows[0][TempPrimBadQualityColumn].ToString();
             this.tempPrimOutOfRangeTag = reader.Rows[0][TempPrimOutOfRangeColumn].ToString();
             this.tempSecBadQualityTag = reader.Rows[0][TempSecBadQualityColumn].ToString();

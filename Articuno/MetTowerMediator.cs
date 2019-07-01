@@ -70,7 +70,7 @@ namespace Articuno
         {
             if (numMetTower == 0)
             {
-                DataTable reader = dbi.readCommand2("SELECT Count(*) as num FROM MetTowerInputTags");
+                DataTable reader = dbi.readCommand("SELECT Count(*) as num FROM MetTowerInputTags");
                 numMetTower = Convert.ToInt16(reader.Rows[0]["num"]);
             }
             return numMetTower;
@@ -78,11 +78,11 @@ namespace Articuno
 
         public void createMetTower()
         {
-            DataTable reader = dbi.readCommand2(THRESHOLD_QUERY);
+            DataTable reader = dbi.readCommand(THRESHOLD_QUERY);
             string temp1 = reader.Rows[0]["OpcTag"].ToString();
             string temp2 = reader.Rows[1]["OpcTag"].ToString();
 
-            reader = dbi.readCommand2(SERVER_NAME_QUERY);
+            reader = dbi.readCommand(SERVER_NAME_QUERY);
             opcServerName = reader.Rows[0]["OpcTag"].ToString();
 
             DAVtqResult[] vtqResults = client.ReadMultipleItems(opcServerName,
