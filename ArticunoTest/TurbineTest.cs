@@ -12,41 +12,16 @@ namespace ArticunoTest
     [TestClass]
     public class TurbineTest
     {
-        private TurbineMediator tf;
-
+        TurbineMediator tm;
         public TurbineTest()
         {
 
             //Must create the MetTowersingleton first
             MetTowerMediator.Instance.createMetTower();
             List<string> newList = new List<string>();
-            TurbineMediator.Instance.createTestTurbines();
-            //newList.Add("T001");
-            //tf = new TurbineMediator(newList, "SV.OPCDAServer.1");
-            //tf.createTurbines();
+            tm = TurbineMediator.Instance;
+            tm.createTestTurbines();
         }
-
-        #region Additional test attributes
-        //
-        // You can use the following additional attributes as you write your tests:
-        //
-        // Use ClassInitialize to run code before running the first test in the class
-        // [ClassInitialize()]
-        // public static void MyClassInitialize(TestContext testContext) { }
-        //
-        // Use ClassCleanup to run code after all tests in a class have run
-        // [ClassCleanup()]
-        // public static void MyClassCleanup() { }
-        //
-        // Use TestInitialize to run code before running each test 
-        // [TestInitialize()]
-        // public void MyTestInitialize() { }
-        //
-        // Use TestCleanup to run code after each test has run
-        // [TestCleanup()]
-        // public void MyTestCleanup() { }
-        //
-        #endregion
 
         [TestMethod]
         [DataTestMethod]
@@ -60,7 +35,7 @@ namespace ArticunoTest
             // AS LONG AS YOU HAVE THE NAME OF THE OPC TAG RIGHT
             // Note that OPC Tag is case sensative...apparently.
             //Read 
-            List<Object> windSpeedValues = (List<Object>)tf.readTurbineWindSpeedTag();
+            List<Object> windSpeedValues = (List<Object>)TurbineMediator.Instance.readTurbineWindSpeedTag();
             foreach (object value in windSpeedValues)
             {
                 Console.WriteLine(Convert.ToDouble(value));
@@ -73,28 +48,28 @@ namespace ArticunoTest
         public void getTagNameFromTurbine()
         {
             List<string> temp;
-            temp = tf.getTurbineWindSpeedTag();
+            temp = TurbineMediator.Instance.getTurbineWindSpeedTag();
             printOutTags(temp);
-            temp = tf.getOperatingStateTag();
+            temp = TurbineMediator.Instance.getOperatingStateTag();
             printOutTags(temp);
-            temp = tf.getNrsStateTag();
+            temp = TurbineMediator.Instance.getNrsStateTag();
             printOutTags(temp);
-            temp = tf.getHumidityTag();
+            temp = TurbineMediator.Instance.getHumidityTag();
             printOutTags(temp);
-            temp = tf.getTemperatureTag();
+            temp = TurbineMediator.Instance.getTemperatureTag();
             printOutTags(temp);
-            temp = tf.getLoadShutdownTag();
+            temp = TurbineMediator.Instance.getLoadShutdownTag();
             printOutTags(temp);
-            temp = tf.getTurbineCtrTag();
+            temp = TurbineMediator.Instance.getTurbineCtrTag();
             printOutTags(temp);
-            temp = tf.getRotorSpeedTag();
+            temp = TurbineMediator.Instance.getRotorSpeedTag();
             printOutTags(temp);
         }
 
         [TestMethod]
         public void writeLoadShutDown()
         {
-            List<Turbine> turbineList = (List<Turbine>)tf.getTurbineList();
+            List<Turbine> turbineList = (List<Turbine>)TurbineMediator.Instance.getTurbineList();
 
             foreach (Turbine turbine in turbineList)
             {
@@ -107,7 +82,7 @@ namespace ArticunoTest
         [TestMethod]
         public void testAlarm()
         {
-            List<Turbine> turbineList = (List<Turbine>)tf.getTurbineList();
+            List<Turbine> turbineList = (List<Turbine>)TurbineMediator.Instance.getTurbineList();
 
             foreach (Turbine turbine in turbineList)
             {
@@ -123,8 +98,36 @@ namespace ArticunoTest
             {
                 Console.WriteLine(item);
                 //Assert.IsNotNull(item);
-
             }
+        }
+
+        [TestMethod]
+        //Prints out a list of turbine prefixes and prints them out
+        public void prefixListTest()
+        {
+            TurbineMediator.Instance.createPrefixList();
+
+            List<string> prefixList = TurbineMediator.Instance.getTurbinePrefixList();
+
+            foreach(string prefix in prefixList)
+            {
+                Console.WriteLine(prefix);
+            }
+        }
+
+        [TestMethod]
+        [DataTestMethod]
+        [DataRow("T001",false,false,false,false,false)]
+        [DataRow("T001",true,true,true,true,true)]
+        public void AlgorithmTest(string turbineId,bool state)
+        {
+            tm.setTemperatureCondition(turbineId, state);
+            tm.setTemperatureCondition(turbineId, state);
+            tm.setTemperatureCondition(turbineId, state);
+            tm.setTemperatureCondition(turbineId, state);
+            tm.setTemperatureCondition(turbineId, state);
+
+            //If all five are true, then this turbine should be paused due to Ice
 
         }
     }
