@@ -292,19 +292,15 @@ namespace Articuno
         public Object readTurbineWindSpeedTag(string turbineId) {return client.ReadItemValue("", opcServerName,getTurbineWindSpeedTag(turbineId)); }
         public Object readRotorSpeedTag(string turbineId) {return client.ReadItemValue("", opcServerName,getRotorSpeedTag(turbineId)); }
         public Object readOperatingStateTag(string turbineId) {return client.ReadItemValue("",opcServerName,getOperatingStateTag(turbineId));}
-        public Object readNrsStateTag(string turbineId) {return client.ReadItemValue("",opcServerName,getNrsStateTag(turbineId);}
+        public Object readNrsStateTag(string turbineId) {return client.ReadItemValue("",opcServerName,getNrsStateTag(turbineId));}
         public Object readTemperatureTag(string turbineId) {return client.ReadItemValue("",opcServerName,getTemperatureTag(turbineId));}
         public Object readTurbineCtrTag(string turbineId) {return client.ReadItemValue("",opcServerName,getTurbineCtrTag(turbineId));}
-        public Object readHumidityTag(string turbineId) {return client.ReadItemValue("",opcServerName,getHumidityTag(turbineId);}
+        public Object readHumidityTag(string turbineId) {return client.ReadItemValue("",opcServerName,getHumidityTag(turbineId));}
 
-        //For writing (using turbineId). Note that the mediator really shouldn't be writing to a 
-        public void writeTurbineWindSpeedTag(string turbineId) {client.ReadItemValue("", opcServerName,getTurbineWindSpeedTag(turbineId)); }
-        public void writeRotorSpeedTag(string turbineId) {client.ReadItemValue("", opcServerName,getRotorSpeedTag(turbineId)); }
-        public void writeOperatingStateTag(string turbineId) {client.ReadItemValue("",opcServerName,getOperatingStateTag(turbineId));}
-        public void writeNrsStateTag(string turbineId) {client.ReadItemValue("",opcServerName,getNrsStateTag(turbineId);}
-        public void writeTemperatureTag(string turbineId) {client.ReadItemValue("",opcServerName,getTemperatureTag(turbineId));}
-        public void writeTurbineCtrTag(string turbineId) {client.ReadItemValue("",opcServerName,getTurbineCtrTag(turbineId));}
-        public void writeHumidityTag(string turbineId) {client.ReadItemValue("",opcServerName,getHumidityTag(turbineId);}
+        //For writing (using turbineId). Note that the mediator really shouldn't be writing to all the availble turbine tags. If you need to test something, you need to create a turbine object 
+        public void writeNrsStateTag(string turbineId,object value) { getTurbine(turbineId).writeNoiseLevel(value); }
+        public void writeTurbineCtrTag(string turbineId,int value) { getTurbine(turbineId).writeTurbineCtrValue(value); }
+        public void writeLoadShutDownCmd(string turbineId ) { getTurbine(turbineId).writeLoadShutdownCmd(); }
 
         private Object readOpcTag() { return null; }
 

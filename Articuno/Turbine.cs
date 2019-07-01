@@ -63,7 +63,6 @@ namespace Articuno
         private MetTower currentMetTower;
         private bool isMetTowerBackup;
 
-
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(Turbine));
 
@@ -138,7 +137,6 @@ namespace Articuno
         public double writeLoadShutdownCmd()
         {
             log.InfoFormat("Shutdown command for {0} has been sent", this.turbinePrefix);
-            //server.writeTagValue(loadShutDown, true);
             try
             {
                 client.WriteItemValue("", OpcServerName, getLoadShutdownTag(), 1.00);
@@ -154,6 +152,10 @@ namespace Articuno
         public void writeAlarmTagValue(Object value)
         {
             client.WriteItemValue("", OpcServerName, turbineAlarmTag, Convert.ToDouble(value));
+        }
+        public void writeNoiseLevel(Object value)
+        {
+            client.WriteItemValue("", OpcServerName,nrsState , Convert.ToDouble(value));
         }
 
         //Misc functions
@@ -180,7 +182,5 @@ namespace Articuno
         //Function to determine participation
         public void setParticipation(bool participationStatus) { articunoParicipation = participationStatus; }
         public bool getParticipation() { return articunoParicipation; }
-
-
     }
 }
