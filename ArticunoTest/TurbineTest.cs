@@ -52,19 +52,20 @@ namespace ArticunoTest
         [DataRow(8.12)]
         [DataRow(0)]
         [DataRow(100)]
+        //This tests to see if Articuno can read and write the status state of the turbine
         public void getTagValueFromTurbine(double testValue)
         {
             //Write some random values to known tags in the test server. Hard coding is fine in this case 
             // AS LONG AS YOU HAVE THE NAME OF THE OPC TAG RIGHT
             // Note that OPC Tag is case sensative...apparently.
             //Read 
-            List<Object> bar = (List<Object>)tf.readTurbineWindSpeedTag();
-            foreach (object foo in bar)
+            List<Object> windSpeedValues = (List<Object>)tf.readTurbineWindSpeedTag();
+            foreach (object value in windSpeedValues)
             {
-                Console.WriteLine(Convert.ToDouble(foo));
-                Assert.AreEqual(Convert.ToDouble(foo), testValue, 0.002);
+                Console.WriteLine(Convert.ToDouble(value));
+                Assert.AreEqual(Convert.ToDouble(value), testValue, 0.002);
             }
-            bar.Clear();
+            windSpeedValues.Clear();
         }
 
         [TestMethod]

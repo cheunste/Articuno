@@ -95,8 +95,6 @@ namespace Articuno
                 //Dictionary<string, object> reader = dbi.readCommand2(cmd);
                 //Dictionary<string, object> reader = null;
                 DataTable reader = dbi.readCommand2(cmd);
-                //DataTable reader = dbi.readCommand2(cmd);
-                //turbine.setLoadShutdownTag(reader["Pause"].ToString());
                 turbine.setNrsStateTag(reader.Rows[0]["NrsMode"].ToString());
                 turbine.setOperatingStateTag(reader.Rows[0]["OperatingState"].ToString());
                 turbine.setRotorSpeedTag(reader.Rows[0]["RotorSpeed"].ToString());
@@ -128,8 +126,7 @@ namespace Articuno
                 //For Turbine tags from the TurbineOutputTags Table There might be duplicates
                 cmd = String.Format("SELECT * " +
                     "from TurbineOutputTags WHERE TurbineId='{0}'", turbinePrefix);
-                //reader = dbi.readCommand2(cmd);
-                reader = null;
+                reader = dbi.readCommand2(cmd);
 
                 turbine.setAlarmTag(reader.Rows[0]["Alarm"].ToString());
                 turbine.setLoadShutdownTag(reader.Rows[0]["Pause"].ToString());
