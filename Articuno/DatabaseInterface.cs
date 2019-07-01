@@ -116,9 +116,11 @@ namespace Articuno
                 connection.Open();
                 using (SQLiteCommand cmd = new SQLiteCommand(command, connection))
                 {
-                    return cmd.ExecuteNonQuery();
+                    //return cmd.ExecuteNonQuery();
+                     cmd.ExecuteNonQuery();
                 }
             }
+            return 0;
         }
 
         public List<Turbine> getTurbineList()

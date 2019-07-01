@@ -56,15 +56,15 @@ namespace ArticunoTest
             Random rnd = new Random();
             int randomNumber = rnd.Next();
             //testConnection.Update
-            string sqlcmd = "UPDATE SystemOutputTags SET 'Default' ='" + randomNumber + "' WHERE Description = 'Heartbeat'";
+            string sqlcmd = String.Format("UPDATE SystemOutputTags SET DefaultValue ='{0}' WHERE Description = 'Heartbeat'",randomNumber);
             dbi.updateCommand(sqlcmd);
 
+            sqlcmd = "Select DefaultValue from SystemOutputTags where Description='Heartbeat'";
             DataTable reader = dbi.readCommand2(sqlcmd);
-            sqlcmd = "Select 'Default' from SystemOutputTags where Description='Heartbeat'";
-            int readHeartbeat = Convert.ToInt16(reader.Rows[0]["'Default'"]);
-            Assert.AreEqual(reader.Rows[0]["Default"], randomNumber);
-            Console.WriteLine("Random Number: " + randomNumber);
-            Console.WriteLine("Value in DB: " + reader.Rows[0]["Default"]);
+            int readHeartbeat = Convert.ToInt32(reader.Rows[0]["DefaultValue"]);
+            Assert.AreEqual(readHeartbeat, randomNumber);
+            Console.WriteLine("Random Number: {0}",randomNumber);
+            Console.WriteLine("Value in DB: {0}",readHeartbeat);
         }
 
         [TestMethod]
