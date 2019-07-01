@@ -82,7 +82,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Timer.cs" />
     <Compile Include="Turbine.cs" />
-    <Compile Include="TurbineFactory.cs" />
+    <Compile Include="TurbineMediator.cs" />
     <Compile Include="TurbineInterface.cs" />
   </ItemGroup>
   <ItemGroup>

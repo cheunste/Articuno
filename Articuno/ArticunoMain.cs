@@ -155,7 +155,7 @@ namespace Articuno
             string prefix = mLookup.Groups[1].Value;
 
             //TODO: Get the turbine based on the prefix
-            Turbine currentTurbine = TurbineFactory.getTurbine(prefix);
+            Turbine currentTurbine = TurbineMediator.getTurbine(prefix);
 
             //If it is null, then something bad happened
             if(currentTurbine is null)

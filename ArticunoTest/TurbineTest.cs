@@ -12,7 +12,7 @@ namespace ArticunoTest
     [TestClass]
     public class TurbineTest
     {
-        private TurbineFactory tf;
+        private TurbineMediator tf;
 
         public TurbineTest()
         {
@@ -20,9 +20,10 @@ namespace ArticunoTest
             //Must create the MetTowersingleton first
             MetTowerMediator.Instance.createMetTower();
             List<string> newList = new List<string>();
-            newList.Add("T001");
-            tf = new TurbineFactory(newList, "SV.OPCDAServer.1");
-            tf.createTurbines();
+            TurbineMediator.Instance.createTestTurbines();
+            //newList.Add("T001");
+            //tf = new TurbineMediator(newList, "SV.OPCDAServer.1");
+            //tf.createTurbines();
         }
 
         #region Additional test attributes

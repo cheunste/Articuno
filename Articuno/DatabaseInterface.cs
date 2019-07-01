@@ -12,7 +12,7 @@ namespace Articuno
     class DatabaseInterface
     {
 
-        private static readonly string SYSTEM_TABLE = "SystemParameters";
+        private static readonly string SYSTEM_INPUT_TABLE = "SystemInputTags";
         private static readonly string MET_TOWER_TABLE = "MetTower";
         private static readonly string TURBINE_INPUT_TABLE = "TurbineInputTags";
         private static readonly string PERFORMANCE_FILTER_TABLE = "PerformanceTable";
@@ -108,10 +108,8 @@ namespace Articuno
         /// <returns></returns>
         public string getOpcServer()
         {
-            //TODO: Implement
-            DataTable result = readCommand("SELECT Description from " + SYSTEM_TABLE);
-            throw new NotImplementedException();
-            return "";
+            DataTable result = readCommand(String.Format("SELECT OpcTag from {0} WHERE Description ='SitePrefix' ", SYSTEM_INPUT_TABLE));
+            return Convert.ToString(result.Rows[0]["OpcTag"]);
         }
 
         public string getMetTower()

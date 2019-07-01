@@ -12,14 +12,14 @@ using System.Threading.Tasks;
 namespace Articuno
 {
     /// <summary>
-    /// The turbine FActory is a factory class responsible for creating the numerous turbines at the site.
+    /// The turbine Mediator is a singleton class that acts also acts as a mediator and it is not only responsible 
+    /// for creating the numerous turbines at the site, but also acts as a middle man between the turbine class and the rest of hte program
+    /// to provide turbine information (temperature, wind speed, rotor speed, operating state, etc.)
     /// It takes in a list of turbine prefixes and then creates a turbine class based  on the prefix
-    /// The factory class also have other methods that'll allow interfaction with all the turbines in its turbine list such as throwing them into another list, 
-    /// or fetching a turbine based on other factors like operating state, etc.
     /// </summary>
 
     /*
-     * Turbine FActory is technically a factory class that is used to create turbines.
+     * Turbine Mediator class is used to create turbines and provides a layer of abstraction and provide turbine related information upon request.
      * 
      * The reason why this doesn't use an interface is that there is only one type of turbine, but multiple
      * of the same turbine is needed to be created.
@@ -29,10 +29,10 @@ namespace Articuno
      * Both the above returns a list
      * 
      */
-    class TurbineFactory
+    class TurbineMediator
     {
         //Log
-        private static readonly ILog log = LogManager.GetLogger(typeof(TurbineFactory));
+        private static readonly ILog log = LogManager.GetLogger(typeof(TurbineMediator));
 
         //List of turbine related lists
         private static List<Turbine> turbineList;
@@ -53,7 +53,7 @@ namespace Articuno
         /// Constructor for the turbine factory class. Takes in a string list of Turbine prefixes (ie T001). Probably should be called only once
         /// </summary>
         /// <param name="turbinePrefixList"></param>
-        public TurbineFactory(List<string> turbinePrefixList, OpcServer server)
+        public TurbineMediator(List<string> turbinePrefixList, OpcServer server)
         {
             turbineList = new List<Turbine>();
             tempList = new List<string>();
@@ -63,7 +63,7 @@ namespace Articuno
             this.server = server;
 
         }
-        public TurbineFactory(List<string> turbinePrefixList, string opcServerName)
+        public TurbineMediator(List<string> turbinePrefixList, string opcServerName)
         {
             turbineList = new List<Turbine>();
             tempList = new List<string>();
@@ -71,6 +71,29 @@ namespace Articuno
 
             this.turbinePrefixList = turbinePrefixList;
             this.opcServerName = opcServerName;
+
+        }
+        private TurbineMediator()
+        {
+            turbineList = new List<Turbine>();
+            tempList = new List<string>();
+            tempObjectList = new List<Object>();
+            this.opcServerName = getOpcServerName();
+        }
+
+        private string getOpcServerName()
+        {
+            return DatabaseInterface.Instance.getOpcServer();
+        }
+
+        public static TurbineMediator Instance { get { return Nested.instance; } }
+
+        private class Nested
+        {
+            static Nested()
+            {
+            }
+            internal static readonly TurbineMediator instance = new TurbineMediator();
 
         }
 
@@ -245,6 +268,15 @@ namespace Articuno
             return tempList;
         }
 
+        public static string getTurbineWindSpeedTag(string turbineId) { return getTurbine(turbineId).getWindSpeedTag(); }
+        public static string getRotorSpeedTag(string turbineId) {return getTurbine(turbineId).getRotorSpeedTag();}
+        public static string getOperatingStateTag(string turbineId) {return getTurbine(turbineId).getOperatinStateTag();}
+        public static string getNrsStateTag(string turbineId) {return getTurbine(turbineId).getNrsStateTag();}
+        public static string getTemperatureTag(string turbineId) {return getTurbine(turbineId).getTemperatureTag();}
+        public static string getLoadShutdownTag(string turbineId) {return getTurbine(turbineId).getLoadShutdownTag();}
+        public static string getTurbineCtrTag(string turbineId) {return getTurbine(turbineId).getTurbineCtrTag();}
+        public static string getHumidityTag(string turbineId) {return getTurbine(turbineId).getTurbineHumidityTag();}
+
         /*
          * The following methods will return the list containing the vlaue  of the opcTag
          */
@@ -255,6 +287,26 @@ namespace Articuno
         public Object readTemperatureTag() { return readMutlipleOpcTags(getTemperatureTag()); }
         public Object readTurbineCtrTag() { return readMutlipleOpcTags(getTurbineCtrTag()); }
         public Object readHumidityTag() { return readMutlipleOpcTags(getHumidityTag()); }
+
+        //For reading (using turbineId)
+        public Object readTurbineWindSpeedTag(string turbineId) {return client.ReadItemValue("", opcServerName,getTurbineWindSpeedTag(turbineId)); }
+        public Object readRotorSpeedTag(string turbineId) {return client.ReadItemValue("", opcServerName,getRotorSpeedTag(turbineId)); }
+        public Object readOperatingStateTag(string turbineId) {return client.ReadItemValue("",opcServerName,getOperatingStateTag(turbineId));}
+        public Object readNrsStateTag(string turbineId) {return client.ReadItemValue("",opcServerName,getNrsStateTag(turbineId);}
+        public Object readTemperatureTag(string turbineId) {return client.ReadItemValue("",opcServerName,getTemperatureTag(turbineId));}
+        public Object readTurbineCtrTag(string turbineId) {return client.ReadItemValue("",opcServerName,getTurbineCtrTag(turbineId));}
+        public Object readHumidityTag(string turbineId) {return client.ReadItemValue("",opcServerName,getHumidityTag(turbineId);}
+
+        //For writing (using turbineId). Note that the mediator really shouldn't be writing to a 
+        public void writeTurbineWindSpeedTag(string turbineId) {client.ReadItemValue("", opcServerName,getTurbineWindSpeedTag(turbineId)); }
+        public void writeRotorSpeedTag(string turbineId) {client.ReadItemValue("", opcServerName,getRotorSpeedTag(turbineId)); }
+        public void writeOperatingStateTag(string turbineId) {client.ReadItemValue("",opcServerName,getOperatingStateTag(turbineId));}
+        public void writeNrsStateTag(string turbineId) {client.ReadItemValue("",opcServerName,getNrsStateTag(turbineId);}
+        public void writeTemperatureTag(string turbineId) {client.ReadItemValue("",opcServerName,getTemperatureTag(turbineId));}
+        public void writeTurbineCtrTag(string turbineId) {client.ReadItemValue("",opcServerName,getTurbineCtrTag(turbineId));}
+        public void writeHumidityTag(string turbineId) {client.ReadItemValue("",opcServerName,getHumidityTag(turbineId);}
+
+        private Object readOpcTag() { return null; }
 
         private Object readMutlipleOpcTags(List<string> tempList)
         {
@@ -279,5 +331,13 @@ namespace Articuno
             return valueList;
         }
 
+        /// <summary>
+        /// Used for testing only. This creates a testing scenario that uses only T001 
+        /// </summary>
+        public void createTestTurbines()
+        {
+            turbinePrefixList.Add("T001");
+            getOpcServerName();
+        }
     }
 }
