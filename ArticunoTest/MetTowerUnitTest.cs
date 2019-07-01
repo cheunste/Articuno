@@ -23,26 +23,26 @@ namespace ArticunoTest
         string[] met1Tags ={
             "Met1.AmbTmp1",
             "Met1.AmbTmp2",
-            "Met1.TempAlm",
-            "Met1.TmpHiDispAlm",
+            "Articuno.Met1.TempAlm",
+            "Articuno.Met1.TmpHiDispAlm",
             "Met1.RH1",
             "Met1.RH2",
-            "Met1.IcePossible",
-            "Met1.RHS1OutRngAlm",
-            "Met1.RHAlm",
-            "Met1.TowerAlm"};
+            "Articuno.Met1.IcePossible",
+            "Articuno.Met1.RHS1OutRngAlm",
+            "Articuno.Met1.RHAlm",
+            "Articuno.Met1.TowerAlm"};
 
         string[] met2Tags = {
             "Met2.AmbTmp1",
             "Met2.AmbTmp2",
-            "Met2.TempAlm",
-            "Met2.TmpHiDispAlm",
+            "Articuno.Met2.TempAlm",
+            "Articuno.Met2.TmpHiDispAlm",
             "Met2.RH1",
             "Met2.RH2",
-            "Met2.IcePossible",
-            "Met2.RHS1OutRngAlm",
-            "Met2.RHAlm",
-            "Met2.TowerAlm"};
+            "Articuno.Met2.IcePossible",
+            "Articuno.Met2.RHS1OutRngAlm",
+            "Articuno.Met2.RHAlm",
+            "Articuno.Met2.TowerAlm"};
 
         string[] ArticunoMetTags = {
             "Articuno.Met1.IcePossible",
@@ -65,6 +65,20 @@ namespace ArticunoTest
 
         //Create a Met Tower Class
         public MetTowerUnitTest()
+        {
+            ////Insert some test data into Articuno.db
+            //dbi = DatabaseInterface.Instance;
+            ////Create new met tower mediator
+            //MetTowerMediator.Instance.createMetTower();
+            //opcServer = new OpcServer(opcServerName);
+            //siteName = "SCRAB";
+            ////set default met tower Data
+            //setValidMetData();
+
+        }
+
+        [TestInitialize]
+        public void Initialize()
         {
             //Insert some test data into Articuno.db
             dbi = DatabaseInterface.Instance;
@@ -177,12 +191,12 @@ namespace ArticunoTest
         [TestMethod]
         //Test to see what happens when the met tower is switched from the default.
         [DataTestMethod]
-        [DataRow("Met1", 20.0, 60.0, 10.0, 50.0)]
-        [DataRow("Met2", 20.0, 60.0, 50.0, 90.0)]
+        [DataRow("Met1", 20.0, 30.0, 10.0, 50.0)]
+        [DataRow("Met2", 25.0, 45.0, 50.0, 90.0)]
         public void swtichMetTowers(string metId, double tempVal1, double tempVal2, double hmdVal1, double hmdVal2)
         {
 
-            setValidMetData();
+            //setValidMetData();
             double tempBeforeSwitch;
             double humdBeforeSwitch;
             MetTower met1 = MetTowerMediator.Instance.getMetTower("Met1");
@@ -213,18 +227,18 @@ namespace ArticunoTest
                     break;
             }
             Assert.AreNotEqual(tempAfterSwitch, tempBeforeSwitch, 0.001, "Temperature is equal after switching met towers");
-            Assert.AreNotEqual(humdAfterSwitch, tempBeforeSwitch, 0.001, "Humidity is equal after switching met towers");
+            Assert.AreNotEqual(humdAfterSwitch, humdBeforeSwitch, 0.001, "Humidity is equal after switching met towers");
 
             //Switch back the met tower to the original
             MetTowerMediator.Instance.switchMetTower(metId);
             tempAfterSwitch = Convert.ToDouble(MetTowerMediator.Instance.readTemperature(metId));
             humdAfterSwitch = Convert.ToDouble(MetTowerMediator.Instance.readHumidity(metId));
 
-            Assert.AreEqual(tempAfterSwitch, tempBeforeSwitch, 0.001, "Temperature is not equal after switching back");
-            Assert.AreEqual(humdAfterSwitch, humdBeforeSwitch, 0.001, "Humidity is not equal after switching back");
+            Assert.AreEqual(tempBeforeSwitch,tempAfterSwitch, 0.001, "Temperature is not equal after switching back");
+            Assert.AreEqual(humdBeforeSwitch,humdAfterSwitch, 0.001, "Humidity is not equal after switching back");
 
             //Call the default good values. God knows what happened in the rpevious tests
-            setValidMetData();
+            //setValidMetData();
 
         }
 
@@ -252,10 +266,11 @@ namespace ArticunoTest
 
             var tempTuple = MetTowerMediator.Instance.tempQualityCheck(metId);
             var humidTuple = MetTowerMediator.Instance.humidQualityCheck(metId);
+            var metTowerQuality = MetTowerMediator.Instance.checkMetTowerQuality(metId);
 
             Assert.AreEqual(expectedTempQual, tempTuple.Item1, "No Data alarm is still showing true (good quality)");
             Assert.AreEqual(expectedHumiQual, humidTuple.Item1, "Temperature alarm is still showing true (good quality)");
-            Assert.AreEqual(MetTowerMediator.Instance.checkMetTowerQuality(metId), nodata, "No data alarm status not equal");
+            Assert.AreEqual(metTowerQuality, nodata, "No data alarm status not equal");
         }
 
         [TestCleanup]
