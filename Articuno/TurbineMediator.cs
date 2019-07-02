@@ -313,8 +313,6 @@ namespace Articuno
         public void writeTurbineCtrTag(string turbineId, int value) { getTurbine(turbineId).writeTurbineCtrValue(value); }
         public void writeLoadShutDownCmd(string turbineId) { getTurbine(turbineId).writeLoadShutdownCmd(); }
 
-        private Object readOpcTag() { return null; }
-
         private Object readMutlipleOpcTags(List<string> tempList)
         {
 
@@ -345,6 +343,7 @@ namespace Articuno
         {
             turbinePrefixList.Clear();
             turbinePrefixList.Add("T001");
+            createTurbines();
             getOpcServerName();
         }
 

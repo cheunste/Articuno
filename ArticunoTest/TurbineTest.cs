@@ -117,16 +117,15 @@ namespace ArticunoTest
 
         [TestMethod]
         [DataTestMethod]
-        [DataRow("T001",false,false,false,false,false)]
-        [DataRow("T001",true,true,true,true,true)]
+        [DataRow("T001",false)]
+        [DataRow("T001",true)]
         public void AlgorithmTest(string turbineId,bool state)
         {
             tm.setTemperatureCondition(turbineId, state);
-            tm.setTemperatureCondition(turbineId, state);
-            tm.setTemperatureCondition(turbineId, state);
-            tm.setTemperatureCondition(turbineId, state);
-            tm.setTemperatureCondition(turbineId, state);
-
+            tm.setOperatingStateCondition(turbineId, state);
+            tm.setNrscondition(turbineId, state);
+            tm.setTurbinePerformanceCondition(turbineId, state);
+            tm.setDeRateCondition(turbineId, state);
             //If all five are true, then this turbine should be paused due to Ice
 
         }
