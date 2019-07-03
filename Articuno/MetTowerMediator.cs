@@ -78,6 +78,7 @@ namespace Articuno
 
         public void createMetTower()
         {
+            //Get he threshold OpcTags from the database
             DataTable reader = dbi.readCommand(THRESHOLD_QUERY);
             string temp1 = reader.Rows[0]["OpcTag"].ToString();
             string temp2 = reader.Rows[1]["OpcTag"].ToString();
@@ -85,6 +86,7 @@ namespace Articuno
             reader = dbi.readCommand(SERVER_NAME_QUERY);
             opcServerName = reader.Rows[0]["OpcTag"].ToString();
 
+            //Get the current threshold values 
             DAVtqResult[] vtqResults = client.ReadMultipleItems(opcServerName,
                 new DAItemDescriptor[]{
                     temp1,
@@ -93,8 +95,6 @@ namespace Articuno
 
             ambTempThreshold = Convert.ToDouble(vtqResults[0].Vtq.Value);
             deltaThreshold = Convert.ToDouble(vtqResults[1].Vtq.Value);
-
-
 
             for (int i = 1; i <= getNumMetTower(); i++)
             {

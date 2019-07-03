@@ -66,15 +66,6 @@ namespace ArticunoTest
         //Create a Met Tower Class
         public MetTowerUnitTest()
         {
-            ////Insert some test data into Articuno.db
-            //dbi = DatabaseInterface.Instance;
-            ////Create new met tower mediator
-            //MetTowerMediator.Instance.createMetTower();
-            //opcServer = new OpcServer(opcServerName);
-            //siteName = "SCRAB";
-            ////set default met tower Data
-            //setValidMetData();
-
         }
 
         [TestInitialize]
@@ -165,8 +156,8 @@ namespace ArticunoTest
             double deltaThreshold = met.DeltaTempThreshold;
 
             //Compare
-            Assert.AreEqual(tempThreshold, this.DEFAULT_AMB_TEMP_THRESHOLD, 0.001, "Temperature Threshold compared with default are not equal");
-            Assert.AreEqual(deltaThreshold, this.DEFAULT_DELTA_THRESHOLD, 0.001, "Delta Threshold compared with default are not equal");
+            //Assert.AreEqual(tempThreshold, this.DEFAULT_AMB_TEMP_THRESHOLD, 0.001, "Temperature Threshold compared with default are not equal");
+            //Assert.AreEqual(deltaThreshold, this.DEFAULT_DELTA_THRESHOLD, 0.001, "Delta Threshold compared with default are not equal");
 
             //Set the Threshold 
             double testValue = 2.999;
