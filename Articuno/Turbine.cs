@@ -147,16 +147,10 @@ namespace Articuno
                 log.ErrorFormat("Error stropping {0}: {1}", this.turbinePrefix, opcException.GetBaseException().Message);
                 return -1.0;
             }
-            //throw new NotImplementedException();
         }
-        public void writeAlarmTagValue(Object value)
-        {
-            client.WriteItemValue("", OpcServerName, turbineAlarmTag, Convert.ToDouble(value));
-        }
-        public void writeNoiseLevel(Object value)
-        {
-            client.WriteItemValue("", OpcServerName,nrsState , Convert.ToDouble(value));
-        }
+        public void writeAlarmTagValue(Object value) { client.WriteItemValue("", OpcServerName, turbineAlarmTag, Convert.ToDouble(value)); }
+        public void writeNoiseLevel(Object value) { client.WriteItemValue("", OpcServerName, nrsState, Convert.ToDouble(value)); }
+        public void writeOperatingState(Object value) { client.WriteItemValue("", OpcServerName, operatingState, Convert.ToDouble(value)); }
 
         //Misc functions
         public string getTurbinePrefixValue() { return this.turbinePrefix; }
@@ -182,5 +176,15 @@ namespace Articuno
         //Function to determine participation
         public void setParticipation(bool participationStatus) { articunoParicipation = participationStatus; }
         public bool getParticipation() { return articunoParicipation; }
+
+        //The actual method that checks all conditions and throws a load shutdown command if needed
+        public void checkIcingConditions()
+        {
+            if (articunoParicipation && temperatureConditionMet && operatingStateConditionMet && nrsConditionMet && turbinePerformanceConditionMet && derateConditionMet)
+            {
+
+            }
+
+        }
     }
 }

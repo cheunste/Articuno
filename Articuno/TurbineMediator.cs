@@ -11,6 +11,10 @@ using System.Threading.Tasks;
 
 namespace Articuno
 {
+
+    //Delegates
+    delegate void IcingDelegates(string turbineId, bool state);
+
     /// <summary>
     /// The turbine Mediator is a singleton class that acts also acts as a mediator and it is not only responsible 
     /// for creating the numerous turbines at the site, but also acts as a middle man between the turbine class and the rest of hte program
@@ -49,6 +53,9 @@ namespace Articuno
         private string opcServerName;
         private EasyDAClient client = new EasyDAClient();
 
+        //Member delegates
+        IcingDelegates tempDelegate, operatingStateDelegate, nrsDelegate, turbinePerfDelegate, deRateConditionDelegate;
+
         /// <summary>
         /// Constructor for the turbine factory class. Takes in a string list of Turbine prefixes (ie T001). Probably should be called only once
         /// </summary>
@@ -78,11 +85,17 @@ namespace Articuno
         /// </summary>
         private TurbineMediator()
         {
-            turbinePrefixList=new List<string>();
+            turbinePrefixList = new List<string>();
             turbineList = new List<Turbine>();
             tempList = new List<string>();
             tempObjectList = new List<Object>();
             this.opcServerName = getOpcServerName();
+
+            tempDelegate = setTemperatureCondition;
+            operatingStateDelegate = setOperatingStateCondition;
+            nrsDelegate = setNrscondition;
+            turbinePerfDelegate = setTurbinePerformanceCondition;
+            deRateConditionDelegate = setDeRateCondition;
         }
 
         private string getOpcServerName()
@@ -132,7 +145,9 @@ namespace Articuno
                     String.Format("SELECT * " +
                     "from TurbineInputTags WHERE TurbineId='{0}'", turbinePrefix);
                 DataTable reader = dbi.readCommand(cmd);
-                turbine.setNrsStateTag(reader.Rows[0]["NrsMode"].ToString());
+                try { turbine.setNrsStateTag(reader.Rows[0]["NrsMode"].ToString()); }
+                catch (NullReferenceException e) { turbine.setNrsStateTag(""); }
+
                 turbine.setOperatingStateTag(reader.Rows[0]["OperatingState"].ToString());
                 turbine.setRotorSpeedTag(reader.Rows[0]["RotorSpeed"].ToString());
                 turbine.setTemperatureTag(reader.Rows[0]["Temperature"].ToString());
@@ -343,15 +358,21 @@ namespace Articuno
         {
             turbinePrefixList.Clear();
             turbinePrefixList.Add("T001");
-            createTurbines();
             getOpcServerName();
+            createTurbines();
         }
 
         //These are functions called by the main Articuno class to set an icing protocol condition given a turbine. Remember, the turbine should pause automatically independently of each other
-        public void setTemperatureCondition(string turbineId, bool state) { getTurbine(turbineId).setTemperatureCondition(state); }
-        public void setOperatingStateCondition(string turbineId, bool state) { getTurbine(turbineId).setOperatingStateCondition(state); }
-        public void setNrscondition(string turbineId, bool state) { getTurbine(turbineId).setNrsCondition(state); }
-        public void setTurbinePerformanceCondition(string turbineId, bool state) { getTurbine(turbineId).setTurbinePerformanceCondition(state); }
-        public void setDeRateCondition(string turbineId, bool state) { getTurbine(turbineId).setDeRateCondition(state); }
+        public void setTemperatureCondition(string turbineId, bool state) { getTurbine(turbineId).setTemperatureCondition(state); checkIcingConditions(turbineId); }
+        public void setOperatingStateCondition(string turbineId, bool state) { getTurbine(turbineId).setOperatingStateCondition(state); checkIcingConditions(turbineId); }
+        public void setNrscondition(string turbineId, bool state) { getTurbine(turbineId).setNrsCondition(state); checkIcingConditions(turbineId); }
+        public void setTurbinePerformanceCondition(string turbineId, bool state) { getTurbine(turbineId).setTurbinePerformanceCondition(state); checkIcingConditions(turbineId); }
+        public void setDeRateCondition(string turbineId, bool state) { getTurbine(turbineId).setDeRateCondition(state); checkIcingConditions(turbineId); }
+
+        private void checkIcingConditions(string turbineId)
+        {
+            Turbine turbine = getTurbine(turbineId);
+            turbine.checkIcingConditions();
+        }
     }
 }

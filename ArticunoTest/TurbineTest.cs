@@ -29,41 +29,51 @@ namespace ArticunoTest
         [DataRow(0)]
         [DataRow(100)]
         //This tests to see if Articuno can read and write the status state of the turbine
-        public void getTagValueFromTurbine(double testValue)
+        //However, as you can't write to all tags, just write to operating state
+        public void rwOperatingState(double testValue)
         {
             //Write some random values to known tags in the test server. Hard coding is fine in this case 
             // AS LONG AS YOU HAVE THE NAME OF THE OPC TAG RIGHT
             // Note that OPC Tag is case sensative...apparently.
             //Read 
-            List<Object> windSpeedValues = (List<Object>)TurbineMediator.Instance.readTurbineWindSpeedTag();
-            foreach (object value in windSpeedValues)
+            foreach (Turbine turb in TurbineMediator.Instance.getTurbineList())
             {
-                Console.WriteLine(Convert.ToDouble(value));
-                Assert.AreEqual(Convert.ToDouble(value), testValue, 0.002);
+                turb.writeOperatingState(testValue);
+                double readValue = Convert.ToDouble(TurbineMediator.Instance.readOperatingStateTag(turb.getTurbinePrefixValue()));
+
+                Assert.AreEqual(testValue, readValue, 0.001, "Written value does not equal test value");
             }
-            windSpeedValues.Clear();
+
         }
 
         [TestMethod]
+        //Get the tag names of all the turbine associated Opc Tags and prints them out.
         public void getTagNameFromTurbine()
         {
             List<string> temp;
             temp = TurbineMediator.Instance.getTurbineWindSpeedTag();
-            printOutTags(temp);
+            printOutTags("turbine wind speed tag", temp);
             temp = TurbineMediator.Instance.getOperatingStateTag();
-            printOutTags(temp);
+            printOutTags("operating state tag", temp);
             temp = TurbineMediator.Instance.getNrsStateTag();
-            printOutTags(temp);
-            temp = TurbineMediator.Instance.getHumidityTag();
-            printOutTags(temp);
+            //WARNING: NRS can be empty or null
+            printOutTags("nrs", temp);
+
+            //Turbine humidty tag is outside of requirement
+            //temp = TurbineMediator.Instance.getHumidityTag();
+            //printOutTags("humidity tag", temp);
+
             temp = TurbineMediator.Instance.getTemperatureTag();
-            printOutTags(temp);
+            printOutTags("temperature tag", temp);
             temp = TurbineMediator.Instance.getLoadShutdownTag();
-            printOutTags(temp);
-            temp = TurbineMediator.Instance.getTurbineCtrTag();
-            printOutTags(temp);
+            printOutTags("Load shutdown tag", temp);
+
+            //No CTR tag provided. I think I'm going to make the turbine CTR independent of an Opc Tag
+            //temp = TurbineMediator.Instance.getTurbineCtrTag();
+            //printOutTags("CTR Tag", temp);
+
             temp = TurbineMediator.Instance.getRotorSpeedTag();
-            printOutTags(temp);
+            printOutTags("Rotor speed tag", temp);
         }
 
         [TestMethod]
@@ -80,6 +90,8 @@ namespace ArticunoTest
         }
 
         [TestMethod]
+        //Test to see if I can raise (and clear) a turbine alarm based on serveral conditions
+        //IMPORTANT: This test does will NOT cover comm loss. That would be the main Articuno class's job
         public void testAlarm()
         {
             List<Turbine> turbineList = (List<Turbine>)TurbineMediator.Instance.getTurbineList();
@@ -87,17 +99,19 @@ namespace ArticunoTest
             foreach (Turbine turbine in turbineList)
             {
                 turbine.writeAlarmTagValue(5);
-                Assert.AreEqual(turbine.readAlarmValue(),5.00);
+                Assert.AreEqual(turbine.readAlarmValue(), 5.00);
             }
 
         }
 
-        private void printOutTags(List<string> printOutList)
+        private void printOutTags(string testName, List<string> printOutList)
         {
-            foreach(var item in printOutList)
+            Console.WriteLine("Test {0}", testName);
+            foreach (var item in printOutList)
             {
-                Console.WriteLine(item);
-                //Assert.IsNotNull(item);
+                if(item.Equals("") && !testName.Equals("nrs"))
+                    Assert.Fail("List for {1} is empty {0}", printOutList, testName);
+                Console.WriteLine("tag: {0}", item);
             }
         }
 
@@ -109,7 +123,7 @@ namespace ArticunoTest
 
             List<string> prefixList = TurbineMediator.Instance.getTurbinePrefixList();
 
-            foreach(string prefix in prefixList)
+            foreach (string prefix in prefixList)
             {
                 Console.WriteLine(prefix);
             }
@@ -117,10 +131,13 @@ namespace ArticunoTest
 
         [TestMethod]
         [DataTestMethod]
-        [DataRow("T001",false)]
-        [DataRow("T001",true)]
-        public void AlgorithmTest(string turbineId,bool state)
+        [DataRow("T001", false)]
+        [DataRow("T001", true)]
+        public void AlgorithmTest(string turbineId, bool state)
         {
+            //Note complete. Do this later once you get the delegates figured out
+            Assert.Fail();
+
             tm.setTemperatureCondition(turbineId, state);
             tm.setOperatingStateCondition(turbineId, state);
             tm.setNrscondition(turbineId, state);
