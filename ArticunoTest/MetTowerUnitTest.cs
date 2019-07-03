@@ -191,8 +191,8 @@ namespace ArticunoTest
         [TestMethod]
         //Test to see what happens when the met tower is switched from the default.
         [DataTestMethod]
-        [DataRow("Met1", 20.0, 30.0, 10.0, 50.0)]
-        [DataRow("Met2", 25.0, 45.0, 50.0, 90.0)]
+        [DataRow("Met1", 21.0, 31.0, 17.0, 57.0)]
+        [DataRow("Met2", 21.0, 41.0, 57.0, 97.0)]
         public void swtichMetTowers(string metId, double tempVal1, double tempVal2, double hmdVal1, double hmdVal2)
         {
 
@@ -202,6 +202,7 @@ namespace ArticunoTest
             MetTower met1 = MetTowerMediator.Instance.getMetTower("Met1");
             MetTower met2 = MetTowerMediator.Instance.getMetTower("Met2");
 
+            Console.WriteLine("Testing {0}, with temperature {1}, {2}, humidty {3},{4}", metId, tempVal1, tempVal2, hmdVal1, hmdVal2);
             //Write Values to the tags
             met1.writeRelativeHumityValue(hmdVal1);
             met1.writePrimTemperatureValue(tempVal1);
@@ -215,6 +216,8 @@ namespace ArticunoTest
             MetTowerMediator.Instance.switchMetTower(metId);
             double tempAfterSwitch = Convert.ToDouble(MetTowerMediator.Instance.readTemperature(metId));
             double humdAfterSwitch = Convert.ToDouble(MetTowerMediator.Instance.readHumidity(metId));
+            Console.WriteLine("Met Tower {0} temperature after switch {1}, humidty after switch {2}",metId,tempAfterSwitch,humdAfterSwitch);
+
             switch (metId)
             {
                 case "Met1":
@@ -233,9 +236,10 @@ namespace ArticunoTest
             MetTowerMediator.Instance.switchMetTower(metId);
             tempAfterSwitch = Convert.ToDouble(MetTowerMediator.Instance.readTemperature(metId));
             humdAfterSwitch = Convert.ToDouble(MetTowerMediator.Instance.readHumidity(metId));
+            Console.WriteLine("Met Tower {0} temperature after switch back {1}, humidty after switch back {2}",metId,tempAfterSwitch,humdAfterSwitch);
 
-            Assert.AreEqual(tempBeforeSwitch,tempAfterSwitch, 0.001, "Temperature is not equal after switching back");
-            Assert.AreEqual(humdBeforeSwitch,humdAfterSwitch, 0.001, "Humidity is not equal after switching back");
+            Assert.AreEqual(tempAfterSwitch,tempBeforeSwitch, 0.001, "Temperature is not equal after switching back");
+            Assert.AreEqual(humdAfterSwitch,humdBeforeSwitch, 0.001, "Humidity is not equal after switching back");
 
             //Call the default good values. God knows what happened in the rpevious tests
             //setValidMetData();
@@ -273,7 +277,6 @@ namespace ArticunoTest
             Assert.AreEqual(metTowerQuality, nodata, "No data alarm status not equal");
         }
 
-        [TestCleanup]
         public void cleanup()
         {
             resetTagsToZero();
@@ -303,15 +306,15 @@ namespace ArticunoTest
         private void setValidMetData()
         {
             //Met1
-            writeValue(String.Format("{0}.Met1.AmbTmp1", siteName), 60.00);
+            writeValue(String.Format("{0}.Met1.AmbTmp1", siteName), 60.33);
             writeValue(String.Format("{0}.Met1.AmbTmp2", siteName), 52.00);
-            writeValue(String.Format("{0}.Met1.RH1", siteName), 30);
-            writeValue(String.Format("{0}.Met1.RH2", siteName), 25);
+            writeValue(String.Format("{0}.Met1.RH1", siteName), 30.22);
+            writeValue(String.Format("{0}.Met1.RH2", siteName), 25.22);
             //Met2
             writeValue(String.Format("{0}.Met2.AmbTmp1", siteName), 80.00);
             writeValue(String.Format("{0}.Met2.AmbTmp2", siteName), 75.00);
-            writeValue(String.Format("{0}.Met2.RH1", siteName), 50);
-            writeValue(String.Format("{0}.Met2.RH2", siteName), 45);
+            writeValue(String.Format("{0}.Met2.RH1", siteName), 50.11);
+            writeValue(String.Format("{0}.Met2.RH2", siteName), 45.11);
         }
 
         //Method used in this class to write values 
