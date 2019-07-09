@@ -109,7 +109,7 @@ namespace ArticunoTest
             Console.WriteLine("Test {0}", testName);
             foreach (var item in printOutList)
             {
-                if(item.Equals("") && !testName.Equals("nrs"))
+                if (item.Equals("") && !testName.Equals("nrs"))
                     Assert.Fail("List for {1} is empty {0}", printOutList, testName);
                 Console.WriteLine("tag: {0}", item);
             }
@@ -144,6 +144,20 @@ namespace ArticunoTest
             tm.setTurbinePerformanceCondition(turbineId, state);
             tm.setDeRateCondition(turbineId, state);
             //If all five are true, then this turbine should be paused due to Ice
+
+        }
+
+        [TestMethod]
+        //There is no tag for internal CTR. Instead you'll be tracking this by writing a value to a member variable and decrementing it/
+        [DataTestMethod]
+        [DataRow(5)]
+        public void setCtrPeriod(int value)
+        {
+            foreach (string prefix in TurbineMediator.Instance.getTurbinePrefixList())
+            {
+                TurbineMediator.Instance.setCtrTime(prefix,value);
+            }
+
 
         }
     }

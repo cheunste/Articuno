@@ -15,11 +15,6 @@ namespace Articuno
     class ArticunoMain
     {
 
-        //public static Queue<Turbine> turbinesInDeRateList { get; set; }
-        //public static Queue<Turbine> turbinesExcludedList { get; set; }
-        //public static Queue<Turbine> turbinesInParticipationList { get; set; }
-        //public static Queue<Turbine> turbinesPausedByArticuno { get; set; }
-
         public static List<Turbine> turbinesInDeRateList { get; set; }
         public static List<Turbine> turbinesExcludedList { get; set; }
         public static List<Turbine> turbinesInParticipationList { get; set; }
@@ -34,9 +29,6 @@ namespace Articuno
         private int ONE_MINUTE_POLLING = 60 * 1000;
         private static int NOISE_LEV = 5;
         private static int RUN_STATE = 100;
-        private static string ENABLE = "CURTAILENA";
-        private static string OPERATING_TAG = "ACTST";
-        private static string NRS_TAG = "NRS";
 
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(ArticunoMain));
@@ -46,11 +38,6 @@ namespace Articuno
         public ArticunoMain(string opcServer, string metTower, List<Turbine> list)
         {
             this.turbineList = list;
-            //turbinesInDeRateList = new Queue<Turbine>();
-            //turbinesExcludedList = new Queue<Turbine>();
-            //turbinesInParticipationList = new Queue<Turbine>();
-            //turbinesPausedByArticuno = new Queue<Turbine>();
-
             turbinesInDeRateList = new List<Turbine>();
             turbinesExcludedList = new List<Turbine>();
             turbinesInParticipationList = new List<Turbine>();
@@ -114,10 +101,10 @@ namespace Articuno
                 Console.WriteLine("{0}: ***Failure: {1}", e.Arguments.ItemDescriptor.ItemId, e.Vtq);
             }
             //If it is the Articuno enable change
-            if (e.Arguments.ItemDescriptor.ItemId.ToString().ToUpper().Contains(ENABLE))
-            {
-                articunoEnable = Convert.ToBoolean(e.Vtq.DisplayValue());
-            }
+            //if (e.Arguments.ItemDescriptor.ItemId.ToString().ToUpper().Contains(ENABLE))
+            //{
+            //    articunoEnable = Convert.ToBoolean(e.Vtq.DisplayValue());
+            //}
         }
 
         /// <summary>
@@ -164,35 +151,35 @@ namespace Articuno
                 return;
             }
             //If it is NRS that changed
-            if (e.Arguments.ItemDescriptor.ItemId.ToString().ToUpper().Contains(NRS_TAG))
-            {
-                string noiseLev = e.Vtq.DisplayValue();
-                log.InfoFormat("Noise level for {0} is now: {1}", prefix, noiseLev);
-                //Nrs condition is false if the noise level is not 5
-                bool nrsCondition = Convert.ToInt16(noiseLev) == NOISE_LEV ? true : false;
-                log.InfoFormat("NRS Condition for {0} setting to: {1}", prefix, nrsCondition);
-                currentTurbine.setNrsCondition(nrsCondition);
-            }
+           // if (e.Arguments.ItemDescriptor.ItemId.ToString().ToUpper().Contains(NRS_TAG))
+           // {
+           //     string noiseLev = e.Vtq.DisplayValue();
+           //     log.InfoFormat("Noise level for {0} is now: {1}", prefix, noiseLev);
+           //     //Nrs condition is false if the noise level is not 5
+           //     bool nrsCondition = Convert.ToInt16(noiseLev) == NOISE_LEV ? true : false;
+           //     log.InfoFormat("NRS Condition for {0} setting to: {1}", prefix, nrsCondition);
+           //     currentTurbine.setNrsCondition(nrsCondition);
+           // }
 
-            //If it is an operating State that changed, throw it into derate queue
-            else if (e.Arguments.ItemDescriptor.ItemId.ToString().ToUpper().Contains(OPERATING_TAG))
-            {
-                string operatingStatus = e.Vtq.DisplayValue();
-                log.InfoFormat("Turbine {0} is in {1}", prefix, operatingStatus);
-                //If not in run (100), then that means it is derated
-                if (Convert.ToInt16(operatingStatus) != RUN_STATE)
-                {
-                    currentTurbine.setDeRateCondition(true);
-                    log.InfoFormat("Adding {0} to Derate List", prefix);
-                    turbinesInDeRateList.Add(currentTurbine);
-                }
-                else
-                {
-                    currentTurbine.setDeRateCondition(false);
-                    log.InfoFormat("Removing {0} to Derate List", prefix);
-                    turbinesInDeRateList.Remove(currentTurbine);
-                }
-            }
+           // //If it is an operating State that changed, throw it into derate queue
+           // else if (e.Arguments.ItemDescriptor.ItemId.ToString().ToUpper().Contains(OPERATING_TAG))
+           // {
+           //     string operatingStatus = e.Vtq.DisplayValue();
+           //     log.InfoFormat("Turbine {0} is in {1}", prefix, operatingStatus);
+           //     //If not in run (100), then that means it is derated
+           //     if (Convert.ToInt16(operatingStatus) != RUN_STATE)
+           //     {
+           //         currentTurbine.setDeRateCondition(true);
+           //         log.InfoFormat("Adding {0} to Derate List", prefix);
+           //         turbinesInDeRateList.Add(currentTurbine);
+           //     }
+           //     else
+           //     {
+           //         currentTurbine.setDeRateCondition(false);
+           //         log.InfoFormat("Removing {0} to Derate List", prefix);
+           //         turbinesInDeRateList.Remove(currentTurbine);
+           //     }
+           // }
             //If participation status changed
             else
             {
