@@ -110,20 +110,13 @@ namespace Articuno
         public void createPrefixList()
         {
             DataTable reader = DatabaseInterface.Instance.readCommand("SELECT TurbineId FROM TurbineInputTags;");
-            foreach (DataRow item in reader.Rows)
-            {
-                turbinePrefixList.Add(item["TurbineId"].ToString());
-
-            }
+            foreach (DataRow item in reader.Rows) { turbinePrefixList.Add(item["TurbineId"].ToString()); }
         }
 
-        public List<string> getTurbinePrefixList()
-        {
-            return this.turbinePrefixList;
-        }
+        public List<string> getTurbinePrefixList() { return this.turbinePrefixList; }
 
+        //Lines for singleton usage
         public static TurbineMediator Instance { get { return Nested.instance; } }
-
         private class Nested
         {
             static Nested() { }
@@ -228,10 +221,7 @@ namespace Articuno
         /// <returns></returns>
         public static Turbine getTurbine(string prefix)
         {
-            foreach (Turbine turbine in turbineList)
-            {
-                if (turbine.getTurbinePrefixValue().Equals(prefix)) { return turbine; }
-            }
+            foreach (Turbine turbine in turbineList) { if (turbine.getTurbinePrefixValue().Equals(prefix)) { return turbine; } }
             return null;
         }
 

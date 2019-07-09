@@ -62,11 +62,35 @@ namespace Articuno
                         });
             }
 
+            //The following lines starts a threading lambda and executes a function every minute. THis is used for events that require minute polling and CTR polling 
+            var startTimeSpan = TimeSpan.Zero;
+            var periodTimeSpan = TimeSpan.FromMilliseconds(ONE_MINUTE_POLLING);
+            var timer = new System.Threading.Timer((e) => { minuteUpdate(); }, null, startTimeSpan, periodTimeSpan);
+
             //start of the infinite loop
             while (true)
             {
 
             }
+
+        }
+
+        /// <summary>
+        /// Function to handle tasks that should be executed every minute (ie get temperature measurements) and every CTR minute (ie check rotor speed, run calculations, etc.) 
+        /// </summary>
+        private void minuteUpdate()
+        {
+            //For every minute, read the met tower measurements and the turbine temperature measurements
+            //TODO: Fill this shit out
+            for (int i = 1; i <= MetTowerMediator.getNumMetTower();i++) {
+                //Get all measurements from the met tower
+                Tuple<double, double, double, double> metMeasurements = MetTowerMediator.Instance.getAllMeasurements("Met"+i);
+                //Get the temperature value of the nearest turbine from the met tower as well
+                MetTowerMediator.Instance.getMetTower("Met" + i).getNearestTurbine().readTemperatureValue();
+            }
+
+            //For every CTR minute, do the other calculation stuff
+            
 
         }
 
@@ -145,41 +169,41 @@ namespace Articuno
             Turbine currentTurbine = TurbineMediator.getTurbine(prefix);
 
             //If it is null, then something bad happened
-            if(currentTurbine is null)
+            if (currentTurbine is null)
             {
                 log.ErrorFormat("Error. Turbine {0} cannot be found in the factory class (getTurbine). No further action executed", prefix);
                 return;
             }
             //If it is NRS that changed
-           // if (e.Arguments.ItemDescriptor.ItemId.ToString().ToUpper().Contains(NRS_TAG))
-           // {
-           //     string noiseLev = e.Vtq.DisplayValue();
-           //     log.InfoFormat("Noise level for {0} is now: {1}", prefix, noiseLev);
-           //     //Nrs condition is false if the noise level is not 5
-           //     bool nrsCondition = Convert.ToInt16(noiseLev) == NOISE_LEV ? true : false;
-           //     log.InfoFormat("NRS Condition for {0} setting to: {1}", prefix, nrsCondition);
-           //     currentTurbine.setNrsCondition(nrsCondition);
-           // }
+            // if (e.Arguments.ItemDescriptor.ItemId.ToString().ToUpper().Contains(NRS_TAG))
+            // {
+            //     string noiseLev = e.Vtq.DisplayValue();
+            //     log.InfoFormat("Noise level for {0} is now: {1}", prefix, noiseLev);
+            //     //Nrs condition is false if the noise level is not 5
+            //     bool nrsCondition = Convert.ToInt16(noiseLev) == NOISE_LEV ? true : false;
+            //     log.InfoFormat("NRS Condition for {0} setting to: {1}", prefix, nrsCondition);
+            //     currentTurbine.setNrsCondition(nrsCondition);
+            // }
 
-           // //If it is an operating State that changed, throw it into derate queue
-           // else if (e.Arguments.ItemDescriptor.ItemId.ToString().ToUpper().Contains(OPERATING_TAG))
-           // {
-           //     string operatingStatus = e.Vtq.DisplayValue();
-           //     log.InfoFormat("Turbine {0} is in {1}", prefix, operatingStatus);
-           //     //If not in run (100), then that means it is derated
-           //     if (Convert.ToInt16(operatingStatus) != RUN_STATE)
-           //     {
-           //         currentTurbine.setDeRateCondition(true);
-           //         log.InfoFormat("Adding {0} to Derate List", prefix);
-           //         turbinesInDeRateList.Add(currentTurbine);
-           //     }
-           //     else
-           //     {
-           //         currentTurbine.setDeRateCondition(false);
-           //         log.InfoFormat("Removing {0} to Derate List", prefix);
-           //         turbinesInDeRateList.Remove(currentTurbine);
-           //     }
-           // }
+            // //If it is an operating State that changed, throw it into derate queue
+            // else if (e.Arguments.ItemDescriptor.ItemId.ToString().ToUpper().Contains(OPERATING_TAG))
+            // {
+            //     string operatingStatus = e.Vtq.DisplayValue();
+            //     log.InfoFormat("Turbine {0} is in {1}", prefix, operatingStatus);
+            //     //If not in run (100), then that means it is derated
+            //     if (Convert.ToInt16(operatingStatus) != RUN_STATE)
+            //     {
+            //         currentTurbine.setDeRateCondition(true);
+            //         log.InfoFormat("Adding {0} to Derate List", prefix);
+            //         turbinesInDeRateList.Add(currentTurbine);
+            //     }
+            //     else
+            //     {
+            //         currentTurbine.setDeRateCondition(false);
+            //         log.InfoFormat("Removing {0} to Derate List", prefix);
+            //         turbinesInDeRateList.Remove(currentTurbine);
+            //     }
+            // }
             //If participation status changed
             else
             {
@@ -213,5 +237,70 @@ namespace Articuno
         */
         public void addToTemperatureQueue(double temperature) { throw new NotImplementedException(); }
 
+        /// <summary>
+        ///  ONLY USED FROM EVENT HANDLERS. This Method that is used to find enums so Articuno knows what other method should call. 
+        /// </summary>
+        /// <param name="opcTag"></param>
+        private static void findChange(string opcTag,Object e)
+        {
+            /*
+             * The following will find the met and turbine indicator for any given OPC Tag that changed by finding any words that are four characters long. First three can be alphanumeric,
+             * but the last one must be a number
+             *
+             * Ex: SCRAB.T001.WROT.RotSpdAv will match T001 and SCRAB.MET1.AmbRh1 will match MET1
+             */
+            string pattern = @"\b\w{3}\d{1}\b";
+            string input = opcTag;
+            Regex lookup = new Regex(pattern, RegexOptions.Singleline);
+            Match matchLookup = lookup.Match(opcTag);
+            string prefix = matchLookup.ToString();
+
+
+            //If it matches the met tower
+            if (matchLookup.Value.ToUpper().Contains("MET")) { throw new NotImplementedException(); }
+            //Else, assume met tower. Not like there's anything else given the regex
+            else
+            {
+                Enum turbineEnum = TurbineMediator.Instance.findTurbineTag(matchLookup.Value, opcTag);
+
+                switch (turbineEnum)
+                {
+                    case TurbineMediator.TurbineEnum.NrsMode:
+                        throw new NotImplementedException();
+                        break;
+                    case TurbineMediator.TurbineEnum.OperatingState:
+                        throw new NotImplementedException();
+                        break;
+                    case TurbineMediator.TurbineEnum.RotorSpeed:
+                        throw new NotImplementedException();
+                        break;
+                    case TurbineMediator.TurbineEnum.Temperature:
+                        throw new NotImplementedException();
+                        break;
+                    case TurbineMediator.TurbineEnum.WindSpeed:
+                        throw new NotImplementedException();
+                        break;
+                    case TurbineMediator.TurbineEnum.Participation:
+                        throw new NotImplementedException();
+                        break;
+
+                    //TODO: Take care of hte cases for system input tags
+
+                }
+
+            }
+        }
+
+        //This is a method that is triggered upon any value changes for certain OPC Tags 
+        static void onItemChangeHandler(object sender, EasyDAItemChangedEventArgs e)
+        {
+            if (e.Succeeded)
+            {
+                string tag = e.Arguments.ItemDescriptor.ItemId;
+                findChange(tag,e.Vtq.Value);
+            }
+            else { log.ErrorFormat("Error occured in onItemChangeHandler with {0}. Msg: {1}", e.Arguments.ItemDescriptor.ItemId, e.ErrorMessageBrief); }
+
+        }
     }
 }
