@@ -21,13 +21,7 @@ namespace ArticunoTest
         [DataTestMethod]
         [DataRow("Select * from SystemInputTags WHERE Description!='SitePrefix' AND Description!='OpcServerName'")]
         [DataRow("Select * from SystemInputTags WHERE Description='OpcServerName'")]
-        //[DataRow("Select * from PerformanceTable limit 5")]
-        //[DataRow("Select TurbineId from TurbineOutputTags")]
-        //[DataRow("Select * from MetTowerInputTags")]
-        //[DataRow("Select * from MetTowerOutputTags")]
-        //[DataRow("Select TurbineId from TurbineInputTags")]
-        //[DataRow("Select TurbineId from TurbineOutputTags")]
-        public void readFromDBTest(string sqlcmd)
+        public void readFromSystemInputTableTest(string sqlcmd)
         {
             //Get all the columns from the SystemParemeters
             //NOTE: To see the output, click the output in 'Test Explorer' after the test is executed.
@@ -43,16 +37,34 @@ namespace ArticunoTest
             {
                 Console.WriteLine(reader.Rows[i]["Default"].ToString());
             }
-
-            //foreach(DataColumn col  in reader.Columns)
-            //{
-            //    Console.WriteLine("Header: {0}",col);
-            //}
-            //foreach(DataRow row in reader.Rows)
-            //{
-            //    Console.WriteLine(row[0]);
-            //}
         }
+
+        [TestMethod]
+        [DataTestMethod]
+        [DataRow("Select TurbineId,Participation from TurbineOutputTags")]
+        //[DataRow("Select TurbineId from TurbineOutputTags")]
+        //[DataRow("Select * from MetTowerInputTags")]
+        //[DataRow("Select * from MetTowerOutputTags")]
+        //[DataRow("Select TurbineId from TurbineInputTags")]
+        //[DataRow("Select TurbineId from TurbineOutputTags")]
+        public void readFromTurbine(string sqlcmd)
+        {
+            DataTable reader = dbi.readCommand(sqlcmd);
+            Console.WriteLine(reader.Rows.Count);
+
+            for (int i = 0; i < reader.Rows.Count; i++)
+            {
+                Console.WriteLine(reader.Rows[i]["TurbineId"].ToString());
+            }
+
+            for (int i = 0; i < reader.Rows.Count; i++)
+            {
+                Console.WriteLine(reader.Rows[i]["Participation"].ToString());
+            }
+
+        }
+
+
 
         [TestMethod]
         //Test to see if you are able to write to the database. 
