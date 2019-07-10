@@ -80,7 +80,6 @@
     <Compile Include="OpcServer.cs" />
     <Compile Include="Setup.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Timer.cs" />
     <Compile Include="Turbine.cs" />
     <Compile Include="TurbineMediator.cs" />
   </ItemGroup>

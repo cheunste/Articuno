@@ -62,14 +62,9 @@ namespace ArticunoTest
         #endregion
 
         [TestMethod]
-        public void TestMethod1()
+        public void SetupTest()
         {
-            //
-            // TODO: Add test logic here
-            //
-            //this.articuno.start();
-            throw new NotImplementedException();
-
+            articuno.setup();
         }
 
         [TestMethod]

@@ -5,6 +5,7 @@ using OpcLabs.EasyOpc.DataAccess.OperationModel;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -22,6 +23,8 @@ namespace Articuno
 
         private static bool articunoEnable;
         private Queue<double> temperatureQueue;
+        private static string opcServerName;
+        private static int ctr;
 
         private List<Turbine> turbineList;
 
@@ -48,19 +51,7 @@ namespace Articuno
 
         public void start()
         {
-            //Set up subscription event handler for system input OPC tags 
-            //These should be polling every second and should include  tags like turbine participation
-            using (var inputClient = new EasyDAClient())
-            {
-                inputClient.ItemChanged += SystemInputOnChanged;
-                inputClient.SubscribeMultipleItems(
-                    new[] {
-                            new DAItemGroupArguments("", "OPCLabs.KitServer.2", "Simulation.Random", 1000, null),
-                            new DAItemGroupArguments("", "OPCLabs.KitServer.2", "Trends.Ramp (1 min)", 1000, null),
-                            new DAItemGroupArguments("", "OPCLabs.KitServer.2", "Trends.Sine (1 min)", 1000, null),
-                            new DAItemGroupArguments("", "OPCLabs.KitServer.2", "Simulation.Register_I4", 1000, null)
-                        });
-            }
+
 
             //The following lines starts a threading lambda and executes a function every minute. THis is used for events that require minute polling and CTR polling 
             var startTimeSpan = TimeSpan.Zero;
@@ -74,6 +65,39 @@ namespace Articuno
             }
 
         }
+        public void setup()
+        {
+
+            DataTable reader = DatabaseInterface.Instance.readCommand("Select * from SystemInputTags WHERE Description='OpcServerName'");
+            opcServerName = reader.Rows[0]["OpcTag"].ToString();
+            string tag;
+
+            //A speicifc client that will respond to System Tag input changes
+            var systemInputClient = new EasyDAClient();
+            systemInputClient.ItemChanged += systemInputOnChangeHandler;
+            List<DAItemGroupArguments> systemInputTags = new List<DAItemGroupArguments>();
+            reader = DatabaseInterface.Instance.readCommand("Select * from SystemInputTags WHERE Description!='SitePrefix' AND Description!='OpcServerName'");
+            for (int i = 0; i < reader.Rows.Count; i++)
+            {
+                tag = reader.Rows[i]["OpcTag"].ToString();
+                systemInputTags.Add(new DAItemGroupArguments("", opcServerName, tag, 1000, null));
+            }
+            systemInputClient.SubscribeMultipleItems(systemInputTags.ToArray());
+
+
+            //A  client that will respond to Met Tower and Turbine Changes
+            var assetStatusClient = new EasyDAClient();
+            assetStatusClient.ItemChanged += assetTagChangeHandler;
+            List<DAItemGroupArguments> assetInputTags = new List<DAItemGroupArguments>();
+            reader = DatabaseInterface.Instance.readCommand("Select * from SystemInputTags WHERE Description!='SitePrefix' AND Description!='OpcServerName'");
+            for (int i = 0; i < reader.Rows.Count; i++)
+            {
+                tag = opcServerName,reader.Rows[i]["OpcTag"].ToString();
+                assetInputTags.Add(new DAItemGroupArguments("",opcServerName, tag, 1000, null));
+            }
+            assetStatusClient.SubscribeMultipleItems(assetInputTags.ToArray());
+
+        }
 
         /// <summary>
         /// Function to handle tasks that should be executed every minute (ie get temperature measurements) and every CTR minute (ie check rotor speed, run calculations, etc.) 
@@ -82,15 +106,16 @@ namespace Articuno
         {
             //For every minute, read the met tower measurements and the turbine temperature measurements
             //TODO: Fill this shit out
-            for (int i = 1; i <= MetTowerMediator.getNumMetTower();i++) {
+            for (int i = 1; i <= MetTowerMediator.getNumMetTower(); i++)
+            {
                 //Get all measurements from the met tower
-                Tuple<double, double, double, double> metMeasurements = MetTowerMediator.Instance.getAllMeasurements("Met"+i);
+                Tuple<double, double, double, double> metMeasurements = MetTowerMediator.Instance.getAllMeasurements("Met" + i);
                 //Get the temperature value of the nearest turbine from the met tower as well
                 MetTowerMediator.Instance.getMetTower("Met" + i).getNearestTurbine().readTemperatureValue();
             }
 
-            //For every CTR minute, do the other calculation stuff
-            
+            //For every CTR minute, do the other calculation stuff. Better set up a  member variable here
+
 
         }
 
@@ -241,7 +266,7 @@ namespace Articuno
         ///  ONLY USED FROM EVENT HANDLERS. This Method that is used to find enums so Articuno knows what other method should call. 
         /// </summary>
         /// <param name="opcTag"></param>
-        private static void findChange(string opcTag,Object e)
+        private static void findChange(string opcTag, Object e)
         {
             /*
              * The following will find the met and turbine indicator for any given OPC Tag that changed by finding any words that are four characters long. First three can be alphanumeric,
@@ -258,7 +283,7 @@ namespace Articuno
 
             //If it matches the met tower
             if (matchLookup.Value.ToUpper().Contains("MET")) { throw new NotImplementedException(); }
-            //Else, assume met tower. Not like there's anything else given the regex
+            //Else, assume Turbine or system input. Not like there's anything else given the regex
             else
             {
                 Enum turbineEnum = TurbineMediator.Instance.findTurbineTag(matchLookup.Value, opcTag);
@@ -284,7 +309,7 @@ namespace Articuno
                         throw new NotImplementedException();
                         break;
 
-                    //TODO: Take care of hte cases for system input tags
+                        //TODO: Take care of hte cases for system input tags
 
                 }
 
@@ -292,15 +317,55 @@ namespace Articuno
         }
 
         //This is a method that is triggered upon any value changes for certain OPC Tags 
-        static void onItemChangeHandler(object sender, EasyDAItemChangedEventArgs e)
+        static void assetTagChangeHandler(object sender, EasyDAItemChangedEventArgs e)
         {
             if (e.Succeeded)
             {
                 string tag = e.Arguments.ItemDescriptor.ItemId;
-                findChange(tag,e.Vtq.Value);
+                findChange(tag, e.Vtq.Value);
             }
             else { log.ErrorFormat("Error occured in onItemChangeHandler with {0}. Msg: {1}", e.Arguments.ItemDescriptor.ItemId, e.ErrorMessageBrief); }
 
+        }
+
+        /// <summary>
+        /// method that handles system input tag changes such as whether Articuno is enabled or not, Threshold, CTR Period, etc.
+        /// </summary>
+        /// <param name="sneder"></param>
+        /// <param name="e"></param>
+        /*
+         * There are only four items in the System InputTags table that really matter. Thre two thresholds (temp and humidity), the CTR period and the Enable tag.
+         * You can hard code this
+         */
+        static void systemInputOnChangeHandler(object sneder, EasyDAItemChangedEventArgs e)
+        {
+            if (e.Succeeded)
+            {
+                string tag = e.Arguments.ItemDescriptor.ItemId.ToString();
+                int value = Convert.ToInt16(e.Vtq.Value);
+                if (tag.Contains("Enable")||tag.Contains("CurtailEna")) { articunoEnable = (value == 1) ? true : false; }
+                if (tag.Contains("CTR") || tag.Contains("EvalTm"))
+                {
+                    ctr = value;
+                }
+                if (tag.Contains("TmpTreshold"))
+                {
+
+                    //MetTowerMediator.Instance.writeTemperatureThreshold();
+                }
+                if (tag.Contains("TmpDelta"))
+                {
+                    //MetTowerMediator.Instance.writeDeltaThreshold();
+                }
+
+
+            }
+            else { log.ErrorFormat("Error occured in systemInputOnChangeHandler with {0}. Msg: {1}", e.Arguments.ItemDescriptor.ItemId, e.ErrorMessageBrief); }
+        }
+
+        public static string getOpcServerName()
+        {
+            return opcServerName;
         }
     }
 }
