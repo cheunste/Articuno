@@ -35,8 +35,16 @@ namespace Articuno
 
         private static bool articunoEnable;
         private Queue<double> temperatureQueue;
+
         private static string opcServerName;
         private static int articunoCtr;
+
+        //OpcTag getters and setters
+        private string tempThresholdTag;
+        private string enableArticunoTag;
+        private string articunoCtrTag;
+        private string deltaThresholdTag;
+        private string dewThresholdTag;
 
         private List<Turbine> turbineList;
 
@@ -79,12 +87,23 @@ namespace Articuno
         }
         public void setup()
         {
-
+            //Get the OPC Server name
             DataTable reader = DatabaseInterface.Instance.readCommand("Select * from SystemInputTags WHERE Description='OpcServerName'");
             opcServerName = reader.Rows[0]["OpcTag"].ToString();
             string tag;
 
-            //A speicifc client that will respond to System Tag input changes
+            //Call the create methods
+            MetTowerMediator.Instance.createMetTower();
+            TurbineMediator.Instance.createTurbines();
+
+            //Initializes Lists and Queues
+            turbinesExcludedList = new List<string>();
+            turbinesPausedByArticuno = new List<string>();
+            turbinesWaitingForPause = new List<string>();
+            temperatureQueue = new Queue<double>();
+
+
+            //A speicifc client that will respond to System Tag input changes. This can be hard coded
             var systemInputClient = new EasyDAClient();
             systemInputClient.ItemChanged += SystemInputOnChange;
             List<DAItemGroupArguments> systemInputTags = new List<DAItemGroupArguments>();
@@ -92,6 +111,18 @@ namespace Articuno
             for (int i = 0; i < reader.Rows.Count; i++)
             {
                 tag = reader.Rows[i]["OpcTag"].ToString();
+                //The following switch statement is ambiguious
+                //because the query always return the OPC tag column in a certain order, 
+                //the switch statement acts as a setter and set the tag from the database into the member variable of this class
+                //If this still doesn't make sense, try executing the above Select * query in SQLite
+                switch (i)
+                {
+                    case 0: tempThresholdTag = tag; break;
+                    case 1: enableArticunoTag = tag; break;
+                    case 2: articunoCtrTag = tag; break;
+                    case 3: deltaThresholdTag = tag; break;
+                    case 4: dewThresholdTag = tag; break;
+                }
                 systemInputTags.Add(new DAItemGroupArguments("", opcServerName, tag, 1000, null));
             }
             systemInputClient.SubscribeMultipleItems(systemInputTags.ToArray());
@@ -101,12 +132,13 @@ namespace Articuno
             var assetStatusClient = new EasyDAClient();
             assetStatusClient.ItemChanged += assetTagChangeHandler;
             List<DAItemGroupArguments> assetInputTags = new List<DAItemGroupArguments>();
-            reader = DatabaseInterface.Instance.readCommand("Select * from SystemInputTags WHERE Description!='SitePrefix' AND Description!='OpcServerName'");
-            for (int i = 0; i < reader.Rows.Count; i++)
-            {
-                tag = opcServerName,reader.Rows[i]["OpcTag"].ToString();
-                assetInputTags.Add(new DAItemGroupArguments("", opcServerName, tag, 1000, null));
-            }
+            //TODO: this shit
+            //reader = DatabaseInterface.Instance.readCommand("Select * from SystemInputTags WHERE Description!='SitePrefix' AND Description!='OpcServerName'");
+            //for (int i = 0; i < reader.Rows.Count; i++)
+            //{
+            //    tag = opcServerName,reader.Rows[i]["OpcTag"].ToString();
+            //    assetInputTags.Add(new DAItemGroupArguments("", opcServerName, tag, 1000, null));
+            //}
             assetStatusClient.SubscribeMultipleItems(assetInputTags.ToArray());
 
         }
@@ -128,6 +160,16 @@ namespace Articuno
 
             //For every CTR minute, do the other calculation stuff. Better set up a  member variable here
             //TODO: Implement
+            articunoCtr--;
+            if (articunoCtr == 0)
+            {
+
+                //Get turbine to update rotor speed and other calculations
+                //
+
+                //Set the CTR back to the original value
+                articunoCtr = readCtrValue();
+            }
         }
 
         /*
@@ -289,5 +331,15 @@ namespace Articuno
         }
 
         public static string getOpcServerName() { return opcServerName; }
+
+        public int readCtrValue()
+        {
+            using (var client = new EasyDAClient())
+            {
+                object value = client.ReadItemValue("", opcServerName,);
+
+            }
+
+        }
     }
 }
