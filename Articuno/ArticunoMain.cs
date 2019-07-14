@@ -122,23 +122,38 @@ namespace Articuno
                     case 2: articunoCtrTag = tag; break;
                     case 3: deltaThresholdTag = tag; break;
                     case 4: dewThresholdTag = tag; break;
+                    case 5:  break;
+                    case 6:  break;
                 }
                 systemInputTags.Add(new DAItemGroupArguments("", opcServerName, tag, 1000, null));
             }
             systemInputClient.SubscribeMultipleItems(systemInputTags.ToArray());
 
 
-            //A  client that will respond to Met Tower and Turbine Changes
+            //A  client that will respond to Turbine OPC tag Changes for operating state, partiicipation and NrsMode
             var assetStatusClient = new EasyDAClient();
             assetStatusClient.ItemChanged += assetTagChangeHandler;
             List<DAItemGroupArguments> assetInputTags = new List<DAItemGroupArguments>();
-            //TODO: this shit
-            //reader = DatabaseInterface.Instance.readCommand("Select * from SystemInputTags WHERE Description!='SitePrefix' AND Description!='OpcServerName'");
-            //for (int i = 0; i < reader.Rows.Count; i++)
-            //{
-            //    tag = opcServerName,reader.Rows[i]["OpcTag"].ToString();
-            //    assetInputTags.Add(new DAItemGroupArguments("", opcServerName, tag, 1000, null));
-            //}
+            reader = DatabaseInterface.Instance.readCommand("Select OperatingState, Participation,NrsMode from TurbineInputTags");
+            for (int i = 0; i < reader.Rows.Count; i++)
+            {
+                try
+                {
+                    assetInputTags.Add(new DAItemGroupArguments("",
+                        opcServerName, reader.Rows[i]["OperatingState"].ToString(), 1000, null));
+                    assetInputTags.Add(new DAItemGroupArguments("",
+                        opcServerName, reader.Rows[i]["Participation"].ToString(), 1000, null));
+                    assetInputTags.Add(new DAItemGroupArguments("",
+                        opcServerName, reader.Rows[i]["NrsMode"].ToString(), 1000, null));
+                }
+                catch(Exception e)
+                {
+
+                }
+                //tag = reader.Rows[i]["OpcTag"].ToString();
+                //assetInputTags.Add(new DAItemGroupArguments("", opcServerName, tag, 1000, null));
+            }
+
             assetStatusClient.SubscribeMultipleItems(assetInputTags.ToArray());
 
         }
@@ -226,6 +241,7 @@ namespace Articuno
 
 
             //If it matches the met tower
+            //TODO: Implement this. You should only have the me ttower switch and the thresholds 
             if (matchLookup.Value.ToUpper().Contains("MET")) { throw new NotImplementedException(); }
             //Else, assume Turbine or system input. Not like there's anything else given the regex
             else
@@ -336,9 +352,9 @@ namespace Articuno
         {
             using (var client = new EasyDAClient())
             {
-                object value = client.ReadItemValue("", opcServerName,);
 
             }
+            return 0;
 
         }
     }

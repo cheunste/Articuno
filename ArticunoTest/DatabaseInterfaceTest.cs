@@ -41,7 +41,8 @@ namespace ArticunoTest
 
         [TestMethod]
         [DataTestMethod]
-        [DataRow("Select TurbineId,Participation from TurbineOutputTags")]
+        //[DataRow("Select NrsMode,OperatingState, Participation from TurbineInputTags")]
+        [DataRow("Select TurbineId,OperatingState, Participation, NrsMode from TurbineInputTags")]
         //[DataRow("Select TurbineId from TurbineOutputTags")]
         //[DataRow("Select * from MetTowerInputTags")]
         //[DataRow("Select * from MetTowerOutputTags")]
