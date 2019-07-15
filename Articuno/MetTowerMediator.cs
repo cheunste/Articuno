@@ -516,10 +516,7 @@ namespace Articuno
         {
             for (int i = 0; i <= metTowerList.Count; i++)
             {
-                if (metTowerList.ElementAt(i).getMetTowerPrefix.Equals(metId))
-                {
-                    metTowerList.ElementAt(i).setNearestTurbine(turbine);
-                }
+                if (metTowerList.ElementAt(i).getMetTowerPrefix.Equals(metId)) { metTowerList.ElementAt(i).setNearestTurbine(turbine); }
             }
         }
 
@@ -548,19 +545,20 @@ namespace Articuno
                 try
                 {
                     met.writeIceIndicationValue(1.00);
-                    log.InfoFormat("Icing conditions met for {0}. " +
-                        "average Temperature {1}, " +
-                        "Temperature threshold {2}", 
+                    log.InfoFormat("Icing conditions met for {0}. \n" +
+                        "average Temperature {1}, \n" +
+                        "Temperature threshold {2} \n", 
                         metId, averageTemperature, tempThreshold);
                 }
                 catch (Exception e)
                 {
                     //in case you can't write to OPC
                     log.ErrorFormat("Error when writing to the " +
-                        "Ice indication {0}. " +
-                        "Met: {1}, " +
-                        "avgTemp: {2}, " +
-                        "tempThreshold {3}",
+                        "Ice indication.\n" +
+                        "Error: {0}. \n" +
+                        "Met: {1}, \n" +
+                        "avgTemp: {2}, \n" +
+                        "tempThreshold {3}\n",
                         e,metId, averageTemperature, tempThreshold);
                 }
             }
