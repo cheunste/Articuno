@@ -34,7 +34,11 @@ namespace Articuno
         public static List<string> turbinesConditionNotMet;
 
         private static bool articunoEnable;
+
+        //Queues for met 1
         private Queue<double> temperatureQueue;
+        //Queues for met 2. find better name later 
+        private Queue<double> temperatureQueue2;
 
         private static string opcServerName;
         private static int articunoCtr;
@@ -67,6 +71,8 @@ namespace Articuno
             turbinesWaitingForPause = new List<string>();
 
             temperatureQueue = new Queue<double>();
+            temperatureQueue2 = new Queue<double>();
+
         }
 
         public void start()
@@ -100,8 +106,9 @@ namespace Articuno
             turbinesExcludedList = new List<string>();
             turbinesPausedByArticuno = new List<string>();
             turbinesWaitingForPause = new List<string>();
-            temperatureQueue = new Queue<double>();
 
+            temperatureQueue = new Queue<double>();
+            temperatureQueue2 = new Queue<double>();
 
             //A speicifc client that will respond to System Tag input changes. This can be hard coded
             var systemInputClient = new EasyDAClient();
@@ -122,8 +129,8 @@ namespace Articuno
                     case 2: articunoCtrTag = tag; break;
                     case 3: deltaThresholdTag = tag; break;
                     case 4: dewThresholdTag = tag; break;
-                    case 5:  break;
-                    case 6:  break;
+                    case 5: break;
+                    case 6: break;
                 }
                 systemInputTags.Add(new DAItemGroupArguments("", opcServerName, tag, 1000, null));
             }
@@ -146,7 +153,7 @@ namespace Articuno
                     assetInputTags.Add(new DAItemGroupArguments("",
                         opcServerName, reader.Rows[i]["NrsMode"].ToString(), 1000, null));
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
 
                 }
@@ -167,10 +174,15 @@ namespace Articuno
             //TODO: Fill this shit out
             for (int i = 1; i <= MetTowerMediator.getNumMetTower(); i++)
             {
-                //Get all measurements from the met tower
+                //Get all measurements from the met tower. Note that it will get turbine 
+                //temperature if the temperature coming from the met tower is bad qualtiy
                 Tuple<double, double, double, double> metMeasurements = MetTowerMediator.Instance.getAllMeasurements("Met" + i);
-                //Get the temperature value of the nearest turbine from the met tower as well
-                MetTowerMediator.Instance.getMetTower("Met" + i).getNearestTurbine().readTemperatureValue();
+
+                //put the into a queue depending on the met number
+                //For met 1
+                if (i == 1) { temperatureQueue.Enqueue(metMeasurements.Item1); }
+                //For met 2
+                else { temperatureQueue2.Enqueue(metMeasurements.Item1); }
             }
 
             //For every CTR minute, do the other calculation stuff. Better set up a  member variable here
@@ -178,9 +190,32 @@ namespace Articuno
             articunoCtr--;
             if (articunoCtr == 0)
             {
+                //Calculate temperature averages from the all the temperature queues
+                double totalTemperature = 0.0;
+                double average = 0.0;
+                double count = 0.0;
+                Queue<double> tempQueue;
 
+
+                for (int i = 1; i <= MetTowerMediator.getNumMetTower(); i++)
+                {
+
+                    if (i == 1) { tempQueue = temperatureQueue; }
+                    //For met 2
+                    else { tempQueue = temperatureQueue2; }
+
+                    count = tempQueue.Count();
+                    foreach (double temperature in tempQueue)
+                    {
+                        totalTemperature += tempQueue.Dequeue();
+                    }
+                    average = totalTemperature / count;
+
+                    //Send this temperature to the Met Mediator and determine if met tower is freezing or not
+                    MetTowerMediator.Instance.isFreezing("Met" + i, average);
+
+                }
                 //Get turbine to update rotor speed and other calculations
-                //
 
                 //Set the CTR back to the original value
                 articunoCtr = readCtrValue();

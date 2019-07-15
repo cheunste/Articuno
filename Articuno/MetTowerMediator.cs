@@ -533,5 +533,10 @@ namespace Articuno
             SecSensorOutOfRange,
             NoData
         }
+
+        public void isFreezing(string metId, double averageTemperature)
+        {
+
+        }
     }
 }
