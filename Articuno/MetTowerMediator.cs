@@ -534,9 +534,36 @@ namespace Articuno
             NoData
         }
 
+        //Function that is called by the main Articuno class to determine if the temperature average calculated
+        // by ARticuno is considered freezing or not
         public void isFreezing(string metId, double averageTemperature)
         {
+            double tempThreshold = readTemperatureThreshold(metId);
 
+            //Freezing Conditions met
+            if (averageTemperature < tempThreshold)
+            {
+                MetTower met = getMetTower(metId);
+                met.readIceIndicationValue();
+                try
+                {
+                    met.writeIceIndicationValue(1.00);
+                    log.InfoFormat("Icing conditions met for {0}. " +
+                        "average Temperature {1}, " +
+                        "Temperature threshold {2}", 
+                        metId, averageTemperature, tempThreshold);
+                }
+                catch (Exception e)
+                {
+                    //in case you can't write to OPC
+                    log.ErrorFormat("Error when writing to the " +
+                        "Ice indication {0}. " +
+                        "Met: {1}, " +
+                        "avgTemp: {2}, " +
+                        "tempThreshold {3}",
+                        e,metId, averageTemperature, tempThreshold);
+                }
+            }
         }
     }
 }
