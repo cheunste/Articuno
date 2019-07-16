@@ -33,7 +33,6 @@ namespace Articuno
         //Turbines that are taken out of the Waiting list due to some other factor (derate, not running, etc.)
         public static List<string> turbinesConditionNotMet;
 
-        private static bool articunoEnable;
 
         //Queues for met 1
         private Queue<double> temperatureQueue;
@@ -42,6 +41,8 @@ namespace Articuno
 
         private static string opcServerName;
         private static int articunoCtr;
+        private static int ctrCountdown;
+        private static bool articunoEnable;
 
         //OpcTag getters and setters
         private string tempThresholdTag;
@@ -187,8 +188,8 @@ namespace Articuno
 
             //For every CTR minute, do the other calculation stuff. Better set up a  member variable here
             //TODO: Implement
-            articunoCtr--;
-            if (articunoCtr == 0)
+            ctrCountdown--;
+            if (ctrCountdown == 0)
             {
                 //Calculate temperature averages from the all the temperature queues
                 double totalTemperature = 0.0;
@@ -213,12 +214,11 @@ namespace Articuno
 
                     //Send this temperature to the Met Mediator and determine if met tower is freezing or not
                     MetTowerMediator.Instance.isFreezing("Met" + i, average);
-
                 }
                 //Get turbine to update rotor speed and other calculations
 
                 //Set the CTR back to the original value
-                articunoCtr = readCtrValue();
+                ctrCountdown = articunoCtr;
             }
         }
 
@@ -373,6 +373,7 @@ namespace Articuno
                 if (tag.Contains("CTR") || tag.Contains("EvalTm"))
                 {
                     articunoCtr = value;
+                    ctrCountdown = value;
                     foreach (string turbinePrefix in TurbineMediator.Instance.getTurbinePrefixList()) { TurbineMediator.Instance.writeTurbineCtrTag(turbinePrefix, value); }
                 }
                 if (tag.Contains("TmpTreshold")) { MetTowerMediator.Instance.writeTemperatureThreshold(value); }
@@ -383,6 +384,7 @@ namespace Articuno
 
         public static string getOpcServerName() { return opcServerName; }
 
+        //Read the CTR value tag
         public int readCtrValue()
         {
             using (var client = new EasyDAClient())
