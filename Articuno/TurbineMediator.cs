@@ -61,30 +61,6 @@ namespace Articuno
         Dictionary<TurbineEnum, string> tagEnum = new Dictionary<TurbineEnum, string>();
 
         /// <summary>
-        /// Constructor for the turbine factory class. Takes in a string list of Turbine prefixes (ie T001). Probably should be called only once
-        /// </summary>
-        /// <param name="turbinePrefixList"></param>
-        public TurbineMediator(List<string> turbinePrefixList, OpcServer server)
-        {
-            turbineList = new List<Turbine>();
-            tempList = new List<string>();
-            tempObjectList = new List<Object>();
-
-            this.turbinePrefixList = turbinePrefixList;
-            this.server = server;
-
-        }
-        public TurbineMediator(List<string> turbinePrefixList, string opcServerName)
-        {
-            turbineList = new List<Turbine>();
-            tempList = new List<string>();
-            tempObjectList = new List<Object>();
-
-            this.turbinePrefixList = turbinePrefixList;
-            this.opcServerName = opcServerName;
-
-        }
-        /// <summary>
         /// constructor for the TurbineMediator class. 
         /// </summary>
         private TurbineMediator()
@@ -379,13 +355,13 @@ namespace Articuno
          * What this does is that given a tag, it should return a TurbineEnum to the main Articuno tag.
          */
 
-            /// <summary>
-            /// This method takes a turbine id and a tag name and then returns a TurbineEnum object Only used by the main Articuno class and nothing else 
-            /// </summary>
-            /// <param name="turbineId"></param>
-            /// <param name="tag"></param>
-            /// <returns>A Turbine enum if a match is found. Null otherwise. </returns>
-        public Enum findTurbineTag (string turbineId, string tag)
+        /// <summary>
+        /// This method takes a turbine id and a tag name and then returns a TurbineEnum object Only used by the main Articuno class and nothing else 
+        /// </summary>
+        /// <param name="turbineId"></param>
+        /// <param name="tag"></param>
+        /// <returns>A Turbine enum if a match is found. Null otherwise. </returns>
+        public Enum findTurbineTag(string turbineId, string tag)
         {
             Turbine tempTurbine = getTurbine(turbineId);
             if (tag.ToUpper().Equals(tempTurbine.getNrsStateTag().ToUpper())) { return TurbineEnum.NrsMode; }
@@ -410,6 +386,25 @@ namespace Articuno
             Temperature,
             WindSpeed,
             Participation
+        }
+
+        //Build the rotor speed lookup table
+        private void buildRotorSpeedLookupTable()
+        {
+            string cmd = String.Format("SELECT * FROM RotorSpeedLookupTable");
+            DataTable reader = DatabaseInterface.Instance.readCommand(cmd);
+            int rotorSpeedRows = reader.Rows.Count;
+
+            for (int i = 0; i <= rotorSpeedRows; i++)
+            {
+
+                Convert.ToDouble(reader.Rows[i]["NrsMode"]);
+                Convert.ToDouble(reader.Rows[i]["RotorSpeedNonNRS"]);
+                Convert.ToDouble(reader.Rows[i]["StandardDeviationNonNRS"]);
+                Convert.ToDouble(reader.Rows[i]["RotorSpeedNRS"]);
+                Convert.ToDouble(reader.Rows[i]["StandardDeviationNRS"]);
+            }
+
         }
 
 

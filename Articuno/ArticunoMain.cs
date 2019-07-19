@@ -51,7 +51,8 @@ namespace Articuno
         private string deltaThresholdTag;
         private string dewThresholdTag;
 
-        private List<Turbine> turbineList;
+        private List<double[]> rotorSpeedLookup;
+        private Object RotorSpeedLookup;
 
         //Constants
         private int ONE_MINUTE_POLLING = 60 * 1000;
@@ -64,17 +65,21 @@ namespace Articuno
 
         public String opcServer { get; set; }
 
-        public ArticunoMain(string opcServer, string metTower, List<Turbine> list)
+        public ArticunoMain()
         {
-            this.turbineList = list;
-            turbinesExcludedList = new List<string>();
-            turbinesPausedByArticuno = new List<string>();
-            turbinesWaitingForPause = new List<string>();
-
-            temperatureQueueMet1 = new Queue<double>();
-            temperatureQueueMet2 = new Queue<double>();
 
         }
+        //public ArticunoMain(string opcServer, string metTower, List<Turbine> list)
+        //{
+        //    this.turbineList = list;
+        //    turbinesExcludedList = new List<string>();
+        //    turbinesPausedByArticuno = new List<string>();
+        //    turbinesWaitingForPause = new List<string>();
+
+        //    temperatureQueueMet1 = new Queue<double>();
+        //    temperatureQueueMet2 = new Queue<double>();
+
+        //}
 
         public void start()
         {
@@ -216,7 +221,7 @@ namespace Articuno
                     MetTowerMediator.Instance.isFreezing("Met" + i, average);
                 }
                 //Get turbine to update rotor speed and other calculations
-                foreach(string prefix in TurbineMediator.Instance.getTurbinePrefixList())
+                foreach (string prefix in TurbineMediator.Instance.getTurbinePrefixList())
                 {
                     //Get Rotor Speed
                     TurbineMediator.Instance.readRotorSpeedTag(prefix);
@@ -400,5 +405,6 @@ namespace Articuno
             return 0;
 
         }
+
     }
 }
