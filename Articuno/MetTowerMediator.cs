@@ -193,6 +193,27 @@ namespace Articuno
             else { return getMetTower(metId).getNearestTurbine().readTurbineTemperatureValue(); }
         }
 
+        /// <summary>
+        /// Write Temperature Threshold for all the met tower
+        /// </summary>
+        /// <param name="value">A double vlaue that represents the temperature threshold</param>
+        public void writeTemperatureThreshold(double value)
+        {
+            foreach (MetTower tower in metTowerList) { tower.AmbTempThreshold = value; }
+        }
+        public double readTemperatureThreshold(string metTowerId) { return getMetTower(metTowerId).DeltaTempThreshold; }
+
+        /// <summary>
+        /// Writes the delta threshold for all the met tower
+        /// </summary>
+        /// <param name="value">A double vlaue that represents the delta threshold<</param>
+        public void writeDeltaThreshold(double value)
+        {
+            foreach (MetTower tower in metTowerList) { tower.DeltaTempThreshold = value; }
+        }
+
+        public double readDeltaThreshold(string metTowerId) { return getMetTower(metTowerId).DeltaTempThreshold; }
+
         public void writePrimTemperature(string metId, double value)
         {
             MetTower met = getMetTower(metId);
@@ -247,7 +268,7 @@ namespace Articuno
         /// Check the quality of the met tower
         /// </summary>
         /// <returns></returns>
-        public bool checkMetTowerQuality(string metId) 
+        public bool checkMetTowerQuality(string metId)
         {
             //Todo: Implement
             var tempTuple = tempQualityCheck(metId);
@@ -256,14 +277,15 @@ namespace Articuno
             MetTower met = getMetTower(metId);
             //If both the temperature quality and the humidity quality is bad quality (aka false), then there will be no data
             //Note that unlike the quality, noData does NOT imply quality, so if there really is no data, then it will be True, False otherwise
-            if (tempTuple.Item1 == false && humidTuple.Item1 == false) {
+            if (tempTuple.Item1 == false && humidTuple.Item1 == false)
+            {
                 noData = true;
-                raiseAlarm(met,MetTowerEnum.NoData);
+                raiseAlarm(met, MetTowerEnum.NoData);
             }
             else
             {
                 noData = false;
-                clearAlarm(met,MetTowerEnum.NoData);
+                clearAlarm(met, MetTowerEnum.NoData);
             }
 
             return noData;
@@ -494,10 +516,7 @@ namespace Articuno
         {
             for (int i = 0; i <= metTowerList.Count; i++)
             {
-                if (metTowerList.ElementAt(i).getMetTowerPrefix.Equals(metId))
-                {
-                    metTowerList.ElementAt(i).setNearestTurbine(turbine);
-                }
+                if (metTowerList.ElementAt(i).getMetTowerPrefix.Equals(metId)) { metTowerList.ElementAt(i).setNearestTurbine(turbine); }
             }
         }
 
@@ -510,6 +529,39 @@ namespace Articuno
             SecSensorQuality,
             SecSensorOutOfRange,
             NoData
+        }
+
+        //Function that is called by the main Articuno class to determine if the temperature average calculated
+        // by ARticuno is considered freezing or not
+        public void isFreezing(string metId, double averageTemperature)
+        {
+            double tempThreshold = readTemperatureThreshold(metId);
+
+            //Freezing Conditions met
+            if (averageTemperature < tempThreshold)
+            {
+                MetTower met = getMetTower(metId);
+                met.readIceIndicationValue();
+                try
+                {
+                    met.writeIceIndicationValue(1.00);
+                    log.InfoFormat("Icing conditions met for {0}. \n" +
+                        "average Temperature {1}, \n" +
+                        "Temperature threshold {2} \n", 
+                        metId, averageTemperature, tempThreshold);
+                }
+                catch (Exception e)
+                {
+                    //in case you can't write to OPC
+                    log.ErrorFormat("Error when writing to the " +
+                        "Ice indication.\n" +
+                        "Error: {0}. \n" +
+                        "Met: {1}, \n" +
+                        "avgTemp: {2}, \n" +
+                        "tempThreshold {3}\n",
+                        e,metId, averageTemperature, tempThreshold);
+                }
+            }
         }
     }
 }

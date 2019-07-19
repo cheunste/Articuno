@@ -51,6 +51,9 @@ namespace Articuno
         private bool turbinePerformanceConditionMet;
         private bool derateConditionMet;
 
+        //CTR Time
+        private int ctrTimeValue;
+
         //Other fields
         //scaling factor for turbine
         private int currentTurbSF;
@@ -99,6 +102,7 @@ namespace Articuno
         public Object readTurbineScalingFactorValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, turbineScalingFactor); }
         public Object readParticipationValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, turbineParticipationTag); }
         public Object readAlarmValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, turbineAlarmTag); }
+        public int readCtrValue() { return this.ctrTimeValue; }
 
         //Setters to set the member variables to the  OPC tag
         //These are used to set the tag name to the member variable
@@ -151,6 +155,16 @@ namespace Articuno
         public void writeAlarmTagValue(Object value) { client.WriteItemValue("", OpcServerName, turbineAlarmTag, Convert.ToDouble(value)); }
         public void writeNoiseLevel(Object value) { client.WriteItemValue("", OpcServerName, nrsState, Convert.ToDouble(value)); }
         public void writeOperatingState(Object value) { client.WriteItemValue("", OpcServerName, operatingState, Convert.ToDouble(value)); }
+        public void writeCtrTimeValue(int value) { ctrTimeValue = value; }
+        public void decrementCtrTime(int value)
+        {
+            ctrTimeValue--;
+            if (ctrTimeValue <= 0)
+            {
+                ctrTimeValue = value;
+                checkIcingConditions();
+            }
+        }
 
         //Misc functions
         public string getTurbinePrefixValue() { return this.turbinePrefix; }

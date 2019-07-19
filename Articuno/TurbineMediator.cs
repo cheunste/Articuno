@@ -7,6 +7,7 @@ using System.Data;
 using System.Data.SQLite;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Articuno
@@ -56,30 +57,9 @@ namespace Articuno
         //Member delegates
         IcingDelegates tempDelegate, operatingStateDelegate, nrsDelegate, turbinePerfDelegate, deRateConditionDelegate;
 
-        /// <summary>
-        /// Constructor for the turbine factory class. Takes in a string list of Turbine prefixes (ie T001). Probably should be called only once
-        /// </summary>
-        /// <param name="turbinePrefixList"></param>
-        public TurbineMediator(List<string> turbinePrefixList, OpcServer server)
-        {
-            turbineList = new List<Turbine>();
-            tempList = new List<string>();
-            tempObjectList = new List<Object>();
+        //Tag-Enum Dictionary
+        Dictionary<TurbineEnum, string> tagEnum = new Dictionary<TurbineEnum, string>();
 
-            this.turbinePrefixList = turbinePrefixList;
-            this.server = server;
-
-        }
-        public TurbineMediator(List<string> turbinePrefixList, string opcServerName)
-        {
-            turbineList = new List<Turbine>();
-            tempList = new List<string>();
-            tempObjectList = new List<Object>();
-
-            this.turbinePrefixList = turbinePrefixList;
-            this.opcServerName = opcServerName;
-
-        }
         /// <summary>
         /// constructor for the TurbineMediator class. 
         /// </summary>
@@ -106,20 +86,13 @@ namespace Articuno
         public void createPrefixList()
         {
             DataTable reader = DatabaseInterface.Instance.readCommand("SELECT TurbineId FROM TurbineInputTags;");
-            foreach (DataRow item in reader.Rows)
-            {
-                turbinePrefixList.Add(item["TurbineId"].ToString());
-
-            }
+            foreach (DataRow item in reader.Rows) { turbinePrefixList.Add(item["TurbineId"].ToString()); }
         }
 
-        public List<string> getTurbinePrefixList()
-        {
-            return this.turbinePrefixList;
-        }
+        public List<string> getTurbinePrefixList() { return this.turbinePrefixList; }
 
+        //Lines for singleton usage
         public static TurbineMediator Instance { get { return Nested.instance; } }
-
         private class Nested
         {
             static Nested() { }
@@ -169,10 +142,8 @@ namespace Articuno
                         MetTowerMediator.Instance.setTurbineBackup(backupMetTower, turbine);
                     }
                 }
-                catch (Exception e)
-                {
-                    //no operation. Reaching here implies this met tower isn't set up for redundancy 
-                }
+                //no operation. Reaching here implies this met tower isn't set up for redundancy 
+                catch (Exception e) { }
 
                 //For Turbine tags from the TurbineOutputTags Table There might be duplicates
                 cmd = String.Format("SELECT * " +
@@ -226,10 +197,7 @@ namespace Articuno
         /// <returns></returns>
         public static Turbine getTurbine(string prefix)
         {
-            foreach (Turbine turbine in turbineList)
-            {
-                if (turbine.getTurbinePrefixValue().Equals(prefix)) { return turbine; }
-            }
+            foreach (Turbine turbine in turbineList) { if (turbine.getTurbinePrefixValue().Equals(prefix)) { return turbine; } }
             return null;
         }
 
@@ -352,6 +320,13 @@ namespace Articuno
         }
 
         /// <summary>
+        /// sets the CTR time for this turbine
+        /// </summary>
+        /// <param name="value"></param>
+        public void setCtrTime(string turbineId, int ctrValue) { getTurbine(turbineId).writeCtrTimeValue(ctrValue); }
+        public int getCtrTime(string turbineId) { return getTurbine(turbineId).readCtrValue(); }
+
+        /// <summary>
         /// Used for testing only. This creates a testing scenario that uses only T001 
         /// </summary>
         public void createTestTurbines()
@@ -374,5 +349,64 @@ namespace Articuno
             Turbine turbine = getTurbine(turbineId);
             turbine.checkIcingConditions();
         }
+
+        /*
+         * I'm going to implement this really lazily as I stopped caring about optimization.
+         * What this does is that given a tag, it should return a TurbineEnum to the main Articuno tag.
+         */
+
+        /// <summary>
+        /// This method takes a turbine id and a tag name and then returns a TurbineEnum object Only used by the main Articuno class and nothing else 
+        /// </summary>
+        /// <param name="turbineId"></param>
+        /// <param name="tag"></param>
+        /// <returns>A Turbine enum if a match is found. Null otherwise. </returns>
+        public Enum findTurbineTag(string turbineId, string tag)
+        {
+            Turbine tempTurbine = getTurbine(turbineId);
+            if (tag.ToUpper().Equals(tempTurbine.getNrsStateTag().ToUpper())) { return TurbineEnum.NrsMode; }
+            else if (tag.ToUpper().Equals(tempTurbine.getOperatinStateTag().ToUpper())) { return TurbineEnum.OperatingState; }
+            else if (tag.ToUpper().Equals(tempTurbine.getRotorSpeedTag().ToUpper())) { return TurbineEnum.RotorSpeed; }
+            else if (tag.ToUpper().Equals(tempTurbine.getTemperatureTag().ToUpper())) { return TurbineEnum.Temperature; }
+            else if (tag.ToUpper().Equals(tempTurbine.getWindSpeedTag().ToUpper())) { return TurbineEnum.WindSpeed; }
+            else if (tag.ToUpper().Equals(tempTurbine.getParticipationTag().ToUpper())) { return TurbineEnum.Participation; }
+
+            //If it reaches here, I have no freaking clue what's going on, but whatever is calling it needs to handle it 
+            else
+                return null;
+        }
+
+
+        //TurbineEnum. This is used to interact with Articuno 
+        public enum TurbineEnum
+        {
+            NrsMode,
+            OperatingState,
+            RotorSpeed,
+            Temperature,
+            WindSpeed,
+            Participation
+        }
+
+        //Build the rotor speed lookup table
+        private void buildRotorSpeedLookupTable()
+        {
+            string cmd = String.Format("SELECT * FROM RotorSpeedLookupTable");
+            DataTable reader = DatabaseInterface.Instance.readCommand(cmd);
+            int rotorSpeedRows = reader.Rows.Count;
+
+            for (int i = 0; i <= rotorSpeedRows; i++)
+            {
+
+                Convert.ToDouble(reader.Rows[i]["NrsMode"]);
+                Convert.ToDouble(reader.Rows[i]["RotorSpeedNonNRS"]);
+                Convert.ToDouble(reader.Rows[i]["StandardDeviationNonNRS"]);
+                Convert.ToDouble(reader.Rows[i]["RotorSpeedNRS"]);
+                Convert.ToDouble(reader.Rows[i]["StandardDeviationNRS"]);
+            }
+
+        }
+
+
     }
 }

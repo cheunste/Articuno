@@ -19,30 +19,53 @@ namespace ArticunoTest
         [TestMethod]
         //Test to get the description column from various tables
         [DataTestMethod]
-        [DataRow("Select * from SystemInputTags")]
-        //[DataRow("Select * from PerformanceTable limit 5")]
+        [DataRow("Select * from SystemInputTags WHERE Description!='SitePrefix' AND Description!='OpcServerName'")]
+        [DataRow("Select * from SystemInputTags WHERE Description='OpcServerName'")]
+        public void readFromSystemInputTableTest(string sqlcmd)
+        {
+            //Get all the columns from the SystemParemeters
+            //NOTE: To see the output, click the output in 'Test Explorer' after the test is executed.
+            DataTable reader = dbi.readCommand(sqlcmd);
+            Console.WriteLine(reader.Rows.Count);
+
+            for (int i = 0; i < reader.Rows.Count; i++)
+            {
+                Console.WriteLine(reader.Rows[i]["OpcTag"].ToString());
+            }
+
+            for (int i = 0; i < reader.Rows.Count; i++)
+            {
+                Console.WriteLine(reader.Rows[i]["Default"].ToString());
+            }
+        }
+
+        [TestMethod]
+        [DataTestMethod]
+        //[DataRow("Select NrsMode,OperatingState, Participation from TurbineInputTags")]
+        [DataRow("Select TurbineId,OperatingState, Participation, NrsMode from TurbineInputTags")]
         //[DataRow("Select TurbineId from TurbineOutputTags")]
         //[DataRow("Select * from MetTowerInputTags")]
         //[DataRow("Select * from MetTowerOutputTags")]
         //[DataRow("Select TurbineId from TurbineInputTags")]
         //[DataRow("Select TurbineId from TurbineOutputTags")]
-        public void readFromDBTest(string sqlcmd)
+        public void readFromTurbine(string sqlcmd)
         {
-            //Get all the columns from the SystemParemeters
-            //NOTE: To see the output, click the output in 'Test Explorer' after the test is executed.
             DataTable reader = dbi.readCommand(sqlcmd);
-            var derp = reader.Columns["OpcTag"];
-            Console.WriteLine(reader.Rows[0]["OpcTag"].ToString());
+            Console.WriteLine(reader.Rows.Count);
 
-            //foreach(DataColumn col  in reader.Columns)
-            //{
-            //    Console.WriteLine("Header: {0}",col);
-            //}
-            //foreach(DataRow row in reader.Rows)
-            //{
-            //    Console.WriteLine(row[0]);
-            //}
+            for (int i = 0; i < reader.Rows.Count; i++)
+            {
+                Console.WriteLine(reader.Rows[i]["TurbineId"].ToString());
+            }
+
+            for (int i = 0; i < reader.Rows.Count; i++)
+            {
+                Console.WriteLine(reader.Rows[i]["Participation"].ToString());
+            }
+
         }
+
+
 
         [TestMethod]
         //Test to see if you are able to write to the database. 
@@ -56,15 +79,15 @@ namespace ArticunoTest
             Random rnd = new Random();
             int randomNumber = rnd.Next();
             //testConnection.Update
-            string sqlcmd = String.Format("UPDATE SystemOutputTags SET DefaultValue ='{0}' WHERE Description = 'Heartbeat'",randomNumber);
+            string sqlcmd = String.Format("UPDATE SystemOutputTags SET DefaultValue ='{0}' WHERE Description = 'Heartbeat'", randomNumber);
             dbi.updateCommand(sqlcmd);
 
             sqlcmd = "Select DefaultValue from SystemOutputTags where Description='Heartbeat'";
             DataTable reader = dbi.readCommand(sqlcmd);
             int readHeartbeat = Convert.ToInt32(reader.Rows[0]["DefaultValue"]);
             Assert.AreEqual(readHeartbeat, randomNumber);
-            Console.WriteLine("Random Number: {0}",randomNumber);
-            Console.WriteLine("Value in DB: {0}",readHeartbeat);
+            Console.WriteLine("Random Number: {0}", randomNumber);
+            Console.WriteLine("Value in DB: {0}", readHeartbeat);
         }
 
         [TestMethod]

@@ -59,10 +59,10 @@ namespace Articuno
             MetTower met1 = new MetTower(metTower, 0.00, 0.00,"SV.OPCDAServer.1");
 
             //Create Articuno instance
-            ArticunoMain artic = new ArticunoMain(opcServer, metTower, di.getTurbineList());
+            //ArticunoMain artic = new ArticunoMain(opcServer, metTower, di.getTurbineList());
 
             //Execute Articuno
-            artic.start();
+            //artic.start();
         }
 
         public Hashtable PerformanceHash { get; set; }

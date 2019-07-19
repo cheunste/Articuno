@@ -18,7 +18,7 @@ namespace ArticunoTest
             //
             // TODO: Add constructor logic here
             //
-            articuno = new ArticunoMain(null, null, null);
+            //articuno = new ArticunoMain(null, null, null);
         }
 
         private TestContext testContextInstance;
@@ -62,14 +62,9 @@ namespace ArticunoTest
         #endregion
 
         [TestMethod]
-        public void TestMethod1()
+        public void SetupTest()
         {
-            //
-            // TODO: Add test logic here
-            //
-            //this.articuno.start();
-            throw new NotImplementedException();
-
+            articuno.setup();
         }
 
         [TestMethod]
