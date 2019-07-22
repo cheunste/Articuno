@@ -124,14 +124,16 @@ namespace Articuno
                     String.Format("SELECT * " +
                     "from TurbineInputTags WHERE TurbineId='{0}'", turbinePrefix);
                 DataTable reader = dbi.readCommand(cmd);
-                try { turbine.setNrsStateTag(reader.Rows[0]["NrsMode"].ToString()); }
-                catch (NullReferenceException e) { turbine.setNrsStateTag(""); }
+                try { turbine.NrsStateTag = reader.Rows[0]["NrsMode"].ToString(); }
+                catch (NullReferenceException e) { turbine.NrsStateTag = ""; }
 
-                turbine.setOperatingStateTag(reader.Rows[0]["OperatingState"].ToString());
-                turbine.setRotorSpeedTag(reader.Rows[0]["RotorSpeed"].ToString());
-                turbine.setTemperatureTag(reader.Rows[0]["Temperature"].ToString());
-                turbine.setWindSpeedTag(reader.Rows[0]["WindSpeed"].ToString());
-                turbine.setParticipationTag(reader.Rows[0]["Participation"].ToString());
+                turbine.OperatingStateTag = reader.Rows[0]["OperatingState"].ToString();
+                turbine.RotorSpeedTag = reader.Rows[0]["RotorSpeed"].ToString();
+                turbine.TemperatureTag = reader.Rows[0]["Temperature"].ToString();
+                turbine.WindSpeedTag = reader.Rows[0]["WindSpeed"].ToString();
+                turbine.WindSpeedTag = reader.Rows[0]["WindSpeed"].ToString();
+                turbine.ParticipationTag = reader.Rows[0]["Participation"].ToString();
+                turbine.ScalingFactorTag = reader.Rows[0]["ScalingFactor"].ToString();
 
                 string primMetTower = reader.Rows[0]["MetReference"].ToString();
                 MetTower metTower = MetTowerMediator.Instance.getMetTower(primMetTower);
@@ -156,8 +158,8 @@ namespace Articuno
                     "from TurbineOutputTags WHERE TurbineId='{0}'", turbinePrefix);
                 reader = dbi.readCommand(cmd);
 
-                turbine.setAlarmTag(reader.Rows[0]["Alarm"].ToString());
-                turbine.setLoadShutdownTag(reader.Rows[0]["Pause"].ToString());
+                turbine.AlarmTag = reader.Rows[0]["Alarm"].ToString();
+                turbine.LoadShutdownTag = reader.Rows[0]["Pause"].ToString();
 
                 //Add turbine to the turbine list
                 turbineList.Add(turbine);
@@ -220,62 +222,62 @@ namespace Articuno
         public List<string> getTurbineWindSpeedTag()
         {
             tempList.Clear();
-            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.getWindSpeedTag()); }
+            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.WindSpeedTag); }
             return tempList;
         }
 
         public List<string> getRotorSpeedTag()
         {
             tempList.Clear();
-            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.getRotorSpeedTag()); }
+            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.RotorSpeedTag); }
             return tempList;
         }
         public List<string> getOperatingStateTag()
         {
             tempList.Clear();
-            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.getOperatinStateTag()); }
+            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.OperatingStateTag); }
             return tempList;
         }
         public List<string> getNrsStateTag()
         {
             tempList.Clear();
-            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.getNrsStateTag()); }
+            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.NrsStateTag); }
             return tempList;
         }
         public List<string> getTemperatureTag()
         {
             tempList.Clear();
-            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.getTemperatureTag()); }
+            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.TemperatureTag); }
             return tempList;
         }
         public List<string> getLoadShutdownTag()
         {
             tempList.Clear();
-            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.getLoadShutdownTag()); }
+            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.LoadShutdownTag); }
             return tempList;
         }
         public List<string> getTurbineCtrTag()
         {
             tempList.Clear();
-            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.getTurbineCtrTag()); }
+            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.TurbineCtrTag); }
             return tempList;
         }
         public List<string> getHumidityTag()
         {
             tempList.Clear();
-            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.getTurbineHumidityTag()); }
+            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.TurbineHumidityTag); }
             return tempList;
         }
 
         //Get methods to get the OPC Tag given a turbine Id
-        public static string getTurbineWindSpeedTag(string turbineId) { return getTurbine(turbineId).getWindSpeedTag(); }
-        public static string getRotorSpeedTag(string turbineId) { return getTurbine(turbineId).getRotorSpeedTag(); }
-        public static string getOperatingStateTag(string turbineId) { return getTurbine(turbineId).getOperatinStateTag(); }
-        public static string getNrsStateTag(string turbineId) { return getTurbine(turbineId).getNrsStateTag(); }
-        public static string getTemperatureTag(string turbineId) { return getTurbine(turbineId).getTemperatureTag(); }
-        public static string getLoadShutdownTag(string turbineId) { return getTurbine(turbineId).getLoadShutdownTag(); }
-        public static string getTurbineCtrTag(string turbineId) { return getTurbine(turbineId).getTurbineCtrTag(); }
-        public static string getHumidityTag(string turbineId) { return getTurbine(turbineId).getTurbineHumidityTag(); }
+        public static string getTurbineWindSpeedTag(string turbineId) { return getTurbine(turbineId).WindSpeedTag; }
+        public static string getRotorSpeedTag(string turbineId) { return getTurbine(turbineId).RotorSpeedTag; }
+        public static string getOperatingStateTag(string turbineId) { return getTurbine(turbineId).OperatingStateTag; }
+        public static string getNrsStateTag(string turbineId) { return getTurbine(turbineId).NrsStateTag; }
+        public static string getTemperatureTag(string turbineId) { return getTurbine(turbineId).TemperatureTag; }
+        public static string getLoadShutdownTag(string turbineId) { return getTurbine(turbineId).LoadShutdownTag; }
+        public static string getTurbineCtrTag(string turbineId) { return getTurbine(turbineId).TurbineCtrTag; }
+        public static string getHumidityTag(string turbineId) { return getTurbine(turbineId).TurbineHumidityTag; }
 
         /*
          * The following methods will return the list containing the vlaue  of the opcTag
@@ -370,12 +372,12 @@ namespace Articuno
         public Enum findTurbineTag(string turbineId, string tag)
         {
             Turbine tempTurbine = getTurbine(turbineId);
-            if (tag.ToUpper().Equals(tempTurbine.getNrsStateTag().ToUpper())) { return TurbineEnum.NrsMode; }
-            else if (tag.ToUpper().Equals(tempTurbine.getOperatinStateTag().ToUpper())) { return TurbineEnum.OperatingState; }
-            else if (tag.ToUpper().Equals(tempTurbine.getRotorSpeedTag().ToUpper())) { return TurbineEnum.RotorSpeed; }
-            else if (tag.ToUpper().Equals(tempTurbine.getTemperatureTag().ToUpper())) { return TurbineEnum.Temperature; }
-            else if (tag.ToUpper().Equals(tempTurbine.getWindSpeedTag().ToUpper())) { return TurbineEnum.WindSpeed; }
-            else if (tag.ToUpper().Equals(tempTurbine.getParticipationTag().ToUpper())) { return TurbineEnum.Participation; }
+            if (tag.ToUpper().Equals(tempTurbine.NrsStateTag.ToUpper())) { return TurbineEnum.NrsMode; }
+            else if (tag.ToUpper().Equals(tempTurbine.OperatingStateTag.ToUpper())) { return TurbineEnum.OperatingState; }
+            else if (tag.ToUpper().Equals(tempTurbine.RotorSpeedTag.ToUpper())) { return TurbineEnum.RotorSpeed; }
+            else if (tag.ToUpper().Equals(tempTurbine.TemperatureTag.ToUpper())) { return TurbineEnum.Temperature; }
+            else if (tag.ToUpper().Equals(tempTurbine.WindSpeedTag.ToUpper())) { return TurbineEnum.WindSpeed; }
+            else if (tag.ToUpper().Equals(tempTurbine.ParticipationTag.ToUpper())) { return TurbineEnum.Participation; }
             //If it reaches here, I have no freaking clue what's going on, but whatever is calling it needs to handle it 
             else return null;
         }
@@ -410,9 +412,9 @@ namespace Articuno
             var windSpeedAverage = 0.0;
 
             //Loop through the queue until the queue is empty and then divide it by the queue count stored earlier
-            while(windSpeedQueue.Count != 0) { windSpeedAverage += windSpeedQueue.Dequeue(); } 
+            while (windSpeedQueue.Count != 0) { windSpeedAverage += windSpeedQueue.Dequeue(); }
 
-            var filterTuple = filterTable.search(windSpeedAverage/windSpeedQueueCount, nrsMode);
+            var filterTuple = filterTable.search(windSpeedAverage / windSpeedQueueCount, nrsMode);
 
             var referenceRotorSpeed = filterTuple.Item1;
             var referenceStdDev = filterTuple.Item1;
@@ -421,7 +423,7 @@ namespace Articuno
             var currentScalingFactor = Convert.ToDouble(turbine.readTurbineScalingFactorValue());
 
             //Set under performance condition to be true. Else, clear it
-            if (currentRotorSpeed< referenceRotorSpeed-(currentScalingFactor*referenceStdDev)){ turbine.setTurbinePerformanceCondition(true); }
+            if (currentRotorSpeed < referenceRotorSpeed - (currentScalingFactor * referenceStdDev)) { turbine.setTurbinePerformanceCondition(true); }
             else { turbine.setTurbinePerformanceCondition(false); }
 
             //For sanity check, make sure the windSPeedQueue is empty 

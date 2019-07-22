@@ -190,7 +190,7 @@ namespace Articuno
             MetTower met = getMetTower(metId);
             var tuple = tempQualityCheck(metId);
             if (tuple.Item1) { return tuple.Item2; }
-            else { return getMetTower(metId).getNearestTurbine().readTurbineTemperatureValue(); }
+            else { return getMetTower(metId).getNearestTurbine().readTemperatureValue(); }
         }
 
         /// <summary>
