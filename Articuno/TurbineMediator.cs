@@ -394,22 +394,24 @@ namespace Articuno
 
         //FUnction to determine whether or not a turbine is underperforming due to ice
         /// <summary>
-        /// Searches the filter table given a wind speed and whether it is on NRS or not
+        /// Searches the filter table given a turbineId
         /// </summary>
-        /// <param name="windSpeed">wind speed in double</param>
-        /// <param name="nrsMode">NRS mode in bool</param>
-        private void RotorSpeedCheck(string turbineId,double windSpeed, bool nrsMode)
+        /// <param name="turbineId">turbine prefix in string</param>
+        public void RotorSpeedCheck(string turbineId)
         {
             Turbine turbine = getTurbine(turbineId);
+            double windSpeed = Convert.ToDouble(turbine.readWindSpeedValue());
+            bool nrsMode = Convert.ToBoolean(turbine.readNrsStateValue());
             var filterTuple = filterTable.search(windSpeed, nrsMode);
 
-            double rotorSpeed = filterTuple.Item1;
-            double stdDev = filterTuple.Item1;
+            double referenceRotorSpeed = filterTuple.Item1;
+            double referenceStdDev = filterTuple.Item1;
 
             double currentRotorSpeed = Convert.ToDouble(turbine.readRotorSpeedValue());
+            double currentScalingFactor = Convert.ToDouble(turbine.readTurbineScalingFactorValue());
 
             //Set under performance condition to be true. Else, clear it
-            if(currentRotorSpeed <= (rotorSpeed - stdDev)) { turbine.setTurbinePerformanceCondition(true); }
+            if (currentRotorSpeed< referenceRotorSpeed-(currentScalingFactor*referenceStdDev)){ turbine.setTurbinePerformanceCondition(true); }
             else { turbine.setTurbinePerformanceCondition(false); }
         }
     }
