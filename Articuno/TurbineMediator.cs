@@ -405,36 +405,42 @@ namespace Articuno
         {
             Turbine turbine = getTurbine(turbineId);
             Queue<double> windSpeedQueue = turbine.getWindSpeedQueue();
+            Queue<double> rotorSpeedQueue = turbine.getRotorSpeedQueue();
 
             bool nrsMode = Convert.ToBoolean(turbine.readNrsStateValue());
 
             var windSpeedQueueCount = windSpeedQueue.Count;
             var windSpeedAverage = 0.0;
+            var rotorSpeedQueueCount = rotorSpeedQueue.Count;
+            var rotorSpeedAverage = 0.0;
 
             //Loop through the queue until the queue is empty and then divide it by the queue count stored earlier
             while (windSpeedQueue.Count != 0) { windSpeedAverage += windSpeedQueue.Dequeue(); }
+            while (rotorSpeedQueue.Count != 0) { rotorSpeedAverage += rotorSpeedQueue.Dequeue(); }
 
             var filterTuple = filterTable.search(windSpeedAverage / windSpeedQueueCount, nrsMode);
 
             var referenceRotorSpeed = filterTuple.Item1;
             var referenceStdDev = filterTuple.Item1;
 
-            var currentRotorSpeed = Convert.ToDouble(turbine.readRotorSpeedValue());
             var currentScalingFactor = Convert.ToDouble(turbine.readTurbineScalingFactorValue());
 
             //Set under performance condition to be true. Else, clear it
-            if (currentRotorSpeed < referenceRotorSpeed - (currentScalingFactor * referenceStdDev)) { turbine.setTurbinePerformanceCondition(true); }
+            if (rotorSpeedAverage < referenceRotorSpeed - (currentScalingFactor * referenceStdDev)) { turbine.setTurbinePerformanceCondition(true); }
             else { turbine.setTurbinePerformanceCondition(false); }
 
             //For sanity check, make sure the windSPeedQueue is empty 
             turbine.emptyQueue();
         }
 
-        public void storeWindSpeed(string turbineId)
+        public void storeMinuteAverages(string turbineId)
         {
             Turbine turbine = getTurbine(turbineId);
             double windSpeedAvg = Convert.ToDouble(turbine.readWindSpeedValue());
+            double rotorSpeedAvg = Convert.ToDouble(turbine.readRotorSpeedValue());
             turbine.addWindSpeedToQueue(windSpeedAvg);
+            turbine.addRotorSpeedToQueue(rotorSpeedAvg);
         }
+
     }
 }

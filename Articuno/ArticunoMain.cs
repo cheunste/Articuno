@@ -51,9 +51,6 @@ namespace Articuno
         private string deltaThresholdTag;
         private string dewThresholdTag;
 
-        private List<double[]> rotorSpeedLookup;
-        private Object RotorSpeedLookup;
-
         //Constants
         private int ONE_MINUTE_POLLING = 60 * 1000;
         private static int NOISE_LEV = 5;
@@ -120,7 +117,7 @@ namespace Articuno
             var systemInputClient = new EasyDAClient();
             systemInputClient.ItemChanged += SystemInputOnChange;
             List<DAItemGroupArguments> systemInputTags = new List<DAItemGroupArguments>();
-            reader = DatabaseInterface.Instance.readCommand("Select * from SystemInputTags WHERE Description!='SitePrefix' AND Description!='OpcServerName'");
+            reader = DatabaseInterface.Instance.readCommand("Select * from SystemInputTags WHERE Description!='SitePrefix' AND Description!='OpcServerName' order by Description ASC");
             for (int i = 0; i < reader.Rows.Count; i++)
             {
                 tag = reader.Rows[i]["OpcTag"].ToString();
@@ -196,7 +193,7 @@ namespace Articuno
             foreach (string prefix in TurbineMediator.Instance.getTurbinePrefixList())
             {
                 //Call the storeWindSpeed function to store a wind speed average into a turbine queue
-                TurbineMediator.Instance.storeWindSpeed(prefix);
+                TurbineMediator.Instance.storeMinuteAverages(prefix);
             }
 
 
