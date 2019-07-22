@@ -54,6 +54,9 @@ namespace Articuno
         //CTR Time
         private int ctrTimeValue;
 
+        //Wind Speed Queue
+        private Queue<Double> windSpeedQueue;
+
         //Other fields
         //scaling factor for turbine
         private int currentTurbSF;
@@ -85,6 +88,7 @@ namespace Articuno
         public Turbine(string prefix)
         {
             this.turbinePrefix = prefix;
+            windSpeedQueue = new Queue<double>();
         }
 
         //Detects when operating state (run, pause, etc.) changes
@@ -198,7 +202,11 @@ namespace Articuno
             {
 
             }
-
         }
+
+        //For Wind speed queues
+        public void addWindSpeedToQueue(double windSpeed) { windSpeedQueue.Enqueue(windSpeed); }
+        public Queue<double> getWindSpeedQueue() { return windSpeedQueue; }
+        public void emptyQueue() { windSpeedQueue.Clear(); }
     }
 }

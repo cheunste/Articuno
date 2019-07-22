@@ -394,25 +394,45 @@ namespace Articuno
 
         //FUnction to determine whether or not a turbine is underperforming due to ice
         /// <summary>
-        /// Searches the filter table given a turbineId
+        /// Calculates the average CTR wind speed and then searches the filter table using CTR average. Paues the turbine if conditions were met. 
+        /// Doesn't pause otherwise
         /// </summary>
         /// <param name="turbineId">turbine prefix in string</param>
+        //Note all vars are doubles here
         public void RotorSpeedCheck(string turbineId)
         {
             Turbine turbine = getTurbine(turbineId);
-            double windSpeed = Convert.ToDouble(turbine.readWindSpeedValue());
+            Queue<double> windSpeedQueue = turbine.getWindSpeedQueue();
+
             bool nrsMode = Convert.ToBoolean(turbine.readNrsStateValue());
-            var filterTuple = filterTable.search(windSpeed, nrsMode);
 
-            double referenceRotorSpeed = filterTuple.Item1;
-            double referenceStdDev = filterTuple.Item1;
+            var windSpeedQueueCount = windSpeedQueue.Count;
+            var windSpeedAverage = 0.0;
 
-            double currentRotorSpeed = Convert.ToDouble(turbine.readRotorSpeedValue());
-            double currentScalingFactor = Convert.ToDouble(turbine.readTurbineScalingFactorValue());
+            //Loop through the queue until the queue is empty and then divide it by the queue count stored earlier
+            while(windSpeedQueue.Count != 0) { windSpeedAverage += windSpeedQueue.Dequeue(); } 
+
+            var filterTuple = filterTable.search(windSpeedAverage/windSpeedQueueCount, nrsMode);
+
+            var referenceRotorSpeed = filterTuple.Item1;
+            var referenceStdDev = filterTuple.Item1;
+
+            var currentRotorSpeed = Convert.ToDouble(turbine.readRotorSpeedValue());
+            var currentScalingFactor = Convert.ToDouble(turbine.readTurbineScalingFactorValue());
 
             //Set under performance condition to be true. Else, clear it
             if (currentRotorSpeed< referenceRotorSpeed-(currentScalingFactor*referenceStdDev)){ turbine.setTurbinePerformanceCondition(true); }
             else { turbine.setTurbinePerformanceCondition(false); }
+
+            //For sanity check, make sure the windSPeedQueue is empty 
+            turbine.emptyQueue();
+        }
+
+        public void storeWindSpeed(string turbineId)
+        {
+            Turbine turbine = getTurbine(turbineId);
+            double windSpeedAvg = Convert.ToDouble(turbine.readWindSpeedValue());
+            turbine.addWindSpeedToQueue(windSpeedAvg);
         }
     }
 }

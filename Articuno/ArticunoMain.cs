@@ -191,8 +191,16 @@ namespace Articuno
                 else { temperatureQueueMet2.Enqueue(metMeasurements.Item1); }
             }
 
+            //TODO: Store the one min wind speed average into the turbine object's internal queue
+            //Get turbine to update internal wind speed queue
+            foreach (string prefix in TurbineMediator.Instance.getTurbinePrefixList())
+            {
+                //Call the storeWindSpeed function to store a wind speed average into a turbine queue
+                TurbineMediator.Instance.storeWindSpeed(prefix);
+            }
+
+
             //For every CTR minute, do the other calculation stuff. Better set up a  member variable here
-            //TODO: Implement
             ctrCountdown--;
             if (ctrCountdown == 0)
             {
@@ -201,8 +209,6 @@ namespace Articuno
                 double average = 0.0;
                 double count = 0.0;
                 Queue<double> tempQueue;
-
-
                 for (int i = 1; i <= MetTowerMediator.getNumMetTower(); i++)
                 {
 
@@ -223,10 +229,8 @@ namespace Articuno
                 //Get turbine to update rotor speed and other calculations
                 foreach (string prefix in TurbineMediator.Instance.getTurbinePrefixList())
                 {
-                    //Get Rotor Speed
-                    TurbineMediator.Instance.readRotorSpeedTag(prefix);
-                    //Compare it with Hash (Todo: Create hash table)
-                    //If lower than hash, then send a low rotor speed condition to turbine. else, don't
+                    //Call the RotorSPeedCheck function to compare rotor speed. 
+                    TurbineMediator.Instance.RotorSpeedCheck(prefix);
                 }
                 //Set the CTR back to the original value
                 ctrCountdown = articunoCtr;
@@ -339,7 +343,7 @@ namespace Articuno
             }
         }
 
-        //This is a method that is triggered upon any value changes for certain OPC Tags 
+        //This is a method that is triggered upon any value changes for certain OPC Tags
         static void assetTagChangeHandler(object sender, EasyDAItemChangedEventArgs e)
         {
             if (e.Succeeded)
