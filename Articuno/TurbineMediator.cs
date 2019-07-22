@@ -54,6 +54,9 @@ namespace Articuno
         private string opcServerName;
         private EasyDAClient client = new EasyDAClient();
 
+        //Rotor Speed
+        private RotorSpeedFilter filterTable;
+
         //Member delegates
         IcingDelegates tempDelegate, operatingStateDelegate, nrsDelegate, turbinePerfDelegate, deRateConditionDelegate;
 
@@ -70,6 +73,9 @@ namespace Articuno
             tempList = new List<string>();
             tempObjectList = new List<Object>();
             this.opcServerName = getOpcServerName();
+
+            //For RotorSpeed Filter Table. There should only be one instance of this. 
+            filterTable = new RotorSpeedFilter();
 
             tempDelegate = setTemperatureCondition;
             operatingStateDelegate = setOperatingStateCondition;
@@ -370,10 +376,8 @@ namespace Articuno
             else if (tag.ToUpper().Equals(tempTurbine.getTemperatureTag().ToUpper())) { return TurbineEnum.Temperature; }
             else if (tag.ToUpper().Equals(tempTurbine.getWindSpeedTag().ToUpper())) { return TurbineEnum.WindSpeed; }
             else if (tag.ToUpper().Equals(tempTurbine.getParticipationTag().ToUpper())) { return TurbineEnum.Participation; }
-
             //If it reaches here, I have no freaking clue what's going on, but whatever is calling it needs to handle it 
-            else
-                return null;
+            else return null;
         }
 
 
@@ -388,25 +392,25 @@ namespace Articuno
             Participation
         }
 
-        //Build the rotor speed lookup table
-        private void buildRotorSpeedLookupTable()
+        //FUnction to determine whether or not a turbine is underperforming due to ice
+        /// <summary>
+        /// Searches the filter table given a wind speed and whether it is on NRS or not
+        /// </summary>
+        /// <param name="windSpeed">wind speed in double</param>
+        /// <param name="nrsMode">NRS mode in bool</param>
+        private void RotorSpeedCheck(string turbineId,double windSpeed, bool nrsMode)
         {
-            string cmd = String.Format("SELECT * FROM RotorSpeedLookupTable");
-            DataTable reader = DatabaseInterface.Instance.readCommand(cmd);
-            int rotorSpeedRows = reader.Rows.Count;
+            Turbine turbine = getTurbine(turbineId);
+            var filterTuple = filterTable.search(windSpeed, nrsMode);
 
-            for (int i = 0; i <= rotorSpeedRows; i++)
-            {
+            double rotorSpeed = filterTuple.Item1;
+            double stdDev = filterTuple.Item1;
 
-                Convert.ToDouble(reader.Rows[i]["NrsMode"]);
-                Convert.ToDouble(reader.Rows[i]["RotorSpeedNonNRS"]);
-                Convert.ToDouble(reader.Rows[i]["StandardDeviationNonNRS"]);
-                Convert.ToDouble(reader.Rows[i]["RotorSpeedNRS"]);
-                Convert.ToDouble(reader.Rows[i]["StandardDeviationNRS"]);
-            }
+            double currentRotorSpeed = Convert.ToDouble(turbine.readRotorSpeedValue());
 
+            //Set under performance condition to be true. Else, clear it
+            if(currentRotorSpeed <= (rotorSpeed - stdDev)) { turbine.setTurbinePerformanceCondition(true); }
+            else { turbine.setTurbinePerformanceCondition(false); }
         }
-
-
     }
 }
