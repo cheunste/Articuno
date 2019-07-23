@@ -55,8 +55,13 @@ namespace Articuno
         private double relativeHumidity;
         private double dewPointTemperature;
 
+
         private double ambTempThreshold;
         private double deltaTempThreshold;
+
+        //Queues
+        private Queue<double> temperatureQueue;
+        private Queue<double> humidityQueue;
 
         //Member bool
         private bool metTowerFailure;
@@ -136,6 +141,9 @@ namespace Articuno
 
             //Set up met id
             this.metTowerPrefix = MetId;
+
+            temperatureQueue = new Queue<double>();
+            humidityQueue = new Queue<double>();
         }
 
         //This method queries the sqlite table and then sets the tags in the table to the members of the class
@@ -295,5 +303,15 @@ namespace Articuno
         //turbien methods for measurement reduedancy
         public void setNearestTurbine(Turbine turbine) { nearestTurbine = turbine; }
         public Turbine getNearestTurbine() { return nearestTurbine; }
+
+        public void writeToQueue(double temperature, double humidity)
+        {
+            //Should this be prim temp or something else?
+            temperatureQueue.Enqueue(temperature);
+            humidityQueue.Enqueue(humidity);
+        }
+
+        public Queue<double> getTemperatureQueue() { return this.temperatureQueue; }
+        public Queue<double> getHumidityQueue() { return this.humidityQueue; }
     }
 }

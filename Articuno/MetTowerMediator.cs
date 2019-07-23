@@ -193,6 +193,31 @@ namespace Articuno
             else { return getMetTower(metId).getNearestTurbine().readTemperatureValue(); }
         }
 
+        internal void writeToQueue(string metId, double temperature, double humidity)
+        {
+            MetTower met = getMetTower(metId);
+            met.writeToQueue(temperature, humidity);
+        }
+
+        internal double calculateCtrAvgTemperature(string metId)
+        {
+            Queue<double> tempQueue = getMetTower(metId).getTemperatureQueue();
+            double temperatureCtrAverage = 0.0;
+            double count = tempQueue.Count;
+            while (tempQueue.Count != 0) { temperatureCtrAverage += tempQueue.Dequeue(); }
+            return temperatureCtrAverage / count;
+
+        }
+
+        internal double calculateCtrAvgHumidity(string metId)
+        {
+            Queue<double> humidityQueue = getMetTower(metId).getHumidityQueue();
+            double humidityCtrAverage = 0.0;
+            double count = humidityQueue.Count;
+            while (humidityQueue.Count != 0) { humidityCtrAverage += humidityQueue.Dequeue(); }
+            return humidityCtrAverage / count;
+        }
+
         /// <summary>
         /// Write Temperature Threshold for all the met tower
         /// </summary>
@@ -547,7 +572,7 @@ namespace Articuno
                     met.writeIceIndicationValue(1.00);
                     log.InfoFormat("Icing conditions met for {0}. \n" +
                         "average Temperature {1}, \n" +
-                        "Temperature threshold {2} \n", 
+                        "Temperature threshold {2} \n",
                         metId, averageTemperature, tempThreshold);
                 }
                 catch (Exception e)
@@ -559,9 +584,10 @@ namespace Articuno
                         "Met: {1}, \n" +
                         "avgTemp: {2}, \n" +
                         "tempThreshold {3}\n",
-                        e,metId, averageTemperature, tempThreshold);
+                        e, metId, averageTemperature, tempThreshold);
                 }
             }
         }
+
     }
 }

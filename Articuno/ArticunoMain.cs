@@ -33,12 +33,6 @@ namespace Articuno
         //Turbines that are taken out of the Waiting list due to some other factor (derate, not running, etc.)
         public static List<string> turbinesConditionNotMet;
 
-
-        //Queues for met 1
-        private Queue<double> temperatureQueueMet1;
-        //Queues for met 2. find better name later 
-        private Queue<double> temperatureQueueMet2;
-
         private static string opcServerName;
         private static int articunoCtr;
         private static int ctrCountdown;
@@ -82,6 +76,8 @@ namespace Articuno
             var periodTimeSpan = TimeSpan.FromMilliseconds(ONE_MINUTE_POLLING);
             var timer = new System.Threading.Timer((e) => { minuteUpdate(); }, null, startTimeSpan, periodTimeSpan);
 
+
+
             //start of the infinite loop
             while (true)
             {
@@ -109,9 +105,6 @@ namespace Articuno
             turbinesExcludedList = new List<string>();
             turbinesPausedByArticuno = new List<string>();
             turbinesWaitingForPause = new List<string>();
-
-            temperatureQueueMet1 = new Queue<double>();
-            temperatureQueueMet2 = new Queue<double>();
 
             //A speicifc client that will respond to System Tag input changes. 
             var systemInputClient = new EasyDAClient();
@@ -174,11 +167,9 @@ namespace Articuno
                 //temperature if the temperature coming from the met tower is bad qualtiy
                 Tuple<double, double, double, double> metMeasurements = MetTowerMediator.Instance.getAllMeasurements("Met" + i);
 
-                //put the into a queue depending on the met number
-                //For met 1
-                if (i == 1) { temperatureQueueMet1.Enqueue(metMeasurements.Item1); }
-                //For met 2
-                else { temperatureQueueMet2.Enqueue(metMeasurements.Item1); }
+                double temperature = metMeasurements.Item1;
+                double humidity = metMeasurements.Item2;
+                MetTowerMediator.Instance.writeToQueue("Met" + i, temperature, humidity);
             }
 
             //TODO: Store the one min wind speed average into the turbine object's internal queue
@@ -195,24 +186,11 @@ namespace Articuno
             if (ctrCountdown == 0)
             {
                 //Calculate temperature averages from the all the temperature queues
-                double totalTemperature = 0.0;
-                double average = 0.0;
-                double count = 0.0;
-                Queue<double> tempQueue;
                 for (int i = 1; i <= MetTowerMediator.getNumMetTower(); i++)
                 {
-
-                    if (i == 1) { tempQueue = temperatureQueueMet1; }
-                    //For met 2
-                    else { tempQueue = temperatureQueueMet2; }
-
-                    count = tempQueue.Count;
-                    foreach (double temperature in tempQueue) { totalTemperature += tempQueue.Dequeue(); }
-
-                    average = totalTemperature / count;
-
+                    double tempAvg = MetTowerMediator.Instance.calculateCtrAvgTemperature("Met" + i);
                     //Send this temperature to the Met Mediator and determine if met tower is freezing or not
-                    MetTowerMediator.Instance.isFreezing("Met" + i, average);
+                    MetTowerMediator.Instance.isFreezing("Met" + i, tempAvg);
                 }
                 //Call the RotorSPeedCheck function to compare rotor speed for all turbines
                 foreach (string prefix in TurbineMediator.Instance.getTurbinePrefixList()) { TurbineMediator.Instance.RotorSpeedCheck(prefix); }
