@@ -342,7 +342,8 @@ namespace Articuno
             Queue<double> windSpeedQueue = turbine.getWindSpeedQueue();
             Queue<double> rotorSpeedQueue = turbine.getRotorSpeedQueue();
 
-            bool nrsMode = Convert.ToBoolean(turbine.readNrsStateValue());
+            //bool nrsMode = Convert.ToBoolean(turbine.readNrsStateValue());
+            bool nrsMode = Convert.ToInt16(turbine.readNrsStateValue()) >= 5 ? true : false;
 
             var windSpeedQueueCount = windSpeedQueue.Count;
             var windSpeedAverage = 0.0;
@@ -368,6 +369,10 @@ namespace Articuno
             turbine.emptyQueue();
         }
 
+        /// <summary>
+        /// Function to tell the turbines to write current temperature and rotor speed values into their queues 
+        /// </summary>
+        /// <param name="turbineId"></param>
         public void storeMinuteAverages(string turbineId)
         {
             Turbine turbine = getTurbine(turbineId);
@@ -375,6 +380,15 @@ namespace Articuno
             double rotorSpeedAvg = Convert.ToDouble(turbine.readRotorSpeedValue());
             turbine.addWindSpeedToQueue(windSpeedAvg);
             turbine.addRotorSpeedToQueue(rotorSpeedAvg);
+        }
+
+        /// <summary>
+        /// Write CTR Time for all the turbines. 
+        /// </summary>
+        /// <param name="value"></param>
+        public void writeCtrTime(int value)
+        {
+            foreach (string turbinePrefix in getTurbinePrefixList()) { writeTurbineCtrTag(turbinePrefix, value); }
         }
 
     }

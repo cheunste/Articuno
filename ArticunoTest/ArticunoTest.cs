@@ -18,7 +18,7 @@ namespace ArticunoTest
             //
             // TODO: Add constructor logic here
             //
-            //articuno = new ArticunoMain(null, null, null);
+            articuno = new ArticunoMain();
         }
 
         private TestContext testContextInstance;
@@ -76,5 +76,18 @@ namespace ArticunoTest
             //this.articuno.start();
             throw new NotImplementedException();
         }
+
+
+        [TestMethod]
+        public void minuteTest()
+        {
+            Assert.Fail();
+            var timer = new System.Threading.Timer((e) => { minuteTestFunction(); }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(60*1000));
+        }
+
+        private void minuteTestFunction() {
+
+        }
+
     }
 }

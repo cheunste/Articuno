@@ -64,19 +64,14 @@ namespace Articuno
 
         public ArticunoMain()
         {
+            turbinesExcludedList = new List<string>();
+            turbinesPausedByArticuno = new List<string>();
+            turbinesWaitingForPause = new List<string>();
 
+
+            setup();
+            start();
         }
-        //public ArticunoMain(string opcServer, string metTower, List<Turbine> list)
-        //{
-        //    this.turbineList = list;
-        //    turbinesExcludedList = new List<string>();
-        //    turbinesPausedByArticuno = new List<string>();
-        //    turbinesWaitingForPause = new List<string>();
-
-        //    temperatureQueueMet1 = new Queue<double>();
-        //    temperatureQueueMet2 = new Queue<double>();
-
-        //}
 
         public void start()
         {
@@ -90,6 +85,11 @@ namespace Articuno
             //start of the infinite loop
             while (true)
             {
+                //Run only if articuno is enabled
+                while (articunoEnable)
+                {
+
+                }
 
             }
 
@@ -113,7 +113,7 @@ namespace Articuno
             temperatureQueueMet1 = new Queue<double>();
             temperatureQueueMet2 = new Queue<double>();
 
-            //A speicifc client that will respond to System Tag input changes. This can be hard coded
+            //A speicifc client that will respond to System Tag input changes. 
             var systemInputClient = new EasyDAClient();
             systemInputClient.ItemChanged += SystemInputOnChange;
             List<DAItemGroupArguments> systemInputTags = new List<DAItemGroupArguments>();
@@ -156,16 +156,9 @@ namespace Articuno
                     assetInputTags.Add(new DAItemGroupArguments("",
                         opcServerName, reader.Rows[i]["NrsMode"].ToString(), 1000, null));
                 }
-                catch (Exception e)
-                {
-
-                }
-                //tag = reader.Rows[i]["OpcTag"].ToString();
-                //assetInputTags.Add(new DAItemGroupArguments("", opcServerName, tag, 1000, null));
+                catch (Exception e) { log.ErrorFormat("Error when attempting to add to assetInputTags list. {0}", e); }
             }
-
             assetStatusClient.SubscribeMultipleItems(assetInputTags.ToArray());
-
         }
 
         /// <summary>
@@ -213,37 +206,21 @@ namespace Articuno
                     //For met 2
                     else { tempQueue = temperatureQueueMet2; }
 
-                    count = tempQueue.Count();
-                    foreach (double temperature in tempQueue)
-                    {
-                        totalTemperature += tempQueue.Dequeue();
-                    }
+                    count = tempQueue.Count;
+                    foreach (double temperature in tempQueue) { totalTemperature += tempQueue.Dequeue(); }
+
                     average = totalTemperature / count;
 
                     //Send this temperature to the Met Mediator and determine if met tower is freezing or not
                     MetTowerMediator.Instance.isFreezing("Met" + i, average);
                 }
-                //Get turbine to update rotor speed and other calculations
-                foreach (string prefix in TurbineMediator.Instance.getTurbinePrefixList())
-                {
-                    //Call the RotorSPeedCheck function to compare rotor speed. 
-                    TurbineMediator.Instance.RotorSpeedCheck(prefix);
-                }
+                //Call the RotorSPeedCheck function to compare rotor speed for all turbines
+                foreach (string prefix in TurbineMediator.Instance.getTurbinePrefixList()) { TurbineMediator.Instance.RotorSpeedCheck(prefix); }
+
                 //Set the CTR back to the original value
                 ctrCountdown = articunoCtr;
             }
         }
-
-        /*
-        This method is special. It adds the current temperature from either the met tower or the turbine (only if met tower is down) to a temperature queue. 
-        This is used for calculating CTR minute temperature averages based on averaging one minute averages, which CORE may or may not be providing
-        The way it works is as follows
-         - you collect one minute average temperatures values every minute (This will be determined by your timer class)
-         - After CTR minute has passed (this could be 10, or 15, or 1, it is dependent on user), then 
-         - calculate the average temperature of all the one min temperature values in the entire queue
-         - perform a dequeue to remove the first most value
-        */
-        public void addToTemperatureQueue(double temperature) { throw new NotImplementedException(); }
 
         /// <summary>
         ///  ONLY USED FROM EVENT HANDLERS. This Method that is used to find enums so Articuno knows what other method should call. 
@@ -298,18 +275,42 @@ namespace Articuno
                 {
                     case TurbineMediator.TurbineEnum.NrsMode:
                         TurbineMediator.Instance.writeNrsStateTag(prefix, value);
+                        if (Convert.ToInt16(TurbineMediator.Instance.readNrsStateTag(prefix)) == 5)
+                        {
+                            if (!turbinesWaitingForPause.Contains(prefix))
+                            {
+                                turbinesWaitingForPause.Add(prefix);
+                                turbinesConditionNotMet.Remove(prefix);
+                            }
+                        }
+                        else
+                        {
+                            if (!turbinesConditionNotMet.Contains(prefix))
+                            {
+                                turbinesWaitingForPause.Remove(prefix);
+                                turbinesConditionNotMet.Add(prefix);
+                            }
+
+                        }
                         break;
                     case TurbineMediator.TurbineEnum.OperatingState:
                         int state = Convert.ToInt16(value);
                         if (state != RUN_STATE || state != DRAFT_STATE)
                         {
-                            turbinesWaitingForPause.Remove(prefix);
-                            turbinesConditionNotMet.Add(prefix);
+                            //Only add to the lists if it doesn't exist
+                            if (!turbinesConditionNotMet.Contains(prefix))
+                            {
+                                turbinesWaitingForPause.Remove(prefix);
+                                turbinesConditionNotMet.Add(prefix);
+                            }
                         }
                         else
                         {
-                            turbinesWaitingForPause.Add(prefix);
-                            turbinesConditionNotMet.Remove(prefix);
+                            if (!turbinesWaitingForPause.Contains(prefix))
+                            {
+                                turbinesWaitingForPause.Add(prefix);
+                                turbinesConditionNotMet.Remove(prefix);
+                            }
                         }
                         break;
                     case TurbineMediator.TurbineEnum.RotorSpeed:
@@ -326,17 +327,22 @@ namespace Articuno
 
                         if (partipationStatus == false)
                         {
-                            turbinesWaitingForPause.Remove(prefix);
-                            turbinesExcludedList.Add(prefix);
+                            if (!turbinesExcludedList.Contains(prefix))
+                            {
+                                turbinesWaitingForPause.Remove(prefix);
+                                turbinesExcludedList.Add(prefix);
+                            }
                         }
                         else
                         {
-                            turbinesWaitingForPause.Add(prefix);
-                            turbinesExcludedList.Remove(prefix);
+                            if (!turbinesWaitingForPause.Contains(prefix))
+                            {
+                                turbinesWaitingForPause.Add(prefix);
+                                turbinesExcludedList.Remove(prefix);
+                            }
                         }
                         break;
                 }
-
             }
         }
 
@@ -386,7 +392,7 @@ namespace Articuno
                 {
                     articunoCtr = value;
                     ctrCountdown = value;
-                    foreach (string turbinePrefix in TurbineMediator.Instance.getTurbinePrefixList()) { TurbineMediator.Instance.writeTurbineCtrTag(turbinePrefix, value); }
+                    TurbineMediator.Instance.writeCtrTime(value);
                 }
                 if (tag.Contains("TmpTreshold")) { MetTowerMediator.Instance.writeTemperatureThreshold(value); }
                 if (tag.Contains("TmpDelta")) { MetTowerMediator.Instance.writeDeltaThreshold(value); }
@@ -395,17 +401,5 @@ namespace Articuno
         }
 
         public static string getOpcServerName() { return opcServerName; }
-
-        //Read the CTR value tag
-        public int readCtrValue()
-        {
-            using (var client = new EasyDAClient())
-            {
-
-            }
-            return 0;
-
-        }
-
     }
 }
