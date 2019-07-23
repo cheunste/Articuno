@@ -131,7 +131,6 @@ namespace Articuno
                 turbine.RotorSpeedTag = reader.Rows[0]["RotorSpeed"].ToString();
                 turbine.TemperatureTag = reader.Rows[0]["Temperature"].ToString();
                 turbine.WindSpeedTag = reader.Rows[0]["WindSpeed"].ToString();
-                turbine.WindSpeedTag = reader.Rows[0]["WindSpeed"].ToString();
                 turbine.ParticipationTag = reader.Rows[0]["Participation"].ToString();
                 turbine.ScalingFactorTag = reader.Rows[0]["ScalingFactor"].ToString();
 
@@ -215,59 +214,6 @@ namespace Articuno
         /// <returns></returns>
         public List<Turbine> getTurbineList() { return turbineList; }
 
-        /*
-         * The next several methods will be returning the OPC tag name for the turbine List
-         * (including the turbine prefix) in a List<string>
-        */
-        public List<string> getTurbineWindSpeedTag()
-        {
-            tempList.Clear();
-            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.WindSpeedTag); }
-            return tempList;
-        }
-
-        public List<string> getRotorSpeedTag()
-        {
-            tempList.Clear();
-            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.RotorSpeedTag); }
-            return tempList;
-        }
-        public List<string> getOperatingStateTag()
-        {
-            tempList.Clear();
-            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.OperatingStateTag); }
-            return tempList;
-        }
-        public List<string> getNrsStateTag()
-        {
-            tempList.Clear();
-            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.NrsStateTag); }
-            return tempList;
-        }
-        public List<string> getTemperatureTag()
-        {
-            tempList.Clear();
-            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.TemperatureTag); }
-            return tempList;
-        }
-        public List<string> getLoadShutdownTag()
-        {
-            tempList.Clear();
-            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.LoadShutdownTag); }
-            return tempList;
-        }
-        public List<string> getTurbineCtrTag()
-        {
-            tempList.Clear();
-            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.TurbineCtrTag); }
-            return tempList;
-        }
-        public List<string> getHumidityTag()
-        {
-            tempList.Clear();
-            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.TurbineHumidityTag); }
-            return tempList;
-        }
 
         //Get methods to get the OPC Tag given a turbine Id
         public static string getTurbineWindSpeedTag(string turbineId) { return getTurbine(turbineId).WindSpeedTag; }
@@ -279,18 +225,7 @@ namespace Articuno
         public static string getTurbineCtrTag(string turbineId) { return getTurbine(turbineId).TurbineCtrTag; }
         public static string getHumidityTag(string turbineId) { return getTurbine(turbineId).TurbineHumidityTag; }
 
-        /*
-         * The following methods will return the list containing the vlaue  of the opcTag
-         */
-        public Object readTurbineWindSpeedTag() { return readMutlipleOpcTags(getTurbineWindSpeedTag()); }
-        public Object readRotorSpeedTag() { return readMutlipleOpcTags(getRotorSpeedTag()); }
-        public Object readOperatingStateTag() { return readMutlipleOpcTags(getOperatingStateTag()); }
-        public Object readNrsStateTag() { return readMutlipleOpcTags(getNrsStateTag()); }
-        public Object readTemperatureTag() { return readMutlipleOpcTags(getTemperatureTag()); }
-        public Object readTurbineCtrTag() { return readMutlipleOpcTags(getTurbineCtrTag()); }
-        public Object readHumidityTag() { return readMutlipleOpcTags(getHumidityTag()); }
-
-        //For reading (using turbineId)
+        //For reading OPC value using turbineId
         public Object readTurbineWindSpeedTag(string turbineId) { return client.ReadItemValue("", opcServerName, getTurbineWindSpeedTag(turbineId)); }
         public Object readRotorSpeedTag(string turbineId) { return client.ReadItemValue("", opcServerName, getRotorSpeedTag(turbineId)); }
         public Object readOperatingStateTag(string turbineId) { return client.ReadItemValue("", opcServerName, getOperatingStateTag(turbineId)); }

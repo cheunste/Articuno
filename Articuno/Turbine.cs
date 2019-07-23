@@ -23,7 +23,6 @@ namespace Articuno
     class Turbine
     {
         //Instance of OPC server
-        OpcServer server;
         string OpcServerName;
         private EasyDAClient client = new EasyDAClient();
 
@@ -48,32 +47,19 @@ namespace Articuno
         private bool articunoParicipation;
 
         //Met Tower Fields
-        private MetTower primaryMet;
-        private MetTower secondaryMet;
         private MetTower currentMetTower;
-        private bool isMetTowerBackup;
 
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(Turbine));
 
         //Constructors
-        public Turbine(string prefix, OpcServer server)
-        {
-            this.TurbinePrefix = prefix;
-            this.server = server;
-        }
-
         public Turbine(string prefix, String OpcServerName)
         {
             this.TurbinePrefix = prefix;
             this.OpcServerName = OpcServerName;
-        }
-
-        public Turbine(string prefix)
-        {
-            this.TurbinePrefix = prefix;
             windSpeedQueue = new Queue<double>();
             rotorSpeedQueue = new Queue<double>();
+
         }
 
         //Detects when operating state (run, pause, etc.) changes
@@ -92,7 +78,8 @@ namespace Articuno
         public Object readAlarmValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, AlarmTag); }
         public int readCtrValue() { return this.ctrTimeValue; }
 
-        //Getters and Setters  to set the member variables to the  OPC tag
+        //public Accessors (Getters and Setters)  to set the member variables to the  OPC tag
+        // Not entirely sure if these should be public or not, but it does make reading code easier
         //These are used to set the tag name to the member variable
         public string WindSpeedTag { set; get; }
         public string RotorSpeedTag { set; get; }
@@ -109,7 +96,7 @@ namespace Articuno
         public string DeRate { set; get; }
 
         //Theses are used to write to the OP Tag Values.  There shouldn't be too many of these
-        public void writeTurbineCtrValue(int ctrValue) { server.writeTagValue(this.TurbineCtrTag, ctrValue); }
+        public void writeTurbineCtrValue(int ctrValue) { client.WriteItemValue("", OpcServerName, this.TurbineCtrTag, ctrValue); }
         //Scalign factor is unique as it is not used in the OPC Server and only used internally in this program
         public void writeTurbineSFValue(int scalingFactor) { this.currentTurbSF = scalingFactor; }
         //Load shutdown function. Probably the most important function

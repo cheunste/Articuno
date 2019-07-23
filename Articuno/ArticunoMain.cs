@@ -355,7 +355,7 @@ namespace Articuno
         /// <summary>
         /// method that handles system input tag changes such as whether Articuno is enabled or not, Threshold, CTR Period, etc.
         /// </summary>
-        /// <param name="sneder"></param>
+        /// <param name="sender"></param>
         /// <param name="e"></param>
         /*
          * There are only four items in the System InputTags table that really matter. Thre two thresholds (temp and humidity), the CTR period and the Enable tag.
@@ -375,7 +375,7 @@ namespace Articuno
          * 
          */
 
-        static void SystemInputOnChange(object sneder, EasyDAItemChangedEventArgs e)
+        static void SystemInputOnChange(object sender, EasyDAItemChangedEventArgs e)
         {
             if (e.Succeeded)
             {
