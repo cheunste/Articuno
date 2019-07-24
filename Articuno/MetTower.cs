@@ -131,17 +131,21 @@ namespace Articuno
 
         }
 
-        public Object RelativeHumidityValue
-        {
-            set { client.WriteItemValue("", opcServerName, RelativeHumidityTag, value); }
-            get { return new EasyDAClient().ReadItemValue("", opcServerName, RelativeHumidityTag); }
-
-        }
-
         /// <summary>
         /// Accessor the RelativeHumidity OPC Tag
         /// </summary>
         public string RelativeHumidityTag { set; get; }
+
+        public Object RelativeHumidityValue
+        {
+            set { client.WriteItemValue("", opcServerName, RelativeHumidityTag, value); }
+            get { return new EasyDAClient().ReadItemValue("", opcServerName, RelativeHumidityTag); }
+        }
+
+        /// <summary>
+        /// Accessor for the Primary Temperature OPC Tag
+        /// </summary>
+        public string PrimTemperatureTag { set; get; }
 
         public Object PrimTemperatureValue
         {
@@ -150,20 +154,17 @@ namespace Articuno
         }
 
         /// <summary>
-        /// Accessor for the Primary Temperature OPC Tag
+        /// Accessosr for SEcondary Temperature OPC Tag
         /// </summary>
-        public string PrimTemperatureTag { set; get; }
-
-
+        public string SecTemperatureTag { set; get; }
+        /// <summary>
+        /// Accessor for the Secondary Temperature Value 
+        /// </summary>
         public Object SecTemperatureValue
         {
             get { return new EasyDAClient().ReadItemValue("", opcServerName, SecTemperatureTag); }
             set { client.WriteItemValue("", opcServerName, SecTemperatureTag, value); }
         }
-        /// <summary>
-        /// Accessosr for SEcondary Temperature OPC Tag
-        /// </summary>
-        public string SecTemperatureTag { set; get; }
 
 
         //Getters for System OPC Tag indicators
@@ -171,15 +172,14 @@ namespace Articuno
         /// Gets the  NoDataAlaarmValue OPC value
         /// </summary>
         /// <returns></returns>
-
         public string NoDataAlarmTag { set; get; }
         public Object NoDataAlarmValue { set { client.WriteItemValue("", opcServerName, NoDataAlarmTag, value); } get { return new EasyDAClient().ReadItemValue("", opcServerName, NoDataAlarmTag); } }
+
         /// <summary>
         /// Gets the IceIndicationValue OPC Value
         /// </summary>
         /// <returns></returns>
         public string IceIndicationTag { set; get; }
-
         public Object IceIndicationValue
         {
             get { return new EasyDAClient().ReadItemValue("", opcServerName, IceIndicationTag); }
@@ -226,23 +226,27 @@ namespace Articuno
 
         public Object TemperaturePrimBadQuality
         {
-            get {   return new EasyDAClient().ReadItemValue("", opcServerName, TemperaturePrimOutOfRangeTag); }
-            set {  client.WriteItemValue("", opcServerName, TemperaturePrimOutOfRangeTag, value); }
+            get { return new EasyDAClient().ReadItemValue("", opcServerName, TemperaturePrimOutOfRangeTag); }
+            set { client.WriteItemValue("", opcServerName, TemperaturePrimOutOfRangeTag, value); }
         }
 
         public Object TemperatureSecOutOfRange
         {
-            get {  return new EasyDAClient().ReadItemValue("", opcServerName, TemperatureSecOutOfRangeTag); }
-            set {  client.WriteItemValue("", opcServerName, TemperatureSecOutOfRangeTag, value); }
+            get { return new EasyDAClient().ReadItemValue("", opcServerName, TemperatureSecOutOfRangeTag); }
+            set { client.WriteItemValue("", opcServerName, TemperatureSecOutOfRangeTag, value); }
         }
 
-        public Object  TemperatureSecBadQuality
+        public Object TemperatureSecBadQuality
         {
-            get {  return new EasyDAClient().ReadItemValue("", opcServerName, TemperatureSecOutOfRangeTag); }
-            set {  client.WriteItemValue("", opcServerName, TemperatureSecOutOfRangeTag, value); }
+            get { return new EasyDAClient().ReadItemValue("", opcServerName, TemperatureSecOutOfRangeTag); }
+            set { client.WriteItemValue("", opcServerName, TemperatureSecOutOfRangeTag, value); }
         }
 
-
+        /// <summary>
+        /// Verifies whether a quality is good or not
+        /// </summary>
+        /// <param name="opcTag"></param>
+        /// <returns></returns>
         public bool isQualityGood(string opcTag)
         {
             DAVtq vtq = client.ReadItem(opcServerName, opcTag);
