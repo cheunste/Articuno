@@ -39,14 +39,14 @@ namespace Articuno
         private static bool articunoEnable;
 
         //OpcTag getters and setters
-        private string tempThresholdTag;
-        private string enableArticunoTag;
-        private string articunoCtrTag;
-        private string deltaThresholdTag;
-        private string dewThresholdTag;
+        private static string tempThresholdTag;
+        private static string enableArticunoTag;
+        private static string articunoCtrTag;
+        private static string deltaThresholdTag;
+        private static string dewThresholdTag;
 
         //Constants
-        private int ONE_MINUTE_POLLING = 60 * 1000;
+        private static int ONE_MINUTE_POLLING = 60 * 1000;
         private static int NOISE_LEV = 5;
         private static int RUN_STATE = 100;
         private static int DRAFT_STATE = 75;
@@ -56,7 +56,7 @@ namespace Articuno
 
         public String opcServer { get; set; }
 
-        public ArticunoMain()
+        static void Main(string[] args)
         {
             //Call the create methods
             MetTowerMediator.Instance.createMetTower();
@@ -71,16 +71,12 @@ namespace Articuno
             start();
         }
 
-        public void start()
+        public static void start()
         {
-
-
             //The following lines starts a threading lambda and executes a function every minute. THis is used for events that require minute polling and CTR polling 
             var startTimeSpan = TimeSpan.Zero;
             var periodTimeSpan = TimeSpan.FromMilliseconds(ONE_MINUTE_POLLING);
             var timer = new System.Threading.Timer((e) => { minuteUpdate(); }, null, startTimeSpan, periodTimeSpan);
-
-
 
             //start of the infinite loop
             while (true)
@@ -90,12 +86,9 @@ namespace Articuno
                 {
 
                 }
-
             }
-
         }
-        static void Main(string[] args) { }
-        public void setup()
+        public static void setup()
         {
             //Get the OPC Server name
             DataTable reader = DatabaseInterface.Instance.readCommand("Select * from SystemInputTags WHERE Description='OpcServerName'");
@@ -168,7 +161,7 @@ namespace Articuno
         /// <summary>
         /// Function to handle tasks that should be executed every minute (ie get temperature measurements) and every CTR minute (ie check rotor speed, run calculations, etc.) 
         /// </summary>
-        private void minuteUpdate()
+        private static void minuteUpdate()
         {
             //For every minute, read the met tower measurements and the turbine temperature measurements
             for (int i = 1; i <= MetTowerMediator.getNumMetTower(); i++)
@@ -367,8 +360,12 @@ namespace Articuno
         //method used to update member lists when a turbine isn't ready to be paused by articuno
         private static void conditionsNotMet(string turbineId)
         {
-            turbinesWaitingForPause.Remove(turbineId);
-            turbinesConditionNotMet.Add(turbineId);
+
+            if (turbinesWaitingForPause.Contains(turbineId))
+            {
+                turbinesWaitingForPause.Remove(turbineId);
+                turbinesConditionNotMet.Add(turbineId);
+            }
         }
 
         //Method used to update member lists  when a turbine is ready to be paused by ARticuno
