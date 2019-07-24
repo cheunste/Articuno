@@ -216,14 +216,14 @@ namespace Articuno
 
 
         //Get methods to get the OPC Tag given a turbine Id
-        public static string getTurbineWindSpeedTag(string turbineId) { return getTurbine(turbineId).WindSpeedTag; }
-        public static string getRotorSpeedTag(string turbineId) { return getTurbine(turbineId).RotorSpeedTag; }
-        public static string getOperatingStateTag(string turbineId) { return getTurbine(turbineId).OperatingStateTag; }
-        public static string getNrsStateTag(string turbineId) { return getTurbine(turbineId).NrsStateTag; }
-        public static string getTemperatureTag(string turbineId) { return getTurbine(turbineId).TemperatureTag; }
-        public static string getLoadShutdownTag(string turbineId) { return getTurbine(turbineId).LoadShutdownTag; }
-        public static string getTurbineCtrTag(string turbineId) { return getTurbine(turbineId).TurbineCtrTag; }
-        public static string getHumidityTag(string turbineId) { return getTurbine(turbineId).TurbineHumidityTag; }
+        public  string getTurbineWindSpeedTag(string turbineId) { return getTurbine(turbineId).WindSpeedTag; }
+        public  string getRotorSpeedTag(string turbineId) { return getTurbine(turbineId).RotorSpeedTag; }
+        public  string getOperatingStateTag(string turbineId) { return getTurbine(turbineId).OperatingStateTag; }
+        public  string getNrsStateTag(string turbineId) { return getTurbine(turbineId).NrsStateTag; }
+        public  string getTemperatureTag(string turbineId) { return getTurbine(turbineId).TemperatureTag; }
+        public  string getLoadShutdownTag(string turbineId) { return getTurbine(turbineId).LoadShutdownTag; }
+        public  string getTurbineCtrTag(string turbineId) { return getTurbine(turbineId).TurbineCtrTag; }
+        public  string getHumidityTag(string turbineId) { return getTurbine(turbineId).TurbineHumidityTag; }
 
         //For reading OPC value using turbineId
         public Object readTurbineWindSpeedTag(string turbineId) { return client.ReadItemValue("", opcServerName, getTurbineWindSpeedTag(turbineId)); }
