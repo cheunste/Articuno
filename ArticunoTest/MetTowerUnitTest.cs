@@ -78,7 +78,7 @@ namespace ArticunoTest
             opcServer = new OpcServer(opcServerName);
             siteName = "SCRAB";
             //set default met tower Data
-            setValidMetData();
+            //setValidMetData();
 
         }
 
@@ -174,13 +174,40 @@ namespace ArticunoTest
 
         [TestMethod]
         //Set bad quality to assert met tower throws an alarm
-        public void checkMetTower()
+        [DataTestMethod]
+        [DataRow("Met1", 300.0, 120.0, 110.0, 200.0)]
+        public void checkMetTower(string metId, double tempVal1, double tempVal2, double hmdVal1, double hmdVal2)
         {
+            //setValidMetData();
+            double tempBeforeSwitch;
+            double humdBeforeSwitch;
+            MetTower met = MetTowerMediator.Instance.getMetTower(metId);
 
+            met.writeRelativeHumityValue(hmdVal1);
+            met.writePrimTemperatureValue(tempVal1);
+            met.writeSecTemperatureValue(tempVal1);
+            bool alarm = Convert.ToBoolean(met.NoDataAlarmValue);
+            Console.WriteLine("Met Tower Quality: {0}",MetTowerMediator.Instance.checkMetTowerQuality(metId));
+            Console.WriteLine("Met Tower Temperature Quality: {0}",MetTowerMediator.Instance.tempQualityCheck(metId));
+            Console.WriteLine("Met Tower Humidity Quality: {0}",MetTowerMediator.Instance.humidQualityCheck(metId));
+
+            Console.WriteLine("{0}",Convert.ToBoolean(met.readTemperaturePrimOutOfRange()));
+            Console.WriteLine("{0}",Convert.ToBoolean(met.readHumidityOutOfRng()));
+            Console.WriteLine("{0}",Convert.ToBoolean(met.readHumidityBadQuality()));
+            Console.WriteLine("{0}",Convert.ToBoolean(met.readTemperaturePrimBadQuality()));
+
+
+            //Assert.AreEqual(true, Convert.ToBoolean(met.readTemperaturePrimOutOfRange()));
+            //Assert.AreEqual(true, Convert.ToBoolean(met.readHumidityOutOfRng()));
+            //Assert.AreEqual(true, Convert.ToBoolean(met.readHumidityBadQuality()));
+            //Assert.AreEqual(true, Convert.ToBoolean(met.readTemperaturePrimBadQuality()));
         }
 
         [TestMethod]
         //Test to see what happens when the met tower is switched from the default.
+        //IMPORTANT: This unit test for some reason fials occasionally if all the tests are executed at once
+        //but never fails if it is executed by itself. I want to say this has something to do with concurrency as it was reading
+        //values that were set up by a different unit test. 
         [DataTestMethod]
         [DataRow("Met1", 21.0, 31.0, 17.0, 57.0)]
         [DataRow("Met2", 21.0, 41.0, 57.0, 97.0)]
@@ -205,9 +232,11 @@ namespace ArticunoTest
 
             //switch met tower 
             MetTowerMediator.Instance.switchMetTower(metId);
+            Console.WriteLine("Met Tower 1 temperature before switch {0}, humidty before switch {1}", tempVal1, hmdVal1);
+            Console.WriteLine("Met Tower 2 temperature before switch {0}, humidty before switch {1}", tempVal2, hmdVal2);
             double tempAfterSwitch = Convert.ToDouble(MetTowerMediator.Instance.readTemperature(metId));
             double humdAfterSwitch = Convert.ToDouble(MetTowerMediator.Instance.readHumidity(metId));
-            Console.WriteLine("Met Tower {0} temperature after switch {1}, humidty after switch {2}",metId,tempAfterSwitch,humdAfterSwitch);
+            Console.WriteLine("Met Tower {0} temperature after switch {1}, humidty after switch {2}", metId, tempAfterSwitch, humdAfterSwitch);
 
             switch (metId)
             {
@@ -227,10 +256,10 @@ namespace ArticunoTest
             MetTowerMediator.Instance.switchMetTower(metId);
             tempAfterSwitch = Convert.ToDouble(MetTowerMediator.Instance.readTemperature(metId));
             humdAfterSwitch = Convert.ToDouble(MetTowerMediator.Instance.readHumidity(metId));
-            Console.WriteLine("Met Tower {0} temperature after switch back {1}, humidty after switch back {2}",metId,tempAfterSwitch,humdAfterSwitch);
+            Console.WriteLine("Met Tower {0} temperature after switch back {1}, humidty after switch back {2}", metId, tempAfterSwitch, humdAfterSwitch);
 
-            Assert.AreEqual(tempAfterSwitch,tempBeforeSwitch, 0.001, "Temperature is not equal after switching back");
-            Assert.AreEqual(humdAfterSwitch,humdBeforeSwitch, 0.001, "Humidity is not equal after switching back");
+            Assert.AreEqual(tempAfterSwitch, tempBeforeSwitch, 0.001, "Temperature is not equal after switching back");
+            Assert.AreEqual(humdAfterSwitch, humdBeforeSwitch, 0.001, "Humidity is not equal after switching back");
 
             //Call the default good values. God knows what happened in the rpevious tests
             //setValidMetData();

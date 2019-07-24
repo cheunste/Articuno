@@ -290,7 +290,7 @@ namespace Articuno
         public double calculateDelta(double ambTemp, double dewPointTemp) { return Math.Abs(ambTemp - dewPointTemp); }
 
         /// <summary>
-        /// Check the quality of the met tower
+        /// Check the quality of the met tower. Returns True if the data is 'bad quality'. Returns False if met tower data is 'good quality
         /// </summary>
         /// <returns></returns>
         public bool checkMetTowerQuality(string metId)
@@ -334,12 +334,23 @@ namespace Articuno
 
             //Bad Quality
             //Set primay relative humidty to either 0 (if below 0) or 100 (if above zero)
+            //Also Raise alarm
             if (rh < 0.0 || rh > 100.0)
             {
                 state = false;
+                raiseAlarm(met, MetTowerEnum.HumidityOutOfRange);
+                raiseAlarm(met, MetTowerEnum.HumidityQuality);
                 rh = ((Math.Abs(0.0 - rh) > 0.0001) ? 0.0 : 100.0);
             }
-            if (!(met.isQualityGood(met.getRelativeHumidityTag())))
+            //CLear the out of range alarm
+            else if (rh > 0.0 && rh < 100.0)
+            {
+                clearAlarm(met, MetTowerEnum.HumidityOutOfRange);
+                clearAlarm(met, MetTowerEnum.HumidityQuality);
+            }
+
+
+            if (!(met.isQualityGood(met.RelativeHumidityTag)))
             {
                 state = false;
             }
@@ -372,8 +383,8 @@ namespace Articuno
         public Tuple<bool, double, double> tempQualityCheck(string metId)
         {
             MetTower met = getMetTower(metId);
-            string primTempTag = met.getPrimTemperatureTag();
-            string secTempTag = met.getSecTemperatureTag();
+            string primTempTag = met.PrimTemperatureTag;
+            string secTempTag = met.SecTemperatureTag;
             //call the ValueQuatliyCheck method to verify
             var primTempCheckTuple = tempValueQualityCheck(primTempTag);
             var secTempCheckTuple = tempValueQualityCheck(secTempTag);
@@ -460,10 +471,10 @@ namespace Articuno
                     }
                     break;
                 case MetTowerEnum.NoData:
-                    if (Convert.ToBoolean(mt.readNoDataAlarmValue()) != BAD_QUALITY)
+                    if (Convert.ToBoolean(mt.NoDataAlarmValue) != BAD_QUALITY)
                     {
                         log.InfoFormat("{0} No Data alarm raised ", mt.getMetTowerPrefix);
-                        mt.writeNoDataAlarmValue(BAD_QUALITY);
+                        mt.NoDataAlarmValue = BAD_QUALITY;
                     }
                     break;
 
@@ -523,10 +534,10 @@ namespace Articuno
                     }
                     break;
                 case MetTowerEnum.NoData:
-                    if (Convert.ToBoolean(mt.readNoDataAlarmValue()) != GOOD_QUALITY)
+                    if (Convert.ToBoolean(mt.NoDataAlarmValue) != GOOD_QUALITY)
                     {
                         log.InfoFormat("{0} No Data alarm cleared ", mt.getMetTowerPrefix);
-                        mt.writeNoDataAlarmValue(GOOD_QUALITY);
+                        mt.NoDataAlarmValue = GOOD_QUALITY;
                     }
                     break;
             }
