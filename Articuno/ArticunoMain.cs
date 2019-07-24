@@ -283,54 +283,21 @@ namespace Articuno
                 {
                     case TurbineMediator.TurbineEnum.NrsMode:
                         TurbineMediator.Instance.writeNrsStateTag(prefix, value);
-
-                        if (Convert.ToInt16(TurbineMediator.Instance.readNrsStateTag(prefix)) == 5 && !turbinesWaitingForPause.Contains(prefix))
-                        {
-                            turbinesWaitingForPause.Add(prefix);
-                            turbinesConditionNotMet.Remove(prefix);
-                        }
-                        //If Turbine isn't in NRS mode anymore
-                        else
-                        {
-                            if (!turbinesConditionNotMet.Contains(prefix))
-                            {
-                                turbinesWaitingForPause.Remove(prefix);
-                                turbinesConditionNotMet.Add(prefix);
-                            }
-                        }
                         break;
+                    //In the case where the turbine went into a different state. This includes pause by the dispatchers, site, curtailment, maintenance, anything non-Articuno 
                     case TurbineMediator.TurbineEnum.OperatingState:
                         int state = Convert.ToInt16(value);
-                        if ((state != RUN_STATE || state != DRAFT_STATE) && !turbinesConditionNotMet.Contains(prefix))
-                        {
-                            //Only add to the lists if it doesn't exist
-                            turbinesWaitingForPause.Remove(prefix);
-                            turbinesConditionNotMet.Add(prefix);
-                        }
-                        else
-                        {
-                            if (!turbinesWaitingForPause.Contains(prefix))
-                            {
-                                turbinesWaitingForPause.Add(prefix);
-                                turbinesConditionNotMet.Remove(prefix);
-                            }
-                        }
+                        //If already paused by Articuno, then there's nothing to do
+                        if (pausedByArticuno(prefix)) { break; }
+                        //If turbine isn't in run or draft, then that means it is derated or in emergency, or something else
+                        if ((state != RUN_STATE || state != DRAFT_STATE)) { conditionsNotMet(prefix); }
+                        else { conditionsMet(prefix); }
                         break;
                     case TurbineMediator.TurbineEnum.Participation:
                         bool partipationStatus = Convert.ToBoolean(value);
-                        if (partipationStatus == false && !turbinesExcludedList.Contains(prefix))
-                        {
-                            turbinesWaitingForPause.Remove(prefix);
-                            turbinesExcludedList.Add(prefix);
-                        }
-                        else
-                        {
-                            if (!turbinesWaitingForPause.Contains(prefix))
-                            {
-                                turbinesWaitingForPause.Add(prefix);
-                                turbinesExcludedList.Remove(prefix);
-                            }
-                        }
+                        if (pausedByArticuno(prefix)) { break; }
+                        if (partipationStatus == false && !turbinesExcludedList.Contains(prefix)) { conditionsNotMet(prefix); }
+                        else { conditionsMet(prefix); }
                         break;
                     default:
                         log.InfoFormat("Event CHanged detected for {0}. However, there is nothing to be doen", opcTag);
@@ -394,5 +361,24 @@ namespace Articuno
         }
 
         public static string getOpcServerName() { return opcServerName; }
+
+        private static bool pausedByArticuno(string turbineId) { return turbinesPausedByArticuno.Contains(turbineId); }
+        private static bool inWaiting(string turbineId) { return turbinesWaitingForPause.Contains(turbineId); }
+        //method used to update member lists when a turbine isn't ready to be paused by articuno
+        private static void conditionsNotMet(string turbineId)
+        {
+            turbinesWaitingForPause.Remove(turbineId);
+            turbinesConditionNotMet.Add(turbineId);
+        }
+
+        //Method used to update member lists  when a turbine is ready to be paused by ARticuno
+        private static void conditionsMet(string turbineId)
+        {
+            if (!turbinesWaitingForPause.Contains(turbineId))
+            {
+                turbinesWaitingForPause.Add(turbineId);
+                turbinesConditionNotMet.Remove(turbineId);
+            }
+        }
     }
 }
