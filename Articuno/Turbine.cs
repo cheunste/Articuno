@@ -23,26 +23,8 @@ namespace Articuno
     class Turbine
     {
         //Instance of OPC server
-        OpcServer server;
         string OpcServerName;
         private EasyDAClient client = new EasyDAClient();
-
-        //Member variables for OPC Tags in the turbine
-        private string turbinePrefix;
-        private string operatingState;
-        private string rotorSpeed;
-        private string nacelleWindSpeed;
-        private string deRate;
-        private string nrsState;
-        private string primMetReference;
-        private string secMetReference;
-        private string loadShutDown;
-        private string turbineCtrTag;
-        private string turbineScalingFactor;
-        private string turbineTemperature;
-        private string turbineHumidity;
-        private string turbineParticipationTag;
-        private string turbineAlarmTag;
 
         //Member variables for algorithm
         private bool temperatureConditionMet;
@@ -54,6 +36,10 @@ namespace Articuno
         //CTR Time
         private int ctrTimeValue;
 
+        //Queues
+        private Queue<Double> windSpeedQueue;
+        private Queue<Double> rotorSpeedQueue;
+
         //Other fields
         //scaling factor for turbine
         private int currentTurbSF;
@@ -61,100 +47,76 @@ namespace Articuno
         private bool articunoParicipation;
 
         //Met Tower Fields
-        private MetTower primaryMet;
-        private MetTower secondaryMet;
         private MetTower currentMetTower;
-        private bool isMetTowerBackup;
 
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(Turbine));
 
         //Constructors
-        public Turbine(string prefix, OpcServer server)
-        {
-            this.turbinePrefix = prefix;
-            this.server = server;
-        }
-
         public Turbine(string prefix, String OpcServerName)
         {
-            this.turbinePrefix = prefix;
+            this.TurbinePrefix = prefix;
             this.OpcServerName = OpcServerName;
-        }
+            windSpeedQueue = new Queue<double>();
+            rotorSpeedQueue = new Queue<double>();
 
-        public Turbine(string prefix)
-        {
-            this.turbinePrefix = prefix;
         }
 
         //Detects when operating state (run, pause, etc.) changes
         public string operatingStateChanged() { throw new NotImplementedException(); }
 
         //Methods to get the value for the wind speed, rotor speed, etc. value from the OPC Server
-        public Object readWindSpeedValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, this.nacelleWindSpeed); }
-        public Object readRotorSpeedValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, this.rotorSpeed); }
-        public Object readOperatinStateValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, this.operatingState); }
-        public Object readNrsStateValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, this.nrsState); }
-        public Object readTemperatureValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, this.turbineTemperature); }
-        public Object readTurbineCtrValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, this.turbineCtrTag); }
-        public Object readTurbineTemperatureValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, this.turbineTemperature); }
-        public Object readTurbineHumidityValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, turbineHumidity); }
-        public Object readTurbineScalingFactorValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, turbineScalingFactor); }
-        public Object readParticipationValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, turbineParticipationTag); }
-        public Object readAlarmValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, turbineAlarmTag); }
+        public Object readWindSpeedValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, WindSpeedTag); }
+        public Object readRotorSpeedValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, RotorSpeedTag); }
+        public Object readOperatinStateValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, OperatingStateTag); }
+        public Object readNrsStateValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, NrsStateTag); }
+        public Object readTemperatureValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, TemperatureTag); }
+        public Object readTurbineCtrValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, TurbineCtrTag); }
+        public Object readTurbineHumidityValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, TurbineHumidityTag); }
+        public Object readTurbineScalingFactorValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, ScalingFactorTag); }
+        public Object readParticipationValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, ParticipationTag); }
+        public Object readAlarmValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, AlarmTag); }
         public int readCtrValue() { return this.ctrTimeValue; }
 
-        //Setters to set the member variables to the  OPC tag
+        //public Accessors (Getters and Setters)  to set the member variables to the  OPC tag
+        // Not entirely sure if these should be public or not, but it does make reading code easier
         //These are used to set the tag name to the member variable
-        public void setWindSpeedTag(string tag) { this.nacelleWindSpeed = tag; }
-        public void setRotorSpeedTag(string tag) { this.rotorSpeed = tag; }
-        public void setOperatingStateTag(string tag) { this.operatingState = tag; }
-        public void setNrsStateTag(string tag) { this.nrsState = tag; }
-        public void setTemperatureTag(string tag) { this.turbineTemperature = tag; }
-        public void setLoadShutdownTag(string tag) { this.loadShutDown = tag; }
-        public void setTurbineCtrTag(string tag) { this.turbineCtrTag = tag; }
-        public void setTurbineTemperatureTag(string tag) { this.turbineTemperature = tag; }
-        public void setTurbineHumidityTag(string tag) { this.turbineHumidity = tag; }
-        public void setParticipationTag(string tag) { this.turbineParticipationTag = tag; }
-        public void setAlarmTag(string tag) { this.turbineAlarmTag = tag; }
-
-        //Getters to get the Name of the OPC Tags.
-        //These are mainly used by the factory class's other methods to get multiple OPC values at once
-        public string getWindSpeedTag() { return this.nacelleWindSpeed; }
-        public string getRotorSpeedTag() { return this.rotorSpeed; }
-        public string getOperatinStateTag() { return this.operatingState; }
-        public string getNrsStateTag() { return this.nrsState; }
-        public string getTemperatureTag() { return this.turbineTemperature; }
-        public string getLoadShutdownTag() { return this.loadShutDown; }
-        public string getTurbineCtrTag() { return this.turbineCtrTag; }
-        public string getTurbineTemperatureTag() { return this.turbineTemperature; }
-        public string getTurbineHumidityTag() { return this.turbineHumidity; }
-        public string getParticipationTag() { return this.turbineParticipationTag; }
-        public string getAlarmTag() { return this.turbineAlarmTag; }
-
+        public string WindSpeedTag { set; get; }
+        public string RotorSpeedTag { set; get; }
+        public string OperatingStateTag { set; get; }
+        public string NrsStateTag { set; get; }
+        public string LoadShutdownTag { set; get; }
+        public string TurbineCtrTag { set; get; }
+        public string TemperatureTag { set; get; }
+        public string TurbineHumidityTag { set; get; }
+        public string ScalingFactorTag { set; get; }
+        public string ParticipationTag { set; get; }
+        public string AlarmTag { set; get; }
+        public string TurbinePrefix { set; get; }
+        public string DeRate { set; get; }
 
         //Theses are used to write to the OP Tag Values.  There shouldn't be too many of these
-        public void writeTurbineCtrValue(int ctrValue) { server.writeTagValue(this.turbineCtrTag, ctrValue); }
+        public void writeTurbineCtrValue(int ctrValue) { client.WriteItemValue("", OpcServerName, this.TurbineCtrTag, ctrValue); }
         //Scalign factor is unique as it is not used in the OPC Server and only used internally in this program
         public void writeTurbineSFValue(int scalingFactor) { this.currentTurbSF = scalingFactor; }
         //Load shutdown function. Probably the most important function
         public double writeLoadShutdownCmd()
         {
-            log.InfoFormat("Shutdown command for {0} has been sent", this.turbinePrefix);
+            log.InfoFormat("Shutdown command for {0} has been sent", this.TurbinePrefix);
             try
             {
-                client.WriteItemValue("", OpcServerName, getLoadShutdownTag(), 1.00);
+                client.WriteItemValue("", OpcServerName, this.LoadShutdownTag, 1.00);
                 return 1.0;
             }
             catch (OpcException opcException)
             {
-                log.ErrorFormat("Error stropping {0}: {1}", this.turbinePrefix, opcException.GetBaseException().Message);
+                log.ErrorFormat("Error stropping {0}: {1}", this.TurbinePrefix, opcException.GetBaseException().Message);
                 return -1.0;
             }
         }
-        public void writeAlarmTagValue(Object value) { client.WriteItemValue("", OpcServerName, turbineAlarmTag, Convert.ToDouble(value)); }
-        public void writeNoiseLevel(Object value) { client.WriteItemValue("", OpcServerName, nrsState, Convert.ToDouble(value)); }
-        public void writeOperatingState(Object value) { client.WriteItemValue("", OpcServerName, operatingState, Convert.ToDouble(value)); }
+        public void writeAlarmTagValue(Object value) { client.WriteItemValue("", OpcServerName, AlarmTag, Convert.ToDouble(value)); }
+        public void writeNoiseLevel(Object value) { client.WriteItemValue("", OpcServerName, NrsStateTag, Convert.ToDouble(value)); }
+        public void writeOperatingState(Object value) { client.WriteItemValue("", OpcServerName, OperatingStateTag, Convert.ToDouble(value)); }
         public void writeCtrTimeValue(int value) { ctrTimeValue = value; }
         public void decrementCtrTime(int value)
         {
@@ -167,8 +129,8 @@ namespace Articuno
         }
 
         //Misc functions
-        public string getTurbinePrefixValue() { return this.turbinePrefix; }
-        public string isDerated() { return this.deRate; }
+        public string getTurbinePrefixValue() { return this.TurbinePrefix; }
+        public string isDerated() { return this.DeRate; }
 
         //The following five fucntions are set by the main Articuno class. They show if each of the four/five 
         //algorithms are true
@@ -198,7 +160,13 @@ namespace Articuno
             {
 
             }
-
         }
+
+        //For Wind speed and Rotor Speed queues
+        public void addWindSpeedToQueue(double windSpeed) { windSpeedQueue.Enqueue(windSpeed); }
+        public void addRotorSpeedToQueue(double rotorSpeed) { rotorSpeedQueue.Enqueue(rotorSpeed); }
+        public Queue<double> getWindSpeedQueue() { return windSpeedQueue; }
+        public Queue<double> getRotorSpeedQueue() { return rotorSpeedQueue; }
+        public void emptyQueue() { windSpeedQueue.Clear(); rotorSpeedQueue.Clear(); }
     }
 }

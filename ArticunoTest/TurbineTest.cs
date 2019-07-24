@@ -50,30 +50,27 @@ namespace ArticunoTest
         //Get the tag names of all the turbine associated Opc Tags and prints them out.
         public void getTagNameFromTurbine()
         {
-            List<string> temp;
-            temp = TurbineMediator.Instance.getTurbineWindSpeedTag();
-            printOutTags("turbine wind speed tag", temp);
-            temp = TurbineMediator.Instance.getOperatingStateTag();
-            printOutTags("operating state tag", temp);
-            temp = TurbineMediator.Instance.getNrsStateTag();
-            //WARNING: NRS can be empty or null
-            printOutTags("nrs", temp);
+            foreach (string prefix in TurbineMediator.Instance.getTurbinePrefixList())
+            {
+                string temp = TurbineMediator.Instance.getTurbineWindSpeedTag(prefix);
+                temp = TurbineMediator.Instance.getOperatingStateTag(prefix);
+                temp = TurbineMediator.Instance.getNrsStateTag(prefix);
+                //WARNING: NRS can be empty or null
 
-            //Turbine humidty tag is outside of requirement
-            //temp = TurbineMediator.Instance.getHumidityTag();
-            //printOutTags("humidity tag", temp);
+                //Turbine humidty tag is outside of requirement
+                //temp = TurbineMediator.Instance.getHumidityTag();
+                //printOutTags("humidity tag", temp);
 
-            temp = TurbineMediator.Instance.getTemperatureTag();
-            printOutTags("temperature tag", temp);
-            temp = TurbineMediator.Instance.getLoadShutdownTag();
-            printOutTags("Load shutdown tag", temp);
+                temp = TurbineMediator.Instance.getTemperatureTag(prefix);
+                temp = TurbineMediator.Instance.getLoadShutdownTag(prefix);
 
-            //No CTR tag provided. I think I'm going to make the turbine CTR independent of an Opc Tag
-            //temp = TurbineMediator.Instance.getTurbineCtrTag();
-            //printOutTags("CTR Tag", temp);
+                //No CTR tag provided. I think I'm going to make the turbine CTR independent of an Opc Tag
+                //temp = TurbineMediator.Instance.getTurbineCtrTag();
+                //printOutTags("CTR Tag", temp);
 
-            temp = TurbineMediator.Instance.getRotorSpeedTag();
-            printOutTags("Rotor speed tag", temp);
+                temp = TurbineMediator.Instance.getRotorSpeedTag(prefix);
+
+            }
         }
 
         [TestMethod]
@@ -155,7 +152,7 @@ namespace ArticunoTest
         {
             foreach (string prefix in TurbineMediator.Instance.getTurbinePrefixList())
             {
-                TurbineMediator.Instance.setCtrTime(prefix,value);
+                TurbineMediator.Instance.setCtrTime(prefix, value);
             }
 
 

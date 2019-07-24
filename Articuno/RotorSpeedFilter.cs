@@ -7,6 +7,10 @@ using System.Threading.Tasks;
 
 namespace Articuno
 {
+    /// <summary>
+    /// This class handles the turbine rotor speed filter data from the database.
+    /// Should only be used by the TurbineMediator Class.
+    /// </summary>
     class RotorSpeedFilter
     {
         //Constants
@@ -19,20 +23,17 @@ namespace Articuno
 
         //private lists
         /*
-         * What's going on here is that the wind speed is used to determine rotor speed and stddev. So what's happenging here is that
-         * a list of WindSpeed is constructed which serves as a lookup list and once the closest wind speed is found, you then return another
-         * list, the data row list, which contains the wind speed as well as the rotor speed, stddev, and their NRS version
-         *
-         * Note that the windSPeedList list returns a dataContent list. Change it to a better name when I find a better one
+         * These lists contain the data (FilterList) and the other is a list of keys that's used to find the item in the filterList
          * 
          */
-
-        //List<List<FilterElement>> windSpeedList;
-        List<FilterElement> windSpeedList;
-        List<FilterElement> dataContent;
+        List<FilterElement> filterList;
         List<double> keyList;
 
-        //This is a private class that's only used in the RotorSpeedFIlter class. Mainly, creating a separate class seems...pointless
+        /*
+         * This is a private class that's only used in the RotorSpeedFIlter class.
+         * It just stores 
+         * Mainly, creating a separate class seems...pointless
+         */
         private class FilterElement
         {
 
@@ -52,16 +53,17 @@ namespace Articuno
             public double StdDev { get; set; }
         }
 
+        /// Constructor. Doesn't take any arguments as it can just get its data from the database
         public RotorSpeedFilter()
         {
-            windSpeedList = new List<FilterElement>();
+            filterList = new List<FilterElement>();
             keyList = new List<double>();
 
             DataTable reader = DatabaseInterface.Instance.readCommand(cmd);
             int rotorSpeedRows = reader.Rows.Count;
             for (int i = 0; i < rotorSpeedRows; i++)
             {
-                windSpeedList.Add(
+                filterList.Add(
                 new FilterElement(Convert.ToDouble(reader.Rows[i][WindSpeed]),
                 Convert.ToDouble(reader.Rows[i][NRS_RotorSpeed]),
                 Convert.ToDouble(reader.Rows[i][NRS_StdDev]),
@@ -70,7 +72,7 @@ namespace Articuno
             }
 
             //Build a Key list from the above List
-            keyList = windSpeedList.Select(y => y.WindSpeed).ToList();
+            keyList = filterList.Select(y => y.WindSpeed).ToList();
 
         }
 
@@ -86,7 +88,7 @@ namespace Articuno
             {
                 index = ~index;
             }
-            var result = windSpeedList[index];
+            var result = filterList[index];
 
             if (nrsMode)
                 return new Tuple<double,double>(result.NrsRotorSpeed, result.NrsStdDev);

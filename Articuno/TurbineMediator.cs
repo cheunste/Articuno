@@ -54,6 +54,9 @@ namespace Articuno
         private string opcServerName;
         private EasyDAClient client = new EasyDAClient();
 
+        //Rotor Speed
+        private RotorSpeedFilter filterTable;
+
         //Member delegates
         IcingDelegates tempDelegate, operatingStateDelegate, nrsDelegate, turbinePerfDelegate, deRateConditionDelegate;
 
@@ -70,6 +73,9 @@ namespace Articuno
             tempList = new List<string>();
             tempObjectList = new List<Object>();
             this.opcServerName = getOpcServerName();
+
+            //For RotorSpeed Filter Table. There should only be one instance of this. 
+            filterTable = new RotorSpeedFilter();
 
             tempDelegate = setTemperatureCondition;
             operatingStateDelegate = setOperatingStateCondition;
@@ -118,14 +124,15 @@ namespace Articuno
                     String.Format("SELECT * " +
                     "from TurbineInputTags WHERE TurbineId='{0}'", turbinePrefix);
                 DataTable reader = dbi.readCommand(cmd);
-                try { turbine.setNrsStateTag(reader.Rows[0]["NrsMode"].ToString()); }
-                catch (NullReferenceException e) { turbine.setNrsStateTag(""); }
+                try { turbine.NrsStateTag = reader.Rows[0]["NrsMode"].ToString(); }
+                catch (NullReferenceException e) { turbine.NrsStateTag = ""; }
 
-                turbine.setOperatingStateTag(reader.Rows[0]["OperatingState"].ToString());
-                turbine.setRotorSpeedTag(reader.Rows[0]["RotorSpeed"].ToString());
-                turbine.setTemperatureTag(reader.Rows[0]["Temperature"].ToString());
-                turbine.setWindSpeedTag(reader.Rows[0]["WindSpeed"].ToString());
-                turbine.setParticipationTag(reader.Rows[0]["Participation"].ToString());
+                turbine.OperatingStateTag = reader.Rows[0]["OperatingState"].ToString();
+                turbine.RotorSpeedTag = reader.Rows[0]["RotorSpeed"].ToString();
+                turbine.TemperatureTag = reader.Rows[0]["Temperature"].ToString();
+                turbine.WindSpeedTag = reader.Rows[0]["WindSpeed"].ToString();
+                turbine.ParticipationTag = reader.Rows[0]["Participation"].ToString();
+                turbine.ScalingFactorTag = reader.Rows[0]["ScalingFactor"].ToString();
 
                 string primMetTower = reader.Rows[0]["MetReference"].ToString();
                 MetTower metTower = MetTowerMediator.Instance.getMetTower(primMetTower);
@@ -150,8 +157,8 @@ namespace Articuno
                     "from TurbineOutputTags WHERE TurbineId='{0}'", turbinePrefix);
                 reader = dbi.readCommand(cmd);
 
-                turbine.setAlarmTag(reader.Rows[0]["Alarm"].ToString());
-                turbine.setLoadShutdownTag(reader.Rows[0]["Pause"].ToString());
+                turbine.AlarmTag = reader.Rows[0]["Alarm"].ToString();
+                turbine.LoadShutdownTag = reader.Rows[0]["Pause"].ToString();
 
                 //Add turbine to the turbine list
                 turbineList.Add(turbine);
@@ -207,82 +214,18 @@ namespace Articuno
         /// <returns></returns>
         public List<Turbine> getTurbineList() { return turbineList; }
 
-        /*
-         * The next several methods will be returning the OPC tag name for the turbine List
-         * (including the turbine prefix) in a List<string>
-        */
-        public List<string> getTurbineWindSpeedTag()
-        {
-            tempList.Clear();
-            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.getWindSpeedTag()); }
-            return tempList;
-        }
-
-        public List<string> getRotorSpeedTag()
-        {
-            tempList.Clear();
-            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.getRotorSpeedTag()); }
-            return tempList;
-        }
-        public List<string> getOperatingStateTag()
-        {
-            tempList.Clear();
-            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.getOperatinStateTag()); }
-            return tempList;
-        }
-        public List<string> getNrsStateTag()
-        {
-            tempList.Clear();
-            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.getNrsStateTag()); }
-            return tempList;
-        }
-        public List<string> getTemperatureTag()
-        {
-            tempList.Clear();
-            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.getTemperatureTag()); }
-            return tempList;
-        }
-        public List<string> getLoadShutdownTag()
-        {
-            tempList.Clear();
-            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.getLoadShutdownTag()); }
-            return tempList;
-        }
-        public List<string> getTurbineCtrTag()
-        {
-            tempList.Clear();
-            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.getTurbineCtrTag()); }
-            return tempList;
-        }
-        public List<string> getHumidityTag()
-        {
-            tempList.Clear();
-            foreach (Turbine turbine in turbineList) { tempList.Add(turbine.getTurbineHumidityTag()); }
-            return tempList;
-        }
 
         //Get methods to get the OPC Tag given a turbine Id
-        public static string getTurbineWindSpeedTag(string turbineId) { return getTurbine(turbineId).getWindSpeedTag(); }
-        public static string getRotorSpeedTag(string turbineId) { return getTurbine(turbineId).getRotorSpeedTag(); }
-        public static string getOperatingStateTag(string turbineId) { return getTurbine(turbineId).getOperatinStateTag(); }
-        public static string getNrsStateTag(string turbineId) { return getTurbine(turbineId).getNrsStateTag(); }
-        public static string getTemperatureTag(string turbineId) { return getTurbine(turbineId).getTemperatureTag(); }
-        public static string getLoadShutdownTag(string turbineId) { return getTurbine(turbineId).getLoadShutdownTag(); }
-        public static string getTurbineCtrTag(string turbineId) { return getTurbine(turbineId).getTurbineCtrTag(); }
-        public static string getHumidityTag(string turbineId) { return getTurbine(turbineId).getTurbineHumidityTag(); }
+        public  string getTurbineWindSpeedTag(string turbineId) { return getTurbine(turbineId).WindSpeedTag; }
+        public  string getRotorSpeedTag(string turbineId) { return getTurbine(turbineId).RotorSpeedTag; }
+        public  string getOperatingStateTag(string turbineId) { return getTurbine(turbineId).OperatingStateTag; }
+        public  string getNrsStateTag(string turbineId) { return getTurbine(turbineId).NrsStateTag; }
+        public  string getTemperatureTag(string turbineId) { return getTurbine(turbineId).TemperatureTag; }
+        public  string getLoadShutdownTag(string turbineId) { return getTurbine(turbineId).LoadShutdownTag; }
+        public  string getTurbineCtrTag(string turbineId) { return getTurbine(turbineId).TurbineCtrTag; }
+        public  string getHumidityTag(string turbineId) { return getTurbine(turbineId).TurbineHumidityTag; }
 
-        /*
-         * The following methods will return the list containing the vlaue  of the opcTag
-         */
-        public Object readTurbineWindSpeedTag() { return readMutlipleOpcTags(getTurbineWindSpeedTag()); }
-        public Object readRotorSpeedTag() { return readMutlipleOpcTags(getRotorSpeedTag()); }
-        public Object readOperatingStateTag() { return readMutlipleOpcTags(getOperatingStateTag()); }
-        public Object readNrsStateTag() { return readMutlipleOpcTags(getNrsStateTag()); }
-        public Object readTemperatureTag() { return readMutlipleOpcTags(getTemperatureTag()); }
-        public Object readTurbineCtrTag() { return readMutlipleOpcTags(getTurbineCtrTag()); }
-        public Object readHumidityTag() { return readMutlipleOpcTags(getHumidityTag()); }
-
-        //For reading (using turbineId)
+        //For reading OPC value using turbineId
         public Object readTurbineWindSpeedTag(string turbineId) { return client.ReadItemValue("", opcServerName, getTurbineWindSpeedTag(turbineId)); }
         public Object readRotorSpeedTag(string turbineId) { return client.ReadItemValue("", opcServerName, getRotorSpeedTag(turbineId)); }
         public Object readOperatingStateTag(string turbineId) { return client.ReadItemValue("", opcServerName, getOperatingStateTag(turbineId)); }
@@ -364,16 +307,14 @@ namespace Articuno
         public Enum findTurbineTag(string turbineId, string tag)
         {
             Turbine tempTurbine = getTurbine(turbineId);
-            if (tag.ToUpper().Equals(tempTurbine.getNrsStateTag().ToUpper())) { return TurbineEnum.NrsMode; }
-            else if (tag.ToUpper().Equals(tempTurbine.getOperatinStateTag().ToUpper())) { return TurbineEnum.OperatingState; }
-            else if (tag.ToUpper().Equals(tempTurbine.getRotorSpeedTag().ToUpper())) { return TurbineEnum.RotorSpeed; }
-            else if (tag.ToUpper().Equals(tempTurbine.getTemperatureTag().ToUpper())) { return TurbineEnum.Temperature; }
-            else if (tag.ToUpper().Equals(tempTurbine.getWindSpeedTag().ToUpper())) { return TurbineEnum.WindSpeed; }
-            else if (tag.ToUpper().Equals(tempTurbine.getParticipationTag().ToUpper())) { return TurbineEnum.Participation; }
-
+            if (tag.ToUpper().Equals(tempTurbine.NrsStateTag.ToUpper())) { return TurbineEnum.NrsMode; }
+            else if (tag.ToUpper().Equals(tempTurbine.OperatingStateTag.ToUpper())) { return TurbineEnum.OperatingState; }
+            else if (tag.ToUpper().Equals(tempTurbine.RotorSpeedTag.ToUpper())) { return TurbineEnum.RotorSpeed; }
+            else if (tag.ToUpper().Equals(tempTurbine.TemperatureTag.ToUpper())) { return TurbineEnum.Temperature; }
+            else if (tag.ToUpper().Equals(tempTurbine.WindSpeedTag.ToUpper())) { return TurbineEnum.WindSpeed; }
+            else if (tag.ToUpper().Equals(tempTurbine.ParticipationTag.ToUpper())) { return TurbineEnum.Participation; }
             //If it reaches here, I have no freaking clue what's going on, but whatever is calling it needs to handle it 
-            else
-                return null;
+            else return null;
         }
 
 
@@ -388,25 +329,67 @@ namespace Articuno
             Participation
         }
 
-        //Build the rotor speed lookup table
-        private void buildRotorSpeedLookupTable()
+        //FUnction to determine whether or not a turbine is underperforming due to ice
+        /// <summary>
+        /// Calculates the average CTR wind speed and then searches the filter table using CTR average. Paues the turbine if conditions were met. 
+        /// Doesn't pause otherwise
+        /// </summary>
+        /// <param name="turbineId">turbine prefix in string</param>
+        //Note all vars are doubles here
+        public void RotorSpeedCheck(string turbineId)
         {
-            string cmd = String.Format("SELECT * FROM RotorSpeedLookupTable");
-            DataTable reader = DatabaseInterface.Instance.readCommand(cmd);
-            int rotorSpeedRows = reader.Rows.Count;
+            Turbine turbine = getTurbine(turbineId);
+            Queue<double> windSpeedQueue = turbine.getWindSpeedQueue();
+            Queue<double> rotorSpeedQueue = turbine.getRotorSpeedQueue();
 
-            for (int i = 0; i <= rotorSpeedRows; i++)
-            {
+            //bool nrsMode = Convert.ToBoolean(turbine.readNrsStateValue());
+            bool nrsMode = Convert.ToInt16(turbine.readNrsStateValue()) >= 5 ? true : false;
 
-                Convert.ToDouble(reader.Rows[i]["NrsMode"]);
-                Convert.ToDouble(reader.Rows[i]["RotorSpeedNonNRS"]);
-                Convert.ToDouble(reader.Rows[i]["StandardDeviationNonNRS"]);
-                Convert.ToDouble(reader.Rows[i]["RotorSpeedNRS"]);
-                Convert.ToDouble(reader.Rows[i]["StandardDeviationNRS"]);
-            }
+            var windSpeedQueueCount = windSpeedQueue.Count;
+            var windSpeedAverage = 0.0;
+            var rotorSpeedQueueCount = rotorSpeedQueue.Count;
+            var rotorSpeedAverage = 0.0;
 
+            //Loop through the queue until the queue is empty and then divide it by the queue count stored earlier
+            while (windSpeedQueue.Count != 0) { windSpeedAverage += windSpeedQueue.Dequeue(); }
+            while (rotorSpeedQueue.Count != 0) { rotorSpeedAverage += rotorSpeedQueue.Dequeue(); }
+
+            var filterTuple = filterTable.search(windSpeedAverage / windSpeedQueueCount, nrsMode);
+
+            var referenceRotorSpeed = filterTuple.Item1;
+            var referenceStdDev = filterTuple.Item1;
+
+            var currentScalingFactor = Convert.ToDouble(turbine.readTurbineScalingFactorValue());
+
+            //Set under performance condition to be true. Else, clear it
+            if (rotorSpeedAverage < referenceRotorSpeed - (currentScalingFactor * referenceStdDev)) { turbine.setTurbinePerformanceCondition(true); }
+            else { turbine.setTurbinePerformanceCondition(false); }
+
+            //For sanity check, make sure the windSPeedQueue is empty 
+            turbine.emptyQueue();
         }
 
+        /// <summary>
+        /// Function to tell the turbines to write current temperature and rotor speed values into their queues 
+        /// </summary>
+        /// <param name="turbineId"></param>
+        public void storeMinuteAverages(string turbineId)
+        {
+            Turbine turbine = getTurbine(turbineId);
+            double windSpeedAvg = Convert.ToDouble(turbine.readWindSpeedValue());
+            double rotorSpeedAvg = Convert.ToDouble(turbine.readRotorSpeedValue());
+            turbine.addWindSpeedToQueue(windSpeedAvg);
+            turbine.addRotorSpeedToQueue(rotorSpeedAvg);
+        }
+
+        /// <summary>
+        /// Write CTR Time for all the turbines. 
+        /// </summary>
+        /// <param name="value"></param>
+        public void writeCtrTime(int value)
+        {
+            foreach (string turbinePrefix in getTurbinePrefixList()) { writeTurbineCtrTag(turbinePrefix, value); }
+        }
 
     }
 }
