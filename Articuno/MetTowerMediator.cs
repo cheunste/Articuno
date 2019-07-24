@@ -242,13 +242,13 @@ namespace Articuno
         public void writePrimTemperature(string metId, double value)
         {
             MetTower met = getMetTower(metId);
-            met.writePrimTemperatureValue(value);
+            met.PrimTemperatureValue=value;
         }
 
         public void writeSecTemperature(string metId, double value)
         {
             MetTower met = getMetTower(metId);
-            met.writeSecTemperatureValue(value);
+            met.SecTemperatureValue=value;
         }
 
         public double readHumidity(string metId)
@@ -266,7 +266,7 @@ namespace Articuno
         public void writeHumidity(string metId, double value)
         {
             MetTower met = getMetTower(metId);
-            met.writeRelativeHumityValue(value);
+            met.RelativeHumidityValue=value;
         }
 
         /// <summary>
@@ -324,7 +324,7 @@ namespace Articuno
         public Tuple<bool, double> humidQualityCheck(string metId)
         {
             MetTower met = getMetTower(metId);
-            var rhOpcObject = met.readRelativeHumidityValue();
+            var rhOpcObject = met.RelativeHumidityValue;
             double rh = (Double)rhOpcObject;
             double minValue = 0.0;
             double maxValue = 100.0;
@@ -429,45 +429,45 @@ namespace Articuno
             switch (metTowerEnum)
             {
                 case MetTowerEnum.HumidityOutOfRange:
-                    if (Convert.ToBoolean(mt.readHumidityOutOfRng()) != BAD_QUALITY)
+                    if (Convert.ToBoolean(mt.HumidityOutOfRng) != BAD_QUALITY)
                     {
                         log.InfoFormat("{0} Humidity sensor out of range alarm raised", mt.getMetTowerPrefix);
-                        mt.writeHumidityOutOfRng(BAD_QUALITY);
+                        mt.HumidityOutOfRng=BAD_QUALITY;
                     }
                     break;
                 case MetTowerEnum.HumidityQuality:
-                    if (Convert.ToBoolean(mt.readHumidityBadQuality()) != BAD_QUALITY)
+                    if (Convert.ToBoolean(mt.HumidityBadQuality) != BAD_QUALITY)
                     {
                         log.InfoFormat("{0} Humidity sensor bad quality alarm raised", mt.getMetTowerPrefix);
-                        mt.writeHumidityBadQuality(BAD_QUALITY);
+                        mt.HumidityBadQuality=BAD_QUALITY;
                     }
                     break;
                 case MetTowerEnum.PrimSensorQuality:
-                    if (Convert.ToBoolean(mt.readTemperaturePrimBadQuality()) != BAD_QUALITY)
+                    if (Convert.ToBoolean(mt.TemperaturePrimBadQuality) != BAD_QUALITY)
                     {
                         log.InfoFormat("{0} Primary Temperature sensor quality alarm raised", mt.getMetTowerPrefix);
-                        mt.writeTemperaturePrimBadQuality(BAD_QUALITY);
+                        mt.TemperaturePrimBadQuality=BAD_QUALITY;
                     }
                     break;
                 case MetTowerEnum.PrimSensorOutOfRange:
-                    if (Convert.ToBoolean(mt.readTemperaturePrimOutOfRange()) != BAD_QUALITY)
+                    if (Convert.ToBoolean(mt.TemperaturePrimOutOfRange) != BAD_QUALITY)
                     {
                         log.InfoFormat("{0} Primary Temperature sensor quality alarm raised", mt.getMetTowerPrefix);
-                        mt.writeTemperaturePrimOutOfRange(BAD_QUALITY);
+                        mt.TemperaturePrimOutOfRange=BAD_QUALITY;
                     }
                     break;
                 case MetTowerEnum.SecSensorQuality:
-                    if (Convert.ToBoolean(mt.readTemperatureSecBadQuality()) != BAD_QUALITY)
+                    if (Convert.ToBoolean(mt.TemperatureSecBadQuality) != BAD_QUALITY)
                     {
                         log.InfoFormat("{0} Secondary Temperature sensor quality alarm raised", mt.getMetTowerPrefix);
-                        mt.writeTemperaturePrimBadQuality(BAD_QUALITY);
+                        mt.TemperaturePrimBadQuality=BAD_QUALITY;
                     }
                     break;
                 case MetTowerEnum.SecSensorOutOfRange:
-                    if (Convert.ToBoolean(mt.readTemperatureSecOutOfRange()) != BAD_QUALITY)
+                    if (Convert.ToBoolean(mt.TemperatureSecOutOfRange) != BAD_QUALITY)
                     {
                         log.InfoFormat("{0} Secondary Temperature sensor quality alarm raised", mt.getMetTowerPrefix);
-                        mt.writeTemperatureSecOutOfRange(BAD_QUALITY);
+                        mt.TemperatureSecOutOfRange=BAD_QUALITY;
                     }
                     break;
                 case MetTowerEnum.NoData:
@@ -491,46 +491,46 @@ namespace Articuno
             switch (metTowerEnum)
             {
                 case MetTowerEnum.HumidityOutOfRange:
-                    if (Convert.ToBoolean(mt.readHumidityOutOfRng()) != GOOD_QUALITY)
+                    if (Convert.ToBoolean(mt.HumidityOutOfRng) != GOOD_QUALITY)
                     {
                         log.InfoFormat("{0} Humidity sensor out of range alarm cleared", mt.getMetTowerPrefix);
-                        mt.writeHumidityOutOfRng(GOOD_QUALITY);
+                        mt.HumidityOutOfRng=GOOD_QUALITY;
                     }
                     break;
                 case MetTowerEnum.HumidityQuality:
-                    if (Convert.ToBoolean(mt.readHumidityBadQuality()) != GOOD_QUALITY)
+                    if (Convert.ToBoolean(mt.HumidityBadQuality) != GOOD_QUALITY)
                     {
                         log.InfoFormat("{0} Humidity sensor bad quality alarm cleared", mt.getMetTowerPrefix);
-                        mt.writeHumidityBadQuality(GOOD_QUALITY);
+                        mt.HumidityBadQuality=GOOD_QUALITY;
                     }
                     break;
                 case MetTowerEnum.PrimSensorQuality:
-                    if (Convert.ToBoolean(mt.readTemperaturePrimBadQuality()) != GOOD_QUALITY)
+                    if (Convert.ToBoolean(mt.TemperaturePrimBadQuality) != GOOD_QUALITY)
                     {
                         log.InfoFormat("{0} Primary Temperature sensor quality alarm cleared", mt.getMetTowerPrefix);
-                        mt.writeTemperaturePrimBadQuality(GOOD_QUALITY);
+                        mt.TemperaturePrimBadQuality=GOOD_QUALITY;
                     }
                     break;
                 case MetTowerEnum.PrimSensorOutOfRange:
-                    if (Convert.ToBoolean(mt.readTemperaturePrimOutOfRange()) != GOOD_QUALITY)
+                    if (Convert.ToBoolean(mt.TemperaturePrimOutOfRange) != GOOD_QUALITY)
                     {
                         log.InfoFormat("{0} Primary Temperature sensor quality alarm cleared", mt.getMetTowerPrefix);
-                        mt.writeTemperaturePrimOutOfRange(GOOD_QUALITY);
+                        mt.TemperaturePrimOutOfRange=GOOD_QUALITY;
                     }
                     break;
                 case MetTowerEnum.SecSensorQuality:
-                    if (Convert.ToBoolean(mt.readTemperatureSecBadQuality()) != GOOD_QUALITY)
+                    if (Convert.ToBoolean(mt.TemperatureSecBadQuality) != GOOD_QUALITY)
                     {
                         log.InfoFormat("{0} Secondary Temperature sensor quality alarm cleared", mt.getMetTowerPrefix);
-                        mt.writeTemperaturePrimBadQuality(GOOD_QUALITY);
+                        mt.TemperaturePrimBadQuality=GOOD_QUALITY;
                     }
-                    Console.WriteLine(Convert.ToBoolean(mt.readTemperatureSecBadQuality()));
+                    Console.WriteLine(Convert.ToBoolean(mt.TemperatureSecBadQuality));
                     break;
                 case MetTowerEnum.SecSensorOutOfRange:
-                    if (Convert.ToBoolean(mt.readTemperatureSecOutOfRange()) != GOOD_QUALITY)
+                    if (Convert.ToBoolean(mt.TemperatureSecOutOfRange) != GOOD_QUALITY)
                     {
                         log.InfoFormat("{0} Secondary Temperature sensor quality alarm cleared", mt.getMetTowerPrefix);
-                        mt.writeTemperatureSecOutOfRange(GOOD_QUALITY);
+                        mt.TemperatureSecOutOfRange=GOOD_QUALITY;
                     }
                     break;
                 case MetTowerEnum.NoData:
@@ -577,10 +577,10 @@ namespace Articuno
             if (averageTemperature < tempThreshold)
             {
                 MetTower met = getMetTower(metId);
-                met.readIceIndicationValue();
+                //met.IceIndicationValue;
                 try
                 {
-                    met.writeIceIndicationValue(1.00);
+                    met.IceIndicationValue=1.00;
                     log.InfoFormat("Icing conditions met for {0}. \n" +
                         "average Temperature {1}, \n" +
                         "Temperature threshold {2} \n",

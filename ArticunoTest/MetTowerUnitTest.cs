@@ -125,9 +125,9 @@ namespace ArticunoTest
         public void GetValueTest(string metId, double tempVal1, double tempVal2, double hmdVal)
         {
             MetTower met = MetTowerMediator.Instance.getMetTower(metId);
-            met.writeRelativeHumityValue(hmdVal);
-            met.writePrimTemperatureValue(tempVal1);
-            met.writeSecTemperatureValue(tempVal1);
+            met.RelativeHumidityValue=hmdVal;
+            met.PrimTemperatureValue=tempVal1;
+            met.SecTemperatureValue=tempVal1;
 
             var met1Values = MetTowerMediator.Instance.getAllMeasurements(metId);
 
@@ -183,18 +183,18 @@ namespace ArticunoTest
             double humdBeforeSwitch;
             MetTower met = MetTowerMediator.Instance.getMetTower(metId);
 
-            met.writeRelativeHumityValue(hmdVal1);
-            met.writePrimTemperatureValue(tempVal1);
-            met.writeSecTemperatureValue(tempVal1);
+            met.RelativeHumidityValue=hmdVal1;
+            met.PrimTemperatureValue=tempVal1;
+            met.SecTemperatureValue=tempVal1;
             bool alarm = Convert.ToBoolean(met.NoDataAlarmValue);
             Console.WriteLine("Met Tower Quality: {0}",MetTowerMediator.Instance.checkMetTowerQuality(metId));
             Console.WriteLine("Met Tower Temperature Quality: {0}",MetTowerMediator.Instance.tempQualityCheck(metId));
             Console.WriteLine("Met Tower Humidity Quality: {0}",MetTowerMediator.Instance.humidQualityCheck(metId));
 
-            Console.WriteLine("{0}",Convert.ToBoolean(met.readTemperaturePrimOutOfRange()));
-            Console.WriteLine("{0}",Convert.ToBoolean(met.readHumidityOutOfRng()));
-            Console.WriteLine("{0}",Convert.ToBoolean(met.readHumidityBadQuality()));
-            Console.WriteLine("{0}",Convert.ToBoolean(met.readTemperaturePrimBadQuality()));
+            Console.WriteLine("{0}",Convert.ToBoolean(met.TemperaturePrimOutOfRange));
+            Console.WriteLine("{0}",Convert.ToBoolean(met.HumidityOutOfRng));
+            Console.WriteLine("{0}",Convert.ToBoolean(met.HumidityBadQuality));
+            Console.WriteLine("{0}",Convert.ToBoolean(met.TemperaturePrimBadQuality));
 
 
             //Assert.AreEqual(true, Convert.ToBoolean(met.readTemperaturePrimOutOfRange()));
@@ -222,13 +222,13 @@ namespace ArticunoTest
 
             Console.WriteLine("Testing {0}, with temperature {1}, {2}, humidty {3},{4}", metId, tempVal1, tempVal2, hmdVal1, hmdVal2);
             //Write Values to the tags
-            met1.writeRelativeHumityValue(hmdVal1);
-            met1.writePrimTemperatureValue(tempVal1);
-            met1.writeSecTemperatureValue(tempVal1);
+            met1.RelativeHumidityValue=hmdVal1;
+            met1.PrimTemperatureValue=tempVal1;
+            met1.SecTemperatureValue=tempVal1;
 
-            met2.writeRelativeHumityValue(hmdVal2);
-            met2.writePrimTemperatureValue(tempVal2);
-            met2.writeSecTemperatureValue(tempVal2);
+            met2.RelativeHumidityValue=hmdVal2;
+            met2.PrimTemperatureValue=tempVal2;
+            met2.SecTemperatureValue=tempVal2;
 
             //switch met tower 
             MetTowerMediator.Instance.switchMetTower(metId);
