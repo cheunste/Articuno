@@ -239,29 +239,6 @@ namespace Articuno
         public void writeTurbineCtrTag(string turbineId, int value) { getTurbine(turbineId).writeTurbineCtrValue(value); }
         public void writeLoadShutDownCmd(string turbineId) { getTurbine(turbineId).writeLoadShutdownCmd(); }
 
-        private Object readMutlipleOpcTags(List<string> tempList)
-        {
-
-            List<Object> valueList = new List<Object>();
-            var itemDescriptors = new DAItemDescriptor[tempList.Count];
-
-            for (int i = 0; i < tempList.Count; i++)
-            {
-                Console.WriteLine(tempList.ElementAt(i));
-                itemDescriptors[i] = new DAItemDescriptor(tempList.ElementAt(i));
-            }
-
-            DAVtqResult[] vtqResults = this.client.ReadMultipleItems(this.opcServerName, itemDescriptors);
-
-            for (int i = 0; i < vtqResults.Length; i++)
-            {
-                //Console.WriteLine(vtqResults[i].Vtq.Value);
-                valueList.Add(vtqResults[i].Vtq.Value);
-            }
-            //return vtqResults;
-            return valueList;
-        }
-
         /// <summary>
         /// sets the CTR time for this turbine
         /// </summary>

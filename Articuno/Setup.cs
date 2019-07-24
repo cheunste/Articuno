@@ -51,7 +51,6 @@ namespace Articuno
 
             //Pull required information from the database
             di.getTurbineList();
-            String opcServer =di.getOpcServer();
             String metTower =di.getMetTower();
 
 

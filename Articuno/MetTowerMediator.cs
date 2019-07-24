@@ -242,13 +242,13 @@ namespace Articuno
         public void writePrimTemperature(string metId, double value)
         {
             MetTower met = getMetTower(metId);
-            met.PrimTemperatureValue=value;
+            met.PrimTemperatureValue = value;
         }
 
         public void writeSecTemperature(string metId, double value)
         {
             MetTower met = getMetTower(metId);
-            met.SecTemperatureValue=value;
+            met.SecTemperatureValue = value;
         }
 
         public double readHumidity(string metId)
@@ -266,7 +266,7 @@ namespace Articuno
         public void writeHumidity(string metId, double value)
         {
             MetTower met = getMetTower(metId);
-            met.RelativeHumidityValue=value;
+            met.RelativeHumidityValue = value;
         }
 
         /// <summary>
@@ -432,42 +432,42 @@ namespace Articuno
                     if (Convert.ToBoolean(mt.HumidityOutOfRng) != BAD_QUALITY)
                     {
                         log.InfoFormat("{0} Humidity sensor out of range alarm raised", mt.getMetTowerPrefix);
-                        mt.HumidityOutOfRng=BAD_QUALITY;
+                        mt.HumidityOutOfRng = BAD_QUALITY;
                     }
                     break;
                 case MetTowerEnum.HumidityQuality:
                     if (Convert.ToBoolean(mt.HumidityBadQuality) != BAD_QUALITY)
                     {
                         log.InfoFormat("{0} Humidity sensor bad quality alarm raised", mt.getMetTowerPrefix);
-                        mt.HumidityBadQuality=BAD_QUALITY;
+                        mt.HumidityBadQuality = BAD_QUALITY;
                     }
                     break;
                 case MetTowerEnum.PrimSensorQuality:
                     if (Convert.ToBoolean(mt.TemperaturePrimBadQuality) != BAD_QUALITY)
                     {
                         log.InfoFormat("{0} Primary Temperature sensor quality alarm raised", mt.getMetTowerPrefix);
-                        mt.TemperaturePrimBadQuality=BAD_QUALITY;
+                        mt.TemperaturePrimBadQuality = BAD_QUALITY;
                     }
                     break;
                 case MetTowerEnum.PrimSensorOutOfRange:
                     if (Convert.ToBoolean(mt.TemperaturePrimOutOfRange) != BAD_QUALITY)
                     {
                         log.InfoFormat("{0} Primary Temperature sensor quality alarm raised", mt.getMetTowerPrefix);
-                        mt.TemperaturePrimOutOfRange=BAD_QUALITY;
+                        mt.TemperaturePrimOutOfRange = BAD_QUALITY;
                     }
                     break;
                 case MetTowerEnum.SecSensorQuality:
                     if (Convert.ToBoolean(mt.TemperatureSecBadQuality) != BAD_QUALITY)
                     {
                         log.InfoFormat("{0} Secondary Temperature sensor quality alarm raised", mt.getMetTowerPrefix);
-                        mt.TemperaturePrimBadQuality=BAD_QUALITY;
+                        mt.TemperaturePrimBadQuality = BAD_QUALITY;
                     }
                     break;
                 case MetTowerEnum.SecSensorOutOfRange:
                     if (Convert.ToBoolean(mt.TemperatureSecOutOfRange) != BAD_QUALITY)
                     {
                         log.InfoFormat("{0} Secondary Temperature sensor quality alarm raised", mt.getMetTowerPrefix);
-                        mt.TemperatureSecOutOfRange=BAD_QUALITY;
+                        mt.TemperatureSecOutOfRange = BAD_QUALITY;
                     }
                     break;
                 case MetTowerEnum.NoData:
@@ -494,35 +494,35 @@ namespace Articuno
                     if (Convert.ToBoolean(mt.HumidityOutOfRng) != GOOD_QUALITY)
                     {
                         log.InfoFormat("{0} Humidity sensor out of range alarm cleared", mt.getMetTowerPrefix);
-                        mt.HumidityOutOfRng=GOOD_QUALITY;
+                        mt.HumidityOutOfRng = GOOD_QUALITY;
                     }
                     break;
                 case MetTowerEnum.HumidityQuality:
                     if (Convert.ToBoolean(mt.HumidityBadQuality) != GOOD_QUALITY)
                     {
                         log.InfoFormat("{0} Humidity sensor bad quality alarm cleared", mt.getMetTowerPrefix);
-                        mt.HumidityBadQuality=GOOD_QUALITY;
+                        mt.HumidityBadQuality = GOOD_QUALITY;
                     }
                     break;
                 case MetTowerEnum.PrimSensorQuality:
                     if (Convert.ToBoolean(mt.TemperaturePrimBadQuality) != GOOD_QUALITY)
                     {
                         log.InfoFormat("{0} Primary Temperature sensor quality alarm cleared", mt.getMetTowerPrefix);
-                        mt.TemperaturePrimBadQuality=GOOD_QUALITY;
+                        mt.TemperaturePrimBadQuality = GOOD_QUALITY;
                     }
                     break;
                 case MetTowerEnum.PrimSensorOutOfRange:
                     if (Convert.ToBoolean(mt.TemperaturePrimOutOfRange) != GOOD_QUALITY)
                     {
                         log.InfoFormat("{0} Primary Temperature sensor quality alarm cleared", mt.getMetTowerPrefix);
-                        mt.TemperaturePrimOutOfRange=GOOD_QUALITY;
+                        mt.TemperaturePrimOutOfRange = GOOD_QUALITY;
                     }
                     break;
                 case MetTowerEnum.SecSensorQuality:
                     if (Convert.ToBoolean(mt.TemperatureSecBadQuality) != GOOD_QUALITY)
                     {
                         log.InfoFormat("{0} Secondary Temperature sensor quality alarm cleared", mt.getMetTowerPrefix);
-                        mt.TemperaturePrimBadQuality=GOOD_QUALITY;
+                        mt.TemperaturePrimBadQuality = GOOD_QUALITY;
                     }
                     Console.WriteLine(Convert.ToBoolean(mt.TemperatureSecBadQuality));
                     break;
@@ -530,7 +530,7 @@ namespace Articuno
                     if (Convert.ToBoolean(mt.TemperatureSecOutOfRange) != GOOD_QUALITY)
                     {
                         log.InfoFormat("{0} Secondary Temperature sensor quality alarm cleared", mt.getMetTowerPrefix);
-                        mt.TemperatureSecOutOfRange=GOOD_QUALITY;
+                        mt.TemperatureSecOutOfRange = GOOD_QUALITY;
                     }
                     break;
                 case MetTowerEnum.NoData:
@@ -556,7 +556,7 @@ namespace Articuno
             }
         }
 
-        private enum MetTowerEnum
+        public enum MetTowerEnum
         {
             HumidityQuality,
             HumidityOutOfRange,
@@ -564,7 +564,8 @@ namespace Articuno
             PrimSensorOutOfRange,
             SecSensorQuality,
             SecSensorOutOfRange,
-            NoData
+            NoData,
+            Switched
         }
 
         //Function that is called by the main Articuno class to determine if the temperature average calculated
@@ -580,7 +581,7 @@ namespace Articuno
                 //met.IceIndicationValue;
                 try
                 {
-                    met.IceIndicationValue=1.00;
+                    met.IceIndicationValue = 1.00;
                     log.InfoFormat("Icing conditions met for {0}. \n" +
                         "average Temperature {1}, \n" +
                         "Temperature threshold {2} \n",
@@ -598,6 +599,21 @@ namespace Articuno
                         e, metId, averageTemperature, tempThreshold);
                 }
             }
+        }
+
+        public Enum findMetTowerTag(string metTowerId, string tag)
+        {
+            MetTower tempMet = getMetTower(metTowerId);
+            if (tag.ToUpper().Equals(tempMet.MetSwitch.ToUpper())) { return MetTowerEnum.Switched; }
+            /*
+            else if (tag.ToUpper().Equals()) {}
+            else if (tag.ToUpper().Equals()) {}
+            else if (tag.ToUpper().Equals()) {}
+            else if (tag.ToUpper().Equals()) {}
+            else if (tag.ToUpper().Equals()) {}
+            */
+            return null;
+
         }
 
     }

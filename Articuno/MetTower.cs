@@ -186,6 +186,9 @@ namespace Articuno
             set { client.WriteItemValue("", opcServerName, IceIndicationTag, value); }
         }
 
+        //For Met TOwer siwtching
+        public string MetSwitch { get; set; }
+
         //Threshold setters and getters
         public double AmbTempThreshold { get { return ambTempThreshold; } set { ambTempThreshold = value; } }
         public double DeltaTempThreshold { get { return deltaTempThreshold; } set { deltaTempThreshold = value; } }
