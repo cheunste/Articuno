@@ -58,10 +58,14 @@ namespace Articuno
 
         public ArticunoMain()
         {
+            //Call the create methods
+            MetTowerMediator.Instance.createMetTower();
+            TurbineMediator.Instance.createTurbines();
+
             turbinesExcludedList = new List<string>();
             turbinesPausedByArticuno = new List<string>();
             turbinesWaitingForPause = new List<string>();
-
+            turbinesConditionNotMet = new List<string>();
 
             setup();
             start();
@@ -90,6 +94,7 @@ namespace Articuno
             }
 
         }
+        static void Main(string[] args) { }
         public void setup()
         {
             //Get the OPC Server name
@@ -97,14 +102,6 @@ namespace Articuno
             opcServerName = reader.Rows[0]["OpcTag"].ToString();
             string tag;
 
-            //Call the create methods
-            MetTowerMediator.Instance.createMetTower();
-            TurbineMediator.Instance.createTurbines();
-
-            //Initializes Lists and Queues
-            turbinesExcludedList = new List<string>();
-            turbinesPausedByArticuno = new List<string>();
-            turbinesWaitingForPause = new List<string>();
 
             //A speicifc client that will respond to System Tag input changes. 
             var systemInputClient = new EasyDAClient();
@@ -132,7 +129,6 @@ namespace Articuno
             }
             systemInputClient.SubscribeMultipleItems(systemInputTags.ToArray());
 
-
             //A  client that will respond to Turbine OPC tag Changes for operating state, partiicipation and NrsMode
             var assetStatusClient = new EasyDAClient();
             assetStatusClient.ItemChanged += assetTagChangeHandler;
@@ -151,6 +147,21 @@ namespace Articuno
                 }
                 catch (Exception e) { log.ErrorFormat("Error when attempting to add to assetInputTags list. {0}", e); }
             }
+
+            //Same client will be used to respond to Met Tower OPC tag Changes (only the switching command though)
+            reader = DatabaseInterface.Instance.readCommand("Select Switch from MetTowerInputTags");
+            for (int i = 0; i < reader.Rows.Count; i++)
+            {
+                var switchTag = reader.Rows[i]["Switch"].ToString();
+                try
+                {
+                    assetInputTags.Add(new DAItemGroupArguments("",
+                        opcServerName, reader.Rows[i]["Switch"].ToString(), 1000, null));
+                }
+                catch (Exception e) { log.ErrorFormat("Error when attempting to add {0} to assetInputTags list. {1}", switchTag, e); }
+            }
+
+
             assetStatusClient.SubscribeMultipleItems(assetInputTags.ToArray());
         }
 
@@ -160,7 +171,6 @@ namespace Articuno
         private void minuteUpdate()
         {
             //For every minute, read the met tower measurements and the turbine temperature measurements
-            //TODO: Fill this shit out
             for (int i = 1; i <= MetTowerMediator.getNumMetTower(); i++)
             {
                 //Get all measurements from the met tower. Note that it will get turbine 
@@ -172,7 +182,6 @@ namespace Articuno
                 MetTowerMediator.Instance.writeToQueue("Met" + i, temperature, humidity);
             }
 
-            //TODO: Store the one min wind speed average into the turbine object's internal queue
             //Get turbine to update internal wind speed queue
             foreach (string prefix in TurbineMediator.Instance.getTurbinePrefixList())
             {
@@ -214,6 +223,14 @@ namespace Articuno
          *  Turbine input tags are the following:
          *  - ArticunoParticipation (Participation)
          *  - NrsMode (Noise Level - Not used at all site)
+         *  
+         *  Met input tags are the following:
+         *  - Switch Command (whether met tower is switched or not)
+         *  
+         *  System input tags are the following:
+         *  - Thresholds (Delta, Amb Temp and Dews) 
+         *  - CTR 
+         *  - Enable
          * 
          * This method is used to monitor the tag change from a turbine's NRS state or a turbine's oeprating state 
          * What happens is that once either state changes, Articuno will remove them from its internal queue
@@ -243,8 +260,21 @@ namespace Articuno
 
 
             //If it matches the met tower
-            //TODO: Implement this. You should only have the me ttower switch and the thresholds 
-            if (matchLookup.Value.ToUpper().Contains("MET")) { throw new NotImplementedException(); }
+            //TODO: Implement this. You should only have the me ttower switch. Thresholds are dealt with in SystemInputOnChange()
+            if (matchLookup.Value.ToUpper().Contains("MET"))
+            {
+                Enum metEnum = MetTowerMediator.Instance.findMetTowerTag(matchLookup.Value, opcTag);
+                switch (metEnum)
+                {
+                    case MetTowerMediator.MetTowerEnum.Switched:
+                        MetTowerMediator.Instance.switchMetTower(prefix);
+                        break;
+                    default:
+                        log.InfoFormat("Event CHanged detected for {0}. However, there is nothing to be doen", opcTag);
+                        break;
+                }
+
+            }
             //Else, assume Turbine or system input. Not like there's anything else given the regex
             else
             {
@@ -253,14 +283,13 @@ namespace Articuno
                 {
                     case TurbineMediator.TurbineEnum.NrsMode:
                         TurbineMediator.Instance.writeNrsStateTag(prefix, value);
-                        if (Convert.ToInt16(TurbineMediator.Instance.readNrsStateTag(prefix)) == 5)
+
+                        if (Convert.ToInt16(TurbineMediator.Instance.readNrsStateTag(prefix)) == 5 && !turbinesWaitingForPause.Contains(prefix))
                         {
-                            if (!turbinesWaitingForPause.Contains(prefix))
-                            {
-                                turbinesWaitingForPause.Add(prefix);
-                                turbinesConditionNotMet.Remove(prefix);
-                            }
+                            turbinesWaitingForPause.Add(prefix);
+                            turbinesConditionNotMet.Remove(prefix);
                         }
+                        //If Turbine isn't in NRS mode anymore
                         else
                         {
                             if (!turbinesConditionNotMet.Contains(prefix))
@@ -268,19 +297,15 @@ namespace Articuno
                                 turbinesWaitingForPause.Remove(prefix);
                                 turbinesConditionNotMet.Add(prefix);
                             }
-
                         }
                         break;
                     case TurbineMediator.TurbineEnum.OperatingState:
                         int state = Convert.ToInt16(value);
-                        if (state != RUN_STATE || state != DRAFT_STATE)
+                        if ((state != RUN_STATE || state != DRAFT_STATE) && !turbinesConditionNotMet.Contains(prefix))
                         {
                             //Only add to the lists if it doesn't exist
-                            if (!turbinesConditionNotMet.Contains(prefix))
-                            {
-                                turbinesWaitingForPause.Remove(prefix);
-                                turbinesConditionNotMet.Add(prefix);
-                            }
+                            turbinesWaitingForPause.Remove(prefix);
+                            turbinesConditionNotMet.Add(prefix);
                         }
                         else
                         {
@@ -291,25 +316,12 @@ namespace Articuno
                             }
                         }
                         break;
-                    case TurbineMediator.TurbineEnum.RotorSpeed:
-                        throw new NotImplementedException();
-                        break;
-                    case TurbineMediator.TurbineEnum.Temperature:
-                        throw new NotImplementedException();
-                        break;
-                    case TurbineMediator.TurbineEnum.WindSpeed:
-                        throw new NotImplementedException();
-                        break;
                     case TurbineMediator.TurbineEnum.Participation:
                         bool partipationStatus = Convert.ToBoolean(value);
-
-                        if (partipationStatus == false)
+                        if (partipationStatus == false && !turbinesExcludedList.Contains(prefix))
                         {
-                            if (!turbinesExcludedList.Contains(prefix))
-                            {
-                                turbinesWaitingForPause.Remove(prefix);
-                                turbinesExcludedList.Add(prefix);
-                            }
+                            turbinesWaitingForPause.Remove(prefix);
+                            turbinesExcludedList.Add(prefix);
                         }
                         else
                         {
@@ -319,6 +331,9 @@ namespace Articuno
                                 turbinesExcludedList.Remove(prefix);
                             }
                         }
+                        break;
+                    default:
+                        log.InfoFormat("Event CHanged detected for {0}. However, there is nothing to be doen", opcTag);
                         break;
                 }
             }
