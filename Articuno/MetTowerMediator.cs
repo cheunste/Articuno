@@ -289,7 +289,7 @@ namespace Articuno
         public double calculateDewPoint(double rh, double ambTemp)
         {
             //The following formula is given by Nick Johansen, ask him for more details
-            return Math.Pow(rh, 1.0 / 8.0) * (112 + (0.9 * ambTemp)) + (0.1 * ambTemp) - 112;
+            return Math.Round(Math.Pow(rh, 1.0 / 8.0) * (112 + (0.9 * ambTemp)) + (0.1 * ambTemp) - 112, 3);
         }
 
         /// <summary>
@@ -298,7 +298,7 @@ namespace Articuno
         /// <param name="ambTemp">The ambient temperature value (Celcius) from the met tower in double format</param>
         /// <param name="dewPointTemp">The dew point temperature from calculateDewPoint</param>
         /// <returns>The delta temperature in double format</returns>
-        public double calculateDelta(double ambTemp, double dewPointTemp) { return Math.Abs(ambTemp - dewPointTemp); }
+        public double calculateDelta(double ambTemp, double dewPointTemp) { return Math.Round(Math.Abs(ambTemp - dewPointTemp),3); }
 
         /// <summary>
         /// Check the quality of the met tower. Returns True if the data is 'bad quality'. Returns False if met tower data is 'good quality
