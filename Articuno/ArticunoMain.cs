@@ -266,7 +266,7 @@ namespace Articuno
                         MetTowerMediator.Instance.switchMetTower(prefix);
                         break;
                     default:
-                        log.InfoFormat("Event CHanged detected for {0}. However, there is nothing to be doen", opcTag);
+                        log.DebugFormat("Event CHanged detected for {0}. However, there is nothing to be doen", opcTag);
                         break;
                 }
 
@@ -296,7 +296,7 @@ namespace Articuno
                         else { conditionsMet(prefix); }
                         break;
                     default:
-                        log.InfoFormat("Event CHanged detected for {0}. However, there is nothing to be doen", opcTag);
+                        log.DebugFormat("Event CHanged detected for {0}. However, there is nothing to be doen", opcTag);
                         break;
                 }
             }

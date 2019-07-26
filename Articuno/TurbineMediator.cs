@@ -175,7 +175,7 @@ namespace Articuno
             {
                 if (turbineInList.Equals(turbine))
                 {
-                    log.InfoFormat("Attempting to pause turbine {0} from the factory", turbine.getTurbinePrefixValue());
+                    log.DebugFormat("Attempting to pause turbine {0} from TurbineMediator", turbine.getTurbinePrefixValue());
                     turbine.writeLoadShutdownCmd();
                 }
             }
@@ -191,7 +191,7 @@ namespace Articuno
             {
                 if (turbineInList.getTurbinePrefixValue().Equals(turbinePrefix))
                 {
-                    log.InfoFormat("Attempting to pause turbine {0} from the factory", turbineInList.getTurbinePrefixValue());
+                    log.DebugFormat("Attempting to pause turbine {0} from TurbineMediator", turbineInList.getTurbinePrefixValue());
                     turbineInList.writeLoadShutdownCmd();
                 }
             }

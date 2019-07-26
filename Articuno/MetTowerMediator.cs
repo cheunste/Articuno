@@ -133,7 +133,7 @@ namespace Articuno
             double rh = readHumidity(metId);
             double dew = calculateDewPoint(rh, temperature);
             double delta = calculateDelta(temperature, dew);
-            log.InfoFormat("{0}, temp: {1}, rh: {2}, dew:{3}, delta: {4}", metId, temperature, rh, dew, delta);
+            log.DebugFormat("{0}, temp: {1}, rh: {2}, dew:{3}, delta: {4}", metId, temperature, rh, dew, delta);
             return new Tuple<double, double, double, double>(temperature, rh, dew, delta);
         }
 
@@ -148,11 +148,11 @@ namespace Articuno
             switch (metId.ToUpper())
             {
                 case "MET1":
-                    log.InfoFormat("met1 switched state from {0} to {1}", met1Switched, !met1Switched);
+                    log.DebugFormat("met1 switched state from {0} to {1}", met1Switched, !met1Switched);
                     met1Switched = !met1Switched;
                     break;
                 case "MET2":
-                    log.InfoFormat("met2 switched state from {0} to {1}", met2Switched, !met2Switched);
+                    log.DebugFormat("met2 switched state from {0} to {1}", met2Switched, !met2Switched);
                     met2Switched = !met2Switched;
                     break;
             }
@@ -168,10 +168,10 @@ namespace Articuno
             switch (metId.ToUpper())
             {
                 case "MET1":
-                    log.InfoFormat("currently using : {0}", met1Switched ? "Met2" : metId);
+                    log.DebugFormat("Met1 currently using : {0} data", met1Switched ? "Met2" : metId);
                     return (met1Switched ? "Met2" : metId);
                 case "MET2":
-                    log.InfoFormat("currently using : {0}", met1Switched ? "Met1" : metId);
+                    log.DebugFormat("Met2 currently using : {0} data", met1Switched ? "Met1" : metId);
                     return (met2Switched ? "Met1" : metId);
                 default:
                     log.ErrorFormat("Something went wrong in isMetTOwerSwitched(), metId: {0}", metId);
@@ -192,13 +192,13 @@ namespace Articuno
             var tuple = tempQualityCheck(metId);
             if (tuple.Item1)
             {
-                log.InfoFormat("{0} good quality. Current temperature : {1}", metId, tuple.Item2);
+                log.DebugFormat("{0} good quality. Current temperature : {1}", metId, tuple.Item2);
                 return tuple.Item2;
             }
             else
             {
                 Object newTemp = getMetTower(metId).getNearestTurbine().readTemperatureValue();
-                log.InfoFormat("{0} bad quality Using Turbine Temperature. Current Temperature: {1}", metId, Convert.ToDouble(newTemp));
+                log.DebugFormat("{0} bad quality Using Turbine Temperature. Current Temperature: {1}", metId, Convert.ToDouble(newTemp));
                 return newTemp;
             }
 
@@ -489,7 +489,6 @@ namespace Articuno
                         mt.NoDataAlarmValue = BAD_QUALITY;
                     }
                     break;
-
             }
         }
 
@@ -616,13 +615,6 @@ namespace Articuno
         {
             MetTower tempMet = getMetTower(metTowerId);
             if (tag.ToUpper().Equals(tempMet.MetSwitch.ToUpper())) { return MetTowerEnum.Switched; }
-            /*
-            else if (tag.ToUpper().Equals()) {}
-            else if (tag.ToUpper().Equals()) {}
-            else if (tag.ToUpper().Equals()) {}
-            else if (tag.ToUpper().Equals()) {}
-            else if (tag.ToUpper().Equals()) {}
-            */
             return null;
 
         }
