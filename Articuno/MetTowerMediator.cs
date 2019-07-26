@@ -298,7 +298,7 @@ namespace Articuno
         /// <param name="ambTemp">The ambient temperature value (Celcius) from the met tower in double format</param>
         /// <param name="dewPointTemp">The dew point temperature from calculateDewPoint</param>
         /// <returns>The delta temperature in double format</returns>
-        public double calculateDelta(double ambTemp, double dewPointTemp) { return Math.Round(Math.Abs(ambTemp - dewPointTemp),3); }
+        public double calculateDelta(double ambTemp, double dewPointTemp) { return Math.Round(Math.Abs(ambTemp - dewPointTemp), 3); }
 
         /// <summary>
         /// Check the quality of the met tower. Returns True if the data is 'bad quality'. Returns False if met tower data is 'good quality
@@ -340,7 +340,7 @@ namespace Articuno
             double minValue = 0.0;
             double maxValue = 100.0;
 
-            bool state = true;
+            bool goodQualityState = true;
 
 
             //Bad Quality
@@ -348,10 +348,11 @@ namespace Articuno
             //Also Raise alarm
             if (rh < 0.0 || rh > 100.0)
             {
-                state = false;
+                goodQualityState = false;
                 raiseAlarm(met, MetTowerEnum.HumidityOutOfRange);
                 raiseAlarm(met, MetTowerEnum.HumidityQuality);
-                rh = ((Math.Abs(0.0 - rh) > 0.0001) ? 0.0 : 100.0);
+                //rh = ((Math.Abs(0.0 - rh) > 0.0001) ? 0.0 : 100.0);
+                rh = (rh < 0.0) ? 0.000 : 99.00;
             }
             //CLear the out of range alarm
             else if (rh > 0.0 && rh < 100.0)
@@ -363,10 +364,10 @@ namespace Articuno
 
             if (!(met.isQualityGood(met.RelativeHumidityTag)))
             {
-                state = false;
+                goodQualityState = false;
             }
 
-            return new Tuple<bool, double>(state, rh);
+            return new Tuple<bool, double>(goodQualityState, rh);
         }
 
         /// <summary>
