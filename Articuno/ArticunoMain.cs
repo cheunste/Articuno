@@ -15,7 +15,6 @@ namespace Articuno
 {
     class ArticunoMain
     {
-
         /*
          * These are Lists that are used to keep turbines organized on a site level using their Prefixes (ie T001)
          * By default, all turbine prefixes should be in the waitingForPause list, but if the state is not 100
@@ -54,13 +53,12 @@ namespace Articuno
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(ArticunoMain));
 
-        public String opcServer { get; set; }
-
         static void Main(string[] args)
         {
             //Call the create methods
             MetTowerMediator.Instance.createMetTower();
-            TurbineMediator.Instance.createTurbines();
+            //TurbineMediator.Instance.createTurbines();
+            TurbineMediator.Instance.createTestTurbines();
 
             turbinesExcludedList = new List<string>();
             turbinesPausedByArticuno = new List<string>();
@@ -81,7 +79,7 @@ namespace Articuno
             //start of the infinite loop
             while (true)
             {
-                //Run only if articuno is enabled
+                //Run only if articuno is enabled. If not, then wait until something occurs
                 while (articunoEnable)
                 {
 
@@ -126,20 +124,25 @@ namespace Articuno
             var assetStatusClient = new EasyDAClient();
             assetStatusClient.ItemChanged += assetTagChangeHandler;
             List<DAItemGroupArguments> assetInputTags = new List<DAItemGroupArguments>();
-            reader = DatabaseInterface.Instance.readCommand("Select OperatingState, Participation,NrsMode from TurbineInputTags");
-            for (int i = 0; i < reader.Rows.Count; i++)
+            foreach (string prefix in TurbineMediator.Instance.getTurbinePrefixList())
             {
-                try
+                string cmd = String.Format("Select OperatingState, Participation,NrsMode from TurbineInputTags where TurbineId='{0}'", prefix);
+                reader = DatabaseInterface.Instance.readCommand(cmd);
+                for (int i = 0; i < reader.Rows.Count; i++)
                 {
-                    assetInputTags.Add(new DAItemGroupArguments("",
-                        opcServerName, reader.Rows[i]["OperatingState"].ToString(), 1000, null));
-                    assetInputTags.Add(new DAItemGroupArguments("",
-                        opcServerName, reader.Rows[i]["Participation"].ToString(), 1000, null));
-                    assetInputTags.Add(new DAItemGroupArguments("",
-                        opcServerName, reader.Rows[i]["NrsMode"].ToString(), 1000, null));
+                    try
+                    {
+                        assetInputTags.Add(new DAItemGroupArguments("",
+                            opcServerName, reader.Rows[i]["OperatingState"].ToString(), 1000, null));
+                        assetInputTags.Add(new DAItemGroupArguments("",
+                            opcServerName, reader.Rows[i]["Participation"].ToString(), 1000, null));
+                        assetInputTags.Add(new DAItemGroupArguments("",
+                            opcServerName, reader.Rows[i]["NrsMode"].ToString(), 1000, null));
+                    }
+                    catch (Exception e) { log.ErrorFormat("Error when attempting to add to assetInputTags list. {0}", e); }
                 }
-                catch (Exception e) { log.ErrorFormat("Error when attempting to add to assetInputTags list. {0}", e); }
             }
+
 
             //Same client will be used to respond to Met Tower OPC tag Changes (only the switching command though)
             reader = DatabaseInterface.Instance.readCommand("Select Switch from MetTowerInputTags");
@@ -340,7 +343,11 @@ namespace Articuno
             {
                 string tag = e.Arguments.ItemDescriptor.ItemId.ToString();
                 int value = Convert.ToInt16(e.Vtq.Value);
-                if (tag.Contains("Enable") || tag.Contains("CurtailEna")) { articunoEnable = (value == 1) ? true : false; }
+                if (tag.Contains("Enable") || tag.Contains("CurtailEna"))
+                {
+                    articunoEnable = (value == 1) ? true : false;
+                    log.InfoFormat("Articuno is : {0}", articunoEnable ? "Enabled" : "Disabled");
+                }
                 if (tag.Contains("CTR") || tag.Contains("EvalTm"))
                 {
                     articunoCtr = value;

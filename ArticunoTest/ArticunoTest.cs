@@ -18,7 +18,6 @@ namespace ArticunoTest
             //
             // TODO: Add constructor logic here
             //
-            articuno = new ArticunoMain();
         }
 
         private TestContext testContextInstance;
@@ -64,7 +63,8 @@ namespace ArticunoTest
         [TestMethod]
         public void SetupTest()
         {
-            articuno.setup();
+            articuno = new ArticunoMain();
+            
         }
 
         [TestMethod]

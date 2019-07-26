@@ -133,6 +133,7 @@ namespace Articuno
             double rh = readHumidity(metId);
             double dew = calculateDewPoint(rh, temperature);
             double delta = calculateDelta(temperature, dew);
+            log.InfoFormat("{0}, temp: {1}, rh: {2}, dew:{3}, delta: {4}", metId, temperature, rh, dew, delta);
             return new Tuple<double, double, double, double>(temperature, rh, dew, delta);
         }
 
@@ -189,8 +190,18 @@ namespace Articuno
             metId = isMetTowerSwitched(metId);
             MetTower met = getMetTower(metId);
             var tuple = tempQualityCheck(metId);
-            if (tuple.Item1) { return tuple.Item2; }
-            else { return getMetTower(metId).getNearestTurbine().readTemperatureValue(); }
+            if (tuple.Item1)
+            {
+                log.InfoFormat("{0} good quality. Current temperature : {1}", metId, tuple.Item2);
+                return tuple.Item2;
+            }
+            else
+            {
+                Object newTemp = getMetTower(metId).getNearestTurbine().readTemperatureValue();
+                log.InfoFormat("{0} bad quality Using Turbine Temperature. Current Temperature: {1}", metId, Convert.ToDouble(newTemp));
+                return newTemp;
+            }
+
         }
 
         internal void writeToQueue(string metId, double temperature, double humidity)
@@ -524,7 +535,6 @@ namespace Articuno
                         log.InfoFormat("{0} Secondary Temperature sensor quality alarm cleared", mt.getMetTowerPrefix);
                         mt.TemperaturePrimBadQuality = GOOD_QUALITY;
                     }
-                    Console.WriteLine(Convert.ToBoolean(mt.TemperatureSecBadQuality));
                     break;
                 case MetTowerEnum.SecSensorOutOfRange:
                     if (Convert.ToBoolean(mt.TemperatureSecOutOfRange) != GOOD_QUALITY)
