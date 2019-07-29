@@ -39,6 +39,7 @@ namespace Articuno
 
         //Other table column 
         private static readonly string NoDataAlarmColumn = "NoDataAlarmTag";
+        private static readonly string SwitchColumn = "Switch";
         private static readonly string IceIndicationColumn = "IceIndicationTag";
 
         //Query constants
@@ -105,6 +106,7 @@ namespace Articuno
             SecTemperatureTag = reader.Rows[0][SecTempValueColumn].ToString();
             RelativeHumidityTag = reader.Rows[0][PrimHumidityValueColumn].ToString();
             HumiditySecValueTag = reader.Rows[0][SecHumidityValueColumn].ToString();
+            MetSwitch = reader.Rows[0][SwitchColumn].ToString();
 
             //Get everything relating to the MetTowerOutputTags table
             reader = dbi.readCommand(OUTPUT_TAG_QUERY + String.Format(" WHERE MetId='{0}'", MetId));
