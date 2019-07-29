@@ -89,7 +89,7 @@ namespace Articuno
         public static void setup()
         {
             //Get the OPC Server name
-            DataTable reader = DatabaseInterface.Instance.readCommand("Select * from SystemInputTags WHERE Description='OpcServerName'");
+            DataTable reader = DatabaseInterface.Instance.readCommand("SELECT * from SystemInputTags WHERE Description='OpcServerName'");
             opcServerName = reader.Rows[0]["OpcTag"].ToString();
             string tag;
 
@@ -98,14 +98,14 @@ namespace Articuno
             var systemInputClient = new EasyDAClient();
             systemInputClient.ItemChanged += SystemInputOnChange;
             List<DAItemGroupArguments> systemInputTags = new List<DAItemGroupArguments>();
-            reader = DatabaseInterface.Instance.readCommand("Select * from SystemInputTags WHERE Description!='SitePrefix' AND Description!='OpcServerName' order by Description ASC");
+            reader = DatabaseInterface.Instance.readCommand("SELECT * from SystemInputTags WHERE Description!='SitePrefix' AND Description!='OpcServerName' order by Description ASC");
             for (int i = 0; i < reader.Rows.Count; i++)
             {
                 tag = reader.Rows[i]["OpcTag"].ToString();
                 //The following switch statement is ambiguious
                 //because the query always return the OPC tag column in a certain order, 
                 //the switch statement acts as a setter and set the tag from the database into the member variable of this class
-                //If this still doesn't make sense, try executing the above Select * query in SQLite
+                //If this still doesn't make sense, try executing the above SELECT * query in SQLite
                 switch (i)
                 {
                     case 0: tempThresholdTag = tag; break;
@@ -126,7 +126,7 @@ namespace Articuno
             List<DAItemGroupArguments> assetInputTags = new List<DAItemGroupArguments>();
             foreach (string prefix in TurbineMediator.Instance.getTurbinePrefixList())
             {
-                string cmd = String.Format("Select OperatingState, Participation,NrsMode from TurbineInputTags where TurbineId='{0}'", prefix);
+                string cmd = String.Format("SELECT OperatingState, Participation,NrsMode from TurbineInputTags where TurbineId='{0}'", prefix);
                 reader = DatabaseInterface.Instance.readCommand(cmd);
                 for (int i = 0; i < reader.Rows.Count; i++)
                 {
@@ -145,7 +145,7 @@ namespace Articuno
 
 
             //Same client will be used to respond to Met Tower OPC tag Changes (only the switching command though)
-            reader = DatabaseInterface.Instance.readCommand("Select Switch from MetTowerInputTags");
+            reader = DatabaseInterface.Instance.readCommand("SELECT Switch from MetTowerInputTags");
             for (int i = 0; i < reader.Rows.Count; i++)
             {
                 var switchTag = reader.Rows[i]["Switch"].ToString();

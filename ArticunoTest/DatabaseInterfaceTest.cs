@@ -19,8 +19,8 @@ namespace ArticunoTest
         [TestMethod]
         //Test to get the description column from various tables
         [DataTestMethod]
-        [DataRow("Select * from SystemInputTags WHERE Description!='SitePrefix' AND Description!='OpcServerName'")]
-        [DataRow("Select * from SystemInputTags WHERE Description='OpcServerName'")]
+        [DataRow("SELECT * from SystemInputTags WHERE Description!='SitePrefix' AND Description!='OpcServerName'")]
+        [DataRow("SELECT * from SystemInputTags WHERE Description='OpcServerName'")]
         public void readFromSystemInputTableTest(string sqlcmd)
         {
             //Get all the columns from the SystemParemeters
@@ -41,13 +41,13 @@ namespace ArticunoTest
 
         [TestMethod]
         [DataTestMethod]
-        //[DataRow("Select NrsMode,OperatingState, Participation from TurbineInputTags")]
-        [DataRow("Select TurbineId,OperatingState, Participation, NrsMode from TurbineInputTags")]
-        //[DataRow("Select TurbineId from TurbineOutputTags")]
-        //[DataRow("Select * from MetTowerInputTags")]
-        //[DataRow("Select * from MetTowerOutputTags")]
-        //[DataRow("Select TurbineId from TurbineInputTags")]
-        //[DataRow("Select TurbineId from TurbineOutputTags")]
+        //[DataRow("SELECT NrsMode,OperatingState, Participation from TurbineInputTags")]
+        [DataRow("SELECT TurbineId,OperatingState, Participation, NrsMode from TurbineInputTags")]
+        //[DataRow("SELECT TurbineId from TurbineOutputTags")]
+        //[DataRow("SELECT * from MetTowerInputTags")]
+        //[DataRow("SELECT * from MetTowerOutputTags")]
+        //[DataRow("SELECT TurbineId from TurbineInputTags")]
+        //[DataRow("SELECT TurbineId from TurbineOutputTags")]
         public void readFromTurbine(string sqlcmd)
         {
             DataTable reader = dbi.readCommand(sqlcmd);
@@ -82,7 +82,7 @@ namespace ArticunoTest
             string sqlcmd = String.Format("UPDATE SystemOutputTags SET DefaultValue ='{0}' WHERE Description = 'Heartbeat'", randomNumber);
             dbi.updateCommand(sqlcmd);
 
-            sqlcmd = "Select DefaultValue from SystemOutputTags where Description='Heartbeat'";
+            sqlcmd = "SELECT DefaultValue from SystemOutputTags where Description='Heartbeat'";
             DataTable reader = dbi.readCommand(sqlcmd);
             int readHeartbeat = Convert.ToInt32(reader.Rows[0]["DefaultValue"]);
             Assert.AreEqual(readHeartbeat, randomNumber);

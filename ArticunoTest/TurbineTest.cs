@@ -39,7 +39,7 @@ namespace ArticunoTest
             foreach (Turbine turb in TurbineMediator.Instance.getTurbineList())
             {
                 turb.writeOperatingState(testValue);
-                double readValue = Convert.ToDouble(TurbineMediator.Instance.readOperatingStateTag(turb.getTurbinePrefixValue()));
+                double readValue = Convert.ToDouble(TurbineMediator.Instance.readOperatingStateValue(turb.getTurbinePrefixValue()));
 
                 Assert.AreEqual(testValue, readValue, 0.001, "Written value does not equal test value");
             }

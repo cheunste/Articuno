@@ -29,7 +29,7 @@ namespace Articuno
      * The reason why this doesn't use an interface is that there is only one type of turbine, but multiple
      * of the same turbine is needed to be created.
      * 
-     * Furthermore, this 'factory' class also provides the list of turbines it creates along
+     * Furthermore, this class also provides the list of turbines it creates along
      * with providing several methods to get the turbine's OPC tags (via getXXX functions) and values (via readXXX functions).
      * Both the above returns a list
      * 
@@ -50,7 +50,6 @@ namespace Articuno
         private List<string> tempList;
 
         //Instance of OpcServer. Might not be needed
-        private OpcServer server;
         private string opcServerName;
         private EasyDAClient client = new EasyDAClient();
 
@@ -226,13 +225,23 @@ namespace Articuno
         public  string getHumidityTag(string turbineId) { return getTurbine(turbineId).TurbineHumidityTag; }
 
         //For reading OPC value using turbineId
-        public Object readTurbineWindSpeedTag(string turbineId) { return client.ReadItemValue("", opcServerName, getTurbineWindSpeedTag(turbineId)); }
-        public Object readRotorSpeedTag(string turbineId) { return client.ReadItemValue("", opcServerName, getRotorSpeedTag(turbineId)); }
-        public Object readOperatingStateTag(string turbineId) { return client.ReadItemValue("", opcServerName, getOperatingStateTag(turbineId)); }
-        public Object readNrsStateTag(string turbineId) { return client.ReadItemValue("", opcServerName, getNrsStateTag(turbineId)); }
-        public Object readTemperatureTag(string turbineId) { return client.ReadItemValue("", opcServerName, getTemperatureTag(turbineId)); }
-        public Object readTurbineCtrTag(string turbineId) { return client.ReadItemValue("", opcServerName, getTurbineCtrTag(turbineId)); }
-        public Object readHumidityTag(string turbineId) { return client.ReadItemValue("", opcServerName, getHumidityTag(turbineId)); }
+        /// <summary>
+        /// Deprecated in favor of design change. This is now in storeMinuteAverages
+        /// </summary>
+        /// <param name="turbineId"></param>
+        /// <returns></returns>
+        public Object readWindSpeedValue(string turbineId) { return client.ReadItemValue("", opcServerName, getTurbineWindSpeedTag(turbineId)); }
+        /// <summary>
+        /// Deprecated in favor of design change. This is now in storeMinuteAverages
+        /// </summary>
+        /// <param name="turbineId"></param>
+        /// <returns></returns>
+        public Object readRotorSpeedValue(string turbineId) { return client.ReadItemValue("", opcServerName, getRotorSpeedTag(turbineId)); }
+        public Object readOperatingStateValue(string turbineId) { return client.ReadItemValue("", opcServerName, getOperatingStateTag(turbineId)); }
+        public Object readNrsStateValue(string turbineId) { return client.ReadItemValue("", opcServerName, getNrsStateTag(turbineId)); }
+        public Object readTemperatureValue(string turbineId) { return client.ReadItemValue("", opcServerName, getTemperatureTag(turbineId)); }
+        public Object readTurbineCtrValue(string turbineId) { return client.ReadItemValue("", opcServerName, getTurbineCtrTag(turbineId)); }
+        public Object readHumidityValue(string turbineId) { return client.ReadItemValue("", opcServerName, getHumidityTag(turbineId)); }
 
         //For writing (using turbineId). Note that the mediator really shouldn't be writing to all the availble turbine tags. If you need to test something, you need to create a turbine object 
         public void writeNrsStateTag(string turbineId, object value) { getTurbine(turbineId).writeNoiseLevel(value); }

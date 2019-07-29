@@ -19,7 +19,8 @@ namespace Articuno
         private static readonly string NRS_StdDev = "StandardDeviationNRS";
         private static readonly string RotorSpeed = "RotorSpeedNonNRS";
         private static readonly string StdDev = "StandardDeviationNonNRS";
-        private static readonly string cmd = String.Format("SELECT * FROM RotorSpeedLookupTable ORDER BY {0} ASC", WindSpeed);
+        private static readonly string TableName = "RotorSpeedLookupTable";
+        private static readonly string cmd = String.Format("SELECT * FROM {0} ORDER BY {1} ASC", TableName,WindSpeed);
 
         //private lists
         /*

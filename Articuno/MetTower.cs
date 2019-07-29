@@ -42,29 +42,20 @@ namespace Articuno
         private static readonly string IceIndicationColumn = "IceIndicationTag";
 
         //Query constants
-        readonly String TEMPERATURE_QUERY = "SELECT " + PrimTempValueTagColumn + "," + SecTempValueColumn + "," + TempPrimBadQualityColumn + "," + TempPrimOutOfRangeColumn + " FROM MetTower";
-        readonly String RH_QUERY = "SELECT " + PrimHumidityValueColumn + "," + SecHumidityValueColumn + "," + HumidityBadQualityColumn + "," + HumidityOutOfRangeColumn + " FROM MetTower";
-        readonly String OTHER_PARAM_QUERY = "SELECT " + NoDataAlarmColumn + ", " + IceIndicationColumn + " FROM MetTower";
+        //readonly String TEMPERATURE_QUERY = "SELECT " + PrimTempValueTagColumn + "," + SecTempValueColumn + "," + TempPrimBadQualityColumn + "," + TempPrimOutOfRangeColumn + " FROM MetTower";
+        //readonly String RH_QUERY = "SELECT " + PrimHumidityValueColumn + "," + SecHumidityValueColumn + "," + HumidityBadQualityColumn + "," + HumidityOutOfRangeColumn + " FROM MetTower";
+        //readonly String OTHER_PARAM_QUERY = "SELECT " + NoDataAlarmColumn + ", " + IceIndicationColumn + " FROM MetTower";
 
         readonly String INPUT_TAG_QUERY = "SELECT * FROM MetTowerInputTags";
         readonly String OUTPUT_TAG_QUERY = "SELECT * FROM MetTowerOutputTags";
 
         //Member variables;
-        //Member doubles 
-        private double ambientTemperature;
-        private double relativeHumidity;
-        private double dewPointTemperature;
-
-
         private double ambTempThreshold;
         private double deltaTempThreshold;
 
         //Queues
         private Queue<double> temperatureQueue;
         private Queue<double> humidityQueue;
-
-        //Member bool
-        private bool metTowerFailure;
 
         //Member prefix
         private string metTowerPrefix;
@@ -73,7 +64,6 @@ namespace Articuno
         private Turbine nearestTurbine;
 
         //opc server
-        private OpcServer opcServer;
         private string opcServerName;
         private EasyDAClient client = new EasyDAClient();
 
