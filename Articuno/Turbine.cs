@@ -197,11 +197,13 @@ namespace Articuno
                 writeLoadShutdownCmd();
                 log.DebugFormat("Writing alarm for {0}", getTurbinePrefixValue());
                 writeAlarmTagValue(true);
+                TurbineMediator.Instance.updateMain(TurbineMediator.TurbineEnum.PausedByArticuno,TurbinePrefix);
             }
             else {
+
                 log.DebugFormat("Clearing alarm for {0}", getTurbinePrefixValue());
                 writeAlarmTagValue(false);
-
+                TurbineMediator.Instance.updateMain(TurbineMediator.TurbineEnum.ClearBySite,TurbinePrefix);
             }
         }
     }

@@ -287,7 +287,7 @@ namespace ArticunoTest
             Console.WriteLine("Temperature of {0}: {1}", metId, temperature);
             Console.WriteLine("Temperature from Turbine: {0}", turbineTemp);
             //Make sure the temperature from both the met tower and its backup turbine are not the same.
-            Assert.AreNotEqual(temperature, turbineTemp, 0.001);
+            Assert.AreEqual(temperature, turbineTemp, 0.001);
         }
 
         [TestMethod]

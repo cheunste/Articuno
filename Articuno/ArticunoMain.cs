@@ -53,6 +53,17 @@ namespace Articuno
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(ArticunoMain));
 
+        //Constructor. This is only used for unit testing purposes
+        public ArticunoMain()
+        {
+            MetTowerMediator.Instance.createMetTower();
+            TurbineMediator.Instance.createTestTurbines();
+            turbinesExcludedList = new List<string>();
+            turbinesPausedByArticuno = new List<string>();
+            turbinesWaitingForPause = new List<string>();
+            turbinesConditionNotMet = new List<string>();
+        }
+
         static void Main(string[] args)
         {
             //Call the create methods
@@ -284,14 +295,14 @@ namespace Articuno
                     case TurbineMediator.TurbineEnum.OperatingState:
                         int state = Convert.ToInt16(value);
                         //If already paused by Articuno, then there's nothing to do
-                        if (pausedByArticuno(prefix)) { break; }
+                        if (isPausedByArticuno(prefix)) { break; }
                         //If turbine isn't in run or draft, then that means it is derated or in emergency, or something else
                         if ((state != RUN_STATE || state != DRAFT_STATE)) { conditionsNotMet(prefix); }
                         else { conditionsMet(prefix); }
                         break;
                     case TurbineMediator.TurbineEnum.Participation:
                         bool partipationStatus = Convert.ToBoolean(value);
-                        if (pausedByArticuno(prefix)) { break; }
+                        if (isPausedByArticuno(prefix)) { break; }
                         if (partipationStatus == false && !turbinesExcludedList.Contains(prefix)) { conditionsNotMet(prefix); }
                         else { conditionsMet(prefix); }
                         break;
@@ -320,20 +331,13 @@ namespace Articuno
         /// <param name="sender"></param>
         /// <param name="e"></param>
         /*
-         * There are only four items in the System InputTags table that really matter. Thre two thresholds (temp and humidity), the CTR period and the Enable tag.
-         * You can hard code this
-         * 
          * Event Handler that is executed whenever  the system input tags changed
          * System input tags are the following:
             - Articuno.TmpThreshold
-            - Articuno.CurtailEna
-            - Articuno.EvalTm
-            - Articuno.TmpDelta
-            - Articuno.TmpDew
-         *  
-         *  CurtailEna is the most important one, which enables Articuno. 
-         *  Thresholds requires the Met Tower class to do an update 
-         *  CTR Period should be updated in both the ArticunoMain and the Turbine classes
+            - Articuno.CurtailEna (Most important)
+            - Articuno.EvalTm  (CTR Period should be updated in both the ArticunoMain and the Turbine classes)
+            - Articuno.TmpDelta (requires met tower to perform update)
+            - Articuno.TmpDew (requires met tower to perform update)
          * 
          */
 
@@ -360,10 +364,7 @@ namespace Articuno
             else { log.ErrorFormat("Error occured in systemInputOnChangeHandler with {0}. Msg: {1}", e.Arguments.ItemDescriptor.ItemId, e.ErrorMessageBrief); }
         }
 
-        public static string getOpcServerName() { return opcServerName; }
-
-        private static bool pausedByArticuno(string turbineId) { return turbinesPausedByArticuno.Contains(turbineId); }
-        private static bool inWaiting(string turbineId) { return turbinesWaitingForPause.Contains(turbineId); }
+        private static bool isPausedByArticuno(string turbineId) { return turbinesPausedByArticuno.Contains(turbineId); }
         //method used to update member lists when a turbine isn't ready to be paused by articuno
         private static void conditionsNotMet(string turbineId)
         {
@@ -378,12 +379,34 @@ namespace Articuno
         //Method used to update member lists  when a turbine is ready to be paused by ARticuno
         private static void conditionsMet(string turbineId)
         {
+            //If turbine is waiting to be paused and it isn't already paused by Articuno
             if (!turbinesWaitingForPause.Contains(turbineId) &&
-                TurbineMediator.Instance.pausedByArticuno(turbineId))
+                !TurbineMediator.Instance.isPausedByArticuno(turbineId))
             {
                 turbinesWaitingForPause.Add(turbineId);
                 turbinesConditionNotMet.Remove(turbineId);
             }
+        }
+
+        /// <summary>
+        /// Method executed from the TurbineMediator class. This should only be used to signal the main program that a turbine is paused
+        /// </summary>
+        /// <param name="turbineId"></param>
+        public static void turbinePausedByArticuno(string turbineId)
+        {
+            log.DebugFormat("ArticunoMain has detected Turbine {0} has paused. ", turbineId);
+            turbinesWaitingForPause.Remove(turbineId);
+            turbinesPausedByArticuno.Add(turbineId);
+        }
+
+        /// <summary>
+        /// Method executed from the TurbineMediator class. This should only be used to signal the main program that a turbine is cleared
+        /// </summary>
+        public static void turbineClearedBySite(string turbineId)
+        {
+            log.DebugFormat("ArticunoMain has detected Turbine {0} has started from the site.", turbineId);
+            turbinesWaitingForPause.Add(turbineId);
+            turbinesPausedByArticuno.Remove(turbineId);
         }
     }
 }

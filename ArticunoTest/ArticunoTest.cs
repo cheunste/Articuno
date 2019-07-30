@@ -13,29 +13,16 @@ namespace ArticunoTest
     public class ArticunoTest
     {
         ArticunoMain articuno;
+        MetTowerMediator mm;
+        TurbineMediator tm;
         public ArticunoTest()
         {
-            //
-            // TODO: Add constructor logic here
-            //
-        }
+            articuno = new ArticunoMain();
+            mm = MetTowerMediator.Instance;
+            tm = TurbineMediator.Instance;
 
-        private TestContext testContextInstance;
-
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext
-        {
-            get
-            {
-                return testContextInstance;
-            }
-            set
-            {
-                testContextInstance = value;
-            }
+            mm.createMetTower();
+            tm.createTestTurbines();
         }
 
         #region Additional test attributes
@@ -68,15 +55,33 @@ namespace ArticunoTest
         }
 
         [TestMethod]
-        public void IcedTowerTest()
+        [DataTestMethod]
+        [DataRow("Met1",-20,-20,90.0)]
+        public void IcedTowerTest(string metId,double temp1, double temp2, double humidity)
         {
-            //
-            // TODO: Add test logic here
-            //
-            //this.articuno.start();
             Assert.Fail();
         }
 
+        //[TestMethod]
+        //[DataTestMethod]
+        //[DataRow("T001", false)]
+        //[DataRow("T001", true)]
+        //public void AlgorithmTest(string turbineId, bool state)
+        //{
+        //    //Note complete. Do this later once you get the delegates figured out
+        //    tm.setTemperatureCondition(turbineId, state);
+        //    tm.setOperatingStateCondition(turbineId, state);
+        //    tm.setNrscondition(turbineId, state);
+        //    tm.setTurbinePerformanceCondition(turbineId, state);
+        //    tm.setDeRateCondition(turbineId, state);
+
+        //    //If all five are true, then this turbine should be paused due to Ice
+        //    //After some CTR Time
+        //    //wait 90 seconds
+        //    System.Threading.Thread.Sleep(90000);
+        //    Assert.AreEqual(state,TurbineMediator.Instance.isPausedByArticuno(turbineId));
+
+        //}
 
         [TestMethod]
         public void minuteTest()

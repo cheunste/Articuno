@@ -13,8 +13,10 @@ namespace ArticunoTest
     public class TurbineTest
     {
         TurbineMediator tm;
+        ArticunoMain am;
         public TurbineTest()
         {
+            am = new ArticunoMain();
 
             //Must create the MetTowersingleton first
             MetTowerMediator.Instance.createMetTower();
@@ -132,6 +134,7 @@ namespace ArticunoTest
         [DataRow("T001", true)]
         public void AlgorithmTest(string turbineId, bool state)
         {
+            ArticunoMain am = new ArticunoMain();
 
             //Note complete. Do this later once you get the delegates figured out
             tm.setTemperatureCondition(turbineId, state);
@@ -144,7 +147,7 @@ namespace ArticunoTest
             //After some CTR Time
             //wait 90 seconds
             System.Threading.Thread.Sleep(90000);
-            Assert.AreEqual(state,TurbineMediator.Instance.pausedByArticuno(turbineId));
+            Assert.AreEqual(state,TurbineMediator.Instance.isPausedByArticuno(turbineId));
 
         }
 

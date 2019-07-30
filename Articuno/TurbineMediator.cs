@@ -56,9 +56,6 @@ namespace Articuno
         //Rotor Speed
         private RotorSpeedFilter filterTable;
 
-        //Member delegates
-        IcingDelegates tempDelegate, operatingStateDelegate, nrsDelegate, turbinePerfDelegate, deRateConditionDelegate;
-
         //Tag-Enum Dictionary
         Dictionary<TurbineEnum, string> tagEnum = new Dictionary<TurbineEnum, string>();
 
@@ -75,12 +72,6 @@ namespace Articuno
 
             //For RotorSpeed Filter Table. There should only be one instance of this. 
             filterTable = new RotorSpeedFilter();
-
-            tempDelegate = setTemperatureCondition;
-            operatingStateDelegate = setOperatingStateCondition;
-            nrsDelegate = setNrscondition;
-            turbinePerfDelegate = setTurbinePerformanceCondition;
-            deRateConditionDelegate = setDeRateCondition;
         }
 
         private string getOpcServerName()
@@ -180,7 +171,7 @@ namespace Articuno
             }
         }
 
-        public bool pausedByArticuno(String turbineId) { return Convert.ToBoolean(getTurbine(turbineId).readAlarmValue()); }
+        public bool isPausedByArticuno(String turbineId) { return Convert.ToBoolean(getTurbine(turbineId).readAlarmValue()); }
         /// <summary>
         /// Command to pause a turbine given a Turbine prefix. Also known as loadshutdown
         /// </summary>
@@ -216,14 +207,14 @@ namespace Articuno
 
 
         //Get methods to get the OPC Tag given a turbine Id
-        public  string getTurbineWindSpeedTag(string turbineId) { return getTurbine(turbineId).WindSpeedTag; }
-        public  string getRotorSpeedTag(string turbineId) { return getTurbine(turbineId).RotorSpeedTag; }
-        public  string getOperatingStateTag(string turbineId) { return getTurbine(turbineId).OperatingStateTag; }
-        public  string getNrsStateTag(string turbineId) { return getTurbine(turbineId).NrsStateTag; }
-        public  string getTemperatureTag(string turbineId) { return getTurbine(turbineId).TemperatureTag; }
-        public  string getLoadShutdownTag(string turbineId) { return getTurbine(turbineId).LoadShutdownTag; }
-        public  string getTurbineCtrTag(string turbineId) { return getTurbine(turbineId).TurbineCtrTag; }
-        public  string getHumidityTag(string turbineId) { return getTurbine(turbineId).TurbineHumidityTag; }
+        public string getTurbineWindSpeedTag(string turbineId) { return getTurbine(turbineId).WindSpeedTag; }
+        public string getRotorSpeedTag(string turbineId) { return getTurbine(turbineId).RotorSpeedTag; }
+        public string getOperatingStateTag(string turbineId) { return getTurbine(turbineId).OperatingStateTag; }
+        public string getNrsStateTag(string turbineId) { return getTurbine(turbineId).NrsStateTag; }
+        public string getTemperatureTag(string turbineId) { return getTurbine(turbineId).TemperatureTag; }
+        public string getLoadShutdownTag(string turbineId) { return getTurbine(turbineId).LoadShutdownTag; }
+        public string getTurbineCtrTag(string turbineId) { return getTurbine(turbineId).TurbineCtrTag; }
+        public string getHumidityTag(string turbineId) { return getTurbine(turbineId).TurbineHumidityTag; }
 
         //For reading OPC value using turbineId
         /// <summary>
@@ -313,7 +304,9 @@ namespace Articuno
             RotorSpeed,
             Temperature,
             WindSpeed,
-            Participation
+            Participation,
+            PausedByArticuno,
+            ClearBySite
         }
 
         //FUnction to determine whether or not a turbine is underperforming due to ice
@@ -377,6 +370,19 @@ namespace Articuno
         {
             foreach (string turbinePrefix in getTurbinePrefixList()) { writeTurbineCtrTag(turbinePrefix, value); }
         }
+
+        /// <summary>
+        /// Method to signal the Articuno Main method that the turbines have paused by the program or cleared by the site
+        /// </summary>
+        public void updateMain(TurbineEnum status, string turbineId)
+        {
+            if (status.Equals(TurbineEnum.PausedByArticuno))
+                ArticunoMain.turbinePausedByArticuno(turbineId);
+            else
+                ArticunoMain.turbineClearedBySite(turbineId);
+        }
+
+
 
     }
 }
