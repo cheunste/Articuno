@@ -132,15 +132,19 @@ namespace ArticunoTest
         [DataRow("T001", true)]
         public void AlgorithmTest(string turbineId, bool state)
         {
-            //Note complete. Do this later once you get the delegates figured out
-            Assert.Fail();
 
+            //Note complete. Do this later once you get the delegates figured out
             tm.setTemperatureCondition(turbineId, state);
             tm.setOperatingStateCondition(turbineId, state);
             tm.setNrscondition(turbineId, state);
             tm.setTurbinePerformanceCondition(turbineId, state);
             tm.setDeRateCondition(turbineId, state);
+
             //If all five are true, then this turbine should be paused due to Ice
+            //After some CTR Time
+            //wait 90 seconds
+            System.Threading.Thread.Sleep(90000);
+            Assert.AreEqual(state,TurbineMediator.Instance.pausedByArticuno(turbineId));
 
         }
 

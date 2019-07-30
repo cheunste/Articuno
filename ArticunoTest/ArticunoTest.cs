@@ -74,7 +74,7 @@ namespace ArticunoTest
             // TODO: Add test logic here
             //
             //this.articuno.start();
-            throw new NotImplementedException();
+            Assert.Fail();
         }
 
 

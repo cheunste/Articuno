@@ -325,11 +325,11 @@ namespace Articuno
          * 
          * Event Handler that is executed whenever  the system input tags changed
          * System input tags are the following:
-         *  - ICE.TmpThreshold
-         *  - ICE.CurtailEna
-         *  - ICE.EvalTm
-         *  - ICE.TmpDelta
-         *  - ICE.TmpDew (Kinda optional?)
+            - Articuno.TmpThreshold
+            - Articuno.CurtailEna
+            - Articuno.EvalTm
+            - Articuno.TmpDelta
+            - Articuno.TmpDew
          *  
          *  CurtailEna is the most important one, which enables Articuno. 
          *  Thresholds requires the Met Tower class to do an update 
@@ -378,7 +378,7 @@ namespace Articuno
         //Method used to update member lists  when a turbine is ready to be paused by ARticuno
         private static void conditionsMet(string turbineId)
         {
-            if (!turbinesWaitingForPause.Contains(turbineId) && 
+            if (!turbinesWaitingForPause.Contains(turbineId) &&
                 TurbineMediator.Instance.pausedByArticuno(turbineId))
             {
                 turbinesWaitingForPause.Add(turbineId);

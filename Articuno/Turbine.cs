@@ -156,10 +156,12 @@ namespace Articuno
         public void setParticipation(bool participationStatus) { articunoParicipation = participationStatus; }
         public bool getParticipation() { return articunoParicipation; }
 
+        public bool Participation { get; set; }
+
         //The actual method that checks all conditions and throws a load shutdown command if needed
         public void checkIcingConditions()
         {
-            if (articunoParicipation && temperatureConditionMet && operatingStateConditionMet && nrsConditionMet && turbinePerformanceConditionMet && derateConditionMet)
+            if (Convert.ToBoolean(readParticipationValue()) && temperatureConditionMet && operatingStateConditionMet && nrsConditionMet && turbinePerformanceConditionMet && derateConditionMet)
             {
                 log.InfoFormat("Icing conditions satisfied for {0}",getTurbinePrefixValue());
                 pauseByArticuno(true);
