@@ -116,7 +116,8 @@ namespace Articuno
                 return -1.0;
             }
         }
-        public void writeAlarmTagValue(Object value) { client.WriteItemValue("", OpcServerName, AlarmTag, Convert.ToDouble(value)); }
+        //public void writeAlarmTagValue(Object value) { client.WriteItemValue("", OpcServerName, AlarmTag, Convert.ToDouble(value)); }
+        public void writeAlarmTagValue(Object value) { client.WriteItemValue("", OpcServerName, AlarmTag, Convert.ToBoolean(value)); }
         public void writeNoiseLevel(Object value) { client.WriteItemValue("", OpcServerName, NrsStateTag, Convert.ToDouble(value)); }
         public void writeOperatingState(Object value) { client.WriteItemValue("", OpcServerName, OperatingStateTag, Convert.ToDouble(value)); }
         public void writeCtrTimeValue(int value) { ctrTimeValue = value; }
@@ -160,7 +161,13 @@ namespace Articuno
         {
             if (articunoParicipation && temperatureConditionMet && operatingStateConditionMet && nrsConditionMet && turbinePerformanceConditionMet && derateConditionMet)
             {
-
+                log.InfoFormat("Icing conditions satisfied for {0}",getTurbinePrefixValue());
+                pauseByArticuno(true);
+            }
+            else
+            {
+                log.InfoFormat("Icing onditions cleared for {0}",getTurbinePrefixValue());
+                pauseByArticuno(false);
             }
         }
 
@@ -170,5 +177,30 @@ namespace Articuno
         public Queue<double> getWindSpeedQueue() { return windSpeedQueue; }
         public Queue<double> getRotorSpeedQueue() { return rotorSpeedQueue; }
         public void emptyQueue() { windSpeedQueue.Clear(); rotorSpeedQueue.Clear(); }
+
+        /// <summary>
+        /// Method used to trigger a pausing condition due to ice.
+        /// </summary>
+        /// <param name="pause"></param>
+        /*
+         * This method is needed because not only are you sending a pause command to the turbine
+         * but you also have to do loggign, raising alarm, etc.
+         * 
+         */
+        private void pauseByArticuno(bool pause)
+        {
+            if (pause)
+            {
+                log.DebugFormat("Sending pause commmand for {0}", getTurbinePrefixValue());
+                writeLoadShutdownCmd();
+                log.DebugFormat("Writing alarm for {0}", getTurbinePrefixValue());
+                writeAlarmTagValue(true);
+            }
+            else {
+                log.DebugFormat("Clearing alarm for {0}", getTurbinePrefixValue());
+                writeAlarmTagValue(false);
+
+            }
+        }
     }
 }

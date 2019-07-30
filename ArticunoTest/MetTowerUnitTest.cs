@@ -285,7 +285,9 @@ namespace ArticunoTest
             double temperature = Convert.ToDouble(MetTowerMediator.Instance.readTemperature(metId));
             double turbineTemp = Convert.ToDouble(TurbineMediator.Instance.readTemperatureValue(turbine));
             Console.WriteLine("Temperature of {0}: {1}", metId, temperature);
-            Assert.AreEqual(temperature, turbineTemp, 0.001);
+            Console.WriteLine("Temperature from Turbine: {0}", turbineTemp);
+            //Make sure the temperature from both the met tower and its backup turbine are not the same.
+            Assert.AreNotEqual(temperature, turbineTemp, 0.001);
         }
 
         [TestMethod]

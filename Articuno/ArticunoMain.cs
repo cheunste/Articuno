@@ -378,7 +378,8 @@ namespace Articuno
         //Method used to update member lists  when a turbine is ready to be paused by ARticuno
         private static void conditionsMet(string turbineId)
         {
-            if (!turbinesWaitingForPause.Contains(turbineId))
+            if (!turbinesWaitingForPause.Contains(turbineId) && 
+                TurbineMediator.Instance.pausedByArticuno(turbineId))
             {
                 turbinesWaitingForPause.Add(turbineId);
                 turbinesConditionNotMet.Remove(turbineId);

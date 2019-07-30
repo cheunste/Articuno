@@ -180,6 +180,7 @@ namespace Articuno
             }
         }
 
+        public bool pausedByArticuno(String turbineId) { return Convert.ToBoolean(getTurbine(turbineId).readAlarmValue()); }
         /// <summary>
         /// Command to pause a turbine given a Turbine prefix. Also known as loadshutdown
         /// </summary>

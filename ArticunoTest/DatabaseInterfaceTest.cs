@@ -93,7 +93,7 @@ namespace ArticunoTest
         [TestMethod]
         //Test to see if it is able to get items from the turbineInput tables
         [DataTestMethod]
-        [DataRow("SELECT Pause from TurbineInputTags WHERE TurbineId=", "'T001'")]
+        //[DataRow("SELECT Pause from TurbineInputTags WHERE TurbineId=", "'T001'")]
         [DataRow("SELECT NrsMode from TurbineInputTags WHERE TurbineId=", "'T001'")]
         [DataRow("SELECT OperatingState from TurbineInputTags WHERE TurbineId=", "'T001'")]
         [DataRow("SELECT RotorSpeed from TurbineInputTags WHERE TurbineId=", "'T001'")]

@@ -95,8 +95,8 @@ namespace ArticunoTest
 
             foreach (Turbine turbine in turbineList)
             {
-                turbine.writeAlarmTagValue(5);
-                Assert.AreEqual(turbine.readAlarmValue(), 5.00);
+                turbine.writeAlarmTagValue(true);
+                Assert.AreEqual(Convert.ToBoolean(turbine.readAlarmValue()), true);
             }
 
         }
