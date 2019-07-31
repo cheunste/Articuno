@@ -22,17 +22,15 @@ namespace Articuno
             "SELECT OpcTag FROM SystemInputTags WHERE Description = 'AmbTempThreshold' or Description = 'DeltaTmpThreshold'";
         private string SERVER_NAME_QUERY =
             "SELECT OpcTag FROM SystemInputTags WHERE Description ='OpcServerName'";
+        private static string SELECT_QUERY = "SELECT Count(*) as num FROM MetTowerInputTags";
+
         private string opcServerName;
         private static List<MetTower> metTowerList = new List<MetTower>();
         private EasyDAClient client = new EasyDAClient();
 
         //constant bool for quality
-        private bool BAD_QUALITY = false;
-        private bool GOOD_QUALITY = true;
-
-        //constant bool for managing switched mettower 
-        private bool met1Switched;
-        private bool met2Switched;
+        private bool BAD_QUALITY = true;
+        private bool GOOD_QUALITY = false;
 
         //thresholds 
         private double deltaThreshold;
@@ -43,14 +41,7 @@ namespace Articuno
 
         //Database
         static DatabaseInterface dbi;
-
-
-        private MetTowerMediator()
-        {
-            met1Switched = false;
-            met2Switched = false;
-            dbi = DatabaseInterface.Instance;
-
+        private MetTowerMediator() { dbi = DatabaseInterface.Instance; 
         }
 
         public static MetTowerMediator Instance { get { return Nested.instance; } }
@@ -70,7 +61,7 @@ namespace Articuno
         {
             if (numMetTower == 0)
             {
-                DataTable reader = dbi.readCommand("SELECT Count(*) as num FROM MetTowerInputTags");
+                DataTable reader = dbi.readCommand(SELECT_QUERY);
                 numMetTower = Convert.ToInt16(reader.Rows[0]["num"]);
             }
             return numMetTower;
@@ -128,7 +119,6 @@ namespace Articuno
         /// <returns>Tuple of doubles</returns>
         public Tuple<double, double, double, double> getAllMeasurements(string metId)
         {
-            metId = isMetTowerSwitched(metId);
             double temperature = (double)readTemperature(metId);
             double rh = readHumidity(metId);
             double dew = calculateDewPoint(rh, temperature);
@@ -145,17 +135,8 @@ namespace Articuno
         /// <param name="metId"></param>
         public void switchMetTower(string metId)
         {
-            switch (metId.ToUpper())
-            {
-                case "MET1":
-                    log.DebugFormat("met1 switched state from {0} to {1}", met1Switched, !met1Switched);
-                    met1Switched = !met1Switched;
-                    break;
-                case "MET2":
-                    log.DebugFormat("met2 switched state from {0} to {1}", met2Switched, !met2Switched);
-                    met2Switched = !met2Switched;
-                    break;
-            }
+            MetTower met = getMetTower(metId);
+            met.MetSwitchValue=!met.MetSwitchValue;
         }
 
         /// <summary>
@@ -165,18 +146,10 @@ namespace Articuno
         /// <returns>A metId. Returns the original metId if it is not switched. Returns a the backup metId otherwise</returns>
         private string isMetTowerSwitched(string metId)
         {
-            switch (metId.ToUpper())
-            {
-                case "MET1":
-                    log.DebugFormat("Met1 currently using : {0} data", met1Switched ? "Met2" : metId);
-                    return (met1Switched ? "Met2" : metId);
-                case "MET2":
-                    log.DebugFormat("Met2 currently using : {0} data", met1Switched ? "Met1" : metId);
-                    return (met2Switched ? "Met1" : metId);
-                default:
-                    log.ErrorFormat("Something went wrong in isMetTOwerSwitched(), metId: {0}", metId);
-                    return "";
-            }
+            if (Convert.ToBoolean(getMetTower(metId).MetSwitchValue))
+                return  metId.Equals("Met1") ? "Met2" : "Met1";
+            else
+                return metId;
         }
 
         /// <summary>
@@ -413,11 +386,13 @@ namespace Articuno
             else if (primTempCheckTuple.Item1 && !secTempCheckTuple.Item1)
             {
                 raiseAlarm(met, MetTowerEnum.PrimSensorQuality);
+                clearAlarm(met, MetTowerEnum.SecSensorQuality);
                 return new Tuple<bool, double, double>(true, primTempCheckTuple.Item2, secTempCheckTuple.Item2);
             }
             //only the primary Temperature value is suspect Raise temperature out of range alarm for Temp sensor 2  
             else if (!primTempCheckTuple.Item1 && secTempCheckTuple.Item1)
             {
+                clearAlarm(met, MetTowerEnum.PrimSensorQuality);
                 raiseAlarm(met, MetTowerEnum.SecSensorQuality);
                 return new Tuple<bool, double, double>(true, primTempCheckTuple.Item2, secTempCheckTuple.Item2);
             }
@@ -469,10 +444,11 @@ namespace Articuno
                     }
                     break;
                 case MetTowerEnum.SecSensorQuality:
+                    Console.WriteLine("SecBadQuality {0}",Convert.ToBoolean(mt.TemperatureSecBadQuality));
                     if (Convert.ToBoolean(mt.TemperatureSecBadQuality) != BAD_QUALITY)
                     {
                         log.InfoFormat("{0} Secondary Temperature sensor quality alarm raised", mt.getMetTowerPrefix);
-                        mt.TemperaturePrimBadQuality = BAD_QUALITY;
+                        mt.TemperatureSecBadQuality = BAD_QUALITY;
                     }
                     break;
                 case MetTowerEnum.SecSensorOutOfRange:
@@ -533,7 +509,7 @@ namespace Articuno
                     if (Convert.ToBoolean(mt.TemperatureSecBadQuality) != GOOD_QUALITY)
                     {
                         log.InfoFormat("{0} Secondary Temperature sensor quality alarm cleared", mt.getMetTowerPrefix);
-                        mt.TemperaturePrimBadQuality = GOOD_QUALITY;
+                        mt.TemperatureSecBadQuality = GOOD_QUALITY;
                     }
                     break;
                 case MetTowerEnum.SecSensorOutOfRange:
@@ -614,7 +590,7 @@ namespace Articuno
         public Enum findMetTowerTag(string metTowerId, string tag)
         {
             MetTower tempMet = getMetTower(metTowerId);
-            if (tag.ToUpper().Equals(tempMet.MetSwitch.ToUpper())) { return MetTowerEnum.Switched; }
+            if (tag.ToUpper().Equals(tempMet.MetSwitchTag.ToUpper())) { return MetTowerEnum.Switched; }
             return null;
 
         }

@@ -42,11 +42,8 @@ namespace Articuno
         private static readonly string SwitchColumn = "Switch";
         private static readonly string IceIndicationColumn = "IceIndicationTag";
 
-        //Query constants
-        //readonly String TEMPERATURE_QUERY = "SELECT " + PrimTempValueTagColumn + "," + SecTempValueColumn + "," + TempPrimBadQualityColumn + "," + TempPrimOutOfRangeColumn + " FROM MetTower";
-        //readonly String RH_QUERY = "SELECT " + PrimHumidityValueColumn + "," + SecHumidityValueColumn + "," + HumidityBadQualityColumn + "," + HumidityOutOfRangeColumn + " FROM MetTower";
-        //readonly String OTHER_PARAM_QUERY = "SELECT " + NoDataAlarmColumn + ", " + IceIndicationColumn + " FROM MetTower";
 
+        //Queries
         readonly String INPUT_TAG_QUERY = "SELECT * FROM MetTowerInputTags";
         readonly String OUTPUT_TAG_QUERY = "SELECT * FROM MetTowerOutputTags";
 
@@ -106,7 +103,7 @@ namespace Articuno
             SecTemperatureTag = reader.Rows[0][SecTempValueColumn].ToString();
             RelativeHumidityTag = reader.Rows[0][PrimHumidityValueColumn].ToString();
             HumiditySecValueTag = reader.Rows[0][SecHumidityValueColumn].ToString();
-            MetSwitch = reader.Rows[0][SwitchColumn].ToString();
+            MetSwitchTag = reader.Rows[0][SwitchColumn].ToString();
 
             //Get everything relating to the MetTowerOutputTags table
             reader = dbi.readCommand(OUTPUT_TAG_QUERY + String.Format(" WHERE MetId='{0}'", MetId));
@@ -179,7 +176,8 @@ namespace Articuno
         }
 
         //For Met TOwer siwtching
-        public string MetSwitch { get; set; }
+        public string MetSwitchTag { get; set; }
+        public bool MetSwitchValue { get; set; }
 
         //Threshold setters and getters
         public double AmbTempThreshold { get { return ambTempThreshold; } set { ambTempThreshold = value; } }
