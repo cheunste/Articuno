@@ -274,7 +274,7 @@ namespace ArticunoTest
         {
             //Create a test turbine
             TurbineMediator.Instance.createTestTurbines();
-            var turbine =TurbineMediator.Instance.getTurbinePrefixList()[0];
+            var turbine = TurbineMediator.Instance.getTurbinePrefixList()[0];
 
             //write the fail values to the met tower
             MetTower met = MetTowerMediator.Instance.getMetTower(metId);
@@ -360,18 +360,18 @@ namespace ArticunoTest
 
         [TestMethod]
         [DataTestMethod]
-        [DataRow("Met1",-50,-50,true)]
-        [DataRow("Met1",0,0,false)]
-        [DataRow("Met1",61,61,true)]
-        public void tempOutOfRangeTest(string metId, double temp1,double temp2,bool failureExpected)
+        [DataRow("Met1", -50, -50, true)]
+        [DataRow("Met1", 0, 0, false)]
+        [DataRow("Met1", 61, 61, true)]
+        public void tempOutOfRangeTest(string metId, double temp1, double temp2, bool failureExpected)
         {
             TurbineMediator.Instance.createTestTurbines();
-            var turbine =TurbineMediator.Instance.getTurbinePrefixList()[0];
+            var turbine = TurbineMediator.Instance.getTurbinePrefixList()[0];
 
             MetTowerMediator.Instance.writePrimTemperature(metId, temp1);
             MetTowerMediator.Instance.writeSecTemperature(metId, temp2);
 
-            MetTower met =MetTowerMediator.Instance.getMetTower(metId);
+            MetTower met = MetTowerMediator.Instance.getMetTower(metId);
             MetTowerMediator.Instance.readTemperature(metId);
             bool primOutOfRange = Convert.ToBoolean(met.TemperaturePrimOutOfRange.ToString());
             bool secOutOfRange = Convert.ToBoolean(met.TemperatureSecOutOfRange.ToString());
@@ -390,11 +390,25 @@ namespace ArticunoTest
 
         [TestMethod]
         [DataTestMethod]
-        [DataRow("Met1",-1,-1,true)]
-        [DataRow("Met1",20,20,false)]
-        [DataRow("Met1",101,101,true)]
-        public void humidityOutOfRangeTest(string metId, double temp1,double temp2,bool failureExpected)
+        [DataRow("Met1", -1, -1, true)]
+        [DataRow("Met1", 20, 20, false)]
+        [DataRow("Met1", 101, 101, true)]
+        public void humidityOutOfRangeTest(string metId, double temp1, double temp2, bool failureExpected)
         {
+            TurbineMediator.Instance.createTestTurbines();
+            var turbine = TurbineMediator.Instance.getTurbinePrefixList()[0];
+
+            MetTowerMediator.Instance.writeHumidity(metId, temp1);
+
+            MetTower met = MetTowerMediator.Instance.getMetTower(metId);
+            MetTowerMediator.Instance.readHumidity(metId);
+            bool primOutOfRange = Convert.ToBoolean(met.HumidityBadQuality.ToString());
+            bool primQuaality = Convert.ToBoolean(met.HumidityOutOfRng.ToString());
+
+            Assert.AreEqual(failureExpected, primOutOfRange);
+            Assert.AreEqual(failureExpected, primQuaality);
+
+
 
         }
 

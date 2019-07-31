@@ -216,10 +216,7 @@ namespace Articuno
         /// Writes the delta threshold for all the met tower
         /// </summary>
         /// <param name="value">A double vlaue that represents the delta threshold<</param>
-        public void writeDeltaThreshold(double value)
-        {
-            foreach (MetTower tower in metTowerList) { tower.DeltaTempThreshold = value; }
-        }
+        public void writeDeltaThreshold(double value) { foreach (MetTower tower in metTowerList) { tower.DeltaTempThreshold = value; } }
 
         public double readDeltaThreshold(string metTowerId) { return getMetTower(metTowerId).DeltaTempThreshold; }
 
@@ -444,7 +441,6 @@ namespace Articuno
                     }
                     break;
                 case MetTowerEnum.SecSensorQuality:
-                    Console.WriteLine("SecBadQuality {0}",Convert.ToBoolean(mt.TemperatureSecBadQuality));
                     if (Convert.ToBoolean(mt.TemperatureSecBadQuality) != BAD_QUALITY)
                     {
                         log.InfoFormat("{0} Secondary Temperature sensor quality alarm raised", mt.getMetTowerPrefix);

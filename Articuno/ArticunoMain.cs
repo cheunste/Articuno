@@ -53,11 +53,20 @@ namespace Articuno
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(ArticunoMain));
 
+        //Singleton instance declarations
+        private static DatabaseInterface dbi;
+        private static MetTowerMediator mm;
+        private static TurbineMediator tm;
+
         //Constructor. This is only used for unit testing purposes
         public ArticunoMain()
         {
-            MetTowerMediator.Instance.createMetTower();
-            TurbineMediator.Instance.createTestTurbines();
+            dbi = DatabaseInterface.Instance;
+            mm = MetTowerMediator.Instance;
+            tm = TurbineMediator.Instance;
+
+            mm.createMetTower();
+            tm.createTestTurbines();
             turbinesExcludedList = new List<string>();
             turbinesPausedByArticuno = new List<string>();
             turbinesWaitingForPause = new List<string>();
@@ -66,10 +75,14 @@ namespace Articuno
 
         static void Main(string[] args)
         {
+            dbi = DatabaseInterface.Instance;
+            mm = MetTowerMediator.Instance;
+            tm = TurbineMediator.Instance;
+
             //Call the create methods
-            MetTowerMediator.Instance.createMetTower();
-            //TurbineMediator.Instance.createTurbines();
-            TurbineMediator.Instance.createTestTurbines();
+            mm.createMetTower();
+            //tm.createTurbines();
+            tm.createTestTurbines();
 
             turbinesExcludedList = new List<string>();
             turbinesPausedByArticuno = new List<string>();
@@ -100,16 +113,18 @@ namespace Articuno
         public static void setup()
         {
             //Get the OPC Server name
-            DataTable reader = DatabaseInterface.Instance.readCommand("SELECT * from SystemInputTags WHERE Description='OpcServerName'");
+            DataTable reader = dbi.readCommand("SELECT * from SystemInputTags WHERE Description='OpcServerName'");
             opcServerName = reader.Rows[0]["OpcTag"].ToString();
             string tag;
 
+            //Set up the accesssors for system output tags
+            reader = dbi.readCommand("SELECT * from SystemOutputTags WHERE Description='NumTurbIced'");
 
             //A speicifc client that will respond to System Tag input changes. 
             var systemInputClient = new EasyDAClient();
             systemInputClient.ItemChanged += SystemInputOnChange;
             List<DAItemGroupArguments> systemInputTags = new List<DAItemGroupArguments>();
-            reader = DatabaseInterface.Instance.readCommand("SELECT * from SystemInputTags WHERE Description!='SitePrefix' AND Description!='OpcServerName' order by Description ASC");
+            reader = dbi.readCommand("SELECT * from SystemInputTags WHERE Description!='SitePrefix' AND Description!='OpcServerName' order by Description ASC");
             for (int i = 0; i < reader.Rows.Count; i++)
             {
                 tag = reader.Rows[i]["OpcTag"].ToString();
@@ -135,10 +150,10 @@ namespace Articuno
             var assetStatusClient = new EasyDAClient();
             assetStatusClient.ItemChanged += assetTagChangeHandler;
             List<DAItemGroupArguments> assetInputTags = new List<DAItemGroupArguments>();
-            foreach (string prefix in TurbineMediator.Instance.getTurbinePrefixList())
+            foreach (string prefix in tm.getTurbinePrefixList())
             {
                 string cmd = String.Format("SELECT OperatingState, Participation,NrsMode from TurbineInputTags where TurbineId='{0}'", prefix);
-                reader = DatabaseInterface.Instance.readCommand(cmd);
+                reader = dbi.readCommand(cmd);
                 for (int i = 0; i < reader.Rows.Count; i++)
                 {
                     try
@@ -156,7 +171,7 @@ namespace Articuno
 
 
             //Same client will be used to respond to Met Tower OPC tag Changes (only the switching command though)
-            reader = DatabaseInterface.Instance.readCommand("SELECT Switch from MetTowerInputTags");
+            reader = dbi.readCommand("SELECT Switch from MetTowerInputTags");
             for (int i = 0; i < reader.Rows.Count; i++)
             {
                 var switchTag = reader.Rows[i]["Switch"].ToString();
@@ -167,7 +182,6 @@ namespace Articuno
                 }
                 catch (Exception e) { log.ErrorFormat("Error when attempting to add {0} to assetInputTags list. {1}", switchTag, e); }
             }
-
 
             assetStatusClient.SubscribeMultipleItems(assetInputTags.ToArray());
         }
@@ -182,18 +196,18 @@ namespace Articuno
             {
                 //Get all measurements from the met tower. Note that it will get turbine 
                 //temperature if the temperature coming from the met tower is bad qualtiy
-                Tuple<double, double, double, double> metMeasurements = MetTowerMediator.Instance.getAllMeasurements("Met" + i);
+                Tuple<double, double, double, double> metMeasurements = mm.getAllMeasurements("Met" + i);
 
                 double temperature = metMeasurements.Item1;
                 double humidity = metMeasurements.Item2;
-                MetTowerMediator.Instance.writeToQueue("Met" + i, temperature, humidity);
+                mm.writeToQueue("Met" + i, temperature, humidity);
             }
 
             //Get turbine to update internal wind speed queue
-            foreach (string prefix in TurbineMediator.Instance.getTurbinePrefixList())
+            foreach (string prefix in tm.getTurbinePrefixList())
             {
                 //Call the storeWindSpeed function to store a wind speed average into a turbine queue
-                TurbineMediator.Instance.storeMinuteAverages(prefix);
+                tm.storeMinuteAverages(prefix);
             }
 
 
@@ -201,15 +215,16 @@ namespace Articuno
             ctrCountdown--;
             if (ctrCountdown == 0)
             {
+                log.InfoFormat("CTR countdown reached 0");
                 //Calculate temperature averages from the all the temperature queues
                 for (int i = 1; i <= MetTowerMediator.getNumMetTower(); i++)
                 {
-                    double tempAvg = MetTowerMediator.Instance.calculateCtrAvgTemperature("Met" + i);
+                    double tempAvg = mm.calculateCtrAvgTemperature("Met" + i);
                     //Send this temperature to the Met Mediator and determine if met tower is freezing or not
-                    MetTowerMediator.Instance.isFreezing("Met" + i, tempAvg);
+                    mm.isFreezing("Met" + i, tempAvg);
                 }
                 //Call the RotorSPeedCheck function to compare rotor speed for all turbines
-                foreach (string prefix in TurbineMediator.Instance.getTurbinePrefixList()) { TurbineMediator.Instance.RotorSpeedCheck(prefix); }
+                foreach (string prefix in tm.getTurbinePrefixList()) { tm.RotorSpeedCheck(prefix); }
 
                 //Set the CTR back to the original value
                 ctrCountdown = articunoCtr;
@@ -270,11 +285,11 @@ namespace Articuno
             //TODO: Implement this. You should only have the me ttower switch. Thresholds are dealt with in SystemInputOnChange()
             if (matchLookup.Value.ToUpper().Contains("MET"))
             {
-                Enum metEnum = MetTowerMediator.Instance.findMetTowerTag(matchLookup.Value, opcTag);
+                Enum metEnum = mm.findMetTowerTag(matchLookup.Value, opcTag);
                 switch (metEnum)
                 {
                     case MetTowerMediator.MetTowerEnum.Switched:
-                        MetTowerMediator.Instance.switchMetTower(prefix);
+                        mm.switchMetTower(prefix);
                         break;
                     default:
                         log.DebugFormat("Event CHanged detected for {0}. However, there is nothing to be doen", opcTag);
@@ -285,11 +300,11 @@ namespace Articuno
             //Else, assume Turbine or system input. Not like there's anything else given the regex
             else
             {
-                Enum turbineEnum = TurbineMediator.Instance.findTurbineTag(matchLookup.Value, opcTag);
+                Enum turbineEnum = tm.findTurbineTag(matchLookup.Value, opcTag);
                 switch (turbineEnum)
                 {
                     case TurbineMediator.TurbineEnum.NrsMode:
-                        TurbineMediator.Instance.writeNrsStateTag(prefix, value);
+                        tm.writeNrsStateTag(prefix, value);
                         break;
                     //In the case where the turbine went into a different state. This includes pause by the dispatchers, site, curtailment, maintenance, anything non-Articuno 
                     case TurbineMediator.TurbineEnum.OperatingState:
@@ -356,10 +371,10 @@ namespace Articuno
                 {
                     articunoCtr = value;
                     ctrCountdown = value;
-                    TurbineMediator.Instance.writeCtrTime(value);
+                    tm.writeCtrTime(value);
                 }
-                if (tag.Contains("TmpTreshold")) { MetTowerMediator.Instance.writeTemperatureThreshold(value); }
-                if (tag.Contains("TmpDelta")) { MetTowerMediator.Instance.writeDeltaThreshold(value); }
+                if (tag.Contains("TmpTreshold")) { mm.writeTemperatureThreshold(value); }
+                if (tag.Contains("TmpDelta")) { mm.writeDeltaThreshold(value); }
             }
             else { log.ErrorFormat("Error occured in systemInputOnChangeHandler with {0}. Msg: {1}", e.Arguments.ItemDescriptor.ItemId, e.ErrorMessageBrief); }
         }
@@ -381,7 +396,7 @@ namespace Articuno
         {
             //If turbine is waiting to be paused and it isn't already paused by Articuno
             if (!turbinesWaitingForPause.Contains(turbineId) &&
-                !TurbineMediator.Instance.isPausedByArticuno(turbineId))
+                !tm.isPausedByArticuno(turbineId))
             {
                 turbinesWaitingForPause.Add(turbineId);
                 turbinesConditionNotMet.Remove(turbineId);
@@ -397,6 +412,7 @@ namespace Articuno
             log.DebugFormat("ArticunoMain has detected Turbine {0} has paused. ", turbineId);
             turbinesWaitingForPause.Remove(turbineId);
             turbinesPausedByArticuno.Add(turbineId);
+
         }
 
         /// <summary>
@@ -408,5 +424,6 @@ namespace Articuno
             turbinesWaitingForPause.Add(turbineId);
             turbinesPausedByArticuno.Remove(turbineId);
         }
+
     }
 }
