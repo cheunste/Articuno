@@ -54,14 +54,14 @@ namespace ArticunoTest
             "Articuno.Met1.TmpHiDispAlm",
             "Articuno.Met1.TowerAlm",
             "Articuno.Met2.IcePossible",
-            "Articuno.Met1.Tmp12OutOfRangeAlm",
+            "Articuno.Met1.TmpS1OutOfRangeAlm",
             "Articuno.Met1.TmpS2OutOfRangeAlm",
             "Articuno.Met2.RHAlm",
             "Articuno.Met2.RHS1OutRngAlm",
             "Articuno.Met2.TempAlm",
             "Articuno.Met2.TmpHiDispAlm",
             "Articuno.Met2.TowerAlm",
-            "Articuno.Met2.Tmp12OutOfRangeAlm",
+            "Articuno.Met2.TmpS1OutOfRangeAlm",
             "Articuno.Met2.TmpS2OutOfRangeAlm"
         };
         string siteName;
@@ -130,6 +130,7 @@ namespace ArticunoTest
 
         public void GetValueTest(string metId, double tempVal1, double tempVal2, double hmdVal)
         {
+            Assert.Fail();
             MetTower met = mm.getMetTower(metId);
             met.RelativeHumidityValue = hmdVal;
             met.PrimTemperatureValue = tempVal1;
@@ -148,7 +149,6 @@ namespace ArticunoTest
             //Warning, all I can do for the dew point and delta calcs are check if they're not null. Mainly because I didn't come up with the formula for this
             Assert.IsNotNull(met1Values.Item3);
             Assert.IsNotNull(met1Values.Item4);
-
         }
 
         [TestMethod]
@@ -180,9 +180,7 @@ namespace ArticunoTest
         [DataRow("Met1", 300.0, 120.0, 110.0, 200.0)]
         public void checkMetTower(string metId, double tempVal1, double tempVal2, double hmdVal1, double hmdVal2)
         {
-            //setValidMetData();
-            double tempBeforeSwitch;
-            double humdBeforeSwitch;
+            Assert.Fail();
             MetTower met = mm.getMetTower(metId);
 
             met.RelativeHumidityValue = hmdVal1;
@@ -285,7 +283,7 @@ namespace ArticunoTest
             Console.WriteLine("Temperature of {0}: {1}", metId, temperature);
             Console.WriteLine("Temperature from Turbine: {0}", turbineTemp);
             //Make sure the temperature from both the met tower and its backup turbine are not the same.
-            Assert.AreEqual(temperature, turbineTemp, 0.001);
+            Assert.AreEqual(temperature, turbineTemp, 0.001,"Not euqal. Turbine: {0}, Met Temp {1}",turbineTemp,temperature);
         }
 
         [TestMethod]
@@ -378,10 +376,10 @@ namespace ArticunoTest
             bool secQuaality = Convert.ToBoolean(met.TemperatureSecBadQuality.ToString());
 
 
-            Assert.AreEqual(Convert.ToBoolean(failureExpected), primOutOfRange);
-            Assert.AreEqual(Convert.ToBoolean(failureExpected), secOutOfRange);
-            Assert.AreEqual(Convert.ToBoolean(failureExpected), primQuaality);
-            Assert.AreEqual(Convert.ToBoolean(failureExpected), secQuaality);
+            Assert.AreEqual(!Convert.ToBoolean(failureExpected), primOutOfRange);
+            Assert.AreEqual(!Convert.ToBoolean(failureExpected), secOutOfRange);
+            Assert.AreEqual(!Convert.ToBoolean(failureExpected), primQuaality);
+            Assert.AreEqual(!Convert.ToBoolean(failureExpected), secQuaality);
 
         }
 
@@ -401,11 +399,11 @@ namespace ArticunoTest
             MetTower met = mm.getMetTower(metId);
             mm.readHumidity(metId);
             Thread.Sleep(100);
-            bool primOutOfRange = Convert.ToBoolean(met.HumidityBadQuality.ToString());
-            bool primQuaality = Convert.ToBoolean(met.HumidityOutOfRng.ToString());
+            bool  primQuaality = Convert.ToBoolean(met.HumidityBadQuality.ToString());
+            bool primOutOfRange = Convert.ToBoolean(met.HumidityOutOfRng.ToString());
 
-            Assert.AreEqual(Convert.ToBoolean(failureExpected), primOutOfRange);
-            Assert.AreEqual(Convert.ToBoolean(failureExpected), primQuaality);
+            Assert.AreEqual(!Convert.ToBoolean(failureExpected), primOutOfRange);
+            Assert.AreEqual(!Convert.ToBoolean(failureExpected), primQuaality);
 
 
 
