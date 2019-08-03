@@ -315,7 +315,6 @@ namespace Articuno
                 qualityState = MetQualityEnum.MET_BAD_QUALITY;
                 raiseAlarm(met, MetTowerEnum.HumidityOutOfRange);
                 raiseAlarm(met, MetTowerEnum.HumidityQuality);
-                //rh = ((Math.Abs(0.0 - rh) > 0.0001) ? 0.0 : 100.0);
                 rh = (rh < 0.0) ? 0.000 : 99.00;
             }
             //CLear the out of range alarm
@@ -325,7 +324,7 @@ namespace Articuno
                 clearAlarm(met, MetTowerEnum.HumidityQuality);
             }
 
-
+            //If the quality for the relative humidity tag is bad, then immediately make the local  variable bad
             if (!(met.isQualityGood(met.RelativeHumidityTag)))
             {
                 qualityState = MetQualityEnum.MET_BAD_QUALITY;
@@ -340,14 +339,17 @@ namespace Articuno
         /// </summary>
         /// <param name="temperatureTag">The OPC tag for temperature (either prim or sec)</param>
         /// <returns>Returns True if good quality, False if bad</returns>
-        private Tuple<MetQualityEnum, double> tempValueQualityCheck(string temperatureTag)
+        private Tuple<MetQualityEnum, double> tempValueCheck(string temperatureTag)
         {
             var temp = client.ReadItemValue("", opcServerName, temperatureTag);
             double tempValue = Convert.ToDouble(temp);
             double minValue = -20.0;
             double maxValue = 60.0;
             //Bad Quality
-            if (tempValue < minValue || tempValue > maxValue) { return new Tuple<MetQualityEnum, double>(MetQualityEnum.MET_BAD_QUALITY, ((tempValue < minValue) ? minValue : maxValue)); }
+            if (tempValue < minValue || tempValue > maxValue)
+            {
+                return new Tuple<MetQualityEnum, double>(MetQualityEnum.MET_BAD_QUALITY, ((tempValue < minValue) ? minValue : maxValue));
+            }
             //Normal oepration
             else { return new Tuple<MetQualityEnum, double>(MetQualityEnum.MET_GOOD_QUALITY, tempValue); }
         }
@@ -362,16 +364,32 @@ namespace Articuno
             string primTempTag = met.PrimTemperatureTag;
             string secTempTag = met.SecTemperatureTag;
             //call the ValueQuatliyCheck method to verify
-            var primTempCheckTuple = tempValueQualityCheck(primTempTag);
-            var secTempCheckTuple = tempValueQualityCheck(secTempTag);
+            var primTempCheckTuple = tempValueCheck(primTempTag);
+            var secTempCheckTuple = tempValueCheck(secTempTag);
 
             var primTempQuality = primTempCheckTuple.Item1;
             var secTempQuality = secTempCheckTuple.Item1;
 
-            if (primTempQuality.Equals(MetQualityEnum.MET_GOOD_QUALITY)) { clearAlarm(met, MetTowerEnum.PrimSensorQuality); }
-            else { raiseAlarm(met, MetTowerEnum.PrimSensorQuality); }
-            if (secTempQuality.Equals(MetQualityEnum.MET_GOOD_QUALITY)) { clearAlarm(met, MetTowerEnum.SecSensorQuality); }
-            else { raiseAlarm(met, MetTowerEnum.SecSensorQuality); }
+            if (primTempQuality.Equals(MetQualityEnum.MET_GOOD_QUALITY))
+            {
+                clearAlarm(met, MetTowerEnum.PrimSensorOutOfRange);
+                clearAlarm(met, MetTowerEnum.PrimSensorQuality);
+            }
+            else
+            {
+                raiseAlarm(met, MetTowerEnum.PrimSensorOutOfRange);
+                raiseAlarm(met, MetTowerEnum.PrimSensorQuality);
+            }
+            if (secTempQuality.Equals(MetQualityEnum.MET_GOOD_QUALITY))
+            {
+                clearAlarm(met, MetTowerEnum.SecSensorOutOfRange);
+                clearAlarm(met, MetTowerEnum.SecSensorQuality);
+            }
+            else
+            {
+                raiseAlarm(met, MetTowerEnum.SecSensorOutOfRange);
+                raiseAlarm(met, MetTowerEnum.SecSensorQuality);
+            }
 
             MetQualityEnum temp = primTempQuality & secTempQuality;
 
@@ -528,7 +546,7 @@ namespace Articuno
 
         public enum MetQualityEnum
         {
-            MET_GOOD_QUALITY=1,
+            MET_GOOD_QUALITY = 1,
             MET_BAD_QUALITY = 0
         }
 

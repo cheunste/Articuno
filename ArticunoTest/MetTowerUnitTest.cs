@@ -54,11 +54,15 @@ namespace ArticunoTest
             "Articuno.Met1.TmpHiDispAlm",
             "Articuno.Met1.TowerAlm",
             "Articuno.Met2.IcePossible",
+            "Articuno.Met1.Tmp12OutOfRangeAlm",
+            "Articuno.Met1.TmpS2OutOfRangeAlm",
             "Articuno.Met2.RHAlm",
             "Articuno.Met2.RHS1OutRngAlm",
             "Articuno.Met2.TempAlm",
             "Articuno.Met2.TmpHiDispAlm",
-            "Articuno.Met2.TowerAlm"
+            "Articuno.Met2.TowerAlm",
+            "Articuno.Met2.Tmp12OutOfRangeAlm",
+            "Articuno.Met2.TmpS2OutOfRangeAlm"
         };
         string siteName;
         string opcServerName = "SV.OPCDAServer.1";
@@ -334,13 +338,13 @@ namespace ArticunoTest
         private void setValidMetData()
         {
             //Met1
-            writeValue(String.Format("{0}.Met1.AmbTmp1", siteName), 60.33);
+            writeValue(String.Format("{0}.Met1.AmbTmp1", siteName), 50.33);
             writeValue(String.Format("{0}.Met1.AmbTmp2", siteName), 52.00);
             writeValue(String.Format("{0}.Met1.RH1", siteName), 30.22);
             writeValue(String.Format("{0}.Met1.RH2", siteName), 25.22);
             //Met2
-            writeValue(String.Format("{0}.Met2.AmbTmp1", siteName), 80.00);
-            writeValue(String.Format("{0}.Met2.AmbTmp2", siteName), 75.00);
+            writeValue(String.Format("{0}.Met2.AmbTmp1", siteName), 40.00);
+            writeValue(String.Format("{0}.Met2.AmbTmp2", siteName), 35.00);
             writeValue(String.Format("{0}.Met2.RH1", siteName), 50.11);
             writeValue(String.Format("{0}.Met2.RH2", siteName), 45.11);
         }
