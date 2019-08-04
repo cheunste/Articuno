@@ -176,7 +176,6 @@ namespace ArticunoTest
 
         [TestMethod]
         //Set bad quality to assert met tower throws an alarm
-        [DataTestMethod]
         [DataRow("Met1", 300.0, 120.0, 110.0, 200.0)]
         public void checkMetTower(string metId, double tempVal1, double tempVal2, double hmdVal1, double hmdVal2)
         {
@@ -226,7 +225,7 @@ namespace ArticunoTest
 
             //switch met tower 
             mm.switchMetTower(metId);
-            Thread.Sleep(100);
+            Thread.Sleep(500);
             Console.WriteLine("Met Tower 1 temperature before switch {0}, humidty before switch {1}", tempVal1, hmdVal1);
             Console.WriteLine("Met Tower 2 temperature before switch {0}, humidty before switch {1}", tempVal2, hmdVal2);
             double tempAfterSwitch = Convert.ToDouble(mm.readTemperature(metId));
@@ -249,7 +248,7 @@ namespace ArticunoTest
 
             //Switch back the met tower to the original
             mm.switchMetTower(metId);
-            Thread.Sleep(100);
+            Thread.Sleep(500);
             tempAfterSwitch = Convert.ToDouble(mm.readTemperature(metId));
             humdAfterSwitch = Convert.ToDouble(mm.readHumidity(metId));
             Console.WriteLine("Met Tower {0} temperature after switch back {1}, humidty after switch back {2}", metId, tempAfterSwitch, humdAfterSwitch);
@@ -290,27 +289,30 @@ namespace ArticunoTest
         [DataTestMethod]
         [DataRow("Met1", -50.0, -50.0, 110.0,MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY,MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY,MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY )]
         [DataRow("Met1", 10.0, 10.0, 60.0, MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY,MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY,MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY )]
-        [DataRow("Met1", 10.0, -50.0, 60.0, MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY,MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY,MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY )]
+        [DataRow("Met1", 10.0, -50.0, 60.0, MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY,MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY,MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY )]
         public void noDataTest(string metId, double tempVal1, double tempVal2, double hmdVal, Object expectedTempQual, Object expectedHumiQual, Object nodata)
         {
             mm.writePrimTemperature(metId, tempVal1);
             mm.writeSecTemperature(metId, tempVal2);
             mm.writeHumidity(metId, hmdVal);
-            Thread.Sleep(100);
+            Thread.Sleep(500);
 
             var tempTuple = mm.tempQualityCheck(metId);
+            var primTempQuality = tempTuple.Item1;
+            var secTempQuality = tempTuple.Item2;
             var humidTuple = mm.humidQualityCheck(metId);
             var metTowerQuality = mm.checkMetTowerQuality(metId);
 
-            Assert.AreEqual(expectedTempQual, tempTuple.Item1, "No Data alarm is still showing true (good quality)");
-            Assert.AreEqual(expectedHumiQual, humidTuple.Item1, "Temperature alarm is still showing true (good quality)");
-            Assert.AreEqual(metTowerQuality, nodata, "No data alarm status not equal");
+            Thread.Sleep(500);
+            Assert.AreEqual(expectedTempQual, primTempQuality, "Primary Temperature alarm is {0}, Expected: {1}",primTempQuality, expectedTempQual);
+            Assert.AreEqual(expectedHumiQual, humidTuple.Item1, "Primary Humidity alarm is {0}, Expected: {1}",humidTuple.Item1,expectedHumiQual);
+            Assert.AreEqual(metTowerQuality, nodata, "No data alarm status not equal. Seeing {0}. Expected {1}, ",metTowerQuality,nodata);
         }
 
         public void cleanup()
         {
-            resetTagsToZero();
-            setValidMetData();
+            //resetTagsToZero();
+            //setValidMetData();
         }
 
         //method to set all the input met tags to zero
@@ -367,8 +369,13 @@ namespace ArticunoTest
             mm.writeSecTemperature(metId, temp2);
 
             MetTower met = mm.getMetTower(metId);
-            mm.readTemperature(metId);
-            Thread.Sleep(100);
+            Thread.Sleep(500);
+            var readTemperature = mm.readTemperature(metId);
+
+            //Assert.AreEqual(Convert.ToDouble(readTemperature), temp1, 0.001, "Temperature are not equal. Read Temperature: {0}, Set Temperature {1}",readTemperature,temp1);
+            Console.WriteLine("Read Temperature: {0}, Set Temperature {1}",readTemperature,temp1);
+
+
             bool primOutOfRange = Convert.ToBoolean(met.TemperaturePrimOutOfRange.ToString());
             bool secOutOfRange = Convert.ToBoolean(met.TemperatureSecOutOfRange.ToString());
 
@@ -376,10 +383,14 @@ namespace ArticunoTest
             bool secQuaality = Convert.ToBoolean(met.TemperatureSecBadQuality.ToString());
 
 
-            Assert.AreEqual(!Convert.ToBoolean(failureExpected), primOutOfRange);
-            Assert.AreEqual(!Convert.ToBoolean(failureExpected), secOutOfRange);
-            Assert.AreEqual(!Convert.ToBoolean(failureExpected), primQuaality);
-            Assert.AreEqual(!Convert.ToBoolean(failureExpected), secQuaality);
+            bool inputQualityStatus = !Convert.ToBoolean(failureExpected);
+
+
+            Thread.Sleep(500);
+            Assert.AreEqual(inputQualityStatus, primOutOfRange,"input quality {0}, prim out of range {1}",inputQualityStatus,primOutOfRange);
+            Assert.AreEqual(inputQualityStatus, secOutOfRange,"input quality {0}, sec out of range {1}",inputQualityStatus,secOutOfRange);
+            Assert.AreEqual(inputQualityStatus, primQuaality,"input quality {0}, prim Quality {1}",inputQualityStatus,primQuaality);
+            Assert.AreEqual(inputQualityStatus, secQuaality,"input quality {0}, sec Quality {1}",inputQualityStatus,secQuaality);
 
         }
 
@@ -397,13 +408,15 @@ namespace ArticunoTest
             mm.writeHumidity(metId, temp1);
 
             MetTower met = mm.getMetTower(metId);
-            mm.readHumidity(metId);
-            Thread.Sleep(100);
+            var readValue =mm.readHumidity(metId);
+            Thread.Sleep(500);
             bool  primQuaality = Convert.ToBoolean(met.HumidityBadQuality.ToString());
             bool primOutOfRange = Convert.ToBoolean(met.HumidityOutOfRng.ToString());
 
-            Assert.AreEqual(!Convert.ToBoolean(failureExpected), primOutOfRange);
-            Assert.AreEqual(!Convert.ToBoolean(failureExpected), primQuaality);
+            var inputStatus =!Convert.ToBoolean(failureExpected);
+            Thread.Sleep(500);
+            Assert.AreEqual(inputStatus, primOutOfRange,"Input Status: {0}, prim Humidity Out of Range: {1}, Read Value: {2}",inputStatus,primOutOfRange, readValue);
+            Assert.AreEqual(inputStatus, primQuaality,"Input Status: {0},prim Humidity Quality{1}, Read Value: {2}",inputStatus,primQuaality, readValue);
 
 
 
