@@ -71,6 +71,8 @@ namespace Articuno
             turbinesPausedByArticuno = new List<string>();
             turbinesWaitingForPause = new List<string>();
             turbinesConditionNotMet = new List<string>();
+
+            setup();
         }
 
         static void Main(string[] args)
@@ -152,7 +154,7 @@ namespace Articuno
             List<DAItemGroupArguments> assetInputTags = new List<DAItemGroupArguments>();
             foreach (string prefix in tm.getTurbinePrefixList())
             {
-                string cmd = String.Format("SELECT OperatingState, Participation,NrsMode from TurbineInputTags where TurbineId='{0}'", prefix);
+                string cmd = String.Format("SELECT OperatingState, Participation,NrsMode,Start from TurbineInputTags where TurbineId='{0}'", prefix);
                 reader = dbi.readCommand(cmd);
                 for (int i = 0; i < reader.Rows.Count; i++)
                 {
@@ -164,6 +166,9 @@ namespace Articuno
                             opcServerName, reader.Rows[i]["Participation"].ToString(), 1000, null));
                         assetInputTags.Add(new DAItemGroupArguments("",
                             opcServerName, reader.Rows[i]["NrsMode"].ToString(), 1000, null));
+                        assetInputTags.Add(new DAItemGroupArguments("",
+                            opcServerName, reader.Rows[i]["Start"].ToString(), 1000, null));
+
                     }
                     catch (Exception e) { log.ErrorFormat("Error when attempting to add to assetInputTags list. {0}", e); }
                 }
@@ -203,13 +208,8 @@ namespace Articuno
                 mm.writeToQueue("Met" + i, temperature, humidity);
             }
 
-            //Get turbine to update internal wind speed queue
-            foreach (string prefix in tm.getTurbinePrefixList())
-            {
-                //Call the storeWindSpeed function to store a wind speed average into a turbine queue
-                tm.storeMinuteAverages(prefix);
-            }
-
+            //Call the storeWindSpeed function to store a wind speed average into a turbine queue (for all turbines in the list)
+            foreach (string prefix in tm.getTurbinePrefixList()) { tm.storeMinuteAverages(prefix); }
 
             //For every CTR minute, do the other calculation stuff. Better set up a  member variable here
             ctrCountdown--;
@@ -303,8 +303,14 @@ namespace Articuno
                 Enum turbineEnum = tm.findTurbineTag(matchLookup.Value, opcTag);
                 switch (turbineEnum)
                 {
+                    //Case where the site changes the NRS Mode
                     case TurbineMediator.TurbineEnum.NrsMode:
                         tm.writeNrsStateTag(prefix, value);
+                        break;
+
+                    //case where the turbine is started by either the site or the NCC
+                    case TurbineMediator.TurbineEnum.TurbineStarted:
+                        if (isPausedByArticuno(prefix)) { TurbineMediator.Instance.startTurbine(prefix); }
                         break;
                     //In the case where the turbine went into a different state. This includes pause by the dispatchers, site, curtailment, maintenance, anything non-Articuno 
                     case TurbineMediator.TurbineEnum.OperatingState:
@@ -418,7 +424,7 @@ namespace Articuno
         /// <summary>
         /// Method executed from the TurbineMediator class. This should only be used to signal the main program that a turbine is cleared
         /// </summary>
-        public static void turbineClearedBySite(string turbineId)
+        public static void turbineClearedOfIce(string turbineId)
         {
             log.DebugFormat("ArticunoMain has detected Turbine {0} has started from the site.", turbineId);
             turbinesWaitingForPause.Add(turbineId);

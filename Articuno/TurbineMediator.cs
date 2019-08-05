@@ -123,6 +123,8 @@ namespace Articuno
                 turbine.WindSpeedTag = reader.Rows[0]["WindSpeed"].ToString();
                 turbine.ParticipationTag = reader.Rows[0]["Participation"].ToString();
                 turbine.ScalingFactorTag = reader.Rows[0]["ScalingFactor"].ToString();
+                turbine.LoadShutdownTag = reader.Rows[0]["Pause"].ToString();
+                turbine.StartCommandTag = reader.Rows[0]["Start"].ToString();
 
                 string primMetTower = reader.Rows[0]["MetReference"].ToString();
                 MetTower metTower = MetTowerMediator.Instance.getMetTower(primMetTower);
@@ -148,8 +150,8 @@ namespace Articuno
                 reader = dbi.readCommand(cmd);
 
                 turbine.AlarmTag = reader.Rows[0]["Alarm"].ToString();
-                turbine.LoadShutdownTag = reader.Rows[0]["Pause"].ToString();
-                turbine.StartCommandTag = reader.Rows[0]["Start"].ToString();
+                //turbine.LoadShutdownTag = reader.Rows[0]["Pause"].ToString();
+                //turbine.StartCommandTag = reader.Rows[0]["Start"].ToString();
 
                 //Add turbine to the turbine list
                 turbineList.Add(turbine);
@@ -189,6 +191,8 @@ namespace Articuno
                 }
             }
         }
+
+        public void startTurbine(string turbineId) { getTurbine(turbineId).startTurbine(); }
 
         /// <summary>
         /// Method to get a turbine object given a turbine prefix (ie T001)
@@ -308,6 +312,7 @@ namespace Articuno
             WindSpeed,
             Participation,
             PausedByArticuno,
+            TurbineStarted,
             ClearBySite
         }
 
@@ -381,7 +386,7 @@ namespace Articuno
             if (status.Equals(TurbineEnum.PausedByArticuno))
                 ArticunoMain.turbinePausedByArticuno(turbineId);
             else
-                ArticunoMain.turbineClearedBySite(turbineId);
+                ArticunoMain.turbineClearedOfIce(turbineId);
         }
 
 
