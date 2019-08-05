@@ -417,7 +417,23 @@ namespace ArticunoTest
             Thread.Sleep(500);
             Assert.AreEqual(inputStatus, primOutOfRange,"Input Status: {0}, prim Humidity Out of Range: {1}, Read Value: {2}",inputStatus,primOutOfRange, readValue);
             Assert.AreEqual(inputStatus, primQuaality,"Input Status: {0},prim Humidity Quality{1}, Read Value: {2}",inputStatus,primQuaality, readValue);
+        }
 
+        [TestMethod]
+        [DataTestMethod]
+        [DataRow("Met1", -1,true)]
+        [DataRow("Met1", 20,false)]
+        [DataRow("Met1", 101,false)]
+        [DataRow("Met1", 90,false)]
+        [DataRow("Met1", 0,true)]
+        [DataRow("Met1", -20,true)]
+        public void freezingTest(string metId, double temperature,bool expectedFrozenState)
+        {
+            mm.isFreezing(metId, temperature);
+            MetTower met =mm.getMetTower(metId);
+
+            Console.WriteLine("Ice Indication Value: {0}", met.IceIndicationValue);
+            Assert.AreEqual(expectedFrozenState, Convert.ToBoolean(met.IceIndicationValue));
 
 
         }
