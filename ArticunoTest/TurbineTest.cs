@@ -159,7 +159,8 @@ namespace ArticunoTest
         {
             foreach (string prefix in TurbineMediator.Instance.getTurbinePrefixList())
             {
-                TurbineMediator.Instance.setCtrTime(prefix, value);
+                //TurbineMediator.Instance.setCtrTime(prefix, value);
+                TurbineMediator.Instance.writeCtrTime(value);
             }
 
 
