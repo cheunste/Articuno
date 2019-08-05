@@ -219,9 +219,11 @@ namespace Articuno
                 //Calculate temperature averages from the all the temperature queues
                 for (int i = 1; i <= MetTowerMediator.getNumMetTower(); i++)
                 {
+                    //TODO: Add humidity to this 
                     double tempAvg = mm.calculateCtrAvgTemperature("Met" + i);
+                    double humidityAvg = mm.calculateCtrAvgHumidity("Met" + i);
                     //Send this temperature to the Met Mediator and determine if met tower is freezing or not
-                    mm.isFreezing("Met" + i, tempAvg);
+                    mm.isFreezing("Met" + i, tempAvg,humidityAvg);
                 }
                 //Call the RotorSPeedCheck function to compare rotor speed for all turbines
                 foreach (string prefix in tm.getTurbinePrefixList()) { tm.RotorSpeedCheck(prefix); }

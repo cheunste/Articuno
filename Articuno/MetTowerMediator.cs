@@ -39,10 +39,7 @@ namespace Articuno
 
         //Database
         static DatabaseInterface dbi;
-        private MetTowerMediator()
-        {
-            dbi = DatabaseInterface.Instance;
-        }
+        private MetTowerMediator() { dbi = DatabaseInterface.Instance; }
 
         public static MetTowerMediator Instance { get { return Nested.instance; } }
 
@@ -480,23 +477,22 @@ namespace Articuno
 
         //Function that is called by the main Articuno class to determine if the temperature average calculated
         // by ARticuno is considered freezing or not
-        public void isFreezing(string metId, double averageTemperature)
+        public void isFreezing(string metId, double avgTemperature,double avgHumidity)
         {
             double tempThreshold = readTemperatureThreshold(metId);
             Console.WriteLine("Threshold {0}", tempThreshold);
 
             MetTower met = getMetTower(metId);
             //Freezing Conditions met
-            if (averageTemperature <= tempThreshold)
+            if (avgTemperature <= tempThreshold)
             {
-                //met.IceIndicationValue;
                 try
                 {
-                    met.IceIndicationValue = 1.00;
+                    met.IceIndicationValue = true;
                     log.InfoFormat("Icing conditions met for {0}. \n" +
                         "average Temperature {1}, \n" +
                         "Temperature threshold {2} \n",
-                        metId, averageTemperature, tempThreshold);
+                        metId, avgTemperature, tempThreshold);
                 }
                 catch (Exception e)
                 {
@@ -507,10 +503,10 @@ namespace Articuno
                         "Met: {1}, \n" +
                         "avgTemp: {2}, \n" +
                         "tempThreshold {3}\n",
-                        e, metId, averageTemperature, tempThreshold);
+                        e, metId, avgTemperature, tempThreshold);
                 }
             }
-            else{ met.IceIndicationValue = 0; }
+            else{ met.IceIndicationValue = false; }
         }
 
         public Enum findMetTowerTag(string metTowerId, string tag)

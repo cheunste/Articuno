@@ -74,10 +74,7 @@ namespace Articuno
             filterTable = new RotorSpeedFilter();
         }
 
-        private string getOpcServerName()
-        {
-            return DatabaseInterface.Instance.getOpcServer();
-        }
+        private string getOpcServerName() { return DatabaseInterface.Instance.getOpcServer(); }
 
         public void createPrefixList()
         {
@@ -158,22 +155,6 @@ namespace Articuno
             }
         }
 
-        /// <summary>
-        /// Command to pause a turbine given a Turbine object. Also known as loadshutdown
-        /// </summary>
-        /// <param name="turbine"></param>
-        public void pauseTurbine(Turbine turbine)
-        {
-            foreach (Turbine turbineInList in turbineList)
-            {
-                if (turbineInList.Equals(turbine))
-                {
-                    log.DebugFormat("Attempting to pause turbine {0} from TurbineMediator", turbine.getTurbinePrefixValue());
-                    turbine.writeLoadShutdownCmd();
-                }
-            }
-        }
-
         public bool isPausedByArticuno(String turbineId) { return Convert.ToBoolean(getTurbine(turbineId).readAlarmValue()); }
         /// <summary>
         /// Command to pause a turbine given a Turbine prefix. Also known as loadshutdown
@@ -192,7 +173,11 @@ namespace Articuno
             }
         }
 
-        public void startTurbine(string turbineId) { getTurbine(turbineId).startTurbine(); }
+        public void startTurbine(string turbineId)
+        {
+            log.DebugFormat("Attempting to start turbine {0} from TurbineMeidator", turbineId);
+            getTurbine(turbineId).startTurbine();
+        }
 
         /// <summary>
         /// Method to get a turbine object given a turbine prefix (ie T001)
@@ -349,7 +334,7 @@ namespace Articuno
             var currentScalingFactor = Convert.ToDouble(turbine.readTurbineScalingFactorValue());
 
             //Set under performance condition to be true. Else, clear it
-            if ((rotorSpeedAverage/rotorSpeedQueueCount) < referenceRotorSpeed - (currentScalingFactor * referenceStdDev)) { turbine.setTurbinePerformanceCondition(true); }
+            if ((rotorSpeedAverage / rotorSpeedQueueCount) < referenceRotorSpeed - (currentScalingFactor * referenceStdDev)) { turbine.setTurbinePerformanceCondition(true); }
             else { turbine.setTurbinePerformanceCondition(false); }
 
             //For sanity check, make sure the windSPeedQueue is empty 
@@ -388,8 +373,5 @@ namespace Articuno
             else
                 ArticunoMain.turbineClearedOfIce(turbineId);
         }
-
-
-
     }
 }
