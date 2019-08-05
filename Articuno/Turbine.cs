@@ -33,8 +33,8 @@ namespace Articuno
         private bool turbinePerformanceConditionMet;
         private bool derateConditionMet;
 
-        //CTR Time
-        private int ctrTimeValue;
+        //CTR Time. This is used to count down to zero. NOT set it.
+        private int ctrCountDown;
 
         //Queues
         private Queue<Double> windSpeedQueue;
@@ -72,12 +72,12 @@ namespace Articuno
         public Object readNrsStateValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, NrsStateTag); }
         public Object readTemperatureValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, TemperatureTag); }
         //public Object readTurbineCtrValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, TurbineCtrTag); }
-        public Object readTurbineCtrValue() { return TurbineCtrTag; }
+        public Object readTurbineCtrValue() { return TurbineCtr; }
         public Object readTurbineHumidityValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, TurbineHumidityTag); }
         public Object readTurbineScalingFactorValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, ScalingFactorTag); }
         public Object readParticipationValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, ParticipationTag); }
         public Object readAlarmValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, AlarmTag); }
-        public int readCtrValue() { return this.ctrTimeValue; }
+        public int readCtrCurrentValue() { return ctrCountDown; }
 
         //public Accessors (Getters and Setters)  to set the member variables to the  OPC tag
         // Not entirely sure if these should be public or not, but it does make reading code easier
@@ -87,7 +87,8 @@ namespace Articuno
         public string OperatingStateTag { set; get; }
         public string NrsStateTag { set; get; }
         public string LoadShutdownTag { set; get; }
-        public string TurbineCtrTag { set; get; }
+        public string StartCommandTag { internal set; get; }
+        public string TurbineCtr { set; get; }
         public string TemperatureTag { set; get; }
         public string TurbineHumidityTag { set; get; }
         public string ScalingFactorTag { set; get; }
@@ -97,8 +98,7 @@ namespace Articuno
         public string DeRate { set; get; }
 
         //Theses are used to write to the OP Tag Values.  There shouldn't be too many of these
-        //public void writeTurbineCtrValue(int ctrValue) { client.WriteItemValue("", OpcServerName, this.TurbineCtrTag, ctrValue); }
-        public void writeTurbineCtrValue(int ctrValue) { TurbineCtrTag = ctrValue.ToString(); }
+        public void writeTurbineCtrValue(int ctrValue) { TurbineCtr = ctrValue.ToString(); ctrCountDown = ctrValue; }
         //Scalign factor is unique as it is not used in the OPC Server and only used internally in this program
         public void writeTurbineSFValue(int scalingFactor) { this.currentTurbSF = scalingFactor; }
         //Load shutdown function. Probably the most important function
@@ -120,13 +120,12 @@ namespace Articuno
         public void writeAlarmTagValue(Object value) { client.WriteItemValue("", OpcServerName, AlarmTag, Convert.ToBoolean(value)); }
         public void writeNoiseLevel(Object value) { client.WriteItemValue("", OpcServerName, NrsStateTag, Convert.ToDouble(value)); }
         public void writeOperatingState(Object value) { client.WriteItemValue("", OpcServerName, OperatingStateTag, Convert.ToDouble(value)); }
-        public void writeCtrTimeValue(int value) { ctrTimeValue = value; }
         public void decrementCtrTime(int value)
         {
-            ctrTimeValue--;
-            if (ctrTimeValue <= 0)
+            ctrCountDown--;
+            if (ctrCountDown <= 0)
             {
-                ctrTimeValue = value;
+                ctrCountDown = value;
                 checkIcingConditions();
             }
         }

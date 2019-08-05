@@ -149,6 +149,7 @@ namespace Articuno
 
                 turbine.AlarmTag = reader.Rows[0]["Alarm"].ToString();
                 turbine.LoadShutdownTag = reader.Rows[0]["Pause"].ToString();
+                turbine.StartCommandTag = reader.Rows[0]["Start"].ToString();
 
                 //Add turbine to the turbine list
                 turbineList.Add(turbine);
@@ -214,7 +215,7 @@ namespace Articuno
         public string getNrsStateTag(string turbineId) { return getTurbine(turbineId).NrsStateTag; }
         public string getTemperatureTag(string turbineId) { return getTurbine(turbineId).TemperatureTag; }
         public string getLoadShutdownTag(string turbineId) { return getTurbine(turbineId).LoadShutdownTag; }
-        public string getTurbineCtrTag(string turbineId) { return getTurbine(turbineId).TurbineCtrTag; }
+        public string getTurbineCtrTag(string turbineId) { return getTurbine(turbineId).TurbineCtr; }
         public string getHumidityTag(string turbineId) { return getTurbine(turbineId).TurbineHumidityTag; }
 
         //For reading OPC value using turbineId
@@ -244,8 +245,9 @@ namespace Articuno
         /// sets the CTR time for this turbine
         /// </summary>
         /// <param name="value"></param>
-        public void setCtrTime(string turbineId, int ctrValue) { getTurbine(turbineId).writeCtrTimeValue(ctrValue); }
-        public int getCtrTime(string turbineId) { return getTurbine(turbineId).readCtrValue(); }
+        public void setCtrTime(string turbineId, int ctrValue) { getTurbine(turbineId).writeTurbineCtrValue(ctrValue); }
+        public int getCtrTime(string turbineId) { return Convert.ToInt32(getTurbine(turbineId).TurbineCtr); }
+        public int getCtrCountdown(string turbineId) { return getTurbine(turbineId).readCtrCurrentValue(); }
 
         /// <summary>
         /// Used for testing only. This creates a testing scenario that uses only T001 
