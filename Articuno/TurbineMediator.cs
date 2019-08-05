@@ -184,6 +184,7 @@ namespace Articuno
                 {
                     log.DebugFormat("Attempting to pause turbine {0} from TurbineMediator", turbineInList.getTurbinePrefixValue());
                     turbineInList.writeLoadShutdownCmd();
+                    updateMain(TurbineEnum.PausedByArticuno, turbinePrefix);
                 }
             }
         }
@@ -232,7 +233,6 @@ namespace Articuno
         public Object readOperatingStateValue(string turbineId) { return client.ReadItemValue("", opcServerName, getOperatingStateTag(turbineId)); }
         public Object readNrsStateValue(string turbineId) { return client.ReadItemValue("", opcServerName, getNrsStateTag(turbineId)); }
         public Object readTemperatureValue(string turbineId) { return client.ReadItemValue("", opcServerName, getTemperatureTag(turbineId)); }
-        public Object readTurbineCtrValue(string turbineId) { return client.ReadItemValue("", opcServerName, getTurbineCtrTag(turbineId)); }
         public Object readHumidityValue(string turbineId) { return client.ReadItemValue("", opcServerName, getHumidityTag(turbineId)); }
 
         //For writing (using turbineId). Note that the mediator really shouldn't be writing to all the availble turbine tags. If you need to test something, you need to create a turbine object 
@@ -342,7 +342,7 @@ namespace Articuno
             var currentScalingFactor = Convert.ToDouble(turbine.readTurbineScalingFactorValue());
 
             //Set under performance condition to be true. Else, clear it
-            if (rotorSpeedAverage < referenceRotorSpeed - (currentScalingFactor * referenceStdDev)) { turbine.setTurbinePerformanceCondition(true); }
+            if ((rotorSpeedAverage/rotorSpeedQueueCount) < referenceRotorSpeed - (currentScalingFactor * referenceStdDev)) { turbine.setTurbinePerformanceCondition(true); }
             else { turbine.setTurbinePerformanceCondition(false); }
 
             //For sanity check, make sure the windSPeedQueue is empty 

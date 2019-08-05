@@ -168,8 +168,8 @@ namespace Articuno
             }
             else
             {
-                log.InfoFormat("Icing onditions cleared for {0}",getTurbinePrefixValue());
-                pauseByArticuno(false);
+                //log.InfoFormat("Icing conditions clear for {0}",getTurbinePrefixValue());
+                //pauseByArticuno(false);
             }
         }
 
@@ -201,7 +201,7 @@ namespace Articuno
             }
             else {
 
-                log.DebugFormat("Clearing alarm for {0}", getTurbinePrefixValue());
+                log.DebugFormat("Clearing Pause Status for {0}", getTurbinePrefixValue());
                 writeAlarmTagValue(false);
                 TurbineMediator.Instance.updateMain(TurbineMediator.TurbineEnum.ClearBySite,TurbinePrefix);
             }
