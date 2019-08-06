@@ -226,6 +226,7 @@ namespace Articuno
                     double humidityAvg = mm.calculateCtrAvgHumidity("Met" + i);
                     //Send this temperature to the Met Mediator and determine if met tower is freezing or not
                     mm.setFrozenCondition("Met" + i, tempAvg, humidityAvg);
+                    tm.checkMetTowerFrozen("Met" + i);
                 }
                 //Call the RotorSPeedCheck function to compare rotor speed for all turbines
                 foreach (string prefix in tm.getTurbinePrefixList()) { tm.RotorSpeedCheck(prefix); }

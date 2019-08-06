@@ -47,7 +47,7 @@ namespace Articuno
         private bool articunoParicipation;
 
         //Met Tower Fields
-        private MetTower currentMetTower;
+        private string currentMetTower;
 
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(Turbine));
@@ -147,13 +147,9 @@ namespace Articuno
         public void setDeRateCondition(bool state) { derateConditionMet = state; }
 
         /*
-         * Met Tower related methods for turbines. 
-         * One sets the met tower reference (upon create) and the other gets it. 
-         * These can be set to another reference  if/when they fail 
-         * The set Met Reference takes in a MetTower object
+         * Met Tower accessor. Note that it only takes a prefix
          */
-        public void setMetTower(MetTower met) { currentMetTower = met; }
-        public MetTower getMetTower() { return currentMetTower; }
+        public string MetTowerPrefix { set; get; }
 
         //Function to determine participation
         public void setParticipation(bool participationStatus) { articunoParicipation = participationStatus; }

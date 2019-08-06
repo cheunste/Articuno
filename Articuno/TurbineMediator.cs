@@ -124,8 +124,8 @@ namespace Articuno
                 turbine.StartCommandTag = reader.Rows[0]["Start"].ToString();
 
                 string primMetTower = reader.Rows[0]["MetReference"].ToString();
-                MetTower metTower = MetTowerMediator.Instance.getMetTower(primMetTower);
-                turbine.setMetTower(metTower);
+                //turbine.setMetTower(primMetTower);
+                turbine.MetTowerPrefix = primMetTower;
 
                 try
                 {
@@ -371,12 +371,22 @@ namespace Articuno
 
 
         /// <summary>
-        /// This function is used to inform all Turbines that a met tower is frozen and may need to update their met tower conditions
+        /// This function is used to inform all Turbines to check if their mapped met tower is frozen up
         /// </summary>
-        /// <param name="frozenMetTowerId">A met tower prefix</param>
+        /// <param name="metId">A met tower prefix</param>
         //Note that met tower can be switched
-        public void reportFrozenMetTower(string frozenMetTowerId)
+        public void checkMetTowerFrozen(string metId)
         {
+            foreach (string turbinePrefix in getTurbinePrefixList()) {
+                string temp = getTurbine(turbinePrefix).MetTowerPrefix;
+                string metPrefix = MetTowerMediator.Instance.isMetTowerSwitched(temp);
+                bool isMetFrozen = MetTowerMediator.Instance.isMetFrozen(metPrefix);
+
+                if (metId.Equals(metPrefix)&&isMetFrozen)
+                    setTemperatureCondition(turbinePrefix, true);
+                else
+                    setTemperatureCondition(turbinePrefix, false);
+            }
 
         }
 
