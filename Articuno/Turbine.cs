@@ -123,10 +123,12 @@ namespace Articuno
         public void decrementCtrTime()
         {
             ctrCountDown--;
+            log.DebugFormat("{0} Current CTR: {1}",getTurbinePrefixValue(),ctrCountDown);
             if (ctrCountDown <= 0)
             {
                 //ctrCountDown = articunoCtrTime;
                 //writeTurbineCtrValue(articunoCtrTime);
+                log.InfoFormat("CTR period for Turbine {0} reached Zero.",getTurbinePrefixValue());
                 ctrCountDown = Convert.ToInt32(TurbineCtr);
                 checkIcingConditions();
             }
@@ -162,7 +164,11 @@ namespace Articuno
         //The actual method that checks all conditions and throws a load shutdown command if needed
         public void checkIcingConditions()
         {
-            if (Convert.ToBoolean(readParticipationValue()) && temperatureConditionMet && operatingStateConditionMet && nrsConditionMet && turbinePerformanceConditionMet && derateConditionMet)
+            Console.WriteLine("Full condition {0}\nparticipation: {1}\nTemp Condition: {2}\n" +
+                "OperatingState: {3}\nNRS:{4}\nTurbinePerf Condition {5}", Convert.ToBoolean(readParticipationValue()) && temperatureConditionMet && operatingStateConditionMet && nrsConditionMet && turbinePerformanceConditionMet,
+                Convert.ToBoolean(readParticipationValue()) ,temperatureConditionMet,operatingStateConditionMet,nrsConditionMet,turbinePerformanceConditionMet);
+            //if (Convert.ToBoolean(readParticipationValue()) && temperatureConditionMet && operatingStateConditionMet && nrsConditionMet && turbinePerformanceConditionMet && derateConditionMet)
+            if (Convert.ToBoolean(readParticipationValue()) && temperatureConditionMet && operatingStateConditionMet && nrsConditionMet && turbinePerformanceConditionMet )
             {
                 log.InfoFormat("Icing conditions satisfied for {0}",getTurbinePrefixValue());
                 pauseByArticuno(true);

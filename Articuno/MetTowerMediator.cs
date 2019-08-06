@@ -141,7 +141,7 @@ namespace Articuno
         /// </summary>
         /// <param name="metId">The metid checked to see if it is swtiched</param>
         /// <returns>A metId. Returns the original metId if it is not switched. Returns a the backup metId otherwise</returns>
-        private string isMetTowerSwitched(string metId)
+        public string isMetTowerSwitched(string metId)
         {
             if (Convert.ToBoolean(getMetTower(metId).MetSwitchValue))
                 return metId.Equals("Met1") ? "Met2" : "Met1";
@@ -477,7 +477,7 @@ namespace Articuno
 
         //Function that is called by the main Articuno class to determine if the temperature average calculated
         // by ARticuno is considered freezing or not
-        public void isFreezing(string metId, double avgTemperature,double avgHumidity)
+        public void setFrozenCondition(string metId, double avgTemperature,double avgHumidity)
         {
             double tempThreshold = readTemperatureThreshold(metId);
             Console.WriteLine("Threshold {0}", tempThreshold);
@@ -490,8 +490,8 @@ namespace Articuno
                 {
                     met.IceIndicationValue = true;
                     log.InfoFormat("Icing conditions met for {0}. \n" +
-                        "average Temperature {1}, \n" +
-                        "Temperature threshold {2} \n",
+                        "{0} Average Temperature {1}, \n" +
+                        "{0} Temperature threshold {2} \n",
                         metId, avgTemperature, tempThreshold);
                 }
                 catch (Exception e)
@@ -508,6 +508,13 @@ namespace Articuno
             }
             else{ met.IceIndicationValue = false; }
         }
+
+        /// <summary>
+        /// Checks to see if a met tower is frozen given the prefix of the met
+        /// </summary>
+        /// <param name="metTowerId"></param>
+        /// <returns>Boolean. True if frozen, false otherwise</returns>
+        public bool isMetFrozen(string metTowerId) { return Convert.ToBoolean(getMetTower(metTowerId).IceIndicationValue); }
 
         public Enum findMetTowerTag(string metTowerId, string tag)
         {

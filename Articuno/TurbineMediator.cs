@@ -368,6 +368,18 @@ namespace Articuno
             foreach (string turbinePrefix in getTurbinePrefixList()) { getTurbine(turbinePrefix).decrementCtrTime(); }
 
         }
+
+
+        /// <summary>
+        /// This function is used to inform all Turbines that a met tower is frozen and may need to update their met tower conditions
+        /// </summary>
+        /// <param name="frozenMetTowerId">A met tower prefix</param>
+        //Note that met tower can be switched
+        public void reportFrozenMetTower(string frozenMetTowerId)
+        {
+
+        }
+
         /// <summary>
         /// Method to signal the Articuno Main method that the turbines have paused by the program or cleared by the site
         /// </summary>

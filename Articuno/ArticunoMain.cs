@@ -212,6 +212,7 @@ namespace Articuno
             foreach (string prefix in tm.getTurbinePrefixList()) { tm.storeMinuteAverages(prefix); }
 
             //Tell the turbines to Decrement thier internal CTR Time
+            tm.decrementTurbineCtrTime();
 
             //For every CTR minute, do the other calculation stuff. Better set up a  member variable here
             ctrCountdown--;
@@ -221,11 +222,10 @@ namespace Articuno
                 //Calculate temperature averages from the all the temperature queues
                 for (int i = 1; i <= MetTowerMediator.getNumMetTower(); i++)
                 {
-                    //TODO: Add humidity to this 
                     double tempAvg = mm.calculateCtrAvgTemperature("Met" + i);
                     double humidityAvg = mm.calculateCtrAvgHumidity("Met" + i);
                     //Send this temperature to the Met Mediator and determine if met tower is freezing or not
-                    mm.isFreezing("Met" + i, tempAvg, humidityAvg);
+                    mm.setFrozenCondition("Met" + i, tempAvg, humidityAvg);
                 }
                 //Call the RotorSPeedCheck function to compare rotor speed for all turbines
                 foreach (string prefix in tm.getTurbinePrefixList()) { tm.RotorSpeedCheck(prefix); }
@@ -276,7 +276,6 @@ namespace Articuno
             /*
              * The following will find the met and turbine indicator for any given OPC Tag that changed by finding any words that are four characters long. First three can be alphanumeric,
              * but the last one must be a number
-             *
              * Ex: SCRAB.T001.WROT.RotSpdAv will match T001 and SCRAB.MET1.AmbRh1 will match MET1
              */
             string pattern = @"\b\w{3}\d{1}\b";
@@ -284,7 +283,6 @@ namespace Articuno
             Regex lookup = new Regex(pattern, RegexOptions.Singleline);
             Match matchLookup = lookup.Match(opcTag);
             string prefix = matchLookup.ToString();
-
 
             //If it matches the met tower
             //TODO: Implement this. You should only have the me ttower switch. Thresholds are dealt with in SystemInputOnChange()
@@ -310,27 +308,18 @@ namespace Articuno
                 {
                     //Case where the site changes the NRS Mode
                     case TurbineMediator.TurbineEnum.NrsMode:
-                        tm.writeNrsStateTag(prefix, value);
+                        checkNrs(prefix, value);
                         break;
-
                     //case where the turbine is started by either the site or the NCC
                     case TurbineMediator.TurbineEnum.TurbineStarted:
-                        if (isPausedByArticuno(prefix)) { TurbineMediator.Instance.startTurbine(prefix); }
+                        if (isPausedByArticuno(prefix)) { tm.startTurbine(prefix); }
                         break;
                     //In the case where the turbine went into a different state. This includes pause by the dispatchers, site, curtailment, maintenance, anything non-Articuno 
                     case TurbineMediator.TurbineEnum.OperatingState:
-                        int state = Convert.ToInt16(value);
-                        //If already paused by Articuno, then there's nothing to do
-                        if (isPausedByArticuno(prefix)) { break; }
-                        //If turbine isn't in run or draft, then that means it is derated or in emergency, or something else
-                        if ((state != RUN_STATE || state != DRAFT_STATE)) { conditionsNotMet(prefix); }
-                        else { conditionsMet(prefix); }
+                        checkOperatingState(prefix, value);
                         break;
                     case TurbineMediator.TurbineEnum.Participation:
-                        bool partipationStatus = Convert.ToBoolean(value);
-                        if (isPausedByArticuno(prefix)) { break; }
-                        if (partipationStatus == false && !turbinesExcludedList.Contains(prefix)) { conditionsNotMet(prefix); }
-                        else { conditionsMet(prefix); }
+                        checkPariticipation(prefix, value);
                         break;
                     default:
                         log.DebugFormat("Event CHanged detected for {0}. However, there is nothing to be doen", opcTag);
@@ -339,6 +328,42 @@ namespace Articuno
             }
         }
 
+        private static void checkNrs(string turbineId, object value)
+        {
+            tm.writeNrsStateTag(turbineId, value);
+            if (Convert.ToInt16(value) == 5)
+                tm.setNrscondition(turbineId, true);
+            else
+                tm.setNrscondition(turbineId, false);
+        }
+        private static void checkOperatingState(string turbineId, object value)
+        {
+            int state = Convert.ToInt16(value);
+            Console.WriteLine("Current Operating State: {0}", state);
+            //If already paused by Articuno, then there's nothing to do
+            if (isPausedByArticuno(turbineId)) { }
+            //If turbine isn't in run or draft, then that means it is derated or in emergency, or something else
+            if ((state != RUN_STATE || state != DRAFT_STATE))
+            {
+                conditionsNotMet(turbineId);
+                tm.setOperatingStateCondition(turbineId, false);
+            }
+            else
+            {
+                conditionsMet(turbineId);
+                tm.setOperatingStateCondition(turbineId, true);
+            }
+
+
+        }
+        private static void checkPariticipation(string turbineId, object value)
+        {
+            bool partipationStatus = Convert.ToBoolean(value);
+            //do nothing if turbine is already in paused
+            if (isPausedByArticuno(turbineId)) { }
+            if (partipationStatus == false && !turbinesExcludedList.Contains(turbineId)) { conditionsNotMet(turbineId); }
+            else { conditionsMet(turbineId); }
+        }
         //This is a method that is triggered upon any value changes for certain OPC Tags
         static void assetTagChangeHandler(object sender, EasyDAItemChangedEventArgs e)
         {
