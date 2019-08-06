@@ -33,7 +33,7 @@ namespace Articuno
         public static List<string> turbinesConditionNotMet;
 
         private static string opcServerName;
-        private static int articunoCtr;
+        private static int articunoCtrTime;
         private static int ctrCountdown;
         private static bool articunoEnable;
 
@@ -211,6 +211,8 @@ namespace Articuno
             //Call the storeWindSpeed function to store a wind speed average into a turbine queue (for all turbines in the list)
             foreach (string prefix in tm.getTurbinePrefixList()) { tm.storeMinuteAverages(prefix); }
 
+            //Tell the turbines to Decrement thier internal CTR Time
+
             //For every CTR minute, do the other calculation stuff. Better set up a  member variable here
             ctrCountdown--;
             if (ctrCountdown == 0)
@@ -223,13 +225,14 @@ namespace Articuno
                     double tempAvg = mm.calculateCtrAvgTemperature("Met" + i);
                     double humidityAvg = mm.calculateCtrAvgHumidity("Met" + i);
                     //Send this temperature to the Met Mediator and determine if met tower is freezing or not
-                    mm.isFreezing("Met" + i, tempAvg,humidityAvg);
+                    mm.isFreezing("Met" + i, tempAvg, humidityAvg);
                 }
                 //Call the RotorSPeedCheck function to compare rotor speed for all turbines
                 foreach (string prefix in tm.getTurbinePrefixList()) { tm.RotorSpeedCheck(prefix); }
 
                 //Set the CTR back to the original value
-                ctrCountdown = articunoCtr;
+                ctrCountdown = articunoCtrTime;
+
             }
         }
 
@@ -377,12 +380,21 @@ namespace Articuno
                 }
                 if (tag.Contains("CTR") || tag.Contains("EvalTm"))
                 {
-                    articunoCtr = value;
+                    articunoCtrTime = value;
                     ctrCountdown = value;
                     tm.writeCtrTime(value);
+                    log.InfoFormat("Articuno CTR updated to: {0} minute", value);
                 }
-                if (tag.Contains("TmpTreshold")) { mm.writeTemperatureThreshold(value); }
-                if (tag.Contains("TmpDelta")) { mm.writeDeltaThreshold(value); }
+                if (tag.Contains("TmpTreshold"))
+                {
+                    mm.writeTemperatureThreshold(value);
+                    log.InfoFormat("Articuno Temperature Threshold updated to: {0} deg C", value);
+                }
+                if (tag.Contains("TmpDelta"))
+                {
+                    mm.writeDeltaThreshold(value);
+                    log.InfoFormat("Articuno Temperature Delta updated to: {0} deg C", value);
+                }
             }
             else { log.ErrorFormat("Error occured in systemInputOnChangeHandler with {0}. Msg: {1}", e.Arguments.ItemDescriptor.ItemId, e.ErrorMessageBrief); }
         }
@@ -428,9 +440,12 @@ namespace Articuno
         /// </summary>
         public static void turbineClearedOfIce(string turbineId)
         {
-            log.DebugFormat("ArticunoMain has detected Turbine {0} has started from the site.", turbineId);
-            turbinesWaitingForPause.Add(turbineId);
-            turbinesPausedByArticuno.Remove(turbineId);
+            if (turbinesPausedByArticuno.Contains(turbineId))
+            {
+                log.DebugFormat("ArticunoMain has detected Turbine {0} has started running from the site.", turbineId);
+                turbinesWaitingForPause.Add(turbineId);
+                turbinesPausedByArticuno.Remove(turbineId);
+            }
         }
 
     }

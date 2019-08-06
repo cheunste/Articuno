@@ -204,7 +204,8 @@ namespace Articuno
         public string getNrsStateTag(string turbineId) { return getTurbine(turbineId).NrsStateTag; }
         public string getTemperatureTag(string turbineId) { return getTurbine(turbineId).TemperatureTag; }
         public string getLoadShutdownTag(string turbineId) { return getTurbine(turbineId).LoadShutdownTag; }
-        public string getTurbineCtrTag(string turbineId) { return getTurbine(turbineId).TurbineCtr; }
+
+        public int getTurbineCtrTime(string turbineId) { return Convert.ToInt32(getTurbine(turbineId).TurbineCtr); }
         public string getHumidityTag(string turbineId) { return getTurbine(turbineId).TurbineHumidityTag; }
 
         //For reading OPC value using turbineId
@@ -235,7 +236,6 @@ namespace Articuno
         /// </summary>
         /// <param name="value"></param>
         public void setCtrTime(string turbineId, int ctrValue) { getTurbine(turbineId).writeTurbineCtrValue(ctrValue); }
-        public int getCtrTime(string turbineId) { return Convert.ToInt32(getTurbine(turbineId).TurbineCtr); }
         public int getCtrCountdown(string turbineId) { return getTurbine(turbineId).readCtrCurrentValue(); }
 
         /// <summary>
@@ -250,11 +250,11 @@ namespace Articuno
         }
 
         //These are functions called by the main Articuno class to set an icing protocol condition given a turbine. Remember, the turbine should pause automatically independently of each other
-        public void setTemperatureCondition(string turbineId, bool state) { getTurbine(turbineId).setTemperatureCondition(state); checkIcingConditions(turbineId); }
-        public void setOperatingStateCondition(string turbineId, bool state) { getTurbine(turbineId).setOperatingStateCondition(state); checkIcingConditions(turbineId); }
-        public void setNrscondition(string turbineId, bool state) { getTurbine(turbineId).setNrsCondition(state); checkIcingConditions(turbineId); }
-        public void setTurbinePerformanceCondition(string turbineId, bool state) { getTurbine(turbineId).setTurbinePerformanceCondition(state); checkIcingConditions(turbineId); }
-        public void setDeRateCondition(string turbineId, bool state) { getTurbine(turbineId).setDeRateCondition(state); checkIcingConditions(turbineId); }
+        public void setTemperatureCondition(string turbineId, bool state) { log.InfoFormat("Temperature condition for {0} {1}",turbineId,state?"met":"not met"); getTurbine(turbineId).setTemperatureCondition(state); checkIcingConditions(turbineId); }
+        public void setOperatingStateCondition(string turbineId, bool state) { log.InfoFormat("Operating status condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setOperatingStateCondition(state); checkIcingConditions(turbineId); }
+        public void setNrscondition(string turbineId, bool state) { log.InfoFormat("NRS Condition for {0} {1}", turbineId, state ? "met" : "not met");getTurbine(turbineId).setNrsCondition(state); checkIcingConditions(turbineId); }
+        public void setTurbinePerformanceCondition(string turbineId, bool state) {log.InfoFormat("Turbine Performance condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setTurbinePerformanceCondition(state); checkIcingConditions(turbineId); }
+        public void setDeRateCondition(string turbineId, bool state) {log.InfoFormat("De Rate condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setDeRateCondition(state); checkIcingConditions(turbineId); }
 
         private void checkIcingConditions(string turbineId)
         {
@@ -329,7 +329,7 @@ namespace Articuno
             var filterTuple = filterTable.search(windSpeedAverage / windSpeedQueueCount, nrsMode);
 
             var referenceRotorSpeed = filterTuple.Item1;
-            var referenceStdDev = filterTuple.Item1;
+            var referenceStdDev = filterTuple.Item2;
 
             var currentScalingFactor = Convert.ToDouble(turbine.readTurbineScalingFactorValue());
 
@@ -357,12 +357,17 @@ namespace Articuno
         /// <summary>
         /// Write CTR Time for all the turbines. 
         /// </summary>
-        /// <param name="value"></param>
-        public void writeCtrTime(int value)
+        /// <param name="articunoCtrTime"></param>
+        public void writeCtrTime(int articunoCtrTime)
         {
-            foreach (string turbinePrefix in getTurbinePrefixList()) { writeTurbineCtrTag(turbinePrefix, value); }
+            foreach (string turbinePrefix in getTurbinePrefixList()) { writeTurbineCtrTag(turbinePrefix, articunoCtrTime); }
         }
 
+        public void decrementTurbineCtrTime()
+        {
+            foreach (string turbinePrefix in getTurbinePrefixList()) { getTurbine(turbinePrefix).decrementCtrTime(); }
+
+        }
         /// <summary>
         /// Method to signal the Articuno Main method that the turbines have paused by the program or cleared by the site
         /// </summary>

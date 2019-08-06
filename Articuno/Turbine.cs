@@ -98,7 +98,7 @@ namespace Articuno
         public string DeRate { set; get; }
 
         //Theses are used to write to the OP Tag Values.  There shouldn't be too many of these
-        public void writeTurbineCtrValue(int ctrValue) { TurbineCtr = ctrValue.ToString(); ctrCountDown = ctrValue; }
+        public void writeTurbineCtrValue(int articunoCtrValue) { TurbineCtr = articunoCtrValue.ToString(); ctrCountDown = articunoCtrValue; }
         //Scalign factor is unique as it is not used in the OPC Server and only used internally in this program
         public void writeTurbineSFValue(int scalingFactor) { this.currentTurbSF = scalingFactor; }
         //Load shutdown function. Probably the most important function
@@ -120,12 +120,14 @@ namespace Articuno
         public void writeAlarmTagValue(Object value) { client.WriteItemValue("", OpcServerName, AlarmTag, Convert.ToBoolean(value)); }
         public void writeNoiseLevel(Object value) { client.WriteItemValue("", OpcServerName, NrsStateTag, Convert.ToDouble(value)); }
         public void writeOperatingState(Object value) { client.WriteItemValue("", OpcServerName, OperatingStateTag, Convert.ToDouble(value)); }
-        public void decrementCtrTime(int value)
+        public void decrementCtrTime()
         {
             ctrCountDown--;
             if (ctrCountDown <= 0)
             {
-                ctrCountDown = value;
+                //ctrCountDown = articunoCtrTime;
+                //writeTurbineCtrValue(articunoCtrTime);
+                ctrCountDown = Convert.ToInt32(TurbineCtr);
                 checkIcingConditions();
             }
         }
@@ -167,8 +169,8 @@ namespace Articuno
             }
             else
             {
-                //log.InfoFormat("Icing conditions clear for {0}",getTurbinePrefixValue());
-                //pauseByArticuno(false);
+                log.InfoFormat("No ice detected for turbine {0}",getTurbinePrefixValue());
+                pauseByArticuno(false);
             }
         }
 
