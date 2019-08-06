@@ -107,9 +107,33 @@ namespace ArticunoTest
         }
 
         [TestMethod]
-        public void EventChangeTest()
+        public void SystemInputEventChangeTest()
         {
+            articuno = new ArticunoMain();
+            OpcServer server = new OpcServer("SV.OPCDAServer.1");
+            List<String> systemInputTags = new List<String>();
+            DataTable reader = di.readCommand("SELECT * from SystemInputTags WHERE Description!='SitePrefix' AND Description!='OpcServerName' order by Description ASC");
 
+            string tag;
+            string tempThresholdTag;
+            string enableArticunoTag;
+            string articunoCtrTag;
+            string deltaThresholdTag;
+            string dewThresholdTag;
+
+            for (int i = 0; i < reader.Rows.Count; i++)
+            {
+                tag = reader.Rows[i]["OpcTag"].ToString();
+                switch (i)
+                {
+                    case 0: tempThresholdTag = tag; break;
+                    case 1: enableArticunoTag = tag; break;
+                    case 2: articunoCtrTag = tag; break;
+                    case 3: deltaThresholdTag = tag; break;
+                    case 4: dewThresholdTag = tag; break;
+                }
+
+            }
         }
 
         [TestMethod]
@@ -131,7 +155,7 @@ namespace ArticunoTest
             Thread.Sleep(500);
 
             string readCtrTime = server.readTagValue(ctrTimeTag).ToString();
-            string turbineCtrTime = tm.getCtrTime(turbineId).ToString();
+            string turbineCtrTime = tm.getTurbineCtrTime(turbineId).ToString();
 
             Console.WriteLine("ctrTimeTag: {0}\nturbineCtrTime tag: {1}", ctrTimeTag, turbineCtrTime);
 

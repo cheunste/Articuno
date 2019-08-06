@@ -25,6 +25,12 @@ namespace ArticunoTest
             tm.createTestTurbines();
         }
 
+        [TestCleanup]
+        public void clearCommands()
+        {
+
+        }
+
         [TestMethod]
         [DataTestMethod]
         [DataRow(8.12)]
@@ -146,7 +152,9 @@ namespace ArticunoTest
             //If all five are true, then this turbine should be paused due to Ice
             //After some CTR Time
             //wait 90 seconds
-            System.Threading.Thread.Sleep(90000);
+            //System.Threading.Thread.Sleep(90000);
+            System.Threading.Thread.Sleep(500);
+
             Assert.AreEqual(state,TurbineMediator.Instance.isPausedByArticuno(turbineId));
 
         }

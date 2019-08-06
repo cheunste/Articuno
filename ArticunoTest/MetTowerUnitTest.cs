@@ -356,7 +356,6 @@ namespace ArticunoTest
         }
 
         [TestMethod]
-        [DataTestMethod]
         [DataRow("Met1", -50, -50, MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY)]
         [DataRow("Met1", 0, 0, MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY)]
         [DataRow("Met1", 61, 61,MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY)] 
@@ -421,15 +420,15 @@ namespace ArticunoTest
 
         [TestMethod]
         [DataTestMethod]
-        [DataRow("Met1", -1,true)]
-        [DataRow("Met1", 20,false)]
-        [DataRow("Met1", 101,false)]
-        [DataRow("Met1", 90,false)]
-        [DataRow("Met1", 0,true)]
-        [DataRow("Met1", -20,true)]
-        public void freezingTest(string metId, double temperature,bool expectedFrozenState)
+        [DataRow("Met1", -1,-1,true)]
+        [DataRow("Met1", 20,15,false)]
+        [DataRow("Met1", 101,101,false)]
+        [DataRow("Met1", 90,15,false)]
+        [DataRow("Met1", 0,90,true)]
+        [DataRow("Met1", -20,99,true)]
+        public void freezingTest(string metId, double temperature,double humidity, bool expectedFrozenState)
         {
-            mm.isFreezing(metId, temperature);
+            mm.setFrozenCondition(metId, temperature,humidity);
             MetTower met =mm.getMetTower(metId);
 
             Console.WriteLine("Ice Indication Value: {0}", met.IceIndicationValue);
