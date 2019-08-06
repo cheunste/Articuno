@@ -98,7 +98,8 @@ namespace Articuno
         public static void start()
         {
             //The following lines starts a threading lambda and executes a function every minute. THis is used for events that require minute polling and CTR polling 
-            var startTimeSpan = TimeSpan.Zero;
+            //var startTimeSpan = TimeSpan.Zero;
+            var startTimeSpan = TimeSpan.FromMilliseconds(ONE_MINUTE_POLLING);
             var periodTimeSpan = TimeSpan.FromMilliseconds(ONE_MINUTE_POLLING);
             var timer = new System.Threading.Timer((e) => { minuteUpdate(); }, null, startTimeSpan, periodTimeSpan);
 
@@ -313,7 +314,10 @@ namespace Articuno
                         break;
                     //case where the turbine is started by either the site or the NCC
                     case TurbineMediator.TurbineEnum.TurbineStarted:
-                        if (isPausedByArticuno(prefix)) { tm.startTurbine(prefix); }
+                        if (isPausedByArticuno(prefix)) {
+                            tm.startTurbine(prefix);
+                            conditionsMet(prefix);
+                        }
                         break;
                     //In the case where the turbine went into a different state. This includes pause by the dispatchers, site, curtailment, maintenance, anything non-Articuno 
                     case TurbineMediator.TurbineEnum.OperatingState:
@@ -344,15 +348,15 @@ namespace Articuno
             //If already paused by Articuno, then there's nothing to do
             if (isPausedByArticuno(turbineId)) { }
             //If turbine isn't in run or draft, then that means it is derated or in emergency, or something else
-            if ((state != RUN_STATE || state != DRAFT_STATE))
-            {
-                conditionsNotMet(turbineId);
-                tm.setOperatingStateCondition(turbineId, false);
-            }
-            else
+            if ((state == RUN_STATE || state == DRAFT_STATE))
             {
                 conditionsMet(turbineId);
                 tm.setOperatingStateCondition(turbineId, true);
+            }
+            else
+            {
+                conditionsNotMet(turbineId);
+                tm.setOperatingStateCondition(turbineId, false);
             }
 
 
@@ -472,6 +476,11 @@ namespace Articuno
                 turbinesWaitingForPause.Add(turbineId);
                 turbinesPausedByArticuno.Remove(turbineId);
             }
+        }
+
+        public static bool isAlreadyPaused(string turbineId)
+        {
+            return turbinesPausedByArticuno.Contains(turbineId);
         }
 
     }
