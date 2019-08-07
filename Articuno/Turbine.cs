@@ -123,12 +123,10 @@ namespace Articuno
         public void decrementCtrTime()
         {
             ctrCountDown--;
-            log.DebugFormat("{0} Current CTR: {1}",getTurbinePrefixValue(),ctrCountDown);
+            log.DebugFormat("{0} Current CTR: {1}", getTurbinePrefixValue(), ctrCountDown);
             if (ctrCountDown <= 0)
             {
-                //ctrCountDown = articunoCtrTime;
-                //writeTurbineCtrValue(articunoCtrTime);
-                log.InfoFormat("CTR period for Turbine {0} reached Zero.",getTurbinePrefixValue());
+                log.InfoFormat("CTR period for Turbine {0} reached Zero.", getTurbinePrefixValue());
                 ctrCountDown = Convert.ToInt32(TurbineCtr);
                 checkIcingConditions();
             }
@@ -160,18 +158,20 @@ namespace Articuno
         //The actual method that checks all conditions and throws a load shutdown command if needed
         public void checkIcingConditions()
         {
-            Console.WriteLine("Full condition {0}\nparticipation: {1}\nTemp Condition: {2}\n" +
-                "OperatingState: {3}\nNRS:{4}\nTurbinePerf Condition {5}", Convert.ToBoolean(readParticipationValue()) && temperatureConditionMet && operatingStateConditionMet && nrsConditionMet && turbinePerformanceConditionMet,
-                Convert.ToBoolean(readParticipationValue()) ,temperatureConditionMet,operatingStateConditionMet,nrsConditionMet,turbinePerformanceConditionMet);
-            //if (Convert.ToBoolean(readParticipationValue()) && temperatureConditionMet && operatingStateConditionMet && nrsConditionMet && turbinePerformanceConditionMet && derateConditionMet)
-            if (Convert.ToBoolean(readParticipationValue()) && temperatureConditionMet && operatingStateConditionMet && nrsConditionMet && turbinePerformanceConditionMet )
+
+            bool frozenCondition = Convert.ToBoolean(readParticipationValue()) && temperatureConditionMet && operatingStateConditionMet && nrsConditionMet && turbinePerformanceConditionMet;
+            log.DebugFormat("Checking ice condition for {6}. Frozen condition: {0},Participation: {1}\n" +
+                "Temp Condition: {2}, OperatingState: {3}, NRS:{4}, TurbinePerf Condition {5}", frozenCondition,
+                Convert.ToBoolean(readParticipationValue()), temperatureConditionMet, operatingStateConditionMet, nrsConditionMet, turbinePerformanceConditionMet, getTurbinePrefixValue());
+
+            if (frozenCondition)
             {
-                log.InfoFormat("Icing conditions satisfied for {0}",getTurbinePrefixValue());
+                log.InfoFormat("Icing conditions satisfied for {0}", getTurbinePrefixValue());
                 pauseByArticuno(true);
             }
             else
             {
-                log.InfoFormat("No ice detected for turbine {0}",getTurbinePrefixValue());
+                log.InfoFormat("No ice detected for turbine {0}", getTurbinePrefixValue());
                 pauseByArticuno(false);
             }
         }
@@ -196,21 +196,34 @@ namespace Articuno
         {
             if (pause)
             {
-                log.DebugFormat("Sending pause commmand for {0}", getTurbinePrefixValue());
-                writeLoadShutdownCmd();
-                log.DebugFormat("Writing alarm for {0}", getTurbinePrefixValue());
-                writeAlarmTagValue(true);
-                TurbineMediator.Instance.updateMain(TurbineMediator.TurbineEnum.PausedByArticuno,TurbinePrefix);
+                if (!ArticunoMain.isAlreadyPaused(TurbinePrefix))
+                {
+                    log.DebugFormat("Sending pause commmand for {0}", getTurbinePrefixValue());
+                    writeLoadShutdownCmd();
+                    log.DebugFormat("Writing alarm for {0}", getTurbinePrefixValue());
+                    writeAlarmTagValue(true);
+                    TurbineMediator.Instance.updateMain(TurbineMediator.TurbineEnum.PausedByArticuno, TurbinePrefix);
+                }
             }
-            else {
-
-                log.DebugFormat("Clearing Pause Status for {0}", getTurbinePrefixValue());
-                writeAlarmTagValue(false);
-                TurbineMediator.Instance.updateMain(TurbineMediator.TurbineEnum.ClearBySite,TurbinePrefix);
+            else
+            {
+                //If it isn't pause, then don't do anything. THat's dispatchers' responsibility
+                //log.DebugFormat("Clearing Pause Status for {0}", getTurbinePrefixValue());
+                //writeAlarmTagValue(false);
+                //TurbineMediator.Instance.updateMain(TurbineMediator.TurbineEnum.ClearBySite, TurbinePrefix);
+                //TurbineMediator.Instance.updateMain(TurbineMediator.TurbineEnum.ClearBySite, TurbinePrefix);
             }
         }
 
-        public void startTurbine() { pauseByArticuno(false); }
+        /// <summary>
+        /// Start the turbine. This function clears its alarm, reset its CTRCount and empty its queue
+        /// </summary>
+        public void startTurbine()
+        {
+            ctrCountDown = Convert.ToInt32(TurbineCtr);
+            writeAlarmTagValue(false);
+            emptyQueue();
+        }
 
     }
 }

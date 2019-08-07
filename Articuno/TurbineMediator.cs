@@ -250,11 +250,11 @@ namespace Articuno
         }
 
         //These are functions called by the main Articuno class to set an icing protocol condition given a turbine. Remember, the turbine should pause automatically independently of each other
-        public void setTemperatureCondition(string turbineId, bool state) { log.InfoFormat("Temperature condition for {0} {1}",turbineId,state?"met":"not met"); getTurbine(turbineId).setTemperatureCondition(state); checkIcingConditions(turbineId); }
-        public void setOperatingStateCondition(string turbineId, bool state) { log.InfoFormat("Operating status condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setOperatingStateCondition(state); checkIcingConditions(turbineId); }
-        public void setNrscondition(string turbineId, bool state) { log.InfoFormat("NRS Condition for {0} {1}", turbineId, state ? "met" : "not met");getTurbine(turbineId).setNrsCondition(state); checkIcingConditions(turbineId); }
-        public void setTurbinePerformanceCondition(string turbineId, bool state) {log.InfoFormat("Turbine Performance condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setTurbinePerformanceCondition(state); checkIcingConditions(turbineId); }
-        public void setDeRateCondition(string turbineId, bool state) {log.InfoFormat("De Rate condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setDeRateCondition(state); checkIcingConditions(turbineId); }
+        public void setTemperatureCondition(string turbineId, bool state) { log.InfoFormat("Temperature condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setTemperatureCondition(state); }
+        public void setOperatingStateCondition(string turbineId, bool state) { log.InfoFormat("Operating status condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setOperatingStateCondition(state); }
+        public void setNrscondition(string turbineId, bool state) { log.InfoFormat("NRS Condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setNrsCondition(state); }
+        public void setTurbinePerformanceCondition(string turbineId, bool state) { log.InfoFormat("Turbine Performance condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setTurbinePerformanceCondition(state); }
+        public void setDeRateCondition(string turbineId, bool state) { log.InfoFormat("De Rate condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setDeRateCondition(state); }
 
         private void checkIcingConditions(string turbineId)
         {
@@ -282,6 +282,7 @@ namespace Articuno
             else if (tag.ToUpper().Equals(tempTurbine.TemperatureTag.ToUpper())) { return TurbineEnum.Temperature; }
             else if (tag.ToUpper().Equals(tempTurbine.WindSpeedTag.ToUpper())) { return TurbineEnum.WindSpeed; }
             else if (tag.ToUpper().Equals(tempTurbine.ParticipationTag.ToUpper())) { return TurbineEnum.Participation; }
+            else if (tag.ToUpper().Equals(tempTurbine.StartCommandTag.ToUpper())) { return TurbineEnum.TurbineStarted; }
             //If it reaches here, I have no freaking clue what's going on, but whatever is calling it needs to handle it 
             else return null;
         }
@@ -377,12 +378,13 @@ namespace Articuno
         //Note that met tower can be switched
         public void checkMetTowerFrozen(string metId)
         {
-            foreach (string turbinePrefix in getTurbinePrefixList()) {
+            foreach (string turbinePrefix in getTurbinePrefixList())
+            {
                 string temp = getTurbine(turbinePrefix).MetTowerPrefix;
                 string metPrefix = MetTowerMediator.Instance.isMetTowerSwitched(temp);
                 bool isMetFrozen = MetTowerMediator.Instance.isMetFrozen(metPrefix);
 
-                if (metId.Equals(metPrefix)&&isMetFrozen)
+                if (metId.Equals(metPrefix) && isMetFrozen)
                     setTemperatureCondition(turbinePrefix, true);
                 else
                     setTemperatureCondition(turbinePrefix, false);
@@ -395,7 +397,7 @@ namespace Articuno
         /// </summary>
         public void updateMain(TurbineEnum status, string turbineId)
         {
-            if (status.Equals(TurbineEnum.PausedByArticuno))
+            if (status.Equals(TurbineEnum.PausedByArticuno)) 
                 ArticunoMain.turbinePausedByArticuno(turbineId);
             else
                 ArticunoMain.turbineClearedOfIce(turbineId);

@@ -477,7 +477,10 @@ namespace Articuno
 
         //Function that is called by the main Articuno class to determine if the temperature average calculated
         // by ARticuno is considered freezing or not
-        public void setFrozenCondition(string metId, double avgTemperature,double avgHumidity)
+        /// <summary>
+        /// Method to check a met tower to see if it meets the freezing condition and set its condition. Returns true if iti s frozen, false otherwise
+        /// </summary>
+        public bool setFrozenCondition(string metId, double avgTemperature,double avgHumidity)
         {
             double tempThreshold = readTemperatureThreshold(metId);
             Console.WriteLine("Threshold {0}", tempThreshold);
@@ -507,6 +510,8 @@ namespace Articuno
                 }
             }
             else{ met.IceIndicationValue = false; }
+
+            return Convert.ToBoolean(met.IceIndicationValue);
         }
 
         /// <summary>
