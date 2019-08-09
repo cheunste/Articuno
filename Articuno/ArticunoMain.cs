@@ -341,10 +341,12 @@ namespace Articuno
                     case TurbineMediator.TurbineEnum.TurbineStarted:
                         if (isPausedByArticuno(prefix))
                         {
-                            tm.startTurbine(prefix);
                             turbineClearedOfIce(prefix);
                             conditionsMet(prefix);
                         }
+                        //Start the turbine if a command is sent. This is because dispatchers
+                        //Can start it on their whim if they want to 
+                        if(Convert.ToInt32(value)==1) tm.startTurbine(prefix);
                         break;
                     //In the case where the turbine went into a different state. This includes pause by the dispatchers, site, curtailment, maintenance, anything non-Articuno 
                     case TurbineMediator.TurbineEnum.OperatingState:

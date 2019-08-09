@@ -220,9 +220,11 @@ namespace Articuno
         /// </summary>
         public void startTurbine()
         {
-            ctrCountDown = Convert.ToInt32(TurbineCtr);
+            log.InfoFormat("Start Command Received for Turbine {0}", getTurbinePrefixValue());
             writeAlarmTagValue(false);
             emptyQueue();
+            log.InfoFormat("Turbine {0} CTR Value reset to: {1}", getTurbinePrefixValue(),TurbineCtr);
+            this.ctrCountDown = Convert.ToInt32(TurbineCtr);
         }
 
     }
