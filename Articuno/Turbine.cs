@@ -41,13 +41,14 @@ namespace Articuno
         private Queue<Double> rotorSpeedQueue;
 
         //Other fields
-        //scaling factor for turbine
-        private int currentTurbSF;
         //this determines if the turbine is participating in Articuno or not. This must be a 'high priority check'  
         private bool articunoParicipation;
 
         //Met Tower Fields
         private string currentMetTower;
+
+        //Startup buffer
+        private readonly int STARTUP_TIME_BUFFER = 30000;
 
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(Turbine));
@@ -71,9 +72,7 @@ namespace Articuno
         public Object readOperatinStateValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, OperatingStateTag); }
         public Object readNrsStateValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, NrsStateTag); }
         public Object readTemperatureValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, TemperatureTag); }
-        //public Object readTurbineCtrValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, TurbineCtrTag); }
-        public Object readTurbineCtrValue() { return TurbineCtr; }
-        public Object readTurbineHumidityValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, TurbineHumidityTag); }
+
         public Object readTurbineScalingFactorValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, ScalingFactorTag); }
         public Object readParticipationValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, ParticipationTag); }
         public Object readAlarmValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, AlarmTag); }
@@ -99,8 +98,7 @@ namespace Articuno
 
         //Theses are used to write to the OP Tag Values.  There shouldn't be too many of these
         public void writeTurbineCtrValue(int articunoCtrValue) { TurbineCtr = articunoCtrValue.ToString(); ctrCountDown = articunoCtrValue; }
-        //Scalign factor is unique as it is not used in the OPC Server and only used internally in this program
-        public void writeTurbineSFValue(int scalingFactor) { this.currentTurbSF = scalingFactor; }
+
         //Load shutdown function. Probably the most important function
         public double writeLoadShutdownCmd()
         {
@@ -220,10 +218,14 @@ namespace Articuno
         /// </summary>
         public void startTurbine()
         {
+
             log.InfoFormat("Start Command Received for Turbine {0}", getTurbinePrefixValue());
+            //Give the turbine some time to start 
+            System.Threading.Thread.Sleep(STARTUP_TIME_BUFFER);
+            log.InfoFormat("Waiting {0} seconds to allow turbine to start up....", STARTUP_TIME_BUFFER);
             writeAlarmTagValue(false);
             emptyQueue();
-            log.InfoFormat("Turbine {0} CTR Value reset to: {1}", getTurbinePrefixValue(),TurbineCtr);
+            log.InfoFormat("Turbine {0} CTR Value reset to: {1}", getTurbinePrefixValue(), TurbineCtr);
             this.ctrCountDown = Convert.ToInt32(TurbineCtr);
         }
 
