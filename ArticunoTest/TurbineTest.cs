@@ -142,7 +142,18 @@ namespace ArticunoTest
         {
             ArticunoMain am = new ArticunoMain();
 
-            //Note complete. Do this later once you get the delegates figured out
+            //Reset the CTR time and start the turbine. Set the CTR for one minute
+            tm.setCtrTime(turbineId, 1);
+
+            //Manually start the turbine. You must do this as Articuno is not designed to start turbines by design
+            OpcServer.writeOpcTag("SV.OPCDAServer.1", "SCRAB.T001.WTUR.SetTurOp.ActSt.Str",1);
+            tm.startTurbine(turbineId);
+
+            //Set the NRS condition to true, or else the turbine will never ice up.
+            if (state) tm.writeNrsStateTag(turbineId, 1);
+            else tm.writeNrsStateTag(turbineId, 0);
+
+
             tm.setTemperatureCondition(turbineId, state);
             tm.setOperatingStateCondition(turbineId, state);
             tm.setNrscondition(turbineId, state);
@@ -150,9 +161,8 @@ namespace ArticunoTest
             tm.setDeRateCondition(turbineId, state);
 
             //If all five are true, then this turbine should be paused due to Ice
-            //After some CTR Time
-            //wait 90 seconds
-            //System.Threading.Thread.Sleep(90000);
+            //Force the mediator to check icing conditions. I don't want to wait.
+            tm.checkIcingConditions(turbineId);
             System.Threading.Thread.Sleep(500);
 
             Assert.AreEqual(state,TurbineMediator.Instance.isPausedByArticuno(turbineId));
