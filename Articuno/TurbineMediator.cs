@@ -110,6 +110,9 @@ namespace Articuno
                     String.Format("SELECT * " +
                     "from TurbineInputTags WHERE TurbineId='{0}'", turbinePrefix);
                 DataTable reader = dbi.readCommand(cmd);
+
+                //Note that NRS can be empty, so that's why there is a try/catch here. If it is empty, just set it to an empty string
+                //Or it can be an empty string in the database
                 try { turbine.NrsStateTag = reader.Rows[0]["NrsMode"].ToString(); }
                 catch (NullReferenceException e) { turbine.NrsStateTag = ""; }
 
@@ -259,7 +262,11 @@ namespace Articuno
         public void setTurbinePerformanceCondition(string turbineId, bool state) { log.InfoFormat("Turbine Performance condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setTurbinePerformanceCondition(state); }
         public void setDeRateCondition(string turbineId, bool state) { log.InfoFormat("De Rate condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setDeRateCondition(state); }
 
-        private void checkIcingConditions(string turbineId)
+        /// <summary>
+        /// force a check Ice condition given a turbine Id. Should only be used in testing only
+        /// </summary>
+        /// <param name="turbineId"></param>
+        public void checkIcingConditions(string turbineId)
         {
             Turbine turbine = getTurbine(turbineId);
             turbine.checkIcingConditions();

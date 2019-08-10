@@ -212,7 +212,8 @@ namespace Articuno
         }
 
         //private static void updateHeartBeat() { client.WriteItemValue("", opcServerName, heartBeatTag, !Convert.ToBoolean(client.ReadItemValue("", opcServerName, heartBeatTag))); }
-        private static void updateHeartBeat() {
+        private static void updateHeartBeat()
+        {
             OpcServer.writeOpcTag(opcServerName, heartBeatTag,
                 !Convert.ToBoolean(OpcServer.readOpcTag(opcServerName, heartBeatTag))
                 );
@@ -253,7 +254,7 @@ namespace Articuno
                     //Send this temperature to the Met Mediator and determine if met tower is freezing or not
                     bool metFrozen = mm.setFrozenCondition("Met" + i, tempAvg, humidityAvg);
                     //client.WriteItemValue("", opcServerName, icePossibleAlarmTag, metFrozen);
-                    OpcServer.writeOpcTag(opcServerName,icePossibleAlarmTag, metFrozen );
+                    OpcServer.writeOpcTag(opcServerName, icePossibleAlarmTag, metFrozen);
                     tm.checkMetTowerFrozen("Met" + i);
                 }
                 //Call the RotorSPeedCheck function to compare rotor speed for all turbines
@@ -349,7 +350,7 @@ namespace Articuno
                         }
                         //Start the turbine if a command is sent. This is because dispatchers
                         //Can start it on their whim if they want to 
-                        if(Convert.ToInt32(value)==1) tm.startTurbine(prefix);
+                        if (Convert.ToInt32(value) == 1) tm.startTurbine(prefix);
                         break;
                     //In the case where the turbine went into a different state. This includes pause by the dispatchers, site, curtailment, maintenance, anything non-Articuno 
                     case TurbineMediator.TurbineEnum.OperatingState:
@@ -367,11 +368,16 @@ namespace Articuno
 
         private static void checkNrs(string turbineId, object value)
         {
-            tm.writeNrsStateTag(turbineId, value);
-            if (Convert.ToInt16(value) == 5)
-                tm.setNrscondition(turbineId, true);
+            //Site might not be set up for NRS, so check to see if the field is empty, if it is, just set the condition to true
+            if (tm.getNrsStateTag(turbineId).Equals("")) { tm.setNrscondition(turbineId, true); }
             else
-                tm.setNrscondition(turbineId, false);
+            {
+                tm.writeNrsStateTag(turbineId, value);
+                if (Convert.ToInt16(value) == 5)
+                    tm.setNrscondition(turbineId, true);
+                else
+                    tm.setNrscondition(turbineId, false);
+            }
         }
         private static void checkOperatingState(string turbineId, object value)
         {
