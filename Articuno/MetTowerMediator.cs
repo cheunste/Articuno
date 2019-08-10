@@ -26,7 +26,6 @@ namespace Articuno
 
         private string opcServerName;
         private static List<MetTower> metTowerList = new List<MetTower>();
-        private EasyDAClient client = new EasyDAClient();
 
         //constant bool for quality
 
@@ -74,15 +73,16 @@ namespace Articuno
             reader = dbi.readCommand(SERVER_NAME_QUERY);
             opcServerName = reader.Rows[0]["OpcTag"].ToString();
 
-            //Get the current threshold values 
-            DAVtqResult[] vtqResults = client.ReadMultipleItems(opcServerName,
-                new DAItemDescriptor[]{
-                    temp1,
-                    temp2
-                });
 
-            ambTempThreshold = Convert.ToDouble(vtqResults[0].Vtq.Value);
-            deltaThreshold = Convert.ToDouble(vtqResults[1].Vtq.Value);
+            //Get the current threshold values 
+            //DAVtqResult[] vtqResults = client.ReadMultipleItems(opcServerName,
+            //    new DAItemDescriptor[]{
+            //        temp1,
+            //        temp2
+            //    });
+
+            ambTempThreshold = Convert.ToDouble(OpcServer.readOpcTag(opcServerName, temp1));
+            deltaThreshold = Convert.ToDouble(OpcServer.readOpcTag(opcServerName, temp2));
 
             for (int i = 1; i <= getNumMetTower(); i++)
             {
@@ -301,7 +301,7 @@ namespace Articuno
             //Bad Quality
             //Set primay relative humidty to either 0 (if below 0) or 100 (if above zero)
             //Also Raise alarm
-            if (rh <= 0.0 || rh >= 100.0)
+            if (rh <= minValue || rh >= maxValue)
             {
                 qualityState = MetQualityEnum.MET_BAD_QUALITY;
                 alarm(met, MetTowerEnum.HumidityOutOfRange, qualityState);
@@ -330,7 +330,7 @@ namespace Articuno
         /// <returns>Returns True if good quality, False if bad</returns>
         private Tuple<MetQualityEnum, double> tempValueCheck(string temperatureTag)
         {
-            var temp = client.ReadItemValue("", opcServerName, temperatureTag);
+            var temp  = OpcServer.readOpcTag( opcServerName, temperatureTag);
             double tempValue = Convert.ToDouble(temp);
             double minValue = -20.0;
             double maxValue = 60.0;
