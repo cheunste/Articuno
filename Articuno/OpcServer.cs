@@ -53,7 +53,7 @@ namespace Articuno
         /// <param name="tag">The OPC tag name (String format)</param>
         /// <param name="serverName">The OPC server name. String.</param>
         /// <returns></returns>
-        public static Object readOpcTag(string tag, string serverName)
+        public static Object readOpcTag(string serverName, string tag)
         {
             try
             {
@@ -95,7 +95,7 @@ namespace Articuno
         /// <param name="tag">The OPC Tag</param>
         /// <param name="value">The value you want to write</param>
         /// <param name="serverName">The OPC server Name</param>
-        public static void writeOpcTag(string tag, object value, string serverName)
+        public static void writeOpcTag(string serverName,string tag, object value)
         {
             try { opcServer.WriteItemValue(serverName, tag, value); }
             catch (Exception e) { log.ErrorFormat("Write to tag: {0} failed. Does {0} exist on the server? Did the server die?", tag); }

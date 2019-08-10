@@ -62,9 +62,6 @@ namespace Articuno
         private static MetTowerMediator mm;
         private static TurbineMediator tm;
 
-        //OPC Client declaration
-        private static EasyDAClient client = new EasyDAClient();
-
         //Constructor. This is only used for unit testing purposes
         public ArticunoMain()
         {
@@ -214,7 +211,12 @@ namespace Articuno
             assetStatusClient.SubscribeMultipleItems(assetInputTags.ToArray());
         }
 
-        private static void updateHeartBeat() { client.WriteItemValue("", opcServerName, heartBeatTag, !Convert.ToBoolean(client.ReadItemValue("", opcServerName, heartBeatTag))); }
+        //private static void updateHeartBeat() { client.WriteItemValue("", opcServerName, heartBeatTag, !Convert.ToBoolean(client.ReadItemValue("", opcServerName, heartBeatTag))); }
+        private static void updateHeartBeat() {
+            OpcServer.writeOpcTag(opcServerName, heartBeatTag,
+                !Convert.ToBoolean(OpcServer.readOpcTag(opcServerName, heartBeatTag))
+                );
+        }
         /// <summary>
         /// Function to handle tasks that should be executed every minute (ie get temperature measurements) and every CTR minute (ie check rotor speed, run calculations, etc.) 
         /// </summary>
@@ -250,7 +252,8 @@ namespace Articuno
                     double humidityAvg = mm.calculateCtrAvgHumidity("Met" + i);
                     //Send this temperature to the Met Mediator and determine if met tower is freezing or not
                     bool metFrozen = mm.setFrozenCondition("Met" + i, tempAvg, humidityAvg);
-                    client.WriteItemValue("", opcServerName, icePossibleAlarmTag, metFrozen);
+                    //client.WriteItemValue("", opcServerName, icePossibleAlarmTag, metFrozen);
+                    OpcServer.writeOpcTag(opcServerName,icePossibleAlarmTag, metFrozen );
                     tm.checkMetTowerFrozen("Met" + i);
                 }
                 //Call the RotorSPeedCheck function to compare rotor speed for all turbines
@@ -491,7 +494,7 @@ namespace Articuno
             log.DebugFormat("ArticunoMain has detected Turbine {0} has paused. ", turbineId);
             turbinesWaitingForPause.Remove(turbineId);
             turbinesPausedByArticuno.Add(turbineId);
-            client.WriteItemValue("", opcServerName, numTurbinesPausedTag, turbinesPausedByArticuno.Count);
+            OpcServer.writeOpcTag(opcServerName, numTurbinesPausedTag, turbinesPausedByArticuno.Count);
         }
 
         /// <summary>
@@ -503,7 +506,7 @@ namespace Articuno
             turbinesWaitingForPause.Add(turbineId);
             turbinesPausedByArticuno.Remove(turbineId);
             //Update the num turb paused
-            client.WriteItemValue("", opcServerName, numTurbinesPausedTag, turbinesPausedByArticuno.Count);
+            OpcServer.writeOpcTag(opcServerName, numTurbinesPausedTag, turbinesPausedByArticuno.Count);
         }
 
         public static bool isAlreadyPaused(string turbineId)
