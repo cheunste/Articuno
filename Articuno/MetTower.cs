@@ -127,7 +127,7 @@ namespace Articuno
         public Object RelativeHumidityValue
         {
             set { OpcServer.writeOpcTag( opcServerName, RelativeHumidityTag, value); }
-            get { return new EasyDAClient().ReadItemValue("", opcServerName, RelativeHumidityTag); }
+            get { return OpcServer.readOpcTag( opcServerName, RelativeHumidityTag); }
         }
 
         /// <summary>
@@ -137,7 +137,7 @@ namespace Articuno
 
         public Object PrimTemperatureValue
         {
-            get { return new EasyDAClient().ReadItemValue("", opcServerName, PrimTemperatureTag); }
+            get { return OpcServer.readOpcTag( opcServerName, PrimTemperatureTag); }
             set { OpcServer.writeOpcTag( opcServerName, PrimTemperatureTag, value); }
         }
 
@@ -150,7 +150,7 @@ namespace Articuno
         /// </summary>
         public Object SecTemperatureValue
         {
-            get { return new EasyDAClient().ReadItemValue("", opcServerName, SecTemperatureTag); }
+            get { return OpcServer.readOpcTag( opcServerName, SecTemperatureTag); }
             set { OpcServer.writeOpcTag( opcServerName, SecTemperatureTag, value); }
         }
 
@@ -161,7 +161,7 @@ namespace Articuno
         /// </summary>
         /// <returns></returns>
         public string NoDataAlarmTag { set; get; }
-        public Object NoDataAlarmValue { set { OpcServer.writeOpcTag( opcServerName, NoDataAlarmTag, value); } get { return new EasyDAClient().ReadItemValue("", opcServerName, NoDataAlarmTag); } }
+        public Object NoDataAlarmValue { set { OpcServer.writeOpcTag( opcServerName, NoDataAlarmTag, value); } get { return OpcServer.readOpcTag( opcServerName, NoDataAlarmTag); } }
 
         /// <summary>
         /// Gets the IceIndicationValue OPC Value
@@ -170,7 +170,7 @@ namespace Articuno
         public string IceIndicationTag { set; get; }
         public Object IceIndicationValue
         {
-            get { return new EasyDAClient().ReadItemValue("", opcServerName, IceIndicationTag); }
+            get { return OpcServer.readOpcTag( opcServerName, IceIndicationTag); }
             set { OpcServer.writeOpcTag( opcServerName, IceIndicationTag, value); }
         }
 
@@ -199,38 +199,38 @@ namespace Articuno
         //The following are for humidity out of range, bad quality, etc.
         public Object HumidityOutOfRng
         {
-            get { return new EasyDAClient().ReadItemValue("", opcServerName, HumidtyOutOfRangeTag); }
+            get { return OpcServer.readOpcTag( opcServerName, HumidtyOutOfRangeTag); }
             set { OpcServer.writeOpcTag( opcServerName, HumidtyOutOfRangeTag, value); }
         }
 
         public Object HumidityBadQuality
         {
-            get { return new EasyDAClient().ReadItemValue("", opcServerName, HumidityBadQualityTag); }
+            get { return OpcServer.readOpcTag( opcServerName, HumidityBadQualityTag); }
             set { OpcServer.writeOpcTag( opcServerName, HumidityBadQualityTag, value); }
         }
 
         //The following are for temperature out of range, bad quality
         public Object TemperaturePrimOutOfRange
         {
-            get { return new EasyDAClient().ReadItemValue("", opcServerName, TemperaturePrimOutOfRangeTag); }
+            get { return OpcServer.readOpcTag( opcServerName, TemperaturePrimOutOfRangeTag); }
             set { OpcServer.writeOpcTag( opcServerName, TemperaturePrimOutOfRangeTag, value); }
         }
 
         public Object TemperaturePrimBadQuality
         {
-            get { return new EasyDAClient().ReadItemValue("", opcServerName, TemperaturePrimOutOfRangeTag); }
+            get { return OpcServer.readOpcTag( opcServerName, TemperaturePrimOutOfRangeTag); }
             set { OpcServer.writeOpcTag( opcServerName, TemperaturePrimOutOfRangeTag, value); }
         }
 
         public Object TemperatureSecOutOfRange
         {
-            get { return new EasyDAClient().ReadItemValue("", opcServerName, TemperatureSecOutOfRangeTag); }
+            get { return OpcServer.readOpcTag( opcServerName, TemperatureSecOutOfRangeTag); }
             set { OpcServer.writeOpcTag( opcServerName, TemperatureSecOutOfRangeTag, value); }
         }
 
         public Object TemperatureSecBadQuality
         {
-            get { return new EasyDAClient().ReadItemValue("", opcServerName, TemperatureSecOutOfRangeTag); }
+            get { return OpcServer.readOpcTag( opcServerName, TemperatureSecOutOfRangeTag); }
             set { OpcServer.writeOpcTag( opcServerName, TemperatureSecOutOfRangeTag, value); }
         }
 
@@ -241,8 +241,11 @@ namespace Articuno
         /// <returns></returns>
         public bool isQualityGood(string opcTag)
         {
-            DAVtq vtq = (DAVtq) OpcServer.readOpcTag(opcServerName, opcTag);
-            return vtq.Quality.IsGood ? true : false;
+            //DAVtq vtq = client.ReadItem(opcServerName, opcTag);
+            //DAVtq vtq = (DAVtq) OpcServer.readOpcTag(opcServerName, opcTag);
+            //return vtq.Quality.IsGood ? true : false;
+
+            return OpcServer.readOpcTagQuality(opcServerName, opcTag);
         }
 
         //Met Id methods

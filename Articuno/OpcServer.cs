@@ -95,10 +95,16 @@ namespace Articuno
         /// <param name="tag">The OPC Tag</param>
         /// <param name="value">The value you want to write</param>
         /// <param name="serverName">The OPC server Name</param>
-        public static void writeOpcTag(string serverName,string tag, object value)
+        public static void writeOpcTag(string serverName, string tag, object value)
         {
             try { opcServer.WriteItemValue(serverName, tag, value); }
             catch (Exception e) { log.ErrorFormat("Write to tag: {0} failed. Does {0} exist on the server? Did the server die?", tag); }
+        }
+
+        public static bool readOpcTagQuality(string serverName, string tag)
+        {
+            DAVtq vtq = opcServer.ReadItem("", serverName, tag);
+            return vtq.Quality.IsGood ? true : false;
         }
 
     }
