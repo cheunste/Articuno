@@ -24,7 +24,6 @@ namespace Articuno
     {
         //Instance of OPC server
         string OpcServerName;
-        private EasyDAClient client = new EasyDAClient();
 
         //Member variables for algorithm
         private bool temperatureConditionMet;
@@ -105,7 +104,7 @@ namespace Articuno
             log.InfoFormat("Shutdown command for {0} has been sent", this.TurbinePrefix);
             try
             {
-                client.WriteItemValue("", OpcServerName, this.LoadShutdownTag, 1.00);
+                OpcServer.writeOpcTag( OpcServerName, this.LoadShutdownTag, 1.00);
                 return 1.0;
             }
             catch (OpcException opcException)
@@ -114,10 +113,10 @@ namespace Articuno
                 return -1.0;
             }
         }
-        //public void writeAlarmTagValue(Object value) { client.WriteItemValue("", OpcServerName, AlarmTag, Convert.ToDouble(value)); }
-        public void writeAlarmTagValue(Object value) { client.WriteItemValue("", OpcServerName, AlarmTag, Convert.ToBoolean(value)); }
-        public void writeNoiseLevel(Object value) { client.WriteItemValue("", OpcServerName, NrsStateTag, Convert.ToDouble(value)); }
-        public void writeOperatingState(Object value) { client.WriteItemValue("", OpcServerName, OperatingStateTag, Convert.ToDouble(value)); }
+        //public void writeAlarmTagValue(Object value) { OpcServer.writeOpcTag( OpcServerName, AlarmTag, Convert.ToDouble(value)); }
+        public void writeAlarmTagValue(Object value) { OpcServer.writeOpcTag( OpcServerName, AlarmTag, Convert.ToBoolean(value)); }
+        public void writeNoiseLevel(Object value) { OpcServer.writeOpcTag( OpcServerName, NrsStateTag, Convert.ToDouble(value)); }
+        public void writeOperatingState(Object value) { OpcServer.writeOpcTag( OpcServerName, OperatingStateTag, Convert.ToDouble(value)); }
         public void decrementCtrTime()
         {
             ctrCountDown--;

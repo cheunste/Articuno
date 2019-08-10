@@ -51,7 +51,6 @@ namespace Articuno
 
         //Instance of OpcServer. Might not be needed
         private string opcServerName;
-        private EasyDAClient client = new EasyDAClient();
 
         //Rotor Speed
         private RotorSpeedFilter filterTable;
@@ -214,17 +213,17 @@ namespace Articuno
         /// </summary>
         /// <param name="turbineId"></param>
         /// <returns></returns>
-        public Object readWindSpeedValue(string turbineId) { return client.ReadItemValue("", opcServerName, getTurbineWindSpeedTag(turbineId)); }
+        public Object readWindSpeedValue(string turbineId) { return OpcServer.readOpcTag( opcServerName, getTurbineWindSpeedTag(turbineId)); }
         /// <summary>
         /// Deprecated in favor of design change. This is now in storeMinuteAverages
         /// </summary>
         /// <param name="turbineId"></param>
         /// <returns></returns>
-        public Object readRotorSpeedValue(string turbineId) { return client.ReadItemValue("", opcServerName, getRotorSpeedTag(turbineId)); }
-        public Object readOperatingStateValue(string turbineId) { return client.ReadItemValue("", opcServerName, getOperatingStateTag(turbineId)); }
-        public Object readNrsStateValue(string turbineId) { return client.ReadItemValue("", opcServerName, getNrsStateTag(turbineId)); }
-        public Object readTemperatureValue(string turbineId) { return client.ReadItemValue("", opcServerName, getTemperatureTag(turbineId)); }
-        public Object readHumidityValue(string turbineId) { return client.ReadItemValue("", opcServerName, getHumidityTag(turbineId)); }
+        public Object readRotorSpeedValue(string turbineId) { return OpcServer.readOpcTag( opcServerName, getRotorSpeedTag(turbineId)); }
+        public Object readOperatingStateValue(string turbineId) { return OpcServer.readOpcTag( opcServerName, getOperatingStateTag(turbineId)); }
+        public Object readNrsStateValue(string turbineId) { return OpcServer.readOpcTag( opcServerName, getNrsStateTag(turbineId)); }
+        public Object readTemperatureValue(string turbineId) { return OpcServer.readOpcTag( opcServerName, getTemperatureTag(turbineId)); }
+        public Object readHumidityValue(string turbineId) { return OpcServer.readOpcTag( opcServerName, getHumidityTag(turbineId)); }
 
         //For writing (using turbineId). Note that the mediator really shouldn't be writing to all the availble turbine tags. If you need to test something, you need to create a turbine object 
         public void writeNrsStateTag(string turbineId, object value) { getTurbine(turbineId).writeNoiseLevel(value); }
