@@ -2,6 +2,7 @@
 using System.Text;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Articuno;
 
 namespace ArticunoTest
 {
@@ -11,59 +12,166 @@ namespace ArticunoTest
     [TestClass]
     public class TurbineTest
     {
+        TurbineMediator tm;
+        ArticunoMain am;
         public TurbineTest()
         {
-            //
-            // TODO: Add constructor logic here
-            //
+            am = new ArticunoMain();
+
+            //Must create the MetTowersingleton first
+            MetTowerMediator.Instance.createMetTower();
+            List<string> newList = new List<string>();
+            tm = TurbineMediator.Instance;
+            tm.createTestTurbines();
         }
 
-        private TestContext testContextInstance;
-
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext
+        [TestCleanup]
+        public void clearCommands()
         {
-            get
-            {
-                return testContextInstance;
-            }
-            set
-            {
-                testContextInstance = value;
-            }
-        }
 
-        #region Additional test attributes
-        //
-        // You can use the following additional attributes as you write your tests:
-        //
-        // Use ClassInitialize to run code before running the first test in the class
-        // [ClassInitialize()]
-        // public static void MyClassInitialize(TestContext testContext) { }
-        //
-        // Use ClassCleanup to run code after all tests in a class have run
-        // [ClassCleanup()]
-        // public static void MyClassCleanup() { }
-        //
-        // Use TestInitialize to run code before running each test 
-        // [TestInitialize()]
-        // public void MyTestInitialize() { }
-        //
-        // Use TestCleanup to run code after each test has run
-        // [TestCleanup()]
-        // public void MyTestCleanup() { }
-        //
-        #endregion
+        }
 
         [TestMethod]
-        public void TestMethod1()
+        [DataTestMethod]
+        [DataRow(8.12)]
+        [DataRow(0)]
+        [DataRow(100)]
+        //This tests to see if Articuno can read and write the status state of the turbine
+        //However, as you can't write to all tags, just write to operating state
+        public void rwOperatingState(double testValue)
         {
-            //
-            // TODO: Add test logic here
-            //
+            //Write some random values to known tags in the test server. Hard coding is fine in this case 
+            // AS LONG AS YOU HAVE THE NAME OF THE OPC TAG RIGHT
+            // Note that OPC Tag is case sensative...apparently.
+            //Read 
+            foreach (Turbine turb in TurbineMediator.Instance.getTurbineList())
+            {
+                turb.writeOperatingState(testValue);
+                double readValue = Convert.ToDouble(TurbineMediator.Instance.readOperatingStateValue(turb.getTurbinePrefixValue()));
+
+                Assert.AreEqual(testValue, readValue, 0.001, "Written value does not equal test value");
+            }
+
+        }
+
+        [TestMethod]
+        //Get the tag names of all the turbine associated Opc Tags and prints them out.
+        public void getTagNameFromTurbine()
+        {
+            foreach (string prefix in TurbineMediator.Instance.getTurbinePrefixList())
+            {
+                string temp = TurbineMediator.Instance.getTurbineWindSpeedTag(prefix);
+                temp = TurbineMediator.Instance.getOperatingStateTag(prefix);
+                temp = TurbineMediator.Instance.getNrsStateTag(prefix);
+                //WARNING: NRS can be empty or null
+
+                //Turbine humidty tag is outside of requirement
+                //temp = TurbineMediator.Instance.getHumidityTag();
+                //printOutTags("humidity tag", temp);
+
+                temp = TurbineMediator.Instance.getTemperatureTag(prefix);
+                temp = TurbineMediator.Instance.getLoadShutdownTag(prefix);
+
+                //No CTR tag provided. I think I'm going to make the turbine CTR independent of an Opc Tag
+                //temp = TurbineMediator.Instance.getTurbineCtrTag();
+                //printOutTags("CTR Tag", temp);
+
+                temp = TurbineMediator.Instance.getRotorSpeedTag(prefix);
+
+            }
+        }
+
+        [TestMethod]
+        public void writeLoadShutDown()
+        {
+            List<Turbine> turbineList = (List<Turbine>)TurbineMediator.Instance.getTurbineList();
+
+            foreach (Turbine turbine in turbineList)
+            {
+                double temp = turbine.writeLoadShutdownCmd();
+                //Console.WriteLine(turbine.writeLoadShutdownCmd());
+                Assert.AreEqual(temp, 1.00, 1.001);
+            }
+        }
+
+        [TestMethod]
+        //Test to see if I can raise (and clear) a turbine alarm based on serveral conditions
+        //IMPORTANT: This test does will NOT cover comm loss. That would be the main Articuno class's job
+        public void testAlarm()
+        {
+            List<Turbine> turbineList = (List<Turbine>)TurbineMediator.Instance.getTurbineList();
+
+            foreach (Turbine turbine in turbineList)
+            {
+                turbine.writeAlarmTagValue(true);
+                Assert.AreEqual(Convert.ToBoolean(turbine.readAlarmValue()), true);
+            }
+
+        }
+
+        private void printOutTags(string testName, List<string> printOutList)
+        {
+            Console.WriteLine("Test {0}", testName);
+            foreach (var item in printOutList)
+            {
+                if (item.Equals("") && !testName.Equals("nrs"))
+                    Assert.Fail("List for {1} is empty {0}", printOutList, testName);
+                Console.WriteLine("tag: {0}", item);
+            }
+        }
+
+        [TestMethod]
+        //Prints out a list of turbine prefixes and prints them out
+        public void prefixListTest()
+        {
+            TurbineMediator.Instance.createPrefixList();
+
+            List<string> prefixList = TurbineMediator.Instance.getTurbinePrefixList();
+
+            foreach (string prefix in prefixList)
+            {
+                Console.WriteLine(prefix);
+            }
+        }
+
+        [TestMethod]
+        [DataTestMethod]
+        [DataRow("T001", false)]
+        [DataRow("T001", true)]
+        public void AlgorithmTest(string turbineId, bool state)
+        {
+            ArticunoMain am = new ArticunoMain();
+
+            //Note complete. Do this later once you get the delegates figured out
+            tm.setTemperatureCondition(turbineId, state);
+            tm.setOperatingStateCondition(turbineId, state);
+            tm.setNrscondition(turbineId, state);
+            tm.setTurbinePerformanceCondition(turbineId, state);
+            tm.setDeRateCondition(turbineId, state);
+
+            //If all five are true, then this turbine should be paused due to Ice
+            //After some CTR Time
+            //wait 90 seconds
+            //System.Threading.Thread.Sleep(90000);
+            System.Threading.Thread.Sleep(500);
+
+            Assert.AreEqual(state,TurbineMediator.Instance.isPausedByArticuno(turbineId));
+
+        }
+
+        [TestMethod]
+        //There is no tag for internal CTR. Instead you'll be tracking this by writing a value to a member variable and decrementing it/
+        [DataTestMethod]
+        [DataRow(5)]
+        public void setCtrPeriod(int value)
+        {
+            foreach (string prefix in TurbineMediator.Instance.getTurbinePrefixList())
+            {
+                //TurbineMediator.Instance.setCtrTime(prefix, value);
+                TurbineMediator.Instance.writeCtrTime(value);
+            }
+
+
         }
     }
 }

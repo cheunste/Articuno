@@ -1,6 +1,9 @@
 ﻿using log4net;
+using OpcLabs.EasyOpc.DataAccess;
+using OpcLabs.EasyOpc.OperationModel;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SQLite;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -19,305 +22,245 @@ namespace Articuno
 
     internal class MetTower
     {
-        //Constants. Can't Fully Capitalize these ones. Too hard to read. Note the staritng capital letter though
+        //Constants. The following are SQL lite table column
         //Temperature table columns
-        private static string PrimTempValueTag = "PrimTempValueTag";
-        private static string SecTempValueTag = "SecTempValueTag";
-        private static string TempBadQualityTag = "TempBadQualityTag";
-        private static string TempOutOfRangeTag = "TempOutOfRangeTag";
+        private static readonly string PrimTempValueTagColumn = "PrimTempValueTag";
+        private static readonly string SecTempValueColumn = "SecTempValueTag";
+        private static readonly string TempPrimBadQualityColumn = "TempPrimBadQualityTag";
+        private static readonly string TempPrimOutOfRangeColumn = "TempPrimOutOfRangeTag";
+        private static readonly string TempSecBadQualityColumn = "TempSecBadQualityTag";
+        private static readonly string TempSecOutOfRangeColumn = "TempSecOutOfRangeTag";
 
         //Humidity table columns
-        private static string PrimHumidityValueTag = "PrimHumidityValueTag";
-        private static string SecHumidityValueTag = "SecHumidityValueTag";
-        private static string HumidityBadQualityTag = "HumidityBadQualityTag";
-        private static string HumidityOutOfRangeTag = "HumidityOutOfRangeTag";
+        private static readonly string PrimHumidityValueColumn = "PrimHumidityValueTag";
+        private static readonly string SecHumidityValueColumn = "SecHumidityValueTag";
+        private static readonly string HumidityBadQualityColumn = "HumidityBadQualityTag";
+        private static readonly string HumidityOutOfRangeColumn = "HumidityOutOfRangeTag";
 
         //Other table column 
-        private static string NoDataAlarmTag = "NoDataAlarmTag";
-        private static string IceIndicationTag = "IceIndicationTag";
+        private static readonly string NoDataAlarmColumn = "NoDataAlarmTag";
+        private static readonly string SwitchColumn = "Switch";
+        private static readonly string IceIndicationColumn = "IceIndicationTag";
 
-        //Query constants
-        String TEMPERATURE_QUERY = "SELECT " + PrimTempValueTag + "," + SecTempValueTag + "," + TempBadQualityTag + "," + TempOutOfRangeTag + " FROM MetTower";
-        String RH_QUERY = "SELECT " + PrimHumidityValueTag + "," + SecHumidityValueTag + "," + HumidityBadQualityTag + "," + HumidityOutOfRangeTag + " FROM MetTower";
-        String OTHER_PARAM_QUERY = "SELECT " + NoDataAlarmTag + ", " + IceIndicationTag + " FROM MetTower";
+
+        //Queries
+        readonly String INPUT_TAG_QUERY = "SELECT * FROM MetTowerInputTags";
+        readonly String OUTPUT_TAG_QUERY = "SELECT * FROM MetTowerOutputTags";
 
         //Member variables;
-        //Member doubles 
-        private double ambientTemperature;
-        private double relativeHumidity;
-        private double dewPointTemperature;
         private double ambTempThreshold;
         private double deltaTempThreshold;
 
-        //Member bool
-        private bool metTowerFailure;
+        //Queues
+        private Queue<double> temperatureQueue;
+        private Queue<double> humidityQueue;
 
-        //Member variable OPC Tags (strings)
-        //For temperature
-        private string primTempTag;
-        private string secTempTag;
-        private string tempBadQualityTag;
-        private string tempOutOfRangeTag;
+        //Member prefix
+        private string metTowerPrefix;
 
-        //For humidity
-        private string primRHTag;
-        private string secRHTag;
-        private string rhBadQualityTag;
-        private string rhOutOfRangeTag;
-
-        //For other tags relating to the met tower 
-        private string noDataAlarmTag;
-        private string iceIndicationTag;
+        //Turbine reference (for backup)
+        private Turbine nearestTurbine;
 
         //opc server
-        private OpcServer opcServer;
+        private string opcServerName;
+        private EasyDAClient client = new EasyDAClient();
+
+        //database
+        private DatabaseInterface dbi;
 
         //log
         private static readonly ILog log = LogManager.GetLogger(typeof(MetTower));
 
-        /// <summary>
-        /// Constructor for the Met Tower Class. Takes in a Met Id. Using  the met Id, the constructor will then query
-        /// the DB for all the relevant values
-        /// </summary>
-        /// <param name="MetId"></param>
-        public MetTower(string MetId, double ambTempThreshold, double deltaTempThreshold, OpcServer opcServerInstance)
+        public MetTower(string MetId, double ambTempThreshold, double deltaTempThreshold, string opcServerName)
         {
             //Open a connection to the DB
-            DatabaseInterface dbi = new DatabaseInterface();
-            dbi.openConnection();
-            //Get everything relating to the Temperaturea
-            SQLiteDataReader reader = dbi.readCommand(TEMPERATURE_QUERY + " WHERE MetId=" + MetId);
-            reader.Read();
-            this.primTempTag = reader[PrimTempValueTag].ToString();
-            this.secTempTag = reader[SecTempValueTag].ToString();
-            this.tempBadQualityTag = reader[TempBadQualityTag].ToString();
-            this.tempOutOfRangeTag = reader[TempOutOfRangeTag].ToString();
-
-            //Get everything relating to the Humidity
-            reader = dbi.readCommand(RH_QUERY + " WHERE MetId=" + MetId);
-            reader.Read();
-            this.primRHTag = reader[PrimHumidityValueTag].ToString();
-            this.secRHTag = reader[SecHumidityValueTag].ToString();
-            this.rhBadQualityTag = reader[HumidityBadQualityTag].ToString();
-            this.rhOutOfRangeTag = reader[HumidityOutOfRangeTag].ToString();
-
-            //Get the other tags relating to the met tower
-            reader = dbi.readCommand(OTHER_PARAM_QUERY + " WHERE MetId=" + MetId);
-            this.noDataAlarmTag = reader[NoDataAlarmTag].ToString();
-            this.iceIndicationTag = reader[IceIndicationTag].ToString();
-            dbi.closeConnection();
-
+            dbi = DatabaseInterface.Instance;
+            //Set up the query
+            metTowerQuerySetup(MetId);
+            //Set OPC Server Name
+            this.opcServerName = opcServerName;
             //set the member thresholds
-            this.ambTempThreshold = ambTempThreshold;
-            this.deltaTempThreshold = deltaTempThreshold;
+            AmbTempThreshold = ambTempThreshold;
+            DeltaTempThreshold = deltaTempThreshold;
 
-            //Set OPC Server
-            opcServer = opcServerInstance;
+            //Set OPC Server Name
+            this.opcServerName = opcServerName;
 
+            //Set up met id
+            this.metTowerPrefix = MetId;
+
+            temperatureQueue = new Queue<double>();
+            humidityQueue = new Queue<double>();
         }
 
-        /// <summary>
-        /// Get Relative Humidity from OPC Server
-        /// </summary>
-        /// <returns></returns>
-        public string getRelativeHumidityValue() { return opcServer.readTagValue(primRHTag).ToString(); }
-
-        /// <summary>
-        /// Set the field of relative humidty 
-        /// </summary>
-        /// <param name="value"></param>
-        public void setRelativeHumityValue(double value) { opcServer.writeTagValue(getRelativeHumidityTag(), value); }
-
-        /// <summary>
-        /// Get the prim relative humidity tag
-        /// </summary>
-        /// <returns></returns>
-        public string getRelativeHumidityTag() { return this.primRHTag; }
-
-        /// <summary>
-        /// Set the Relativie Humidity Tag. Used only internally to this program
-        /// </summary>
-        public void setRelativeHumidityTag(string tag) { this.primRHTag = tag; }
-
-        /// <summary>
-        /// Get the Primary Temperature value from the met tower
-        /// </summary>
-        /// <returns></returns>
-        public string getPrimTemperatureValue() { return opcServer.readTagValue(primTempTag).ToString(); }
-        /// <summary>
-        /// Sets the primary temperature field. Used for this program only
-        /// </summary>
-        public void setPrimTemperatureValue(double value) { opcServer.writeTagValue(getPrimTemperatureTag(),value); }
-
-        /// <summary>
-        /// Returns the OpcTag for the primary temperature tag
-        /// </summary>
-        /// <returns></returns>
-        public string getPrimTemperatureTag() { return this.primTempTag; }
-
-        /// <summary>
-        /// Set the primary temperature tag.
-        /// </summary>
-        public void setPrimTemperatureTag(string tag) { this.primTempTag = tag; }
-
-        /// <summary>
-        /// Get the SEcondary Temperature value from the met tower
-        /// </summary>
-        /// <returns></returns>
-        public string getSecTemperatureValue() { return opcServer.readTagValue(secTempTag).ToString(); }
-
-        /// <summary>
-        /// Sets the primary temperature field. Used for this program only
-        /// </summary>
-        public void setSecTemperatureValue(double value) { opcServer.writeTagValue(getSecTemperatureTag(), value); }
-
-        /// <summary>
-        /// Returns the OpcTag for the primary temperature tag
-        /// </summary>
-        /// <returns></returns>
-        public string getSecTemperatureTag() { return this.secTempTag; }
-
-        /// <summary>
-        /// Set the secondary temperature tag.
-        /// </summary>
-        public void setSecTemperatureTag(string tag) { this.secTempTag = tag; }
-
-        /// <summary>
-        /// Calculates the Dew Point Temperature given the ambient temperature and the the relative humidity
-        /// </summary>
-        /// <param name="ambTemp">The ambient temperature value (Celcius) from the met tower in double format</param>
-        /// <param name="rh">The relative humidity in double format</param>
-        /// <returns>The dew point temperature in double format </returns>
-        public double calculateDewPoint(double rh, double ambTemp)
+        //This method queries the sqlite table and then sets the tags in the table to the members of the class
+        private void metTowerQuerySetup(string MetId)
         {
-            //The following formula is given by Nick Johansen, ask him for more details
-            return Math.Pow(rh, 1.0 / 8.0) * (112 + (0.9 * ambTemp)) + (0.1 * ambTemp) - 112;
+            //Get everything relating to the MetTowerInputTags table
+            DataTable reader = dbi.readCommand(INPUT_TAG_QUERY + String.Format(" WHERE MetId='{0}'", MetId));
+
+            PrimTemperatureTag = reader.Rows[0][PrimTempValueTagColumn].ToString();
+            SecTemperatureTag = reader.Rows[0][SecTempValueColumn].ToString();
+            RelativeHumidityTag = reader.Rows[0][PrimHumidityValueColumn].ToString();
+            HumiditySecValueTag = reader.Rows[0][SecHumidityValueColumn].ToString();
+            MetSwitchTag = reader.Rows[0][SwitchColumn].ToString();
+
+            //Get everything relating to the MetTowerOutputTags table
+            reader = dbi.readCommand(OUTPUT_TAG_QUERY + String.Format(" WHERE MetId='{0}'", MetId));
+            TemperaturePrimBadQualityTag = reader.Rows[0][TempPrimBadQualityColumn].ToString();
+            TemperaturePrimOutOfRangeTag = reader.Rows[0][TempPrimOutOfRangeColumn].ToString();
+            TemperatureSecBadQualityTag = reader.Rows[0][TempSecBadQualityColumn].ToString();
+            TemperatureSecOutOfRangeTag = reader.Rows[0][TempSecOutOfRangeColumn].ToString();
+
+            HumidtyOutOfRangeTag = reader.Rows[0][HumidityOutOfRangeColumn].ToString();
+            HumidityBadQualityTag = reader.Rows[0][HumidityBadQualityColumn].ToString();
+
+            IceIndicationTag = reader.Rows[0][IceIndicationColumn].ToString();
+            NoDataAlarmTag = reader.Rows[0][NoDataAlarmColumn].ToString();
+
         }
 
         /// <summary>
-        /// Calculates the Delta Temperature given the ambient Temperature and a dew point temperature (from calculateDewPoitn function)
+        /// Accessor the RelativeHumidity OPC Tag
         /// </summary>
-        /// <param name="ambTemp">The ambient temperature value (Celcius) from the met tower in double format</param>
-        /// <param name="dewPointTemp">The dew point temperature from calculateDewPoint</param>
-        /// <returns>The delta temperature in double format</returns>
-        public double calculateDelta(double ambTemp, double dewPointTemp)
+        public string RelativeHumidityTag { set; get; }
+
+        public Object RelativeHumidityValue
         {
-            return Math.Abs(ambTemp - dewPointTemp);
+            set { client.WriteItemValue("", opcServerName, RelativeHumidityTag, value); }
+            get { return new EasyDAClient().ReadItemValue("", opcServerName, RelativeHumidityTag); }
         }
 
         /// <summary>
-        /// Check the quality of the met tower
+        /// Accessor for the Primary Temperature OPC Tag
         /// </summary>
-        /// <param name="ambTemp"></param>
-        /// <param name="rh"></param>
-        /// <returns></returns>
-        public bool checkMetTower(double ambTemp, double rh)
+        public string PrimTemperatureTag { set; get; }
+
+        public Object PrimTemperatureValue
         {
-            throw new NotImplementedException();
+            get { return new EasyDAClient().ReadItemValue("", opcServerName, PrimTemperatureTag); }
+            set { client.WriteItemValue("", opcServerName, PrimTemperatureTag, value); }
         }
 
         /// <summary>
-        /// Checks the quality of the relative humidity of the current met tower. 
-        /// Returns true if quality is good. False otherwise
+        /// Accessosr for SEcondary Temperature OPC Tag
         /// </summary>
-        /// <returns>Returns True if good quality, False if bad</returns>
-        public bool rhQualityCheck()
-        {
-            double rh = Convert.ToDouble(getRelativeHumidityValue());
-            double minValue = 0.0;
-            double maxValue = 100.0;
-
-            //Bad Quality
-            if(rh < 0.0 || rh > 100.0)
-            {
-                //Cap it off and throw an alarm
-                //Set primay relative humidty to either 0 (if below 0) or 100 (if above zero)
-                opcServer.writeTagValue(getPrimTemperatureTag(), ((rh < 0.0) ? 0.0 : 100.0) );
-                throw new NotImplementedException();
-                return false;
-            }
-            //Normal operation 
-            else
-            {
-                return true;
-            }
-        }
-
+        public string SecTemperatureTag { set; get; }
         /// <summary>
-        /// Checks the quality of the temperature of the current met tower. 
-        /// Returns true if quality is good. False otherwise
+        /// Accessor for the Secondary Temperature Value 
         /// </summary>
-        /// <param name="temperatureTag">The OPC tag for temperature (either prim or sec)</param>
-        /// <returns>Returns True if good quality, False if bad</returns>
-        private bool tempQualityCheck(string temperatureTag)
+        public Object SecTemperatureValue
         {
-            double tempValue = Convert.ToDouble(temperatureTag);
-            double minValue = -20.0;
-            double maxValue = 60.0;
-            //Bad Quality
-            if  (tempValue < minValue || tempValue > maxValue)
-            {
-                //Cap it off and throw an alarm
-                //Set primay relative humidty to either 0 (if below 0) or 100 (if above zero)
-                opcServer.writeTagValue(temperatureTag, ((tempValue < minValue) ? -20.0 : 60.0));
-
-                throw new NotImplementedException();
-                return false;
-            }
-            else
-            {
-                return true;
-            }
-            throw new NotImplementedException();
+            get { return new EasyDAClient().ReadItemValue("", opcServerName, SecTemperatureTag); }
+            set { client.WriteItemValue("", opcServerName, SecTemperatureTag, value); }
         }
 
-        /// <summary>
-        /// Check the temperature quality of both the primary and secondary sensors
-        /// </summary>
-        /// <returns>Returns True if good quality, False if bad</returns>
-        public bool tempQualityCheck()
-        {
-            //If both cases are true, then both sensors are working correctly
-
-            bool primTempCheck = tempQualityCheck(getPrimTemperatureTag());
-            bool secTempCheck = tempQualityCheck(getSecTemperatureTag());
-            //normal operaiton
-            if(primTempCheck && secTempCheck){
-                return true;
-            }
-            //only the secondary Temperature value is suspect
-            else if(primTempCheck && !secTempCheck)
-            {
-
-            }
-            //only the primary Temperature value is suspect
-            else if(!primTempCheck && secTempCheck)
-            {
-
-            }
-            //If both sensors are bad.  Use turbine data
-            else
-            {
-                return false;
-            }
-            throw new NotImplementedException();
-        }
 
         //Getters for System OPC Tag indicators
         /// <summary>
         /// Gets the  NoDataAlaarmValue OPC value
         /// </summary>
         /// <returns></returns>
-        public string getNoDataAlarmValue() { return noDataAlarmTag;}
+        public string NoDataAlarmTag { set; get; }
+        public Object NoDataAlarmValue { set { client.WriteItemValue("", opcServerName, NoDataAlarmTag, value); } get { return new EasyDAClient().ReadItemValue("", opcServerName, NoDataAlarmTag); } }
+
         /// <summary>
         /// Gets the IceIndicationValue OPC Value
         /// </summary>
         /// <returns></returns>
-        public string getIceIndicationValue() { return iceIndicationTag;}
+        public string IceIndicationTag { set; get; }
+        public Object IceIndicationValue
+        {
+            get { return new EasyDAClient().ReadItemValue("", opcServerName, IceIndicationTag); }
+            set { client.WriteItemValue("", opcServerName, IceIndicationTag, value); }
+        }
+
+        //For Met TOwer siwtching
+        public string MetSwitchTag { get; set; }
+        public bool MetSwitchValue { get; set; }
 
         //Threshold setters and getters
-        public double AmbTempThreshold { get; set; }
-        public double DeltaTempThreshold { get; set; }
+        public double AmbTempThreshold { get { return ambTempThreshold; } set { ambTempThreshold = value; } }
+        public double DeltaTempThreshold { get { return deltaTempThreshold; } set { deltaTempThreshold = value; } }
 
+        //Humidity Accessors
+        public string HumidityPrimValueTag { get; set; }
+        public string HumiditySecValueTag { get; set; }
+        public string HumidtyOutOfRangeTag { get; set; }
+        public string HumidityBadQualityTag { get; set; }
+
+        //Primary Temperature  Accessors
+        public string TemperaturePrimBadQualityTag { get; set; }
+        public string TemperaturePrimOutOfRangeTag { get; set; }
+
+        //Secondary Temperature Accessors
+        public string TemperatureSecBadQualityTag { get; set; }
+        public string TemperatureSecOutOfRangeTag { get; set; }
+
+        //The following are for humidity out of range, bad quality, etc.
+        public Object HumidityOutOfRng
+        {
+            get { return new EasyDAClient().ReadItemValue("", opcServerName, HumidtyOutOfRangeTag); }
+            set { client.WriteItemValue("", opcServerName, HumidtyOutOfRangeTag, value); }
+        }
+
+        public Object HumidityBadQuality
+        {
+            get { return new EasyDAClient().ReadItemValue("", opcServerName, HumidityBadQualityTag); }
+            set { client.WriteItemValue("", opcServerName, HumidityBadQualityTag, value); }
+        }
+
+        //The following are for temperature out of range, bad quality
+        public Object TemperaturePrimOutOfRange
+        {
+            get { return new EasyDAClient().ReadItemValue("", opcServerName, TemperaturePrimOutOfRangeTag); }
+            set { client.WriteItemValue("", opcServerName, TemperaturePrimOutOfRangeTag, value); }
+        }
+
+        public Object TemperaturePrimBadQuality
+        {
+            get { return new EasyDAClient().ReadItemValue("", opcServerName, TemperaturePrimOutOfRangeTag); }
+            set { client.WriteItemValue("", opcServerName, TemperaturePrimOutOfRangeTag, value); }
+        }
+
+        public Object TemperatureSecOutOfRange
+        {
+            get { return new EasyDAClient().ReadItemValue("", opcServerName, TemperatureSecOutOfRangeTag); }
+            set { client.WriteItemValue("", opcServerName, TemperatureSecOutOfRangeTag, value); }
+        }
+
+        public Object TemperatureSecBadQuality
+        {
+            get { return new EasyDAClient().ReadItemValue("", opcServerName, TemperatureSecOutOfRangeTag); }
+            set { client.WriteItemValue("", opcServerName, TemperatureSecOutOfRangeTag, value); }
+        }
+
+        /// <summary>
+        /// Verifies whether a quality is good or not
+        /// </summary>
+        /// <param name="opcTag"></param>
+        /// <returns></returns>
+        public bool isQualityGood(string opcTag)
+        {
+            DAVtq vtq = client.ReadItem(opcServerName, opcTag);
+            return vtq.Quality.IsGood ? true : false;
+        }
+
+        //Met Id methods
+        public string getMetTowerPrefix { set { } get { return this.metTowerPrefix; } }
+
+        //turbien methods for measurement reduedancy
+        public void setNearestTurbine(Turbine turbine) { nearestTurbine = turbine; }
+        public Turbine getNearestTurbine() { return nearestTurbine; }
+
+        public void writeToQueue(double temperature, double humidity)
+        {
+            //Should this be prim temp or something else?
+            temperatureQueue.Enqueue(temperature);
+            humidityQueue.Enqueue(humidity);
+        }
+
+        public Queue<double> getTemperatureQueue() { return this.temperatureQueue; }
+        public Queue<double> getHumidityQueue() { return this.humidityQueue; }
     }
 }

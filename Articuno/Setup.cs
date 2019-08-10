@@ -34,36 +34,35 @@ namespace Articuno
 
         private static readonly ILog log = LogManager.GetLogger(typeof(Setup));
 
-        static void Main(string[] args)
-        {
+        //static void Main(string[] args)
+        //{
 
-            //Create instance to the Database
-            DatabaseInterface di = new DatabaseInterface();
+        //    //Create instance to the Database
+        //    DatabaseInterface di = DatabaseInterface.Instance;
 
-            //Create instance to the Logging class
+        //    //Create instance to the Logging class
 
-            //Check to see if the DB exists. Exit if it doesn't exist
-            if (di.databaseNotFound()) {
-                //TODO: Add Log "Error: SQLite DB not found"
-                return;
-            }
-
-
-            //Pull required information from the database
-            di.getTurbineList();
-            String opcServer =di.getOpcServer();
-            String metTower =di.getMetTower();
+        //    //Check to see if the DB exists. Exit if it doesn't exist
+        //    if (di.databaseNotFound()) {
+        //        //TODO: Add Log "Error: SQLite DB not found"
+        //        return;
+        //    }
 
 
-            //Create Met Tower References
-            MetTower met1 = new MetTower(metTower, 0.00, 0.00,null);
+        //    //Pull required information from the database
+        //    di.getTurbineList();
+        //    String metTower =di.getMetTower();
 
-            //Create Articuno instance
-            Articuno artic = new Articuno(opcServer, metTower, di.getTurbineList());
 
-            //Execute Articuno
-            artic.start();
-        }
+        //    //Create Met Tower References
+        //    MetTower met1 = new MetTower(metTower, 0.00, 0.00,"SV.OPCDAServer.1");
+
+        //    //Create Articuno instance
+        //    //ArticunoMain artic = new ArticunoMain(opcServer, metTower, di.getTurbineList());
+
+        //    //Execute Articuno
+        //    //artic.start();
+        //}
 
         public Hashtable PerformanceHash { get; set; }
         /// <summary>

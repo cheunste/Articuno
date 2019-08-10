@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Articuno;
 using System.Data.SQLite;
 using System.Data;
+using System.Collections.Generic;
 
 namespace ArticunoTest
 {
@@ -12,105 +13,59 @@ namespace ArticunoTest
         DatabaseInterface dbi;
         public DatabaseInterfaceTest()
         {
-            dbi = new DatabaseInterface();
-        }
-
-        [TestMethod]
-        public void connectionTest()
-        {
-            SQLiteConnection testConnection = dbi.openConnection();
-            ConnectionState test = testConnection.State;
-            Assert.AreEqual(test.ToString().ToLower(), "open");
-
-            dbi.closeConnection(testConnection);
-            test = testConnection.State;
-            Assert.AreEqual(test.ToString().ToLower(), "closed");
+            dbi = DatabaseInterface.Instance;
         }
 
         [TestMethod]
         //Test to get the description column from various tables
-        public void readFromDBTest()
+        [DataTestMethod]
+        [DataRow("SELECT * from SystemInputTags WHERE Description!='SitePrefix' AND Description!='OpcServerName'")]
+        [DataRow("SELECT * from SystemInputTags WHERE Description='OpcServerName'")]
+        public void readFromSystemInputTableTest(string sqlcmd)
         {
-            //Open the DB
-            SQLiteConnection testConnection = dbi.openConnection();
-
             //Get all the columns from the SystemParemeters
             //NOTE: To see the output, click the output in 'Test Explorer' after the test is executed.
-            string sqlcmd = "Select * from SystemInputTags";
-            SQLiteDataReader reader = dbi.readCommand(sqlcmd);
+            DataTable reader = dbi.readCommand(sqlcmd);
+            Console.WriteLine(reader.Rows.Count);
 
-            while (reader.Read())
+            for (int i = 0; i < reader.Rows.Count; i++)
             {
-                Assert.IsNotNull(reader["Description"]);
-                Console.WriteLine(
-                    reader["Description"]
-                    );
+                Console.WriteLine(reader.Rows[i]["OpcTag"].ToString());
             }
 
-            sqlcmd = "Select * from PerformanceTable limit 5";
-            reader = dbi.readCommand(sqlcmd);
-
-            while (reader.Read())
+            for (int i = 0; i < reader.Rows.Count; i++)
             {
-                Assert.IsNotNull(reader["id"]);
-                Assert.IsNotNull(reader["WindSpeed"]);
-                Assert.IsNotNull(reader["RotorSpeed"]);
-                Assert.IsNotNull(reader["RotorSpeedNrs"]);
-                Assert.IsNotNull(reader["StdDevNrs"]);
-                Console.WriteLine(
-                    reader["id"] +" " + reader["WindSpeed"]+  " " + reader["RotorSpeed"]+  " " + reader["RotorSpeedNrs"]+  " " + reader["StdDevNrs"]
-                );
+                Console.WriteLine(reader.Rows[i]["Default"].ToString());
             }
-
-            //Get everything from the MetTower tables
-            sqlcmd = "Select * from MetTowerInputTags";
-            reader = dbi.readCommand(sqlcmd);
-
-            while (reader.Read())
-            {
-                Assert.IsNotNull(reader["MetId"]);
-                Console.WriteLine(
-                    reader["MetId"]
-                );
-            }
-
-            sqlcmd = "Select * from MetTowerOutputTags";
-            reader = dbi.readCommand(sqlcmd);
-
-            while (reader.Read())
-            {
-                Assert.IsNotNull(reader["MetId"]);
-                Console.WriteLine(
-                    reader["MetId"]
-                );
-            }
-
-            //Get the Turbine Ids from the TurbineINputTags and TurbineOutputTable table
-            sqlcmd = "Select TurbineId from TurbineInputTags";
-            reader = dbi.readCommand(sqlcmd);
-
-            while (reader.Read())
-            {
-                Assert.IsNotNull(reader["TurbineId"]);
-                Console.WriteLine(
-                    reader["TurbineId"]
-                );
-            }
-
-            sqlcmd = "Select TurbineId from TurbineOutputTags";
-            reader = dbi.readCommand(sqlcmd);
-
-            while (reader.Read())
-            {
-                Assert.IsNotNull(reader["TurbineId"]);
-                Console.WriteLine(
-                    reader["TurbineId"]
-                );
-            }
-
-            //Close the DB
-            dbi.closeConnection(testConnection);
         }
+
+        [TestMethod]
+        [DataTestMethod]
+        //[DataRow("SELECT NrsMode,OperatingState, Participation from TurbineInputTags")]
+        [DataRow("SELECT TurbineId,OperatingState, Participation, NrsMode from TurbineInputTags")]
+        //[DataRow("SELECT TurbineId from TurbineOutputTags")]
+        //[DataRow("SELECT * from MetTowerInputTags")]
+        //[DataRow("SELECT * from MetTowerOutputTags")]
+        //[DataRow("SELECT TurbineId from TurbineInputTags")]
+        //[DataRow("SELECT TurbineId from TurbineOutputTags")]
+        public void readFromTurbine(string sqlcmd)
+        {
+            DataTable reader = dbi.readCommand(sqlcmd);
+            Console.WriteLine(reader.Rows.Count);
+
+            for (int i = 0; i < reader.Rows.Count; i++)
+            {
+                Console.WriteLine(reader.Rows[i]["TurbineId"].ToString());
+            }
+
+            for (int i = 0; i < reader.Rows.Count; i++)
+            {
+                Console.WriteLine(reader.Rows[i]["Participation"].ToString());
+            }
+
+        }
+
+
 
         [TestMethod]
         //Test to see if you are able to write to the database. 
@@ -119,25 +74,39 @@ namespace ArticunoTest
         {
             //For simplicity, write to the SystemOutputTgas table
             //Open the DB
-            SQLiteConnection testConnection = dbi.openConnection();
 
             //generate a random int
             Random rnd = new Random();
             int randomNumber = rnd.Next();
             //testConnection.Update
-            string sqlcmd = "UPDATE SystemOutputTags SET 'Default' ='"+randomNumber+"' WHERE Description = 'Heartbeat'";
+            string sqlcmd = String.Format("UPDATE SystemOutputTags SET DefaultValue ='{0}' WHERE Description = 'Heartbeat'", randomNumber);
             dbi.updateCommand(sqlcmd);
 
-            SQLiteDataReader reader = dbi.readCommand(sqlcmd);
-            sqlcmd = "Select Default from SystemOutputTags where Description='Heartbeat'";
-            while (reader.Read())
-            {
-                Assert.AreEqual(reader["Default"], randomNumber);
-                Console.WriteLine("Random Number: " + randomNumber);
-                Console.WriteLine("Value in DB: "+ reader["Default"] );
-            }
-            //Close the DB
-            dbi.closeConnection(testConnection);
+            sqlcmd = "SELECT DefaultValue from SystemOutputTags where Description='Heartbeat'";
+            DataTable reader = dbi.readCommand(sqlcmd);
+            int readHeartbeat = Convert.ToInt32(reader.Rows[0]["DefaultValue"]);
+            Assert.AreEqual(readHeartbeat, randomNumber);
+            Console.WriteLine("Random Number: {0}", randomNumber);
+            Console.WriteLine("Value in DB: {0}", readHeartbeat);
         }
-   }
+
+        [TestMethod]
+        //Test to see if it is able to get items from the turbineInput tables
+        [DataTestMethod]
+        //[DataRow("SELECT Pause from TurbineInputTags WHERE TurbineId=", "'T001'")]
+        [DataRow("SELECT NrsMode from TurbineInputTags WHERE TurbineId=", "'T001'")]
+        [DataRow("SELECT OperatingState from TurbineInputTags WHERE TurbineId=", "'T001'")]
+        [DataRow("SELECT RotorSpeed from TurbineInputTags WHERE TurbineId=", "'T001'")]
+        [DataRow("SELECT Temperature from TurbineInputTags WHERE TurbineId=", "'T001'")]
+        [DataRow("SELECT WindSpeed from TurbineInputTags WHERE TurbineId=", "'T001'")]
+
+        public void turbineTableTest(string cmd, string turbinePrefix)
+        {
+            string sqlcmd = cmd + turbinePrefix;
+            DataTable reader = dbi.readCommand(sqlcmd);
+            Assert.IsNotNull(reader.Rows[0][0]);
+            Console.WriteLine(reader.Rows[0][0]);
+
+        }
+    }
 }
