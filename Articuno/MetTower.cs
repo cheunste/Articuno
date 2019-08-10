@@ -39,32 +39,21 @@ namespace Articuno
 
         //Other table column 
         private static readonly string NoDataAlarmColumn = "NoDataAlarmTag";
+        private static readonly string SwitchColumn = "Switch";
         private static readonly string IceIndicationColumn = "IceIndicationTag";
 
-        //Query constants
-        readonly String TEMPERATURE_QUERY = "SELECT " + PrimTempValueTagColumn + "," + SecTempValueColumn + "," + TempPrimBadQualityColumn + "," + TempPrimOutOfRangeColumn + " FROM MetTower";
-        readonly String RH_QUERY = "SELECT " + PrimHumidityValueColumn + "," + SecHumidityValueColumn + "," + HumidityBadQualityColumn + "," + HumidityOutOfRangeColumn + " FROM MetTower";
-        readonly String OTHER_PARAM_QUERY = "SELECT " + NoDataAlarmColumn + ", " + IceIndicationColumn + " FROM MetTower";
 
+        //Queries
         readonly String INPUT_TAG_QUERY = "SELECT * FROM MetTowerInputTags";
         readonly String OUTPUT_TAG_QUERY = "SELECT * FROM MetTowerOutputTags";
 
         //Member variables;
-        //Member doubles 
-        private double ambientTemperature;
-        private double relativeHumidity;
-        private double dewPointTemperature;
-
-
         private double ambTempThreshold;
         private double deltaTempThreshold;
 
         //Queues
         private Queue<double> temperatureQueue;
         private Queue<double> humidityQueue;
-
-        //Member bool
-        private bool metTowerFailure;
 
         //Member prefix
         private string metTowerPrefix;
@@ -73,7 +62,6 @@ namespace Articuno
         private Turbine nearestTurbine;
 
         //opc server
-        private OpcServer opcServer;
         private string opcServerName;
         private EasyDAClient client = new EasyDAClient();
 
@@ -115,6 +103,7 @@ namespace Articuno
             SecTemperatureTag = reader.Rows[0][SecTempValueColumn].ToString();
             RelativeHumidityTag = reader.Rows[0][PrimHumidityValueColumn].ToString();
             HumiditySecValueTag = reader.Rows[0][SecHumidityValueColumn].ToString();
+            MetSwitchTag = reader.Rows[0][SwitchColumn].ToString();
 
             //Get everything relating to the MetTowerOutputTags table
             reader = dbi.readCommand(OUTPUT_TAG_QUERY + String.Format(" WHERE MetId='{0}'", MetId));
@@ -185,6 +174,10 @@ namespace Articuno
             get { return new EasyDAClient().ReadItemValue("", opcServerName, IceIndicationTag); }
             set { client.WriteItemValue("", opcServerName, IceIndicationTag, value); }
         }
+
+        //For Met TOwer siwtching
+        public string MetSwitchTag { get; set; }
+        public bool MetSwitchValue { get; set; }
 
         //Threshold setters and getters
         public double AmbTempThreshold { get { return ambTempThreshold; } set { ambTempThreshold = value; } }

@@ -13,14 +13,22 @@ namespace ArticunoTest
     public class TurbineTest
     {
         TurbineMediator tm;
+        ArticunoMain am;
         public TurbineTest()
         {
+            am = new ArticunoMain();
 
             //Must create the MetTowersingleton first
             MetTowerMediator.Instance.createMetTower();
             List<string> newList = new List<string>();
             tm = TurbineMediator.Instance;
             tm.createTestTurbines();
+        }
+
+        [TestCleanup]
+        public void clearCommands()
+        {
+
         }
 
         [TestMethod]
@@ -39,7 +47,7 @@ namespace ArticunoTest
             foreach (Turbine turb in TurbineMediator.Instance.getTurbineList())
             {
                 turb.writeOperatingState(testValue);
-                double readValue = Convert.ToDouble(TurbineMediator.Instance.readOperatingStateTag(turb.getTurbinePrefixValue()));
+                double readValue = Convert.ToDouble(TurbineMediator.Instance.readOperatingStateValue(turb.getTurbinePrefixValue()));
 
                 Assert.AreEqual(testValue, readValue, 0.001, "Written value does not equal test value");
             }
@@ -95,8 +103,8 @@ namespace ArticunoTest
 
             foreach (Turbine turbine in turbineList)
             {
-                turbine.writeAlarmTagValue(5);
-                Assert.AreEqual(turbine.readAlarmValue(), 5.00);
+                turbine.writeAlarmTagValue(true);
+                Assert.AreEqual(Convert.ToBoolean(turbine.readAlarmValue()), true);
             }
 
         }
@@ -132,15 +140,22 @@ namespace ArticunoTest
         [DataRow("T001", true)]
         public void AlgorithmTest(string turbineId, bool state)
         {
-            //Note complete. Do this later once you get the delegates figured out
-            Assert.Fail();
+            ArticunoMain am = new ArticunoMain();
 
+            //Note complete. Do this later once you get the delegates figured out
             tm.setTemperatureCondition(turbineId, state);
             tm.setOperatingStateCondition(turbineId, state);
             tm.setNrscondition(turbineId, state);
             tm.setTurbinePerformanceCondition(turbineId, state);
             tm.setDeRateCondition(turbineId, state);
+
             //If all five are true, then this turbine should be paused due to Ice
+            //After some CTR Time
+            //wait 90 seconds
+            //System.Threading.Thread.Sleep(90000);
+            System.Threading.Thread.Sleep(500);
+
+            Assert.AreEqual(state,TurbineMediator.Instance.isPausedByArticuno(turbineId));
 
         }
 
@@ -152,7 +167,8 @@ namespace ArticunoTest
         {
             foreach (string prefix in TurbineMediator.Instance.getTurbinePrefixList())
             {
-                TurbineMediator.Instance.setCtrTime(prefix, value);
+                //TurbineMediator.Instance.setCtrTime(prefix, value);
+                TurbineMediator.Instance.writeCtrTime(value);
             }
 
 
