@@ -2,18 +2,64 @@
 
 ## Introduction
 
-Articuno is a name of the Avangrid ice/sound abatement curtailment tool for CORE. This tool is designed to pause a turbine when the software determines the condition at the site is cold enough for ice to form on the turbine blades.
+Articuno is a name of the Avangrid ice/sound abatement curtailment tool for CORE. This tool is designed to automatically pause a turbine once ice have started to build up on the turbine's blades. 
+
+## System Overview
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam et volutpat magna. In efficitur orci nec ligula blandit, nec venenatis est feugiat. Sed ultrices, est sed blandit suscipit, mi leo fringilla eros, at elementum purus nibh commodo velit. Donec sagittis, metus at mattis facilisis, nunc tortor interdum sem, id malesuada orci turpis id justo. Aliquam tempus libero vel felis dictum condimentum. Mauris maximus est libero, id dictum eros vestibulum sit amet. Proin pellentesque quam ultricies purus sodales hendrerit. Nulla maximus vulputate tellus, in posuere dolor ullamcorper sed. 
+
 
 ## Installation
 
-### 1) Verify the Articuno Tags are Added in PcVUe
-### 2) Update the Articuno.db database
-### 3) Move to the UCC
-### 4) Run the program
+Check out the project via the git repository (or download it as a zip if git isn't installed)
+
+```git
+git clone https://github.com/cheunste/Articuno.git
+```
+
+### Updating the Database
+
+ 1) Modify the articuno db in Articuno/articuno.db with the full names of the OPC tags.
+    i) To do this, you must first:
+        - Get the Wind farm site prefix (ie SCRAB, HOOSA, etc.)
+        - Have access to SQLite tools, or the GUI application "DB Browser for SQLite"
+        
+ 2) Open the articuno.db either by sqlite cmd tools or DB Browser for SQLite (GUI). More information on the columns of the table in the [tables section](###Tables)
+
+    i) Replace the prefix of all the tags of the MetTowerInputTags table (the default is either XXXXX or 'SCRAB') with the new site prefix. There will be 10 changes total.
+
+    ii) Replace the prefix of all the tags of the MetTowerOuputTags table (the default is either XXXXX or 'SCRAB') with the new site prefix. There will be 20 changes total.
+
+    iii) Replace the prefix of all the tags of the SystemInputTags table (the default is either XXXXX or 'SCRAB') with the new site prefix. There will be 6 changes total.
+    
+    iv) Replace the prefix of all the tags of the SystemOutputTags table (the default is either XXXXX or 'SCRAB') with the new site prefix. There will be 3 changes total.
+
+    v) Replace the prefix of all the tags of the TurbienInputTags table (the default is either XXXXX or 'SCRAB') with the new site prefix. This will depend on the number of turbines at the site.
+       - In many cases, additional or fewer turbines will be needed. The number of turbines must match the number of turbines at the site
+       - There will be 12 changes for each turbine at the site
+       - **Important**: The NrsMode tag can be blank if the site does **NOT** have a noise reduction system mode. This can be left as null or an empty string
+       - The 'MetReference' column refers to a met tower that the turbine will be referencing. This list is given by Nick Johanesen from technical Division
+       - The 'RedundancyForMet' column allows this turbine to act as a temperature backup in case both temperature sensors for the met fails. Not all turbines need this column filled out and can be left as NULL or an empty string
+
+    vi) Replace the prefix of all the tags of the TurbineOutputTags table (the default is either XXXXX or 'SCRAB') with the new site prefix. This will depend on the number of turbines at the site. there will be 2 changes for each turbine at the site
+    
+ 3) Move the modified articuno.db to the release directory in (Articuno/bin/release)
+ 4) Verify the Articuno Tags added to the database are in both PcVue and FrontVue
+
+ ### System Installaion
+ 
+ To deploy Articuno on the UCC please do the following:
+
+ 1) Install .NET Framework 4.7 (minimum) on the target UCC
+ 2) Copy the release version of the project (the entire 'release' directory in Articuno/bin/release) onto the UCC's directory in "C:\Program Files\XXX\XXX"
+ 3) Launch the software
+
+ ### Starting a service
+ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam et volutpat magna. In efficitur orci nec ligula blandit, nec venenatis est feugiat. Sed ultrices, est sed blandit suscipit, mi leo fringilla eros, at elementum purus nibh commodo velit. Donec sagittis, metus at mattis facilisis, nunc tortor interdum sem, id malesuada orci turpis id justo. Aliquam tempus libero vel felis dictum condimentum. Mauris maximus est libero, id dictum eros vestibulum sit amet. Proin pellentesque quam ultricies purus sodales hendrerit. Nulla maximus vulputate tellus, in posuere dolor ullamcorper sed. 
 
 ## How to Use
 
-## Dispatcher Usage
+## Dispatcher 
 
 Articuno is a backend program that will automatically pause a turbine when all the following conditions are met:
 - the temperature of the met tower is below the threshold value set by the NCC
@@ -21,6 +67,8 @@ Articuno is a backend program that will automatically pause a turbine when all t
 - the turbine is set for pariticipation 
 - the rotor speed of a turbine is under performing given an average wind speed
 - the turbine is in running state the entire Control Time Resolution Period. More on this in the ###CTR section.
+
+For the NCC dispatchers, this is a completely hands off process as the turbine is designed to be stop automatically and the turbine is not designed to start unless the NCC send a start command to the turbine (or send a site wide start all command).
 
 ### Articuno Control Displays (FrontVue)
 
@@ -64,7 +112,7 @@ The articuno database must be updated for each new site installation.
 
 The Database is comprised of eight tables, each of which is shown below with their column headers along with a description
 
-**MetTowerInputTags**
+**MetTowerInputTags**: Table containing Met Tower sensor and met tower command OPC tags.
 |Column| Description|
 |--|--|
 |MetId| Met Tower Prefix |
@@ -73,7 +121,7 @@ The Database is comprised of eight tables, each of which is shown below with the
 |PrimHumidityValueTag| Tag of Met Tower Humidity Sensor | 
 |Switch| Tag of Switch Command |  
 
-**MetTowerOutputTags**
+**MetTowerOutputTags**: Table containing Met Tower alarms OPC Tags.
 |Column | Description |
 |--|--|
 |MetId| Met Tower Prefix |
@@ -90,7 +138,7 @@ The Database is comprised of eight tables, each of which is shown below with the
 
 **RotorSpeedLookup Table**
 
-Note that this table is developed by Nick Johansen from Technical Division 
+Table containing the rotor speed filters.Note that this table is developed by Nick Johansen from Technical Division 
 
 |Column | Description |
 |--|--|
@@ -102,34 +150,42 @@ Note that this table is developed by Nick Johansen from Technical Division
 
 **SystemInputTags Table**
 
-The System Input and Output Tag tables are a tad different. These tables contain tags 
-that are inconsistent with the rest of hte program. The input tag table contains the following items in "Description":
-AmbTempThreshold
-ArticunoEnable
-CTRPeriod
-DeltaTmpThreshold
-DewTempThreshold
-SitePrefix
-OpcServerName
-
+This table contains the command OPC tags that allows NCC to interact with Articuno. The System Input and Output Tag tables are a tad different. These tables contain tags that are inconsistent with the rest of the program. 
 
 |Column | Description |
 |--|--|
 |Description| Description of the OpcTag |
 |OpcTag| The OPC Tag name|
+
+
+The SystemInputTags table contains the following items in "Description":
+
+|Description | OpcTag| Notes | 
+|--|--| --|
+| AmbTempThreshold | SCRAB.Articuno.TmpThreshold | The temperature threshold set by NCC |
+| ArticunoEnable | SCRAB.Articuno.CurtailEna | Enable/disable Articuno |  
+| CTRPeriod | SCRAB.Articuno.EvalTm |  The CTR (Control Time Resolution) of Articuno set by NCC |  
+| DeltaTmpThreshold | SCRAB.Articuno.TmpDelta |  The temperature threshold data set by NCC |
+| DewTempThreshold | SCRAB.ArticunSCRABo.TmpDew |  The Dew Point threshold set by NCC |
+| SitePrefix | SCRAB | Site prefix. Set by GCS | 
+| OpcServerName | SV.OPCDAServer.1 |  The name of the OPC Server. **Should never be changed** | 
+
 
 **SystemOutputTags Table**
 
-The System Input and Output Tag tables are a tad different. These tables contain tags 
+This table contains OPC tags that inform NCC of the current status of Articuno. The System Input and Output Tag tables are a tad different. These tables contain tags 
 that are inconsistent with the rest of hte program. The output tag table contains the following items in "Description":
-Heartbeat
-IcePossible
-NumTurbIced
 
 |Column | Description |
 |--|--|
 |Description| Description of the OpcTag |
 |OpcTag| The OPC Tag name|
+
+|Description | OpcTag| Notes | 
+|--|--| --|
+|Heartbeat | SCRAB.Articuno.Heartbeat | Articuno Heartbeat. Used to inform NCC system is alive or not| 
+|IcePossible | SCRAB.Articuno.IcePossible | Alarm to inform NCC that ice is possible on site|
+|NumTurbIced | SCRAB.Articuno.NumTurbPause | The number of turbines paused by Articuno|
 
 **TurbineInputTags Table**
 
