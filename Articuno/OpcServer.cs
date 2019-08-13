@@ -9,7 +9,7 @@ using OpcLabs.EasyOpc.DataAccess;
 namespace Articuno
 {
     /// <summary>
-    /// The OpcServer class sets up an interface to the OpcServer (PcVue). This probalby should be a singleton as there should only be one instance of this
+    /// The OpcServer class sets up an interface to the OpcServer (PcVue). This can be either a singleton or a static class...probably
     /// </summary>
     internal class OpcServer
     {
@@ -22,10 +22,8 @@ namespace Articuno
         private static readonly ILog log = LogManager.GetLogger(typeof(MetTower));
 
         //Constructor. Tages in a server name and sets the 
-        public OpcServer(String serverName)
-        {
-            this.serverName = serverName;
-        }
+        public OpcServer(String serverName) { this.serverName = serverName; }
+
         /// <summary>
         /// The readTags function reads an OPC tag value given an OPC Tag. This always returns a String.
         /// Mainly because I don't trust what the server is returning. 

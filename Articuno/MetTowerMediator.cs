@@ -73,14 +73,6 @@ namespace Articuno
             reader = dbi.readCommand(SERVER_NAME_QUERY);
             opcServerName = reader.Rows[0]["OpcTag"].ToString();
 
-
-            //Get the current threshold values 
-            //DAVtqResult[] vtqResults = client.ReadMultipleItems(opcServerName,
-            //    new DAItemDescriptor[]{
-            //        temp1,
-            //        temp2
-            //    });
-
             ambTempThreshold = Convert.ToDouble(OpcServer.readOpcTag(opcServerName, temp1));
             deltaThreshold = Convert.ToDouble(OpcServer.readOpcTag(opcServerName, temp2));
 
@@ -164,7 +156,6 @@ namespace Articuno
             var primSensorValue = tuple.Item3;
             var secSensorValue = tuple.Item4;
 
-            var finalQuality = primSensorQuality & secSensorQuality;
 
             if (primSensorQuality.Equals(MetQualityEnum.MET_GOOD_QUALITY))
             {
@@ -526,8 +517,6 @@ namespace Articuno
             MetTower tempMet = getMetTower(metTowerId);
             if (tag.ToUpper().Equals(tempMet.MetSwitchTag.ToUpper())) { return MetTowerEnum.Switched; }
             return null;
-
         }
-
     }
 }

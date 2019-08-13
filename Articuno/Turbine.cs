@@ -15,7 +15,6 @@ namespace Articuno
     /// You can set the tags via the setXXXXXTag method and get the value of said tag via the getXXXXXXValue method
     /// </summary>
 
-
     /*
      * This is the turbine class. It represents a turbine object in Articuno 
      * It probably should be an interface...but having an interface to create just one type of turbine seems kinda redundant. That's why I have a factory class
@@ -62,13 +61,10 @@ namespace Articuno
 
         }
 
-        //Detects when operating state (run, pause, etc.) changes
-        public string operatingStateChanged() { throw new NotImplementedException(); }
-
-        //Methods to get the value for the wind speed, rotor speed, etc. value from the OPC Server
+        //Methods to read the value for the wind speed, rotor speed, etc. value from the OPC Server
         public Object readWindSpeedValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, WindSpeedTag); }
         public Object readRotorSpeedValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, RotorSpeedTag); }
-        public Object readOperatinStateValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, OperatingStateTag); }
+        public Object readOperatingStateValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, OperatingStateTag); }
         public Object readNrsStateValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, NrsStateTag); }
         public Object readTemperatureValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, TemperatureTag); }
 
@@ -79,7 +75,6 @@ namespace Articuno
 
         //public Accessors (Getters and Setters)  to set the member variables to the  OPC tag
         // Not entirely sure if these should be public or not, but it does make reading code easier
-        //These are used to set the tag name to the member variable
         public string WindSpeedTag { set; get; }
         public string RotorSpeedTag { set; get; }
         public string OperatingStateTag { set; get; }
@@ -104,7 +99,7 @@ namespace Articuno
             log.InfoFormat("Shutdown command for {0} has been sent", this.TurbinePrefix);
             try
             {
-                OpcServer.writeOpcTag( OpcServerName, this.LoadShutdownTag, 1.00);
+                OpcServer.writeOpcTag(OpcServerName, this.LoadShutdownTag, 1.00);
                 return 1.0;
             }
             catch (OpcException opcException)
@@ -114,9 +109,9 @@ namespace Articuno
             }
         }
         //public void writeAlarmTagValue(Object value) { OpcServer.writeOpcTag( OpcServerName, AlarmTag, Convert.ToDouble(value)); }
-        public void writeAlarmTagValue(Object value) { OpcServer.writeOpcTag( OpcServerName, AlarmTag, Convert.ToBoolean(value)); }
-        public void writeNoiseLevel(Object value) { OpcServer.writeOpcTag( OpcServerName, NrsStateTag, Convert.ToDouble(value)); }
-        public void writeOperatingState(Object value) { OpcServer.writeOpcTag( OpcServerName, OperatingStateTag, Convert.ToDouble(value)); }
+        public void writeAlarmTagValue(Object value) { OpcServer.writeOpcTag(OpcServerName, AlarmTag, Convert.ToBoolean(value)); }
+        public void writeNoiseLevel(Object value) { OpcServer.writeOpcTag(OpcServerName, NrsStateTag, Convert.ToDouble(value)); }
+        public void writeOperatingState(Object value) { OpcServer.writeOpcTag(OpcServerName, OperatingStateTag, Convert.ToDouble(value)); }
         public void decrementCtrTime()
         {
             ctrCountDown--;
@@ -142,11 +137,11 @@ namespace Articuno
         public void setDeRateCondition(bool state) { derateConditionMet = state; }
 
         /*
-         * Met Tower accessor. Note that it only takes a prefix
+         * Met Tower accessor. Note that it only takes a prefix (ie Met1, Met2)
          */
         public string MetTowerPrefix { set; get; }
 
-        //Function to determine participation
+        //Function to determine turbine participation in Articuno
         public void setParticipation(bool participationStatus) { articunoParicipation = participationStatus; }
         public bool getParticipation() { return articunoParicipation; }
 
@@ -173,11 +168,14 @@ namespace Articuno
             }
         }
 
-        //For Wind speed and Rotor Speed queues
+        //For Wind speed and Rotor Speed queues. 
         public void addWindSpeedToQueue(double windSpeed) { windSpeedQueue.Enqueue(windSpeed); }
         public void addRotorSpeedToQueue(double rotorSpeed) { rotorSpeedQueue.Enqueue(rotorSpeed); }
         public Queue<double> getWindSpeedQueue() { return windSpeedQueue; }
         public Queue<double> getRotorSpeedQueue() { return rotorSpeedQueue; }
+        /// <summary>
+        /// Method call to clear all content of a turbine's wind speed queue and rotor speed queue
+        /// </summary>
         public void emptyQueue() { windSpeedQueue.Clear(); rotorSpeedQueue.Clear(); }
 
         /// <summary>
@@ -201,14 +199,6 @@ namespace Articuno
                     writeAlarmTagValue(true);
                     TurbineMediator.Instance.updateMain(TurbineMediator.TurbineEnum.PausedByArticuno, TurbinePrefix);
                 }
-            }
-            else
-            {
-                //If it isn't pause, then don't do anything. THat's dispatchers' responsibility
-                //log.DebugFormat("Clearing Pause Status for {0}", getTurbinePrefixValue());
-                //writeAlarmTagValue(false);
-                //TurbineMediator.Instance.updateMain(TurbineMediator.TurbineEnum.ClearBySite, TurbinePrefix);
-                //TurbineMediator.Instance.updateMain(TurbineMediator.TurbineEnum.ClearBySite, TurbinePrefix);
             }
         }
 

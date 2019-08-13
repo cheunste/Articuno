@@ -211,7 +211,7 @@ namespace Articuno
             assetStatusClient.SubscribeMultipleItems(assetInputTags.ToArray());
         }
 
-        //private static void updateHeartBeat() { client.WriteItemValue("", opcServerName, heartBeatTag, !Convert.ToBoolean(client.ReadItemValue("", opcServerName, heartBeatTag))); }
+        //Function to update an heartbeat
         private static void updateHeartBeat()
         {
             OpcServer.writeOpcTag(opcServerName, heartBeatTag,
