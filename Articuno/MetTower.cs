@@ -64,16 +64,11 @@ namespace Articuno
         //opc server
         private string opcServerName;
 
-        //database
-        private DatabaseInterface dbi;
-
         //log
         private static readonly ILog log = LogManager.GetLogger(typeof(MetTower));
 
         public MetTower(string MetId,string opcServerName)
         {
-            //Open a connection to the DB
-            dbi = DatabaseInterface.Instance;
             //Set OPC Server Name
             this.opcServerName = opcServerName;
 
