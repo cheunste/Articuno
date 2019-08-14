@@ -319,10 +319,8 @@ namespace Articuno
         /// </summary>
         /// <param name="temperatureTag">The OPC tag for temperature (either prim or sec)</param>
         /// <returns>Returns True if good quality, False if bad</returns>
-        private Tuple<MetQualityEnum, double> tempValueCheck(string temperatureTag)
+        private Tuple<MetQualityEnum, double> tempValueCheck(string temperatureTag,double tempValue)
         {
-            var temp  = OpcServer.readOpcTag( opcServerName, temperatureTag);
-            double tempValue = Convert.ToDouble(temp);
             double minValue = -20.0;
             double maxValue = 60.0;
             //Bad Quality
@@ -345,9 +343,12 @@ namespace Articuno
             MetTower met = getMetTower(metId);
             string primTempTag = met.PrimTemperatureTag;
             string secTempTag = met.SecTemperatureTag;
+            double primTempValue = Convert.ToDouble(met.PrimTemperatureValue);
+            double secTempValue = Convert.ToDouble(met.SecTemperatureValue);
+
             //call the ValueQuatliyCheck method to verify
-            var primTempCheckTuple = tempValueCheck(primTempTag);
-            var secTempCheckTuple = tempValueCheck(secTempTag);
+            var primTempCheckTuple = tempValueCheck(primTempTag,primTempValue);
+            var secTempCheckTuple = tempValueCheck(secTempTag,secTempValue);
 
             var primTempQuality = primTempCheckTuple.Item1;
             var secTempQuality = secTempCheckTuple.Item1;
@@ -471,7 +472,7 @@ namespace Articuno
         /// <summary>
         /// Method to check a met tower to see if it meets the freezing condition and set its condition. Returns true if iti s frozen, false otherwise
         /// </summary>
-        public bool setFrozenCondition(string metId, double avgTemperature,double avgHumidity)
+        public bool setFrozenCondition(string metId, double avgTemperature, double avgHumidity)
         {
             double tempThreshold = readTemperatureThreshold(metId);
             Console.WriteLine("Threshold {0}", tempThreshold);
@@ -500,7 +501,7 @@ namespace Articuno
                         e, metId, avgTemperature, tempThreshold);
                 }
             }
-            else{ met.IceIndicationValue = false; }
+            else { met.IceIndicationValue = false; }
 
             return Convert.ToBoolean(met.IceIndicationValue);
         }
