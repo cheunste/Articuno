@@ -216,17 +216,16 @@ namespace Articuno
         /// </summary>
         /// <param name="turbineId"></param>
         /// <returns></returns>
-        public Object readWindSpeedValue(string turbineId) { return OpcServer.readOpcTag( opcServerName, getTurbineWindSpeedTag(turbineId)); }
+        public Object readWindSpeedValue(string turbineId) { return getTurbine(turbineId).readWindSpeedValue(); }
         /// <summary>
         /// Deprecated in favor of design change. This is now in storeMinuteAverages
         /// </summary>
         /// <param name="turbineId"></param>
         /// <returns></returns>
-        public Object readRotorSpeedValue(string turbineId) { return OpcServer.readOpcTag( opcServerName, getRotorSpeedTag(turbineId)); }
-        public Object readOperatingStateValue(string turbineId) { return OpcServer.readOpcTag( opcServerName, getOperatingStateTag(turbineId)); }
-        public Object readNrsStateValue(string turbineId) { return OpcServer.readOpcTag( opcServerName, getNrsStateTag(turbineId)); }
-        public Object readTemperatureValue(string turbineId) { return OpcServer.readOpcTag( opcServerName, getTemperatureTag(turbineId)); }
-        public Object readHumidityValue(string turbineId) { return OpcServer.readOpcTag( opcServerName, getHumidityTag(turbineId)); }
+        public Object readRotorSpeedValue(string turbineId) { return getTurbine(turbineId).readRotorSpeedValue(); }
+        public Object readOperatingStateValue(string turbineId) { return getTurbine(turbineId).readOperatingStateValue(); }
+        public Object readNrsStateValue(string turbineId) { return getTurbine(turbineId).readNrsStateValue(); }
+        public Object readTemperatureValue(string turbineId) { return getTurbine(turbineId).readTemperatureValue(); }
 
         //For writing (using turbineId). Note that the mediator really shouldn't be writing to all the availble turbine tags. If you need to test something, you need to create a turbine object 
         public void writeNrsStateTag(string turbineId, object value) { getTurbine(turbineId).writeNoiseLevel(value); }

@@ -62,15 +62,15 @@ namespace Articuno
         }
 
         //Methods to read the value for the wind speed, rotor speed, etc. value from the OPC Server
-        public Object readWindSpeedValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, WindSpeedTag); }
-        public Object readRotorSpeedValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, RotorSpeedTag); }
-        public Object readOperatingStateValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, OperatingStateTag); }
-        public Object readNrsStateValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, NrsStateTag); }
-        public Object readTemperatureValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, TemperatureTag); }
+        public Object readWindSpeedValue() { return OpcServer.readOpcTag(OpcServerName, WindSpeedTag); }
+        public Object readRotorSpeedValue() { return OpcServer.readOpcTag(OpcServerName, RotorSpeedTag); }
+        public Object readOperatingStateValue() { return OpcServer.readOpcTag(OpcServerName, OperatingStateTag); }
+        public Object readNrsStateValue() {return OpcServer.readOpcTag(OpcServerName,NrsStateTag);}
+        public Object readTemperatureValue() {return OpcServer.readOpcTag(OpcServerName,TemperatureTag);}
 
-        public Object readTurbineScalingFactorValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, ScalingFactorTag); }
-        public Object readParticipationValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, ParticipationTag); }
-        public Object readAlarmValue() { return new EasyDAClient().ReadItemValue("", OpcServerName, AlarmTag); }
+        public Object readTurbineScalingFactorValue() {return OpcServer.readOpcTag(OpcServerName,ScalingFactorTag);}
+        public Object readParticipationValue() {return OpcServer.readOpcTag(OpcServerName,ParticipationTag);}
+        public Object readAlarmValue() {return OpcServer.readOpcTag(OpcServerName,AlarmTag);}
         public int readCtrCurrentValue() { return ctrCountDown; }
 
         //public Accessors (Getters and Setters)  to set the member variables to the  OPC tag
