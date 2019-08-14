@@ -70,17 +70,12 @@ namespace Articuno
         //log
         private static readonly ILog log = LogManager.GetLogger(typeof(MetTower));
 
-        public MetTower(string MetId, double ambTempThreshold, double deltaTempThreshold, string opcServerName)
+        public MetTower(string MetId,string opcServerName)
         {
             //Open a connection to the DB
             dbi = DatabaseInterface.Instance;
-            //Set up the query
-            metTowerQuerySetup(MetId);
             //Set OPC Server Name
             this.opcServerName = opcServerName;
-            //set the member thresholds
-            AmbTempThreshold = ambTempThreshold;
-            DeltaTempThreshold = deltaTempThreshold;
 
             //Set OPC Server Name
             this.opcServerName = opcServerName;
@@ -90,33 +85,6 @@ namespace Articuno
 
             temperatureQueue = new Queue<double>();
             humidityQueue = new Queue<double>();
-        }
-
-        //This method queries the sqlite table and then sets the tags in the table to the members of the class
-        private void metTowerQuerySetup(string MetId)
-        {
-            //Get everything relating to the MetTowerInputTags table
-            DataTable reader = dbi.readCommand(INPUT_TAG_QUERY + String.Format(" WHERE MetId='{0}'", MetId));
-
-            PrimTemperatureTag = reader.Rows[0][PrimTempValueTagColumn].ToString();
-            SecTemperatureTag = reader.Rows[0][SecTempValueColumn].ToString();
-            RelativeHumidityTag = reader.Rows[0][PrimHumidityValueColumn].ToString();
-            HumiditySecValueTag = reader.Rows[0][SecHumidityValueColumn].ToString();
-            MetSwitchTag = reader.Rows[0][SwitchColumn].ToString();
-
-            //Get everything relating to the MetTowerOutputTags table
-            reader = dbi.readCommand(OUTPUT_TAG_QUERY + String.Format(" WHERE MetId='{0}'", MetId));
-            TemperaturePrimBadQualityTag = reader.Rows[0][TempPrimBadQualityColumn].ToString();
-            TemperaturePrimOutOfRangeTag = reader.Rows[0][TempPrimOutOfRangeColumn].ToString();
-            TemperatureSecBadQualityTag = reader.Rows[0][TempSecBadQualityColumn].ToString();
-            TemperatureSecOutOfRangeTag = reader.Rows[0][TempSecOutOfRangeColumn].ToString();
-
-            HumidtyOutOfRangeTag = reader.Rows[0][HumidityOutOfRangeColumn].ToString();
-            HumidityBadQualityTag = reader.Rows[0][HumidityBadQualityColumn].ToString();
-
-            IceIndicationTag = reader.Rows[0][IceIndicationColumn].ToString();
-            NoDataAlarmTag = reader.Rows[0][NoDataAlarmColumn].ToString();
-
         }
 
         /// <summary>
