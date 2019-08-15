@@ -18,28 +18,33 @@ namespace Articuno
         public static int numMetTower;
 
         //private members
-        private string THRESHOLD_QUERY =
-            "SELECT OpcTag FROM SystemInputTags WHERE Description = 'AmbTempThreshold' or Description = 'DeltaTmpThreshold'";
-        private string SERVER_NAME_QUERY =
-            "SELECT OpcTag FROM SystemInputTags WHERE Description ='OpcServerName'";
+        private string MET_INPUT_TABLE_TAGS =
+            "SELECT * FROM MetTowerInputTags WHERE MetId='{0}'";
+        private string MET_OUTPUT_TABLE_TAGS =
+            "SELECT * FROM MetTowerOutputTags WHERE MetId='{0}'";
+
+        private string MET_NUM =
+            "SELECT MetId FROM MetTowerInputTags";
+
         private static string SELECT_QUERY = "SELECT Count(*) as num FROM MetTowerInputTags";
 
         private string opcServerName;
         private static List<MetTower> metTowerList = new List<MetTower>();
-
-        //constant bool for quality
-
-        //thresholds 
-        private double deltaThreshold;
-        private double ambTempThreshold;
+        private static List<String> metPrefixList = new List<String>();
 
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(MetTowerMediator));
 
         //Database
         static DatabaseInterface dbi;
-        private MetTowerMediator() { dbi = DatabaseInterface.Instance; }
+        private MetTowerMediator() {
 
+            metPrefixList = new List<string>();
+            metTowerList = new List<MetTower>();
+            dbi = DatabaseInterface.Instance;
+            opcServerName=getOpcServerName();
+        }
+        private string getOpcServerName() { return DatabaseInterface.Instance.getOpcServer(); }
         public static MetTowerMediator Instance { get { return Nested.instance; } }
 
         private class Nested
@@ -65,26 +70,53 @@ namespace Articuno
 
         public void createMetTower()
         {
-            //Get he threshold OpcTags from the database
-            DataTable reader = dbi.readCommand(THRESHOLD_QUERY);
-            string temp1 = reader.Rows[0]["OpcTag"].ToString();
-            string temp2 = reader.Rows[1]["OpcTag"].ToString();
+            log.Info("Creating Met Tower lists");
+            metTowerList = new List<MetTower>();
+            metTowerList.Clear();
 
-            reader = dbi.readCommand(SERVER_NAME_QUERY);
-            opcServerName = reader.Rows[0]["OpcTag"].ToString();
+            DatabaseInterface dbi = DatabaseInterface.Instance;
 
-            ambTempThreshold = Convert.ToDouble(OpcServer.readOpcTag(opcServerName, temp1));
-            deltaThreshold = Convert.ToDouble(OpcServer.readOpcTag(opcServerName, temp2));
+            metPrefixList.Clear();
+            createPrefixList();
 
-            for (int i = 1; i <= getNumMetTower(); i++)
+            foreach (string metPrefix in metPrefixList)
             {
-                MetTower metTower = new MetTower("Met" + i.ToString(),
-                    ambTempThreshold,
-                    deltaThreshold,
-                    opcServerName);
+                MetTower met = new MetTower(metPrefix, opcServerName);
 
-                metTowerList.Add(metTower);
+                //For Met Tower tags from the MetTowerInputTags table
+                string cmd = String.Format(MET_INPUT_TABLE_TAGS, metPrefix);
+                DataTable reader = dbi.readCommand(cmd);
+
+                //Set the tags from the MeTowerInputTags table to the accessors
+                met.PrimTemperatureTag = reader.Rows[0]["PrimTempValueTag"].ToString();
+                met.SecTemperatureTag = reader.Rows[0]["SecTempValueTag"].ToString();
+                met.RelativeHumidityTag = reader.Rows[0]["PrimHumidityValueTag"].ToString();
+                met.HumidityPrimValueTag = reader.Rows[0]["PrimHumidityValueTag"].ToString();
+                met.HumiditySecValueTag = reader.Rows[0]["SecHumidityValueTag"].ToString();
+                met.MetSwitchTag = reader.Rows[0]["Switch"].ToString();
+
+                //For Met Tower tags from the MetTowerInputTags table
+                cmd = String.Format(MET_OUTPUT_TABLE_TAGS, metPrefix);
+                reader = dbi.readCommand(cmd);
+
+                //Set the tags from the MeTowerInputTags table to the accessors
+                met.TemperaturePrimBadQualityTag = reader.Rows[0]["TempPrimBadQualityTag"].ToString();
+                met.TemperaturePrimOutOfRangeTag = reader.Rows[0]["TempPrimOutOfRangeTag"].ToString();
+                met.TemperatureSecOutOfRangeTag = reader.Rows[0]["TempSecOutOfRangeTag"].ToString();
+                met.TemperatureSecBadQualityTag = reader.Rows[0]["TempSecBadQualityTag"].ToString();
+                met.HumidtyOutOfRangeTag = reader.Rows[0]["HumidityOutOfRangeTag"].ToString();
+                met.HumidityBadQualityTag = reader.Rows[0]["HumidityBadQualityTag"].ToString();
+                met.IceIndicationTag = reader.Rows[0]["IceIndicationTag"].ToString();
+                met.NoDataAlarmTag = reader.Rows[0]["NoDataAlarmTag"].ToString();
+
+                metTowerList.Add(met);
             }
+        }
+
+        public void createPrefixList()
+        {
+            DataTable reader = DatabaseInterface.Instance.readCommand(MET_NUM);
+            foreach (DataRow item in reader.Rows) { metPrefixList.Add(item["MetId"].ToString()); }
         }
 
         /// <summary>
@@ -282,8 +314,9 @@ namespace Articuno
         public Tuple<MetQualityEnum, double> humidQualityCheck(string metId)
         {
             MetTower met = getMetTower(metId);
-            var rhOpcObject = met.RelativeHumidityValue;
-            double rh = (Double)rhOpcObject;
+            var rhOpcObject = Convert.ToDouble(met.RelativeHumidityValue);
+            //double rh = (Double)rhOpcObject;
+            double rh = rhOpcObject;
             double minValue = 0.0;
             double maxValue = 100.0;
 
@@ -319,7 +352,7 @@ namespace Articuno
         /// </summary>
         /// <param name="temperatureTag">The OPC tag for temperature (either prim or sec)</param>
         /// <returns>Returns True if good quality, False if bad</returns>
-        private Tuple<MetQualityEnum, double> tempValueCheck(string temperatureTag,double tempValue)
+        private Tuple<MetQualityEnum, double> tempValueCheck(string temperatureTag, double tempValue)
         {
             double minValue = -20.0;
             double maxValue = 60.0;
@@ -347,8 +380,8 @@ namespace Articuno
             double secTempValue = Convert.ToDouble(met.SecTemperatureValue);
 
             //call the ValueQuatliyCheck method to verify
-            var primTempCheckTuple = tempValueCheck(primTempTag,primTempValue);
-            var secTempCheckTuple = tempValueCheck(secTempTag,secTempValue);
+            var primTempCheckTuple = tempValueCheck(primTempTag, primTempValue);
+            var secTempCheckTuple = tempValueCheck(secTempTag, secTempValue);
 
             var primTempQuality = primTempCheckTuple.Item1;
             var secTempQuality = secTempCheckTuple.Item1;
