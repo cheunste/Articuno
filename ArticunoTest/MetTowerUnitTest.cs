@@ -125,12 +125,11 @@ namespace ArticunoTest
         [TestMethod]
         //Test the temperature values and see if they match the database
         [DataTestMethod]
-        [DataRow("Met1", 20.0, 60.0, 10.0)]
-        [DataRow("Met2", 40.0, 60.0, 50.0)]
+        [DataRow("Met1", 20.0, 60.0, .100)]
+        [DataRow("Met2", 40.0, 60.0, .500)]
 
         public void GetValueTest(string metId, double tempVal1, double tempVal2, double hmdVal)
         {
-            Assert.Fail();
             MetTower met = mm.getMetTower(metId);
             met.RelativeHumidityValue = hmdVal;
             met.PrimTemperatureValue = tempVal1;
@@ -144,7 +143,7 @@ namespace ArticunoTest
             Console.WriteLine(met1Values.Item4);
 
             Assert.AreEqual(met1Values.Item1, tempVal1, 0.001, "temperature value not equal");
-            Assert.AreEqual(met1Values.Item2, hmdVal, 0.001, "Humidty values are not equal");
+            Assert.AreEqual(met1Values.Item2, hmdVal/100, 0.001, "Humidty values are not equal");
 
             //Warning, all I can do for the dew point and delta calcs are check if they're not null. Mainly because I didn't come up with the formula for this
             Assert.IsNotNull(met1Values.Item3);
@@ -176,10 +175,9 @@ namespace ArticunoTest
 
         [TestMethod]
         //Set bad quality to assert met tower throws an alarm
-        [DataRow("Met1", 300.0, 120.0, 110.0, 200.0)]
+        [DataRow("Met1", 300.0, 120.0, 1.100, 200.0)]
         public void checkMetTower(string metId, double tempVal1, double tempVal2, double hmdVal1, double hmdVal2)
         {
-            Assert.Fail();
             MetTower met = mm.getMetTower(metId);
 
             met.RelativeHumidityValue = hmdVal1;
@@ -236,11 +234,11 @@ namespace ArticunoTest
             {
                 case "Met1":
                     tempBeforeSwitch = tempVal1;
-                    humdBeforeSwitch = hmdVal1;
+                    humdBeforeSwitch = hmdVal1/100;
                     break;
                 default:
                     tempBeforeSwitch = tempVal2;
-                    humdBeforeSwitch = hmdVal2;
+                    humdBeforeSwitch = hmdVal2/100;
                     break;
             }
             Assert.AreNotEqual(tempAfterSwitch, tempBeforeSwitch, 0.001, "Temperature is equal after switching met towers");
@@ -399,12 +397,12 @@ namespace ArticunoTest
         [DataRow("Met1", -1, -1, MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY)]
         [DataRow("Met1", 20, 20, MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY)]
         [DataRow("Met1", 101, 101,MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY)] 
-        public void humidityOutOfRangeTest(string metId, double temp1, double temp2, Object failureExpected)
+        public void humidityOutOfRangeTest(string metId, double humidity, double temp2, Object failureExpected)
         {
             tm.createTestTurbines();
             var turbine = tm.getTurbinePrefixList()[0];
 
-            mm.writeHumidity(metId, temp1);
+            mm.writeHumidity(metId, humidity);
 
             MetTower met = mm.getMetTower(metId);
             var readValue =mm.readHumidity(metId);
@@ -420,17 +418,19 @@ namespace ArticunoTest
 
         [TestMethod]
         [DataTestMethod]
-        [DataRow("Met1", -1,-1,true)]
-        [DataRow("Met1", 20,15,false)]
-        [DataRow("Met1", 101,101,false)]
-        [DataRow("Met1", 90,15,false)]
-        [DataRow("Met1", 0,90,true)]
-        [DataRow("Met1", -20,99,true)]
+        [DataRow("Met1", 20,.15,false)]
+        [DataRow("Met1", 90,.15,false)]
+        [DataRow("Met1", 00,.99,true)]
+        [DataRow("Met1", -20,.99,true)]
         public void freezingTest(string metId, double temperature,double humidity, bool expectedFrozenState)
         {
-            mm.setFrozenCondition(metId, temperature,humidity);
+            //Set the threshold to something that'll (hopefully) trigger the test conditions. 
+            //This is mainly because dew and delta aren't really known to the users...yet
             MetTower met =mm.getMetTower(metId);
+            mm.writeDeltaThreshold(1);
+            mm.writeTemperatureThreshold(0);
 
+            mm.setFrozenCondition(metId, temperature,humidity);
             Console.WriteLine("Ice Indication Value: {0}", met.IceIndicationValue);
             Assert.AreEqual(expectedFrozenState, Convert.ToBoolean(met.IceIndicationValue));
 

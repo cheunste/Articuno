@@ -42,7 +42,7 @@ namespace Articuno
             metPrefixList = new List<string>();
             metTowerList = new List<MetTower>();
             dbi = DatabaseInterface.Instance;
-            opcServerName=getOpcServerName();
+            opcServerName = getOpcServerName();
         }
         private string getOpcServerName() { return DatabaseInterface.Instance.getOpcServer(); }
         public static MetTowerMediator Instance { get { return Nested.instance; } }
@@ -268,11 +268,7 @@ namespace Articuno
         /// <param name="ambTemp">The ambient temperature value (Celcius) from the met tower in double format</param>
         /// <param name="rh">The relative humidity in double format</param>
         /// <returns>The dew point temperature in double format </returns>
-        public double calculateDewPoint(double rh, double ambTemp)
-        {
-            //The following formula is given by Nick Johansen, ask him for more details
-            return Math.Round(Math.Pow(rh, 1.0 / 8.0) * (112 + (0.9 * ambTemp)) + (0.1 * ambTemp) - 112, 3);
-        }
+        public double calculateDewPoint(double rh, double ambTemp) => Math.Round(Math.Pow(rh, 1.0 / 8.0) * (112 + (0.9 * ambTemp)) + (0.1 * ambTemp) - 112, 3);
 
         /// <summary>
         /// Calculates the Delta Temperature given the ambient Temperature and a dew point temperature (from calculateDewPoitn function)
@@ -280,7 +276,7 @@ namespace Articuno
         /// <param name="ambTemp">The ambient temperature value (Celcius) from the met tower in double format</param>
         /// <param name="dewPointTemp">The dew point temperature from calculateDewPoint</param>
         /// <returns>The delta temperature in double format</returns>
-        public double calculateDelta(double ambTemp, double dewPointTemp) { return Math.Round(Math.Abs(ambTemp - dewPointTemp), 3); }
+        public double calculateDelta(double ambTemp, double dewPointTemp)=> Math.Round(Math.Abs(ambTemp - dewPointTemp), 3); 
 
         /// <summary>
         /// Check the quality of the met tower. Returns True if the data is 'bad quality'. Returns False if met tower data is 'good quality
@@ -308,17 +304,18 @@ namespace Articuno
 
         /// <summary>
         /// Checks the quality of the relative humidity of the current met tower. 
-        /// Returns true if quality is good. False otherwise
+        /// Returns true if quality is good. False otherwise. IMPORTANT: This function will convert the Humidty from % to decimal
         /// </summary>
         /// <returns>Returns True if good quality, False if bad</returns>
         public Tuple<MetQualityEnum, double> humidQualityCheck(string metId)
         {
             MetTower met = getMetTower(metId);
-            var rhOpcObject = Convert.ToDouble(met.RelativeHumidityValue);
-            //double rh = (Double)rhOpcObject;
-            double rh = rhOpcObject;
+            //IMPORTANT: The OPC Value is read as a percentage, but this program needs the humidity as a decimal (ie between 0 and 1)
+            double rh = Convert.ToDouble(met.RelativeHumidityValue)/100.00;
             double minValue = 0.0;
-            double maxValue = 100.0;
+            double maxValue = 1.0;
+            double minCapValue = 0.00;
+            double maxCapValue = 0.99;
 
             var qualityState = MetQualityEnum.MET_GOOD_QUALITY;
 
@@ -330,11 +327,11 @@ namespace Articuno
                 qualityState = MetQualityEnum.MET_BAD_QUALITY;
                 alarm(met, MetTowerEnum.HumidityOutOfRange, qualityState);
                 alarm(met, MetTowerEnum.HumidityQuality, qualityState);
-                rh = (rh <= 0.0) ? 0.000 : 99.00;
+                rh = (rh <= minValue) ? minCapValue : maxCapValue;
                 log.DebugFormat("Humidity exceeded allowable range. Capping Relative Humidity of {0} at {1}", metId, rh);
             }
             //CLear the out of range alarm
-            else if (rh > 0.0 && rh < 100.0)
+            else if (rh > minValue && rh < maxValue)
             {
                 alarm(met, MetTowerEnum.HumidityOutOfRange, qualityState);
                 alarm(met, MetTowerEnum.HumidityQuality, qualityState);
@@ -508,11 +505,17 @@ namespace Articuno
         public bool setFrozenCondition(string metId, double avgTemperature, double avgHumidity)
         {
             double tempThreshold = readTemperatureThreshold(metId);
-            Console.WriteLine("Threshold {0}", tempThreshold);
+            double deltaThreshold = readDeltaThreshold(metId);
+
+            double dewPoint =calculateDewPoint(avgHumidity, avgTemperature);
+            double delta =calculateDelta(avgTemperature, dewPoint);
+
+            Console.WriteLine("Temp Threshold {0}", tempThreshold);
+            Console.WriteLine("Delta Threshold {0}", deltaThreshold);
 
             MetTower met = getMetTower(metId);
             //Freezing Conditions met
-            if (avgTemperature <= tempThreshold)
+            if ((avgTemperature <= tempThreshold) && (delta<=deltaThreshold))
             {
                 try
                 {
