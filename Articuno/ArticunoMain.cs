@@ -238,8 +238,6 @@ namespace Articuno
             //Call the storeWindSpeed function to store a wind speed average into a turbine queue (for all turbines in the list)
             foreach (string prefix in tm.getTurbinePrefixList()) { tm.storeMinuteAverages(prefix); }
 
-            //Tell the turbines to Decrement thier internal CTR Time
-            tm.decrementTurbineCtrTime();
 
             //For every CTR minute, do the other calculation stuff. Better set up a  member variable here
             ctrCountdown--;
@@ -257,13 +255,13 @@ namespace Articuno
                     OpcServer.writeOpcTag(opcServerName, icePossibleAlarmTag, metFrozen);
                     tm.checkMetTowerFrozen("Met" + i);
                 }
-                //Call the RotorSPeedCheck function to compare rotor speed for all turbines
-                foreach (string prefix in tm.getTurbinePrefixList()) { tm.RotorSpeedCheck(prefix); }
-
                 //Set the CTR back to the original value
                 ctrCountdown = articunoCtrTime;
-
             }
+
+            //Tell the turbines to Decrement thier internal CTR Time. Must be after the met tower code or else turbine might not respond to a met tower icing change event
+            tm.decrementTurbineCtrTime();
+
         }
 
         /// <summary>

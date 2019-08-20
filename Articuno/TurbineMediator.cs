@@ -157,24 +157,17 @@ namespace Articuno
             }
         }
 
-        public bool isPausedByArticuno(String turbineId) { return Convert.ToBoolean(getTurbine(turbineId).readAlarmValue()); }
         /// <summary>
-        /// Command to pause a turbine given a Turbine prefix. Also known as loadshutdown
+        /// Returns a bool to see if a Turbine is paused by Articuno or not.
         /// </summary>
-        /// <param name="turbine"></param>
-        public void pauseTurbine(string turbinePrefix)
-        {
-            foreach (Turbine turbineInList in turbineList)
-            {
-                if (turbineInList.getTurbinePrefixValue().Equals(turbinePrefix))
-                {
-                    log.DebugFormat("Attempting to pause turbine {0} from TurbineMediator", turbineInList.getTurbinePrefixValue());
-                    turbineInList.writeLoadShutdownCmd();
-                    updateMain(TurbineEnum.PausedByArticuno, turbinePrefix);
-                }
-            }
-        }
-
+        /// <param name="turbineId"></param>
+        /// <returns></returns>
+        public bool isPausedByArticuno(String turbineId) { return Convert.ToBoolean(getTurbine(turbineId).readAlarmValue()); }
+       
+        /// <summary>
+        /// Command to start a turbine given a turbineId 
+        /// </summary>
+        /// <param name="turbineId">A turbine prefix</param>
         public void startTurbine(string turbineId)
         {
             log.DebugFormat("Attempting to start turbine {0} from TurbineMeidator", turbineId);

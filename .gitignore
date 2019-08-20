@@ -260,3 +260,4 @@ paket-files/
 __pycache__/
 *.pyc
 Articuno/Manual.md
+/Articuno/ClassDiagram1.cd
