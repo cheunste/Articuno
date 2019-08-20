@@ -119,10 +119,13 @@ namespace Articuno
             if (ctrCountDown <= 0)
             {
                 log.InfoFormat("CTR period for Turbine {0} reached Zero.", getTurbinePrefixValue());
+                //Reset CTR countdown
                 ctrCountDown = Convert.ToInt32(TurbineCtr);
-                checkIcingConditions();
                 //Call the RotorSPeedCheck function to compare rotor speed for all turbines
                 TurbineMediator.Instance.RotorSpeedCheck(getTurbinePrefixValue());
+
+                //Does Check the rest of the icing conditions
+                checkIcingConditions();
             }
         }
 
