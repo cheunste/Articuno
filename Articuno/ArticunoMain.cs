@@ -439,28 +439,29 @@ namespace Articuno
             {
                 string tag = e.Arguments.ItemDescriptor.ItemId.ToString();
                 int value = Convert.ToInt16(e.Vtq.Value);
-                if (tag.Contains("Enable") || tag.Contains("CurtailEna"))
+                if (tag.Equals(enableArticunoTag))
                 {
                     articunoEnable = (value == 1) ? true : false;
                     log.InfoFormat("Articuno is : {0}", articunoEnable ? "Enabled" : "Disabled");
                 }
-                if (tag.Contains("CTR") || tag.Contains("EvalTm"))
+                if (tag.Equals(articunoCtrTag))
                 {
                     articunoCtrTime = value;
                     ctrCountdown = value;
                     tm.writeCtrTime(value);
                     log.InfoFormat("Articuno CTR updated to: {0} minute", value);
                 }
-                if (tag.Contains("TmpTreshold"))
+                if (tag.Equals(tempThresholdTag))
                 {
                     mm.writeTemperatureThreshold(value);
                     log.InfoFormat("Articuno Temperature Threshold updated to: {0} deg C", value);
                 }
-                if (tag.Contains("TmpDelta"))
+                if (tag.Equals(deltaThresholdTag))
                 {
                     mm.writeDeltaThreshold(value);
                     log.InfoFormat("Articuno Temperature Delta updated to: {0} deg C", value);
                 }
+
             }
             else { log.ErrorFormat("Error occured in systemInputOnChangeHandler with {0}. Msg: {1}", e.Arguments.ItemDescriptor.ItemId, e.ErrorMessageBrief); }
         }
