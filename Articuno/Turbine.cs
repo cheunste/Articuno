@@ -42,9 +42,6 @@ namespace Articuno
         //this determines if the turbine is participating in Articuno or not. This must be a 'high priority check'  
         private bool articunoParicipation;
 
-        //Met Tower Fields
-        private string currentMetTower;
-
         //Startup buffer
         private readonly int STARTUP_TIME_BUFFER = 30000;
 

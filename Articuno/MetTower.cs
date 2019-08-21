@@ -22,31 +22,6 @@ namespace Articuno
 
     internal class MetTower
     {
-        //Constants. The following are SQL lite table column
-        //Temperature table columns
-        private static readonly string PrimTempValueTagColumn = "PrimTempValueTag";
-        private static readonly string SecTempValueColumn = "SecTempValueTag";
-        private static readonly string TempPrimBadQualityColumn = "TempPrimBadQualityTag";
-        private static readonly string TempPrimOutOfRangeColumn = "TempPrimOutOfRangeTag";
-        private static readonly string TempSecBadQualityColumn = "TempSecBadQualityTag";
-        private static readonly string TempSecOutOfRangeColumn = "TempSecOutOfRangeTag";
-
-        //Humidity table columns
-        private static readonly string PrimHumidityValueColumn = "PrimHumidityValueTag";
-        private static readonly string SecHumidityValueColumn = "SecHumidityValueTag";
-        private static readonly string HumidityBadQualityColumn = "HumidityBadQualityTag";
-        private static readonly string HumidityOutOfRangeColumn = "HumidityOutOfRangeTag";
-
-        //Other table column 
-        private static readonly string NoDataAlarmColumn = "NoDataAlarmTag";
-        private static readonly string SwitchColumn = "Switch";
-        private static readonly string IceIndicationColumn = "IceIndicationTag";
-
-
-        //Queries
-        readonly String INPUT_TAG_QUERY = "SELECT * FROM MetTowerInputTags";
-        readonly String OUTPUT_TAG_QUERY = "SELECT * FROM MetTowerOutputTags";
-
         //Member variables;
         private double ambTempThreshold;
         private double deltaTempThreshold;

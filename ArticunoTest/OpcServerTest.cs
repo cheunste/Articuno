@@ -74,7 +74,6 @@ namespace ArticunoTest
         public void turbineTagTest()
         {
             //Test the read/write from the input tag
-            var testValue = 777;
             string[] turbineInputTags =
             {
                 prefix + "." + "T001.WTUR.DmdW.actVal",

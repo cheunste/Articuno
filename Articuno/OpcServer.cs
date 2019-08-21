@@ -62,6 +62,7 @@ namespace Articuno
             {
                 //Log Exception here
                 log.ErrorFormat("Reading tag: {0} failed. Does {0} exist on the server?", tag);
+                log.ErrorFormat("Error:", e);
                 return null;
             }
         }
@@ -83,6 +84,7 @@ namespace Articuno
             catch (Exception e)
             {
                 log.ErrorFormat("Write to tag: {0} failed. Does {0} exist on the server? Did the server die?", tag);
+                log.ErrorFormat("Error:", e);
                 return false;
             }
         }
@@ -96,7 +98,10 @@ namespace Articuno
         public static void writeOpcTag(string serverName, string tag, object value)
         {
             try { opcServer.WriteItemValue(serverName, tag, value); }
-            catch (Exception e) { log.ErrorFormat("Write to tag: {0} failed. Does {0} exist on the server? Did the server die?", tag); }
+            catch (Exception e) {
+                log.ErrorFormat("Write to tag: {0} failed. Does {0} exist on the server? Did the server die?", tag);
+                log.ErrorFormat("Error:", e);
+            }
         }
 
         public static bool readOpcTagQuality(string serverName, string tag)
