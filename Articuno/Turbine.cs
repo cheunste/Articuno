@@ -19,7 +19,7 @@ namespace Articuno
      * This is the turbine class. It represents a turbine object in Articuno 
      * It probably should be an interface...but having an interface to create just one type of turbine seems kinda redundant. That's why I have a factory class
      */
-    class Turbine
+    sealed internal class Turbine
     {
         //Instance of OPC server
         string OpcServerName;

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Articuno
 {
-    class DatabaseInterface
+    sealed internal class DatabaseInterface
     {
 
         private static readonly string SYSTEM_INPUT_TABLE = "SystemInputTags";

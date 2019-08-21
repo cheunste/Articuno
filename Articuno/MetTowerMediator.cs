@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Articuno
 {
-    class MetTowerMediator
+    sealed internal class MetTowerMediator
     {
         //the number of met towers. Probably shouldn't be static
         public static int numMetTower;

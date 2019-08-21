@@ -34,7 +34,7 @@ namespace Articuno
      * Both the above returns a list
      * 
      */
-    class TurbineMediator
+    sealed internal class TurbineMediator
     {
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(TurbineMediator));

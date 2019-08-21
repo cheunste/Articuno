@@ -11,7 +11,7 @@ namespace Articuno
     /// <summary>
     /// The OpcServer class sets up an interface to the OpcServer (PcVue). This can be either a singleton or a static class...probably
     /// </summary>
-    internal class OpcServer
+    sealed internal class OpcServer
     {
         //member variables
         EasyDAClient client = new EasyDAClient();

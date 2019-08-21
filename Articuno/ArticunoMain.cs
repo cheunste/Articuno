@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Articuno
 {
-    class ArticunoMain
+    sealed internal class ArticunoMain
     {
         /*
          * These are Lists that are used to keep turbines organized on a site level using their Prefixes (ie T001)

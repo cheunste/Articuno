@@ -20,7 +20,7 @@ namespace Articuno
     /// Errors: Thrwos errors if values are bad 
     /// </summary>
 
-    internal class MetTower
+    sealed internal class MetTower
     {
         //Member variables;
         private double ambTempThreshold;
