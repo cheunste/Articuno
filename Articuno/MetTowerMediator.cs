@@ -535,6 +535,7 @@ namespace Articuno
                         "avgTemp: {2}, \n" +
                         "tempThreshold {3}\n",
                         e, metId, avgTemperature, tempThreshold);
+                    log.ErrorFormat("Error:\n{0}", e);
                 }
             }
             else { met.IceIndicationValue = false; }

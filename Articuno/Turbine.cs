@@ -134,7 +134,13 @@ namespace Articuno
         //algorithms are true
         public void setTemperatureCondition(bool state) { this.temperatureConditionMet = state; }
         public void setOperatingStateCondition(bool state) { this.operatingStateConditionMet = state; }
-        public void setNrsCondition(bool state) { this.nrsConditionMet = state; }
+        
+        //Changing the NRS condition also resets the CTR
+        public void setNrsCondition(bool state) {
+            this.nrsConditionMet = state;
+            this.ctrCountDown = Convert.ToInt32(TurbineCtr);
+            emptyQueue();
+        }
         public void setTurbinePerformanceCondition(bool state) { turbinePerformanceConditionMet = state; }
         public void setDeRateCondition(bool state) { derateConditionMet = state; }
 
