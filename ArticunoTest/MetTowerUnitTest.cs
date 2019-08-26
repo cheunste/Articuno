@@ -23,16 +23,16 @@ namespace ArticunoTest
 
         //These are tags for met tower1
         string[] met1Tags ={
-            "Met1.AmbTmp1",
-            "Met1.AmbTmp2",
-            "Articuno.Met1.TempAlm",
-            "Articuno.Met1.TmpHiDispAlm",
-            "Met1.RH1",
-            "Met1.RH2",
-            "Articuno.Met1.IcePossible",
-            "Articuno.Met1.RHS1OutRngAlm",
-            "Articuno.Met1.RHAlm",
-            "Articuno.Met1.TowerAlm"};
+            "Met.AmbTmp1",
+            "Met.AmbTmp2",
+            "Articuno.Met.TempAlm",
+            "Articuno.Met.TmpHiDispAlm",
+            "Met.RH1",
+            "Met.RH2",
+            "Articuno.Met.IcePossible",
+            "Articuno.Met.RHS1OutRngAlm",
+            "Articuno.Met.RHAlm",
+            "Articuno.Met.TowerAlm"};
 
         string[] met2Tags = {
             "Met2.AmbTmp1",
@@ -47,15 +47,15 @@ namespace ArticunoTest
             "Articuno.Met2.TowerAlm"};
 
         string[] ArticunoMetTags = {
-            "Articuno.Met1.IcePossible",
-            "Articuno.Met1.RHAlm",
-            "Articuno.Met1.RHS1OutRngAlm",
-            "Articuno.Met1.TempAlm",
-            "Articuno.Met1.TmpHiDispAlm",
-            "Articuno.Met1.TowerAlm",
+            "Articuno.Met.IcePossible",
+            "Articuno.Met.RHAlm",
+            "Articuno.Met.RHS1OutRngAlm",
+            "Articuno.Met.TempAlm",
+            "Articuno.Met.TmpHiDispAlm",
+            "Articuno.Met.TowerAlm",
             "Articuno.Met2.IcePossible",
-            "Articuno.Met1.TmpS1OutOfRangeAlm",
-            "Articuno.Met1.TmpS2OutOfRangeAlm",
+            "Articuno.Met.TmpS1OutOfRangeAlm",
+            "Articuno.Met.TmpS2OutOfRangeAlm",
             "Articuno.Met2.RHAlm",
             "Articuno.Met2.RHS1OutRngAlm",
             "Articuno.Met2.TempAlm",
@@ -93,8 +93,8 @@ namespace ArticunoTest
         [TestMethod]
         public void createNewMetTower()
         {
-            //var derp = MetTowerMediatorSingleton.Instance.getAllMeasurements("Met1");
-            MetTower met1 = mm.getMetTower("Met1");
+            //var derp = MetTowerMediatorSingleton.Instance.getAllMeasurements("Met");
+            MetTower met1 = mm.getMetTower("Met");
             MetTower met2 = mm.getMetTower("Met2");
             Assert.IsNotNull(met1);
             Assert.IsNotNull(met2);
@@ -125,7 +125,7 @@ namespace ArticunoTest
         [TestMethod]
         //Test the temperature values and see if they match the database
         [DataTestMethod]
-        [DataRow("Met1", 20.0, 60.0, .100)]
+        [DataRow("Met", 20.0, 60.0, .100)]
         [DataRow("Met2", 40.0, 60.0, .500)]
 
         public void GetValueTest(string metId, double tempVal1, double tempVal2, double hmdVal)
@@ -155,7 +155,7 @@ namespace ArticunoTest
         public void testThresholds()
         {
 
-            MetTower met = mm.getMetTower("Met1");
+            MetTower met = mm.getMetTower("Met");
             //Get the thresholds
             double tempThreshold = met.AmbTempThreshold;
             double deltaThreshold = met.DeltaTempThreshold;
@@ -175,7 +175,7 @@ namespace ArticunoTest
 
         [TestMethod]
         //Set bad quality to assert met tower throws an alarm
-        [DataRow("Met1", 300.0, 120.0, 1.100, 200.0)]
+        [DataRow("Met", 300.0, 120.0, 1.100, 200.0)]
         public void checkMetTower(string metId, double tempVal1, double tempVal2, double hmdVal1, double hmdVal2)
         {
             MetTower met = mm.getMetTower(metId);
@@ -200,7 +200,7 @@ namespace ArticunoTest
         //but never fails if it is executed by itself. I want to say this has something to do with concurrency as it was reading
         //values that were set up by a different unit test. 
         [DataTestMethod]
-        [DataRow("Met1", 21.0, 31.0, 17.0, 57.0)]
+        [DataRow("Met", 21.0, 31.0, 17.0, 57.0)]
         [DataRow("Met2", 21.0, 41.0, 57.0, 97.0)]
         public void swtichMetTowers(string metId, double tempVal1, double tempVal2, double hmdVal1, double hmdVal2)
         {
@@ -208,7 +208,7 @@ namespace ArticunoTest
             //setValidMetData();
             double tempBeforeSwitch;
             double humdBeforeSwitch;
-            MetTower met1 = mm.getMetTower("Met1");
+            MetTower met1 = mm.getMetTower("Met");
             MetTower met2 = mm.getMetTower("Met2");
 
             Console.WriteLine("Testing {0}, with temperature {1}, {2}, humidty {3},{4}", metId, tempVal1, tempVal2, hmdVal1, hmdVal2);
@@ -232,7 +232,7 @@ namespace ArticunoTest
 
             switch (metId)
             {
-                case "Met1":
+                case "Met":
                     tempBeforeSwitch = tempVal1;
                     humdBeforeSwitch = hmdVal1/100;
                     break;
@@ -261,7 +261,7 @@ namespace ArticunoTest
 
         [TestMethod]
         [DataTestMethod]
-        [DataRow("Met1", -50.0, -50.0)]
+        [DataRow("Met", -50.0, -50.0)]
         //Needs imporvement. The database is getting locked. FIgure this out after a DB refactor
         public void useTurbineTempTest(string metId, double tempSensor1Val, double tempSensor2Val)
         {
@@ -285,9 +285,9 @@ namespace ArticunoTest
 
         [TestMethod]
         [DataTestMethod]
-        [DataRow("Met1", -50.0, -50.0, 110.0,MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY,MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY,MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY )]
-        [DataRow("Met1", 10.0, 10.0, 60.0, MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY,MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY,MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY )]
-        [DataRow("Met1", 10.0, -50.0, 60.0, MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY,MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY,MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY )]
+        [DataRow("Met", -50.0, -50.0, 110.0,MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY,MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY,MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY )]
+        [DataRow("Met", 10.0, 10.0, 60.0, MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY,MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY,MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY )]
+        [DataRow("Met", 10.0, -50.0, 60.0, MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY,MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY,MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY )]
         public void noDataTest(string metId, double tempVal1, double tempVal2, double hmdVal, Object expectedTempQual, Object expectedHumiQual, Object nodata)
         {
             mm.writePrimTemperature(metId, tempVal1);
@@ -335,11 +335,11 @@ namespace ArticunoTest
         //Sets the met tower data to normal parameters. Needs to be hard coded so I can see a value difference between the two mets
         private void setValidMetData()
         {
-            //Met1
-            writeValue(String.Format("{0}.Met1.AmbTmp1", siteName), 50.33);
-            writeValue(String.Format("{0}.Met1.AmbTmp2", siteName), 52.00);
-            writeValue(String.Format("{0}.Met1.RH1", siteName), 30.22);
-            writeValue(String.Format("{0}.Met1.RH2", siteName), 25.22);
+            //Met
+            writeValue(String.Format("{0}.Met.AmbTmp1", siteName), 50.33);
+            writeValue(String.Format("{0}.Met.AmbTmp2", siteName), 52.00);
+            writeValue(String.Format("{0}.Met.RH1", siteName), 30.22);
+            writeValue(String.Format("{0}.Met.RH2", siteName), 25.22);
             //Met2
             writeValue(String.Format("{0}.Met2.AmbTmp1", siteName), 40.00);
             writeValue(String.Format("{0}.Met2.AmbTmp2", siteName), 35.00);
@@ -354,9 +354,9 @@ namespace ArticunoTest
         }
 
         [TestMethod]
-        [DataRow("Met1", -50, -50, MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY)]
-        [DataRow("Met1", 0, 0, MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY)]
-        [DataRow("Met1", 61, 61,MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY)] 
+        [DataRow("Met", -50, -50, MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY)]
+        [DataRow("Met", 0, 0, MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY)]
+        [DataRow("Met", 61, 61,MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY)] 
         public void tempOutOfRangeTest(string metId, double temp1, double temp2, Object failureExpected)
         {
             tm.createTestTurbines();
@@ -394,9 +394,9 @@ namespace ArticunoTest
 
         [TestMethod]
         [DataTestMethod]
-        [DataRow("Met1", -1, -1, MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY)]
-        [DataRow("Met1", 20, 20, MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY)]
-        [DataRow("Met1", 101, 101,MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY)] 
+        [DataRow("Met", -1, -1, MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY)]
+        [DataRow("Met", 20, 20, MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY)]
+        [DataRow("Met", 101, 101,MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY)] 
         public void humidityOutOfRangeTest(string metId, double humidity, double temp2, Object failureExpected)
         {
             tm.createTestTurbines();
@@ -418,10 +418,10 @@ namespace ArticunoTest
 
         [TestMethod]
         [DataTestMethod]
-        [DataRow("Met1", 20,.15,false)]
-        [DataRow("Met1", 90,.15,false)]
-        [DataRow("Met1", 00,.99,true)]
-        [DataRow("Met1", -20,.99,true)]
+        [DataRow("Met", 20,.15,false)]
+        [DataRow("Met", 90,.15,false)]
+        [DataRow("Met", 00,.99,true)]
+        [DataRow("Met", -20,.99,true)]
         public void freezingTest(string metId, double temperature,double humidity, bool expectedFrozenState)
         {
             //Set the threshold to something that'll (hopefully) trigger the test conditions. 
