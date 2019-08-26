@@ -42,8 +42,11 @@ namespace Articuno
         //this determines if the turbine is participating in Articuno or not. This must be a 'high priority check'  
         private bool articunoParicipation;
 
+        //Constants
         //Startup buffer
         private readonly int STARTUP_TIME_BUFFER = 30000;
+        private readonly double AGC_BLOCK_COMMAND = 0.00;
+        private readonly double AGC_UNBLOCK_COMMAND = 1.00;
 
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(Turbine));
@@ -86,6 +89,7 @@ namespace Articuno
         public string AlarmTag { set; get; }
         public string TurbinePrefix { set; get; }
         public string DeRate { set; get; }
+        public string AgcBlockingTag { set; get; }
 
         //Theses are used to write to the OP Tag Values.  There shouldn't be too many of these
         public void writeTurbineCtrValue(int articunoCtrValue) { TurbineCtr = articunoCtrValue.ToString(); ctrCountDown = articunoCtrValue; }
@@ -203,6 +207,9 @@ namespace Articuno
             {
                 if (!ArticunoMain.isAlreadyPaused(TurbinePrefix))
                 {
+                    //Block Turbine in AGC
+                    blockTurbine(true);
+
                     log.DebugFormat("Sending pause commmand for {0}", getTurbinePrefixValue());
                     writeLoadShutdownCmd();
                     log.DebugFormat("Writing alarm for {0}", getTurbinePrefixValue());
@@ -217,6 +224,8 @@ namespace Articuno
         /// </summary>
         public void startTurbine()
         {
+            //Unblock Turbine from AGC
+            blockTurbine(false);
 
             log.InfoFormat("Start Command Received for Turbine {0}", getTurbinePrefixValue());
             //Give the turbine some time to start 
@@ -226,6 +235,19 @@ namespace Articuno
             emptyQueue();
             log.InfoFormat("Turbine {0} CTR Value reset to: {1}", getTurbinePrefixValue(), TurbineCtr);
             this.ctrCountDown = Convert.ToInt32(TurbineCtr);
+        }
+
+        //Function to block/remove turbine in AGC until startup.
+        /// <summary>
+        /// function to block the turbine from AGC.
+        /// </summary>
+        /// <param name="state"></param>
+        private void blockTurbine(bool state)
+        {
+            if (state) 
+                OpcServer.writeOpcTag(OpcServerName, AgcBlockingTag, Convert.ToDouble(AGC_BLOCK_COMMAND));
+            else
+                OpcServer.writeOpcTag(OpcServerName, AgcBlockingTag, Convert.ToDouble(AGC_UNBLOCK_COMMAND));
         }
 
     }

@@ -58,6 +58,10 @@ namespace Articuno
         //Tag-Enum Dictionary
         Dictionary<TurbineEnum, string> tagEnum = new Dictionary<TurbineEnum, string>();
 
+        //SQL statement constants
+        private readonly string TURBINE_FIND_TURBINEID = "SELECT TurbineId FROM TurbineInputTags;";
+        private readonly string TURBINE_INPUT_COLUMN_QUERY = "SELECT * from TurbineInputTags WHERE TurbineId='{0}'";
+        private readonly string TURBINE_OUTPUT_COLUMN_QUERY = "SELECT * from TurbineOutputTags WHERE TurbineId='{0}'";
         /// <summary>
         /// constructor for the TurbineMediator class. 
         /// </summary>
@@ -77,7 +81,7 @@ namespace Articuno
 
         public void createPrefixList()
         {
-            DataTable reader = DatabaseInterface.Instance.readCommand("SELECT TurbineId FROM TurbineInputTags;");
+            DataTable reader = DatabaseInterface.Instance.readCommand(TURBINE_FIND_TURBINEID);
             foreach (DataRow item in reader.Rows) { turbinePrefixList.Add(item["TurbineId"].ToString()); }
         }
 
@@ -107,8 +111,7 @@ namespace Articuno
 
                 //For Turbine tags from the  TurbineInputTags Table
                 string cmd =
-                    String.Format("SELECT * " +
-                    "from TurbineInputTags WHERE TurbineId='{0}'", turbinePrefix);
+                    String.Format(TURBINE_INPUT_COLUMN_QUERY, turbinePrefix);
                 DataTable reader = dbi.readCommand(cmd);
 
                 //Note that NRS can be empty, so that's why there is a try/catch here. If it is empty, just set it to an empty string
@@ -144,11 +147,11 @@ namespace Articuno
                 catch (Exception e) { }
 
                 //For Turbine tags from the TurbineOutputTags Table There might be duplicates
-                cmd = String.Format("SELECT * " +
-                    "from TurbineOutputTags WHERE TurbineId='{0}'", turbinePrefix);
+                cmd = String.Format(TURBINE_OUTPUT_COLUMN_QUERY, turbinePrefix);
                 reader = dbi.readCommand(cmd);
 
                 turbine.AlarmTag = reader.Rows[0]["Alarm"].ToString();
+                turbine.AgcBlockingTag = reader.Rows[0]["AGCBlocking"].ToString();
                 //turbine.LoadShutdownTag = reader.Rows[0]["Pause"].ToString();
                 //turbine.StartCommandTag = reader.Rows[0]["Start"].ToString();
 
