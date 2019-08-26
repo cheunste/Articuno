@@ -64,7 +64,7 @@ namespace Articuno
                 //Log Exception here
                 log.ErrorFormat("Reading tag: {0} failed. Does {0} exist on the server?", tag);
                 log.ErrorFormat("Error:", e);
-                return null;
+                return "";
             }
         }
 
