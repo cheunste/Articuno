@@ -120,7 +120,7 @@ namespace Articuno
         }
 
         /// <summary>
-        /// Get the Met tower given an metTowerId (ie Met1, Met2)
+        /// Get the Met tower given an metTowerId (ie Met, Met2)
         /// </summary>
         /// <param name="metTowerId"></param>
         /// <returns>A Met Tower Object if exist. Null otherwise. createMetTower() must be called before using this fucntion</returns>
@@ -136,7 +136,7 @@ namespace Articuno
         /// <summary>
         /// Returns a tuple containing an ambient Temperature, a relative humidity, calculated dew point and a temperature delta given a met tower id
         /// </summary>
-        /// <param name="metId">the met tower id (ie Met1) in string</param>
+        /// <param name="metId">the met tower id (ie Met) in string</param>
         /// <returns>Tuple of doubles</returns>
         public Tuple<double, double, double, double> getAllMeasurements(string metId)
         {
@@ -150,7 +150,7 @@ namespace Articuno
 
         /// <summary>
         /// This function switches the met tower to use the backup met tower.
-        /// For example, if Met1 is passed in, then it will use Met2 and vice versa.
+        /// For example, if Met is passed in, then it will use Met2 and vice versa.
         /// 
         /// </summary>
         /// <param name="metId"></param>
@@ -168,7 +168,7 @@ namespace Articuno
         public string isMetTowerSwitched(string metId)
         {
             if (Convert.ToBoolean(getMetTower(metId).MetSwitchValue))
-                return metId.Equals("Met1") ? "Met2" : "Met1";
+                return metId.Equals("Met") ? "Met2" : "Met";
             else
                 return metId;
         }
@@ -466,7 +466,7 @@ namespace Articuno
         /// <summary>
         /// Method used to set a met tower to a turbine
         /// </summary>
-        /// <param name="metId">The met id. Met1 or Met2</param>
+        /// <param name="metId">The met id. Met or Met2</param>
         /// <param name="turbine">The turbine id (ie T001)</param>
         public void setTurbineBackup(string metId, Turbine turbine)
         {
