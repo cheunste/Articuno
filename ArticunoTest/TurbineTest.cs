@@ -136,7 +136,7 @@ namespace ArticunoTest
 
         [TestMethod]
         [DataTestMethod]
-        [DataRow("T001", false)]
+        //[DataRow("T001", false)]
         [DataRow("T001", true)]
         public void AlgorithmTest(string turbineId, bool state)
         {

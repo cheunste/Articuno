@@ -226,13 +226,15 @@ namespace Articuno
             //For every minute, read the met tower measurements and the turbine temperature measurements
             for (int i = 1; i <= MetTowerMediator.getNumMetTower(); i++)
             {
+                //This is needed because apparently Met Tower 1 is unnumbered.
+                string j = (i == 1) ? "" : Convert.ToString(i);
                 //Get all measurements from the met tower. Note that it will get turbine 
                 //temperature if the temperature coming from the met tower is bad qualtiy
-                Tuple<double, double, double, double> metMeasurements = mm.getAllMeasurements("Met" + i);
+                Tuple<double, double, double, double> metMeasurements = mm.getAllMeasurements("Met" + j);
 
                 double temperature = metMeasurements.Item1;
                 double humidity = metMeasurements.Item2;
-                mm.writeToQueue("Met" + i, temperature, humidity);
+                mm.writeToQueue("Met" + j, temperature, humidity);
             }
 
             //Call the storeWindSpeed function to store a wind speed average into a turbine queue (for all turbines in the list)
@@ -247,13 +249,16 @@ namespace Articuno
                 //Calculate temperature averages from the all the temperature queues
                 for (int i = 1; i <= MetTowerMediator.getNumMetTower(); i++)
                 {
-                    double tempAvg = mm.calculateCtrAvgTemperature("Met" + i);
-                    double humidityAvg = mm.calculateCtrAvgHumidity("Met" + i);
+                    //This is needed because apparently Met Tower 1 is unnumbered.
+                    string j = (i == 1) ? "" : Convert.ToString(i);
+
+                    double tempAvg = mm.calculateCtrAvgTemperature("Met" + j);
+                    double humidityAvg = mm.calculateCtrAvgHumidity("Met" + j);
+
                     //Send this temperature to the Met Mediator and determine if met tower is freezing or not
-                    bool metFrozen = mm.setFrozenCondition("Met" + i, tempAvg, humidityAvg);
-                    //client.WriteItemValue("", opcServerName, icePossibleAlarmTag, metFrozen);
+                    bool metFrozen = mm.setFrozenCondition("Met" + j, tempAvg, humidityAvg);
                     OpcServer.writeOpcTag(opcServerName, icePossibleAlarmTag, metFrozen);
-                    tm.checkMetTowerFrozen("Met" + i);
+                    tm.checkMetTowerFrozen("Met" + j);
                 }
                 //Set the CTR back to the original value
                 ctrCountdown = articunoCtrTime;
@@ -304,9 +309,9 @@ namespace Articuno
             /*
              * The following will find the met and turbine indicator for any given OPC Tag that changed by finding any words that are four characters long. First three can be alphanumeric,
              * but the last one must be a number
-             * Ex: SCRAB.T001.WROT.RotSpdAv will match T001 and SCRAB.MET1.AmbRh1 will match MET1
+             * Ex: SCRAB.T001.WROT.RotSpdAv will match T001 and SCRAB.MET.AmbRh1 will match MET
              */
-            string pattern = @"\b\w{3}\d{1}\b";
+            string pattern = @"\b\w{3}(\d{1})*\b";
             string input = opcTag;
             Regex lookup = new Regex(pattern, RegexOptions.Singleline);
             Match matchLookup = lookup.Match(opcTag);
@@ -323,7 +328,7 @@ namespace Articuno
                         mm.switchMetTower(prefix);
                         break;
                     default:
-                        log.DebugFormat("Event CHanged detected for {0}. However, there is nothing to be doen", opcTag);
+                        log.DebugFormat("Event CHanged detected for {0}. However, there is nothing to be done", opcTag);
                         break;
                 }
 
