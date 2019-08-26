@@ -138,6 +138,8 @@ namespace Articuno
         //Changing the NRS condition also resets the CTR
         public void setNrsCondition(bool state) {
             this.nrsConditionMet = state;
+            //Reset CTR in this condition and empty queue. Essentually, start from scratch
+            //This is because a turbine must remain in its NRS without level change the ENTIRE CTR period.
             this.ctrCountDown = Convert.ToInt32(TurbineCtr);
             emptyQueue();
         }

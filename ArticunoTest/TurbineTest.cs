@@ -150,8 +150,8 @@ namespace ArticunoTest
             tm.startTurbine(turbineId);
 
             //Set the NRS condition to true, or else the turbine will never ice up.
-            if (state) tm.writeNrsStateTag(turbineId, 1);
-            else tm.writeNrsStateTag(turbineId, 0);
+            if (state) tm.writeNrsStateTag(turbineId, 5);
+            else tm.writeNrsStateTag(turbineId, 1);
 
 
             tm.setTemperatureCondition(turbineId, state);
