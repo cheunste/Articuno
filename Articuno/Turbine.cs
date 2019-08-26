@@ -30,6 +30,7 @@ namespace Articuno
         private bool nrsConditionMet;
         private bool turbinePerformanceConditionMet;
         private bool derateConditionMet;
+        private static TurbineMediator tm;
 
         //CTR Time. This is used to count down to zero. NOT set it.
         private int ctrCountDown;
@@ -58,6 +59,7 @@ namespace Articuno
             this.OpcServerName = OpcServerName;
             windSpeedQueue = new Queue<double>();
             rotorSpeedQueue = new Queue<double>();
+            tm = TurbineMediator.Instance;
 
         }
 
@@ -123,7 +125,7 @@ namespace Articuno
                 //Reset CTR countdown
                 ctrCountDown = Convert.ToInt32(TurbineCtr);
                 //Call the RotorSPeedCheck function to compare rotor speed for all turbines
-                TurbineMediator.Instance.RotorSpeedCheck(getTurbinePrefixValue());
+                tm.RotorSpeedCheck(getTurbinePrefixValue());
 
                 //Does Check the rest of the icing conditions
                 checkIcingConditions();
@@ -205,7 +207,7 @@ namespace Articuno
         {
             if (pause)
             {
-                if (!ArticunoMain.isAlreadyPaused(TurbinePrefix))
+                if(!tm.isTurbinePaused(TurbinePrefix))
                 {
                     //Block Turbine in AGC
                     blockTurbine(true);
@@ -214,7 +216,7 @@ namespace Articuno
                     writeLoadShutdownCmd();
                     log.DebugFormat("Writing alarm for {0}", getTurbinePrefixValue());
                     writeAlarmTagValue(true);
-                    TurbineMediator.Instance.updateMain(TurbineMediator.TurbineEnum.PausedByArticuno, TurbinePrefix);
+                    tm.updateMain(TurbineMediator.TurbineEnum.PausedByArticuno, TurbinePrefix);
                 }
             }
         }

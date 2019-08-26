@@ -407,5 +407,7 @@ namespace Articuno
             else
                 ArticunoMain.turbineClearedOfIce(turbineId);
         }
+
+        public bool isTurbinePaused(string turbinePrefix) { return ArticunoMain.isAlreadyPaused(turbinePrefix); }
     }
 }
