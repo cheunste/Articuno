@@ -19,11 +19,14 @@ namespace Articuno
         private static readonly string NRS_StdDev = "StandardDeviationNRS";
         private static readonly string RotorSpeed = "RotorSpeedNonNRS";
         private static readonly string StdDev = "StandardDeviationNonNRS";
-        private static readonly string cmd = String.Format("SELECT * FROM RotorSpeedLookupTable ORDER BY {0} ASC", WindSpeed);
+        private static readonly string TableName = "RotorSpeedLookupTable";
+        private static readonly string cmd = String.Format("SELECT * FROM {0} ORDER BY {1} ASC", TableName,WindSpeed);
 
         //private lists
         /*
-         * These lists contain the data (FilterList) and the other is a list of keys that's used to find the item in the filterList
+         * These lists contain the data (FilterList) and the other is a list of keys that's used to find the item in the filterList.
+         * 
+         * Yeah, now that I think about it, I might not really need another class, but the TurbineMediator class is already getting too busy
          * 
          */
         List<FilterElement> filterList;

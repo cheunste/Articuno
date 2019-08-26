@@ -9,13 +9,10 @@ using System.Threading.Tasks;
 
 namespace Articuno
 {
-    class DatabaseInterface
+    sealed internal class DatabaseInterface
     {
 
         private static readonly string SYSTEM_INPUT_TABLE = "SystemInputTags";
-        private static readonly string MET_TOWER_TABLE = "MetTower";
-        private static readonly string TURBINE_INPUT_TABLE = "TurbineInputTags";
-        private static readonly string PERFORMANCE_FILTER_TABLE = "PerformanceTable";
 
         static string dataSource = ".\\articuno.db";
         static string ConnectionString = String.Format("Data Source ={0};Version=3;", dataSource);
@@ -37,21 +34,6 @@ namespace Articuno
 
             }
             internal static readonly DatabaseInterface instance = new DatabaseInterface();
-        }
-
-
-
-        //Returns true if the Articuno sqlite database is not found 
-        public Boolean databaseNotFound()
-        {
-            try
-            {
-            }
-            catch (Exception e)
-            {
-                return true;
-            }
-            return false;
         }
 
         public DataTable readCommand(string command)
@@ -94,14 +76,6 @@ namespace Articuno
             return 0;
         }
 
-        public List<Turbine> getTurbineList()
-        {
-            //TODO: Implement
-            DataTable result = readCommand("SELECT TurbineId from " + TURBINE_INPUT_TABLE);
-
-            throw new NotImplementedException();
-        }
-
         /// <summary>
         /// Gets the name of the OPC Server
         /// </summary>
@@ -110,14 +84,6 @@ namespace Articuno
         {
             DataTable result = readCommand(String.Format("SELECT OpcTag from {0} WHERE Description ='OpcServerName' ", SYSTEM_INPUT_TABLE));
             return Convert.ToString(result.Rows[0]["OpcTag"]);
-        }
-
-        public string getMetTower()
-        {
-            //TODO: check query
-            DataTable result = readCommand("SELECT * FROM" + MET_TOWER_TABLE);
-            //throw new NotImplementedException();
-            return "";
         }
     }
 }

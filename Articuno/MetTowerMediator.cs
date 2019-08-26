@@ -12,47 +12,39 @@ using System.Threading.Tasks;
 
 namespace Articuno
 {
-    class MetTowerMediator
+    sealed internal class MetTowerMediator
     {
         //the number of met towers. Probably shouldn't be static
         public static int numMetTower;
 
         //private members
-        private string THRESHOLD_QUERY =
-            "SELECT OpcTag FROM SystemInputTags WHERE Description = 'AmbTempThreshold' or Description = 'DeltaTmpThreshold'";
-        private string SERVER_NAME_QUERY =
-            "SELECT OpcTag FROM SystemInputTags WHERE Description ='OpcServerName'";
+        private string MET_INPUT_TABLE_TAGS =
+            "SELECT * FROM MetTowerInputTags WHERE MetId='{0}'";
+        private string MET_OUTPUT_TABLE_TAGS =
+            "SELECT * FROM MetTowerOutputTags WHERE MetId='{0}'";
+
+        private string MET_NUM =
+            "SELECT MetId FROM MetTowerInputTags";
+
+        private static string SELECT_QUERY = "SELECT Count(*) as num FROM MetTowerInputTags";
+
         private string opcServerName;
         private static List<MetTower> metTowerList = new List<MetTower>();
-        private EasyDAClient client = new EasyDAClient();
-
-        //constant bool for quality
-        private bool BAD_QUALITY = false;
-        private bool GOOD_QUALITY = true;
-
-        //constant bool for managing switched mettower 
-        private bool met1Switched;
-        private bool met2Switched;
-
-        //thresholds 
-        private double deltaThreshold;
-        private double ambTempThreshold;
+        private static List<String> metPrefixList = new List<String>();
 
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(MetTowerMediator));
 
         //Database
         static DatabaseInterface dbi;
+        private MetTowerMediator() {
 
-
-        private MetTowerMediator()
-        {
-            met1Switched = false;
-            met2Switched = false;
+            metPrefixList = new List<string>();
+            metTowerList = new List<MetTower>();
             dbi = DatabaseInterface.Instance;
-
+            opcServerName = getOpcServerName();
         }
-
+        private string getOpcServerName() { return DatabaseInterface.Instance.getOpcServer(); }
         public static MetTowerMediator Instance { get { return Nested.instance; } }
 
         private class Nested
@@ -70,7 +62,7 @@ namespace Articuno
         {
             if (numMetTower == 0)
             {
-                DataTable reader = dbi.readCommand("SELECT Count(*) as num FROM MetTowerInputTags");
+                DataTable reader = dbi.readCommand(SELECT_QUERY);
                 numMetTower = Convert.ToInt16(reader.Rows[0]["num"]);
             }
             return numMetTower;
@@ -78,37 +70,57 @@ namespace Articuno
 
         public void createMetTower()
         {
-            //Get he threshold OpcTags from the database
-            DataTable reader = dbi.readCommand(THRESHOLD_QUERY);
-            string temp1 = reader.Rows[0]["OpcTag"].ToString();
-            string temp2 = reader.Rows[1]["OpcTag"].ToString();
+            log.Info("Creating Met Tower lists");
+            metTowerList = new List<MetTower>();
+            metTowerList.Clear();
 
-            reader = dbi.readCommand(SERVER_NAME_QUERY);
-            opcServerName = reader.Rows[0]["OpcTag"].ToString();
+            DatabaseInterface dbi = DatabaseInterface.Instance;
 
-            //Get the current threshold values 
-            DAVtqResult[] vtqResults = client.ReadMultipleItems(opcServerName,
-                new DAItemDescriptor[]{
-                    temp1,
-                    temp2
-                });
+            metPrefixList.Clear();
+            createPrefixList();
 
-            ambTempThreshold = Convert.ToDouble(vtqResults[0].Vtq.Value);
-            deltaThreshold = Convert.ToDouble(vtqResults[1].Vtq.Value);
-
-            for (int i = 1; i <= getNumMetTower(); i++)
+            foreach (string metPrefix in metPrefixList)
             {
-                MetTower metTower = new MetTower("Met" + i.ToString(),
-                    ambTempThreshold,
-                    deltaThreshold,
-                    opcServerName);
+                MetTower met = new MetTower(metPrefix, opcServerName);
 
-                metTowerList.Add(metTower);
+                //For Met Tower tags from the MetTowerInputTags table
+                string cmd = String.Format(MET_INPUT_TABLE_TAGS, metPrefix);
+                DataTable reader = dbi.readCommand(cmd);
+
+                //Set the tags from the MeTowerInputTags table to the accessors
+                met.PrimTemperatureTag = reader.Rows[0]["PrimTempValueTag"].ToString();
+                met.SecTemperatureTag = reader.Rows[0]["SecTempValueTag"].ToString();
+                met.RelativeHumidityTag = reader.Rows[0]["PrimHumidityValueTag"].ToString();
+                met.HumidityPrimValueTag = reader.Rows[0]["PrimHumidityValueTag"].ToString();
+                met.HumiditySecValueTag = reader.Rows[0]["SecHumidityValueTag"].ToString();
+                met.MetSwitchTag = reader.Rows[0]["Switch"].ToString();
+
+                //For Met Tower tags from the MetTowerInputTags table
+                cmd = String.Format(MET_OUTPUT_TABLE_TAGS, metPrefix);
+                reader = dbi.readCommand(cmd);
+
+                //Set the tags from the MeTowerInputTags table to the accessors
+                met.TemperaturePrimBadQualityTag = reader.Rows[0]["TempPrimBadQualityTag"].ToString();
+                met.TemperaturePrimOutOfRangeTag = reader.Rows[0]["TempPrimOutOfRangeTag"].ToString();
+                met.TemperatureSecOutOfRangeTag = reader.Rows[0]["TempSecOutOfRangeTag"].ToString();
+                met.TemperatureSecBadQualityTag = reader.Rows[0]["TempSecBadQualityTag"].ToString();
+                met.HumidtyOutOfRangeTag = reader.Rows[0]["HumidityOutOfRangeTag"].ToString();
+                met.HumidityBadQualityTag = reader.Rows[0]["HumidityBadQualityTag"].ToString();
+                met.IceIndicationTag = reader.Rows[0]["IceIndicationTag"].ToString();
+                met.NoDataAlarmTag = reader.Rows[0]["NoDataAlarmTag"].ToString();
+
+                metTowerList.Add(met);
             }
         }
 
+        public void createPrefixList()
+        {
+            DataTable reader = DatabaseInterface.Instance.readCommand(MET_NUM);
+            foreach (DataRow item in reader.Rows) { metPrefixList.Add(item["MetId"].ToString()); }
+        }
+
         /// <summary>
-        /// Get the Met tower given an metTowerId (ie Met1, Met2)
+        /// Get the Met tower given an metTowerId (ie Met, Met2)
         /// </summary>
         /// <param name="metTowerId"></param>
         /// <returns>A Met Tower Object if exist. Null otherwise. createMetTower() must be called before using this fucntion</returns>
@@ -124,37 +136,28 @@ namespace Articuno
         /// <summary>
         /// Returns a tuple containing an ambient Temperature, a relative humidity, calculated dew point and a temperature delta given a met tower id
         /// </summary>
-        /// <param name="metId">the met tower id (ie Met1) in string</param>
+        /// <param name="metId">the met tower id (ie Met) in string</param>
         /// <returns>Tuple of doubles</returns>
         public Tuple<double, double, double, double> getAllMeasurements(string metId)
         {
-            metId = isMetTowerSwitched(metId);
             double temperature = (double)readTemperature(metId);
             double rh = readHumidity(metId);
             double dew = calculateDewPoint(rh, temperature);
             double delta = calculateDelta(temperature, dew);
+            log.DebugFormat("{0}, temp: {1}, rh: {2}, dew:{3}, delta: {4}", metId, temperature, rh, dew, delta);
             return new Tuple<double, double, double, double>(temperature, rh, dew, delta);
         }
 
         /// <summary>
         /// This function switches the met tower to use the backup met tower.
-        /// For example, if Met1 is passed in, then it will use Met2 and vice versa.
+        /// For example, if Met is passed in, then it will use Met2 and vice versa.
         /// 
         /// </summary>
         /// <param name="metId"></param>
         public void switchMetTower(string metId)
         {
-            switch (metId.ToUpper())
-            {
-                case "MET1":
-                    log.InfoFormat("met1 switched state from {0} to {1}", met1Switched, !met1Switched);
-                    met1Switched = !met1Switched;
-                    break;
-                case "MET2":
-                    log.InfoFormat("met2 switched state from {0} to {1}", met2Switched, !met2Switched);
-                    met2Switched = !met2Switched;
-                    break;
-            }
+            MetTower met = getMetTower(metId);
+            met.MetSwitchValue = !met.MetSwitchValue;
         }
 
         /// <summary>
@@ -162,20 +165,12 @@ namespace Articuno
         /// </summary>
         /// <param name="metId">The metid checked to see if it is swtiched</param>
         /// <returns>A metId. Returns the original metId if it is not switched. Returns a the backup metId otherwise</returns>
-        private string isMetTowerSwitched(string metId)
+        public string isMetTowerSwitched(string metId)
         {
-            switch (metId.ToUpper())
-            {
-                case "MET1":
-                    log.InfoFormat("currently using : {0}", met1Switched ? "Met2" : metId);
-                    return (met1Switched ? "Met2" : metId);
-                case "MET2":
-                    log.InfoFormat("currently using : {0}", met1Switched ? "Met1" : metId);
-                    return (met2Switched ? "Met1" : metId);
-                default:
-                    log.ErrorFormat("Something went wrong in isMetTOwerSwitched(), metId: {0}", metId);
-                    return "";
-            }
+            if (Convert.ToBoolean(getMetTower(metId).MetSwitchValue))
+                return metId.Equals("Met") ? "Met2" : "Met";
+            else
+                return metId;
         }
 
         /// <summary>
@@ -187,10 +182,50 @@ namespace Articuno
         public Object readTemperature(string metId)
         {
             metId = isMetTowerSwitched(metId);
-            MetTower met = getMetTower(metId);
             var tuple = tempQualityCheck(metId);
-            if (tuple.Item1) { return tuple.Item2; }
-            else { return getMetTower(metId).getNearestTurbine().readTemperatureValue(); }
+            var primSensorQuality = tuple.Item1;
+            var secSensorQuality = tuple.Item2;
+            var primSensorValue = tuple.Item3;
+            var secSensorValue = tuple.Item4;
+
+
+            if (primSensorQuality.Equals(MetQualityEnum.MET_GOOD_QUALITY))
+            {
+                log.DebugFormat("{0} good quality. Using Primary Temperature Sensor value. Current temperature : {1}", metId, primSensorValue);
+                return primSensorValue;
+            }
+            else if (secSensorQuality.Equals(MetQualityEnum.MET_GOOD_QUALITY))
+            {
+                log.DebugFormat("{0} bad quality. Using Secondary Temperature Sensor Value. Current temperature : {1}", metId, secSensorValue);
+                return secSensorValue;
+            }
+            else
+            {
+                Object newTemp = getMetTower(metId).getNearestTurbine().readTemperatureValue();
+                log.DebugFormat("{0} both sensors bad quality. Using Turbine Temperature. Current Temperature: {1}. Quality S1: {2}, S2: {3}", metId, Convert.ToDouble(newTemp), primSensorQuality, secSensorQuality);
+                return newTemp;
+            }
+        }
+
+        internal void writeToQueue(string metId, double temperature, double humidity) { getMetTower(metId).writeToQueue(temperature, humidity); }
+
+        internal double calculateCtrAvgTemperature(string metId)
+        {
+            Queue<double> tempQueue = getMetTower(metId).getTemperatureQueue();
+            double temperatureCtrAverage = 0.0;
+            double count = tempQueue.Count;
+            while (tempQueue.Count != 0) { temperatureCtrAverage += tempQueue.Dequeue(); }
+            return temperatureCtrAverage / count;
+
+        }
+
+        internal double calculateCtrAvgHumidity(string metId)
+        {
+            Queue<double> humidityQueue = getMetTower(metId).getHumidityQueue();
+            double humidityCtrAverage = 0.0;
+            double count = humidityQueue.Count;
+            while (humidityQueue.Count != 0) { humidityCtrAverage += humidityQueue.Dequeue(); }
+            return humidityCtrAverage / count;
         }
 
         /// <summary>
@@ -207,41 +242,24 @@ namespace Articuno
         /// Writes the delta threshold for all the met tower
         /// </summary>
         /// <param name="value">A double vlaue that represents the delta threshold<</param>
-        public void writeDeltaThreshold(double value)
-        {
-            foreach (MetTower tower in metTowerList) { tower.DeltaTempThreshold = value; }
-        }
+        public void writeDeltaThreshold(double value) { foreach (MetTower tower in metTowerList) { tower.DeltaTempThreshold = value; } }
 
         public double readDeltaThreshold(string metTowerId) { return getMetTower(metTowerId).DeltaTempThreshold; }
 
-        public void writePrimTemperature(string metId, double value)
-        {
-            MetTower met = getMetTower(metId);
-            met.writePrimTemperatureValue(value);
-        }
+        public void writePrimTemperature(string metId, double value) { getMetTower(metId).PrimTemperatureValue = value; }
 
-        public void writeSecTemperature(string metId, double value)
-        {
-            MetTower met = getMetTower(metId);
-            met.writeSecTemperatureValue(value);
-        }
+        public void writeSecTemperature(string metId, double value) { getMetTower(metId).SecTemperatureValue = value; }
 
         public double readHumidity(string metId)
         {
             metId = isMetTowerSwitched(metId);
-            MetTower met = getMetTower(metId);
             var rhQuality = humidQualityCheck(metId);
-
-            //If the quality for the  humidty value is bad then an alarm should trigger
-            //The value is already capped off at 0.00% or 100%
-            if (!rhQuality.Item1) { raiseAlarm(met, MetTowerEnum.HumidityOutOfRange); }
-            else { clearAlarm(met, MetTowerEnum.HumidityOutOfRange); }
             return rhQuality.Item2;
         }
         public void writeHumidity(string metId, double value)
         {
             MetTower met = getMetTower(metId);
-            met.writeRelativeHumityValue(value);
+            met.RelativeHumidityValue = value;
         }
 
         /// <summary>
@@ -250,11 +268,7 @@ namespace Articuno
         /// <param name="ambTemp">The ambient temperature value (Celcius) from the met tower in double format</param>
         /// <param name="rh">The relative humidity in double format</param>
         /// <returns>The dew point temperature in double format </returns>
-        public double calculateDewPoint(double rh, double ambTemp)
-        {
-            //The following formula is given by Nick Johansen, ask him for more details
-            return Math.Pow(rh, 1.0 / 8.0) * (112 + (0.9 * ambTemp)) + (0.1 * ambTemp) - 112;
-        }
+        public double calculateDewPoint(double rh, double ambTemp) => Math.Round(Math.Pow(rh, 1.0 / 8.0) * (112 + (0.9 * ambTemp)) + (0.1 * ambTemp) - 112, 3);
 
         /// <summary>
         /// Calculates the Delta Temperature given the ambient Temperature and a dew point temperature (from calculateDewPoitn function)
@@ -262,64 +276,71 @@ namespace Articuno
         /// <param name="ambTemp">The ambient temperature value (Celcius) from the met tower in double format</param>
         /// <param name="dewPointTemp">The dew point temperature from calculateDewPoint</param>
         /// <returns>The delta temperature in double format</returns>
-        public double calculateDelta(double ambTemp, double dewPointTemp) { return Math.Abs(ambTemp - dewPointTemp); }
+        public double calculateDelta(double ambTemp, double dewPointTemp)=> Math.Round(Math.Abs(ambTemp - dewPointTemp), 3); 
 
         /// <summary>
-        /// Check the quality of the met tower
+        /// Check the quality of the met tower. Returns True if the data is 'bad quality'. Returns False if met tower data is 'good quality
         /// </summary>
         /// <returns></returns>
-        public bool checkMetTowerQuality(string metId)
+        public MetQualityEnum checkMetTowerQuality(string metId)
         {
             //Todo: Implement
             var tempTuple = tempQualityCheck(metId);
             var humidTuple = humidQualityCheck(metId);
-            bool noData = false;
+            MetQualityEnum noData = MetQualityEnum.MET_GOOD_QUALITY;
             MetTower met = getMetTower(metId);
             //If both the temperature quality and the humidity quality is bad quality (aka false), then there will be no data
             //Note that unlike the quality, noData does NOT imply quality, so if there really is no data, then it will be True, False otherwise
-            if (tempTuple.Item1 == false && humidTuple.Item1 == false)
+            if (tempTuple.Item1 == MetQualityEnum.MET_BAD_QUALITY && tempTuple.Item2 == MetQualityEnum.MET_BAD_QUALITY && humidTuple.Item1 == MetQualityEnum.MET_BAD_QUALITY)
             {
-                noData = true;
-                raiseAlarm(met, MetTowerEnum.NoData);
+                noData = MetQualityEnum.MET_BAD_QUALITY;
+                alarm(met, MetTowerEnum.NoData, noData);
             }
             else
-            {
-                noData = false;
-                clearAlarm(met, MetTowerEnum.NoData);
-            }
+                alarm(met, MetTowerEnum.NoData, noData);
 
             return noData;
         }
 
         /// <summary>
         /// Checks the quality of the relative humidity of the current met tower. 
-        /// Returns true if quality is good. False otherwise
+        /// Returns true if quality is good. False otherwise. IMPORTANT: This function will convert the Humidty from % to decimal
         /// </summary>
         /// <returns>Returns True if good quality, False if bad</returns>
-        public Tuple<bool, double> humidQualityCheck(string metId)
+        public Tuple<MetQualityEnum, double> humidQualityCheck(string metId)
         {
             MetTower met = getMetTower(metId);
-            var rhOpcObject = met.readRelativeHumidityValue();
-            double rh = (Double)rhOpcObject;
+            //IMPORTANT: The OPC Value is read as a percentage, but this program needs the humidity as a decimal (ie between 0 and 1)
+            double rh = Convert.ToDouble(met.RelativeHumidityValue)/100.00;
             double minValue = 0.0;
-            double maxValue = 100.0;
+            double maxValue = 1.0;
+            double minCapValue = 0.00;
+            double maxCapValue = 0.99;
 
-            bool state = true;
-
+            var qualityState = MetQualityEnum.MET_GOOD_QUALITY;
 
             //Bad Quality
             //Set primay relative humidty to either 0 (if below 0) or 100 (if above zero)
-            if (rh < 0.0 || rh > 100.0)
+            //Also Raise alarm
+            if (rh <= minValue || rh >= maxValue)
             {
-                state = false;
-                rh = ((Math.Abs(0.0 - rh) > 0.0001) ? 0.0 : 100.0);
+                qualityState = MetQualityEnum.MET_BAD_QUALITY;
+                alarm(met, MetTowerEnum.HumidityOutOfRange, qualityState);
+                alarm(met, MetTowerEnum.HumidityQuality, qualityState);
+                rh = (rh <= minValue) ? minCapValue : maxCapValue;
+                log.DebugFormat("Humidity exceeded allowable range. Capping Relative Humidity of {0} at {1}", metId, rh);
             }
-            if (!(met.isQualityGood(met.getRelativeHumidityTag())))
+            //CLear the out of range alarm
+            else if (rh > minValue && rh < maxValue)
             {
-                state = false;
+                alarm(met, MetTowerEnum.HumidityOutOfRange, qualityState);
+                alarm(met, MetTowerEnum.HumidityQuality, qualityState);
             }
 
-            return new Tuple<bool, double>(state, rh);
+            //If the quality for the relative humidity tag is bad, then immediately make the local  variable bad
+            if (!(met.isQualityGood(met.RelativeHumidityTag))) { qualityState = MetQualityEnum.MET_BAD_QUALITY; }
+
+            return new Tuple<MetQualityEnum, double>(qualityState, rh);
         }
 
         /// <summary>
@@ -328,181 +349,116 @@ namespace Articuno
         /// </summary>
         /// <param name="temperatureTag">The OPC tag for temperature (either prim or sec)</param>
         /// <returns>Returns True if good quality, False if bad</returns>
-        private Tuple<bool, double> tempValueQualityCheck(string temperatureTag)
+        private Tuple<MetQualityEnum, double> tempValueCheck(string temperatureTag, double tempValue)
         {
-            var temp = client.ReadItemValue("", opcServerName, temperatureTag);
-            double tempValue = Convert.ToDouble(temp);
             double minValue = -20.0;
             double maxValue = 60.0;
             //Bad Quality
-            if (tempValue < minValue || tempValue > maxValue) { return new Tuple<bool, double>(false, ((tempValue < minValue) ? minValue : maxValue)); }
+            if (tempValue <= minValue || tempValue >= maxValue)
+            {
+                var newTemperature = ((tempValue <= minValue) ? minValue : maxValue);
+                log.DebugFormat("Temperature sensor of tag {0} out of range. Capping temperature at {1}", temperatureTag, newTemperature);
+                return new Tuple<MetQualityEnum, double>(MetQualityEnum.MET_BAD_QUALITY, newTemperature);
+            }
             //Normal oepration
-            else { return new Tuple<bool, double>(true, tempValue); }
+            else { return new Tuple<MetQualityEnum, double>(MetQualityEnum.MET_GOOD_QUALITY, tempValue); }
         }
 
         /// <summary>
         /// Check the temperature quality of both the primary and secondary sensors
         /// </summary>
         /// <returns>Returns True if good quality, False if bad</returns>
-        public Tuple<bool, double, double> tempQualityCheck(string metId)
+        public Tuple<MetQualityEnum, MetQualityEnum, double, double> tempQualityCheck(string metId)
         {
             MetTower met = getMetTower(metId);
-            string primTempTag = met.getPrimTemperatureTag();
-            string secTempTag = met.getSecTemperatureTag();
-            //call the ValueQuatliyCheck method to verify
-            var primTempCheckTuple = tempValueQualityCheck(primTempTag);
-            var secTempCheckTuple = tempValueQualityCheck(secTempTag);
+            string primTempTag = met.PrimTemperatureTag;
+            string secTempTag = met.SecTemperatureTag;
+            double primTempValue = Convert.ToDouble(met.PrimTemperatureValue);
+            double secTempValue = Convert.ToDouble(met.SecTemperatureValue);
 
-            //normal operaiton
-            //If both cases are true, then both sensors are working correctly
-            if ((primTempCheckTuple.Item1) && (secTempCheckTuple.Item1))
+            //call the ValueQuatliyCheck method to verify
+            var primTempCheckTuple = tempValueCheck(primTempTag, primTempValue);
+            var secTempCheckTuple = tempValueCheck(secTempTag, secTempValue);
+
+            var primTempQuality = primTempCheckTuple.Item1;
+            var secTempQuality = secTempCheckTuple.Item1;
+
+            if (primTempQuality.Equals(MetQualityEnum.MET_GOOD_QUALITY))
             {
-                clearAlarm(met, MetTowerEnum.PrimSensorQuality);
-                clearAlarm(met, MetTowerEnum.SecSensorQuality);
-                return new Tuple<bool, double, double>(true, primTempCheckTuple.Item2, secTempCheckTuple.Item2);
+                alarm(met, MetTowerEnum.PrimSensorOutOfRange, MetQualityEnum.MET_GOOD_QUALITY);
+                alarm(met, MetTowerEnum.PrimSensorQuality, MetQualityEnum.MET_GOOD_QUALITY);
             }
-            //only the secondary Temperature value is suspect. Raise temperature out of range alarm for Temp sensor 1  
-            else if (primTempCheckTuple.Item1 && !secTempCheckTuple.Item1)
-            {
-                raiseAlarm(met, MetTowerEnum.PrimSensorQuality);
-                return new Tuple<bool, double, double>(true, primTempCheckTuple.Item2, secTempCheckTuple.Item2);
-            }
-            //only the primary Temperature value is suspect Raise temperature out of range alarm for Temp sensor 2  
-            else if (!primTempCheckTuple.Item1 && secTempCheckTuple.Item1)
-            {
-                raiseAlarm(met, MetTowerEnum.SecSensorQuality);
-                return new Tuple<bool, double, double>(true, primTempCheckTuple.Item2, secTempCheckTuple.Item2);
-            }
-            //If both sensors are bad.  Use turbine data. Raise alarm
             else
             {
-                raiseAlarm(met, MetTowerEnum.PrimSensorQuality);
-                raiseAlarm(met, MetTowerEnum.SecSensorQuality);
-                return new Tuple<bool, double, double>(false, primTempCheckTuple.Item2, secTempCheckTuple.Item2);
+                alarm(met, MetTowerEnum.PrimSensorOutOfRange, MetQualityEnum.MET_BAD_QUALITY);
+                alarm(met, MetTowerEnum.PrimSensorQuality, MetQualityEnum.MET_BAD_QUALITY);
             }
+            if (secTempQuality.Equals(MetQualityEnum.MET_GOOD_QUALITY))
+            {
+                alarm(met, MetTowerEnum.SecSensorOutOfRange, MetQualityEnum.MET_GOOD_QUALITY);
+                alarm(met, MetTowerEnum.SecSensorQuality, MetQualityEnum.MET_GOOD_QUALITY);
+            }
+            else
+            {
+                alarm(met, MetTowerEnum.SecSensorOutOfRange, MetQualityEnum.MET_BAD_QUALITY);
+                alarm(met, MetTowerEnum.SecSensorQuality, MetQualityEnum.MET_BAD_QUALITY);
+            }
+
+            return new Tuple<MetQualityEnum, MetQualityEnum, double, double>(primTempQuality, secTempQuality, primTempCheckTuple.Item2, secTempCheckTuple.Item2);
         }
 
+
         /// <summary>
-        /// Method to set alarms on the met tower class. this is one of the methods that will log alarms
+        /// Method to raise or clear alarm
         /// </summary>
-        /// <param name="mt"></param>
-        /// <param name="metTowerEnum"></param>
-        // Note that there is an if statement check to see if it wasn't already in the state beforehand. This is to prevent from constantly logging and constantly overwriting the OPC tag
-        private void raiseAlarm(MetTower mt, MetTowerEnum metTowerEnum)
+        /// <param name="mt">Met Tower</param>
+        /// <param name="metTowerEnum">MetTower Enum</param>
+        /// <param name="quality">The quality Enum. </param>
+        private void alarm(MetTower mt, MetTowerEnum metTowerEnum, MetQualityEnum quality)
         {
+            //Good Quality will return a false (in active alarm). Bad quality  will return a true (active alarm)
+            // If Good Quality (true), then clear alarm (set false)
+            // If Bad Quality (true), then raise the alarm (set true)
+            var logComment = Convert.ToBoolean(quality) ? "cleared" : "raised";
+            bool status = Convert.ToBoolean(quality) ? false : true;
+
+
             switch (metTowerEnum)
             {
                 case MetTowerEnum.HumidityOutOfRange:
-                    if (Convert.ToBoolean(mt.readHumidityOutOfRng()) != BAD_QUALITY)
-                    {
-                        log.InfoFormat("{0} Humidity sensor out of range alarm raised", mt.getMetTowerPrefix);
-                        mt.writeHumidityOutOfRng(BAD_QUALITY);
-                    }
+                    if (Convert.ToBoolean(mt.HumidityOutOfRng) != Convert.ToBoolean(status))
+                        log.InfoFormat("{0} Humidity sensor out of range alarm {1}. Humidity Value: {2}", mt.getMetTowerPrefix, logComment, mt.RelativeHumidityValue);
+                    mt.HumidityOutOfRng = Convert.ToBoolean(status);
                     break;
                 case MetTowerEnum.HumidityQuality:
-                    if (Convert.ToBoolean(mt.readHumidityBadQuality()) != BAD_QUALITY)
-                    {
-                        log.InfoFormat("{0} Humidity sensor bad quality alarm raised", mt.getMetTowerPrefix);
-                        mt.writeHumidityBadQuality(BAD_QUALITY);
-                    }
+                    if (Convert.ToBoolean(mt.HumidityBadQuality) != Convert.ToBoolean(status))
+                        log.InfoFormat("{0} Humidity sensor bad status alarm {1}. Humidity Value {2}", mt.getMetTowerPrefix, logComment, mt.RelativeHumidityValue);
+                    mt.HumidityBadQuality = Convert.ToBoolean(status);
                     break;
                 case MetTowerEnum.PrimSensorQuality:
-                    if (Convert.ToBoolean(mt.readTemperaturePrimBadQuality()) != BAD_QUALITY)
-                    {
-                        log.InfoFormat("{0} Primary Temperature sensor quality alarm raised", mt.getMetTowerPrefix);
-                        mt.writeTemperaturePrimBadQuality(BAD_QUALITY);
-                    }
+                    if (Convert.ToBoolean(mt.TemperaturePrimBadQuality) != Convert.ToBoolean(status))
+                        log.InfoFormat("{0} Primary Temperature sensor quality status alarm {1}. Primary Temp: {2}", mt.getMetTowerPrefix, logComment, mt.PrimTemperatureValue);
+                    mt.TemperaturePrimBadQuality = Convert.ToBoolean(status);
                     break;
                 case MetTowerEnum.PrimSensorOutOfRange:
-                    if (Convert.ToBoolean(mt.readTemperaturePrimOutOfRange()) != BAD_QUALITY)
-                    {
-                        log.InfoFormat("{0} Primary Temperature sensor quality alarm raised", mt.getMetTowerPrefix);
-                        mt.writeTemperaturePrimOutOfRange(BAD_QUALITY);
-                    }
+                    if (Convert.ToBoolean(mt.TemperaturePrimOutOfRange) != Convert.ToBoolean(status))
+                        log.InfoFormat("{0} Primary Temperature sensor out of range alarm {1}. Primary Temp: {2}. Alarm Status:{3}", mt.getMetTowerPrefix, logComment, mt.PrimTemperatureValue, status);
+                    mt.TemperaturePrimOutOfRange = Convert.ToBoolean(status);
                     break;
                 case MetTowerEnum.SecSensorQuality:
-                    if (Convert.ToBoolean(mt.readTemperatureSecBadQuality()) != BAD_QUALITY)
-                    {
-                        log.InfoFormat("{0} Secondary Temperature sensor quality alarm raised", mt.getMetTowerPrefix);
-                        mt.writeTemperaturePrimBadQuality(BAD_QUALITY);
-                    }
+                    if (Convert.ToBoolean(mt.TemperatureSecBadQuality) != Convert.ToBoolean(status))
+                        log.InfoFormat("{0} Secondary Temperature sensor quality status alarm {1}. Sec Temp: {2}", mt.getMetTowerPrefix, logComment, mt.SecTemperatureValue);
+                    mt.TemperatureSecBadQuality = Convert.ToBoolean(status);
                     break;
                 case MetTowerEnum.SecSensorOutOfRange:
-                    if (Convert.ToBoolean(mt.readTemperatureSecOutOfRange()) != BAD_QUALITY)
-                    {
-                        log.InfoFormat("{0} Secondary Temperature sensor quality alarm raised", mt.getMetTowerPrefix);
-                        mt.writeTemperatureSecOutOfRange(BAD_QUALITY);
-                    }
+                    if (Convert.ToBoolean(mt.TemperatureSecOutOfRange) != Convert.ToBoolean(status))
+                        log.InfoFormat("{0} Secondary Temperature sensor out of range alarm {1}. Sec Temp: {2}", mt.getMetTowerPrefix, logComment, mt.SecTemperatureValue);
+                    mt.TemperatureSecOutOfRange = Convert.ToBoolean(status);
                     break;
                 case MetTowerEnum.NoData:
-                    if (Convert.ToBoolean(mt.readNoDataAlarmValue()) != BAD_QUALITY)
-                    {
-                        log.InfoFormat("{0} No Data alarm raised ", mt.getMetTowerPrefix);
-                        mt.writeNoDataAlarmValue(BAD_QUALITY);
-                    }
-                    break;
-
-            }
-        }
-
-        /// <summary>
-        /// Method to clear the alarms on the met tower class. this is one of the methods that will log alarms
-        /// </summary>
-        /// <param name="mt"></param>
-        /// <param name="metTowerEnum"></param>
-        private void clearAlarm(MetTower mt, MetTowerEnum metTowerEnum)
-        {
-            switch (metTowerEnum)
-            {
-                case MetTowerEnum.HumidityOutOfRange:
-                    if (Convert.ToBoolean(mt.readHumidityOutOfRng()) != GOOD_QUALITY)
-                    {
-                        log.InfoFormat("{0} Humidity sensor out of range alarm cleared", mt.getMetTowerPrefix);
-                        mt.writeHumidityOutOfRng(GOOD_QUALITY);
-                    }
-                    break;
-                case MetTowerEnum.HumidityQuality:
-                    if (Convert.ToBoolean(mt.readHumidityBadQuality()) != GOOD_QUALITY)
-                    {
-                        log.InfoFormat("{0} Humidity sensor bad quality alarm cleared", mt.getMetTowerPrefix);
-                        mt.writeHumidityBadQuality(GOOD_QUALITY);
-                    }
-                    break;
-                case MetTowerEnum.PrimSensorQuality:
-                    if (Convert.ToBoolean(mt.readTemperaturePrimBadQuality()) != GOOD_QUALITY)
-                    {
-                        log.InfoFormat("{0} Primary Temperature sensor quality alarm cleared", mt.getMetTowerPrefix);
-                        mt.writeTemperaturePrimBadQuality(GOOD_QUALITY);
-                    }
-                    break;
-                case MetTowerEnum.PrimSensorOutOfRange:
-                    if (Convert.ToBoolean(mt.readTemperaturePrimOutOfRange()) != GOOD_QUALITY)
-                    {
-                        log.InfoFormat("{0} Primary Temperature sensor quality alarm cleared", mt.getMetTowerPrefix);
-                        mt.writeTemperaturePrimOutOfRange(GOOD_QUALITY);
-                    }
-                    break;
-                case MetTowerEnum.SecSensorQuality:
-                    if (Convert.ToBoolean(mt.readTemperatureSecBadQuality()) != GOOD_QUALITY)
-                    {
-                        log.InfoFormat("{0} Secondary Temperature sensor quality alarm cleared", mt.getMetTowerPrefix);
-                        mt.writeTemperaturePrimBadQuality(GOOD_QUALITY);
-                    }
-                    Console.WriteLine(Convert.ToBoolean(mt.readTemperatureSecBadQuality()));
-                    break;
-                case MetTowerEnum.SecSensorOutOfRange:
-                    if (Convert.ToBoolean(mt.readTemperatureSecOutOfRange()) != GOOD_QUALITY)
-                    {
-                        log.InfoFormat("{0} Secondary Temperature sensor quality alarm cleared", mt.getMetTowerPrefix);
-                        mt.writeTemperatureSecOutOfRange(GOOD_QUALITY);
-                    }
-                    break;
-                case MetTowerEnum.NoData:
-                    if (Convert.ToBoolean(mt.readNoDataAlarmValue()) != GOOD_QUALITY)
-                    {
-                        log.InfoFormat("{0} No Data alarm cleared ", mt.getMetTowerPrefix);
-                        mt.writeNoDataAlarmValue(GOOD_QUALITY);
-                    }
+                    if (Convert.ToBoolean(mt.NoDataAlarmValue) != Convert.ToBoolean(status))
+                        log.InfoFormat("{0} No Data alarm {1}. NoData Alarm Value {2}", mt.getMetTowerPrefix, logComment, mt.NoDataAlarmValue);
+                    mt.NoDataAlarmValue = Convert.ToBoolean(status);
                     break;
             }
         }
@@ -510,7 +466,7 @@ namespace Articuno
         /// <summary>
         /// Method used to set a met tower to a turbine
         /// </summary>
-        /// <param name="metId">The met id. Met1 or Met2</param>
+        /// <param name="metId">The met id. Met or Met2</param>
         /// <param name="turbine">The turbine id (ie T001)</param>
         public void setTurbineBackup(string metId, Turbine turbine)
         {
@@ -520,7 +476,7 @@ namespace Articuno
             }
         }
 
-        private enum MetTowerEnum
+        public enum MetTowerEnum
         {
             HumidityQuality,
             HumidityOutOfRange,
@@ -528,27 +484,46 @@ namespace Articuno
             PrimSensorOutOfRange,
             SecSensorQuality,
             SecSensorOutOfRange,
-            NoData
+            NoData,
+            Switched,
+        }
+
+        /// <summary>
+        /// Good Quality gives a true (1). Bad Quality gives a false (0)
+        /// </summary>
+        public enum MetQualityEnum
+        {
+            MET_GOOD_QUALITY = 1,
+            MET_BAD_QUALITY = 0
         }
 
         //Function that is called by the main Articuno class to determine if the temperature average calculated
         // by ARticuno is considered freezing or not
-        public void isFreezing(string metId, double averageTemperature)
+        /// <summary>
+        /// Method to check a met tower to see if it meets the freezing condition and set its condition. Returns true if iti s frozen, false otherwise
+        /// </summary>
+        public bool setFrozenCondition(string metId, double avgTemperature, double avgHumidity)
         {
             double tempThreshold = readTemperatureThreshold(metId);
+            double deltaThreshold = readDeltaThreshold(metId);
 
+            double dewPoint =calculateDewPoint(avgHumidity, avgTemperature);
+            double delta =calculateDelta(avgTemperature, dewPoint);
+
+            Console.WriteLine("Temp Threshold {0}", tempThreshold);
+            Console.WriteLine("Delta Threshold {0}", deltaThreshold);
+
+            MetTower met = getMetTower(metId);
             //Freezing Conditions met
-            if (averageTemperature < tempThreshold)
+            if ((avgTemperature <= tempThreshold) && (delta<=deltaThreshold))
             {
-                MetTower met = getMetTower(metId);
-                met.readIceIndicationValue();
                 try
                 {
-                    met.writeIceIndicationValue(1.00);
+                    met.IceIndicationValue = true;
                     log.InfoFormat("Icing conditions met for {0}. \n" +
-                        "average Temperature {1}, \n" +
-                        "Temperature threshold {2} \n", 
-                        metId, averageTemperature, tempThreshold);
+                        "{0} Average Temperature {1}, \n" +
+                        "{0} Temperature threshold {2} \n",
+                        metId, avgTemperature, tempThreshold);
                 }
                 catch (Exception e)
                 {
@@ -559,9 +534,27 @@ namespace Articuno
                         "Met: {1}, \n" +
                         "avgTemp: {2}, \n" +
                         "tempThreshold {3}\n",
-                        e,metId, averageTemperature, tempThreshold);
+                        e, metId, avgTemperature, tempThreshold);
+                    log.ErrorFormat("Error:\n{0}", e);
                 }
             }
+            else { met.IceIndicationValue = false; }
+
+            return Convert.ToBoolean(met.IceIndicationValue);
+        }
+
+        /// <summary>
+        /// Checks to see if a met tower is frozen given the prefix of the met
+        /// </summary>
+        /// <param name="metTowerId"></param>
+        /// <returns>Boolean. True if frozen, false otherwise</returns>
+        public bool isMetFrozen(string metTowerId) { return Convert.ToBoolean(getMetTower(metTowerId).IceIndicationValue); }
+
+        public Enum findMetTowerTag(string metTowerId, string tag)
+        {
+            MetTower tempMet = getMetTower(metTowerId);
+            if (tag.ToUpper().Equals(tempMet.MetSwitchTag.ToUpper())) { return MetTowerEnum.Switched; }
+            return null;
         }
     }
 }
