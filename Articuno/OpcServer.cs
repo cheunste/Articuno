@@ -51,28 +51,6 @@ namespace Articuno
         }
 
         /// <summary>
-        /// method to read a value from the OPC server. Returns an Object. Use this for production. Use readTagValue for testing
-        /// </summary>
-        /// <param name="tag">The OPC tag name (String format)</param>
-        /// <param name="serverName">The OPC server name. String.</param>
-        /// <returns></returns>
-        public static Object readOpcTag(string serverName, string tag)
-        {
-            try
-            {
-                object value = opcServer.ReadItemValue("", serverName, tag);
-                return value;
-            }
-            catch (Exception e)
-            {
-                //Log Exception here
-                log.ErrorFormat("Reading tag: {0} failed. Does {0} exist on the server?", tag);
-                log.ErrorFormat("Error:\n{0}", e);
-                return "";
-            }
-        }
-
-        /// <summary>
         /// Sets a value given  an OPC tagname and a value
         /// </summary>
         /// <param name="tag">the name of hte OPC tag</param>
@@ -93,6 +71,62 @@ namespace Articuno
                 return false;
             }
         }
+
+        /// <summary>
+        /// method to read a value from the OPC server. Returns an Object. Use this for production. Use readTagValue for testing
+        /// </summary>
+        /// <param name="tag">The OPC tag name (String format)</param>
+        /// <param name="serverName">The OPC server name. String.</param>
+        /// <returns>An Object if tag is in good quality, a null if tag isbad quality </returns>
+        //public static Object readOpcTag(string serverName, string tag)
+        //{
+        //    try
+        //    {
+        //        object value = opcServer.ReadItemValue("", serverName, tag);
+        //        return value;
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        //Log Exception here
+        //        log.ErrorFormat("Reading tag: {0} failed. Does {0} exist on the server?", tag);
+        //        log.ErrorFormat("Error:\n{0}", e);
+        //        return null;
+        //    }
+        //}
+        public static Object readOpcTag(string serverName, string tag)
+        {
+            try
+            {
+                object value = opcServer.ReadItemValue("", serverName, tag);
+                return value;
+            }
+            catch (Exception e)
+            {
+                //Log Exception here
+                log.ErrorFormat("Reading tag: {0} failed. Does {0} exist on the server?", tag);
+                log.ErrorFormat("Error:\n{0}", e);
+                return null;
+            }
+        }
+
+        public static Object readAnalogTag(string serverName, string tag)
+        {
+            Object obj = readOpcTag(serverName, tag);
+            return (obj ?? 0);
+        }
+
+        public static Object readStringTag(string serverName,string tag)
+        {
+            Object obj = readOpcTag(serverName, tag);
+            return (obj ?? "");
+        }
+
+        public static Object readBooleanTag(string serverName,string tag)
+        {
+            Object obj = readOpcTag(serverName, tag);
+            return (obj ?? false);
+        }
+
 
         /// <summary>
         /// method to write a value to an OPC tag on the OPC server.  Use this method for production. Use writeTagValue for testing
