@@ -64,15 +64,15 @@ namespace Articuno
         }
 
         //Methods to read the value for the wind speed, rotor speed, etc. value from the OPC Server
-        public Object readWindSpeedValue() { return OpcServer.readOpcTag(OpcServerName, WindSpeedTag); }
-        public Object readRotorSpeedValue() { return OpcServer.readOpcTag(OpcServerName, RotorSpeedTag); }
-        public Object readOperatingStateValue() { return OpcServer.readOpcTag(OpcServerName, OperatingStateTag); }
-        public Object readNrsStateValue() {return OpcServer.readOpcTag(OpcServerName,NrsStateTag);}
-        public Object readTemperatureValue() {return OpcServer.readOpcTag(OpcServerName,TemperatureTag);}
+        public Object readWindSpeedValue() { return OpcServer.readAnalogTag(OpcServerName, WindSpeedTag); }
+        public Object readRotorSpeedValue() { return OpcServer.readAnalogTag(OpcServerName, RotorSpeedTag); }
+        public Object readOperatingStateValue() { return OpcServer.readAnalogTag(OpcServerName, OperatingStateTag); }
+        public Object readNrsStateValue() {return OpcServer.readAnalogTag(OpcServerName,NrsStateTag);}
+        public Object readTemperatureValue() {return OpcServer.readAnalogTag(OpcServerName,TemperatureTag);}
 
-        public Object readTurbineScalingFactorValue() {return OpcServer.readOpcTag(OpcServerName,ScalingFactorTag);}
-        public Object readParticipationValue() {return OpcServer.readOpcTag(OpcServerName,ParticipationTag);}
-        public Object readAlarmValue() {return OpcServer.readOpcTag(OpcServerName,AlarmTag);}
+        public Object readTurbineScalingFactorValue() {return OpcServer.readAnalogTag(OpcServerName,ScalingFactorTag);}
+        public Object readParticipationValue() {return OpcServer.readAnalogTag(OpcServerName,ParticipationTag);}
+        public Object readAlarmValue() {return OpcServer.readAnalogTag(OpcServerName,AlarmTag);}
         public int readCtrCurrentValue() { return ctrCountDown; }
 
         //public Accessors (Getters and Setters)  to set the member variables to the  OPC tag

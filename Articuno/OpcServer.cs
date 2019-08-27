@@ -93,7 +93,7 @@ namespace Articuno
         //        return null;
         //    }
         //}
-        public static Object readOpcTag(string serverName, string tag)
+        private static Object readOpcTag(string serverName, string tag)
         {
             try
             {
@@ -103,7 +103,7 @@ namespace Articuno
             catch (Exception e)
             {
                 //Log Exception here
-                log.ErrorFormat("Reading tag: {0} failed. Does {0} exist on the server?", tag);
+                log.ErrorFormat("Reading tag: {0} failed. Does {0} exist on the server or is it bad quality?", tag);
                 log.ErrorFormat("Error:\n{0}", e);
                 return null;
             }
