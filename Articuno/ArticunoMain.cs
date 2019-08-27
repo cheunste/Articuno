@@ -215,7 +215,7 @@ namespace Articuno
         private static void updateHeartBeat()
         {
             OpcServer.writeOpcTag(opcServerName, heartBeatTag,
-                !Convert.ToBoolean(OpcServer.readOpcTag(opcServerName, heartBeatTag))
+                !Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, heartBeatTag))
                 );
         }
         /// <summary>
