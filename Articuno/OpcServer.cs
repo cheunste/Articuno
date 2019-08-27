@@ -22,7 +22,11 @@ namespace Articuno
         private static readonly ILog log = LogManager.GetLogger(typeof(MetTower));
 
         //Constructor. Tages in a server name and sets the 
-        public OpcServer(String serverName) { this.serverName = serverName; }
+        public OpcServer(String serverName) {
+            this.serverName = serverName;
+            EasyDAClient.SharedParameters.TopicParameters.SlowdownWeight = 0.0f;
+            EasyDAClient.SharedParameters.TopicParameters.SpeedupWeight = 0.0f;
+        }
 
         /// <summary>
         /// The readTags function reads an OPC tag value given an OPC Tag. This always returns a String.
