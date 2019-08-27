@@ -42,7 +42,7 @@ namespace Articuno
                 //Log Exception here
                 log.ErrorFormat("Reading tag: {0} failed. Does {0} exist on the server?", tag);
                 log.ErrorFormat("Error:\n{0}", e);
-                return null;
+                return "";
             }
         }
 
@@ -63,7 +63,7 @@ namespace Articuno
             {
                 //Log Exception here
                 log.ErrorFormat("Reading tag: {0} failed. Does {0} exist on the server?", tag);
-                log.ErrorFormat("Error:", e);
+                log.ErrorFormat("Error:\n{0}", e);
                 return "";
             }
         }
@@ -85,7 +85,7 @@ namespace Articuno
             catch (Exception e)
             {
                 log.ErrorFormat("Write to tag: {0} failed. Does {0} exist on the server? Did the server die?", tag);
-                log.ErrorFormat("Error:", e);
+                log.ErrorFormat("Error:\n{0}", e);
                 return false;
             }
         }
@@ -101,7 +101,7 @@ namespace Articuno
             try { opcServer.WriteItemValue(serverName, tag, value); }
             catch (Exception e) {
                 log.ErrorFormat("Write to tag: {0} failed. Does {0} exist on the server? Did the server die?", tag);
-                log.ErrorFormat("Error:", e);
+                log.ErrorFormat("Error:\n{0}", e);
             }
         }
 
