@@ -375,7 +375,7 @@ namespace Articuno
             if (tm.getNrsStateTag(turbineId).Equals("")) { tm.setNrscondition(turbineId, true); }
             else
             {
-                tm.writeNrsStateTag(turbineId, value);
+                //tm.writeNrsStateTag(turbineId, value);
                 if (Convert.ToInt16(value) == NOISE_LEV)
                     tm.setNrscondition(turbineId, true);
                 else
