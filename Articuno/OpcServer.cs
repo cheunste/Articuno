@@ -112,18 +112,25 @@ namespace Articuno
         public static Object readAnalogTag(string serverName, string tag)
         {
             Object obj = readOpcTag(serverName, tag);
+            if (obj == null)
+                log.ErrorFormat("Issue reading tag: {0}. Will be sending back an {1} to Artiucno  ",tag,0);
             return (obj ?? 0);
         }
 
         public static Object readStringTag(string serverName,string tag)
         {
             Object obj = readOpcTag(serverName, tag);
+            if (obj == null)
+                log.ErrorFormat("Issue reading tag: {0}. Will be sending back an {1} to Artiucno  ",tag," empty string ");
+
             return (obj ?? "");
         }
 
         public static Object readBooleanTag(string serverName,string tag)
         {
             Object obj = readOpcTag(serverName, tag);
+            if (obj == null)
+                log.ErrorFormat("Issue reading tag: {0}. Will be sending back an {1} to Artiucno  ",tag,false);
             return (obj ?? false);
         }
 
