@@ -99,7 +99,7 @@ namespace Articuno
         //Load shutdown function. Probably the most important function
         public double writeLoadShutdownCmd()
         {
-            log.InfoFormat("Shutdown command for {0} has been sent", this.TurbinePrefix);
+            log.DebugFormat("Shutdown command for {0} has been sent", this.TurbinePrefix);
             try
             {
                 OpcServer.writeOpcTag(OpcServerName, this.LoadShutdownTag, 1.00);
@@ -121,7 +121,7 @@ namespace Articuno
             log.DebugFormat("{0} Current CTR: {1}", getTurbinePrefixValue(), ctrCountDown);
             if (ctrCountDown <= 0)
             {
-                log.InfoFormat("CTR period for Turbine {0} reached Zero.", getTurbinePrefixValue());
+                log.DebugFormat("CTR period for Turbine {0} reached Zero.", getTurbinePrefixValue());
                 //Reset CTR countdown
                 ctrCountDown = Convert.ToInt32(TurbineCtr);
                 //Call the RotorSPeedCheck function to compare rotor speed for all turbines
@@ -174,12 +174,12 @@ namespace Articuno
 
             if (frozenCondition)
             {
-                log.InfoFormat("Icing conditions satisfied for {0}", getTurbinePrefixValue());
+                log.DebugFormat("Icing conditions satisfied for {0}", getTurbinePrefixValue());
                 pauseByArticuno(true);
             }
             else
             {
-                log.InfoFormat("No ice detected for turbine {0}", getTurbinePrefixValue());
+                log.DebugFormat("No ice detected for turbine {0}", getTurbinePrefixValue());
                 pauseByArticuno(false);
             }
         }
@@ -229,13 +229,13 @@ namespace Articuno
             //Unblock Turbine from AGC
             blockTurbine(false);
 
-            log.InfoFormat("Start Command Received for Turbine {0}", getTurbinePrefixValue());
+            log.DebugFormat("Start Command Received for Turbine {0}", getTurbinePrefixValue());
             //Give the turbine some time to start 
             System.Threading.Thread.Sleep(STARTUP_TIME_BUFFER);
-            log.InfoFormat("Waiting {0} seconds to allow turbine to start up....", STARTUP_TIME_BUFFER);
+            log.DebugFormat("Waiting {0} seconds to allow turbine to start up....", STARTUP_TIME_BUFFER);
             writeAlarmTagValue(false);
             emptyQueue();
-            log.InfoFormat("Turbine {0} CTR Value reset to: {1}", getTurbinePrefixValue(), TurbineCtr);
+            log.DebugFormat("Turbine {0} CTR Value reset to: {1}", getTurbinePrefixValue(), TurbineCtr);
             this.ctrCountDown = Convert.ToInt32(TurbineCtr);
         }
 

@@ -245,7 +245,7 @@ namespace Articuno
             ctrCountdown--;
             if (ctrCountdown == 0)
             {
-                log.InfoFormat("CTR countdown reached 0");
+                log.DebugFormat("CTR countdown reached 0");
                 //Calculate temperature averages from the all the temperature queues
                 for (int i = 1; i <= MetTowerMediator.getNumMetTower(); i++)
                 {
@@ -447,24 +447,24 @@ namespace Articuno
                 if (tag.Equals(enableArticunoTag))
                 {
                     articunoEnable = (value == 1) ? true : false;
-                    log.InfoFormat("Articuno is : {0}", articunoEnable ? "Enabled" : "Disabled");
+                    log.DebugFormat("Articuno is : {0}", articunoEnable ? "Enabled" : "Disabled");
                 }
                 if (tag.Equals(articunoCtrTag))
                 {
                     articunoCtrTime = value;
                     ctrCountdown = value;
                     tm.writeCtrTime(value);
-                    log.InfoFormat("Articuno CTR updated to: {0} minute", value);
+                    log.DebugFormat("Articuno CTR updated to: {0} minute", value);
                 }
                 if (tag.Equals(tempThresholdTag))
                 {
                     mm.writeTemperatureThreshold(value);
-                    log.InfoFormat("Articuno Temperature Threshold updated to: {0} deg C", value);
+                    log.DebugFormat("Articuno Temperature Threshold updated to: {0} deg C", value);
                 }
                 if (tag.Equals(deltaThresholdTag))
                 {
                     mm.writeDeltaThreshold(value);
-                    log.InfoFormat("Articuno Temperature Delta updated to: {0} deg C", value);
+                    log.DebugFormat("Articuno Temperature Delta updated to: {0} deg C", value);
                 }
 
             }
