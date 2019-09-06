@@ -38,7 +38,7 @@ namespace Articuno
         {
             try
             {
-                var value = client.ReadItemValue("", serverName, tag);
+                                var value = client.ReadItemValue("", serverName, tag);
                 return value.ToString();
             }
             catch (Exception e)
@@ -97,15 +97,27 @@ namespace Articuno
         {
             try
             {
-                object value = opcServer.ReadItemValue("", serverName, tag);
+                //object derp = opcServer.GetPropertyValue("",serverName,tag, DAPropertyIds.Value);
+                //return derp;
+                //object value = opcServer.ReadItemValue("", serverName, tag);
+
+                object quality = opcServer.GetPropertyValue("",serverName,tag, DAPropertyIds.Quality);
+                object value = opcServer.GetPropertyValue("",serverName,tag, DAPropertyIds.Value);
+
+                log.DebugFormat("{0}: {1}. Qual: {2}",tag,value,quality);
                 return value;
             }
             catch (Exception e)
             {
                 //Log Exception here
-                log.ErrorFormat("Reading tag: {0} failed. Does {0} exist on the server or is it bad quality?", tag);
-                log.ErrorFormat("Error:\n{0}", e);
-                return null;
+                //log.ErrorFormat("Reading tag: {0} failed. Does {0} exist on the server or is it bad quality?", tag);
+                //log.ErrorFormat("Error:\n{0}", e);
+                //return null;
+                object value = opcServer.GetPropertyValue("",serverName,tag, DAPropertyIds.Value);
+                object quality = opcServer.GetPropertyValue("",serverName,tag, DAPropertyIds.Quality);
+                log.DebugFormat("{0}: {1}. Qual: {2}",tag,value,quality);
+                return value;
+
             }
         }
 

@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace Articuno
 {
@@ -48,7 +49,7 @@ namespace Articuno
         static string numTurbinesPausedTag;
 
         //Constants
-        private static int ONE_MINUTE_POLLING = 60 * 1000;
+        private static int ONE_MINUTE_POLLING = 60 * 100;
         private static int HEARTBEAT_POLLING = 15 * 1000;
         private static int NOISE_LEV = 5;
         private static int RUN_STATE = 100;
@@ -103,13 +104,21 @@ namespace Articuno
         {
             //The following lines starts a threading lambda and executes a function every minute. THis is used for events that require minute polling and CTR polling 
             //var startTimeSpan = TimeSpan.Zero;
-            var startTimeSpan = TimeSpan.FromMilliseconds(ONE_MINUTE_POLLING);
             var periodTimeSpan = TimeSpan.FromMilliseconds(ONE_MINUTE_POLLING);
             var heartBeatTimeSpan = TimeSpan.FromMilliseconds(HEARTBEAT_POLLING);
-            var heartBeatPeriodTimeSpan = TimeSpan.FromMilliseconds(HEARTBEAT_POLLING);
 
-            var timer = new System.Threading.Timer((e) => { minuteUpdate(); }, null, startTimeSpan, periodTimeSpan);
-            var heartBeatTimer = new System.Threading.Timer((e) => { updateHeartBeat(); }, null, heartBeatTimeSpan, heartBeatPeriodTimeSpan);
+            //var timer = new System.Threading.Timer((e) => { minuteUpdate(); }, null, startTimeSpan, periodTimeSpan);
+            //var heartBeatTimer = new System.Threading.Timer((e) => { updateHeartBeat(e); }, null, heartBeatTimeSpan, heartBeatPeriodTimeSpan);
+
+            System.Timers.Timer minuteTimer = new System.Timers.Timer(periodTimeSpan.TotalMilliseconds);
+            minuteTimer.AutoReset = true;
+            minuteTimer.Elapsed += new System.Timers.ElapsedEventHandler(minuteUpdate);
+            minuteTimer.Start();
+
+            System.Timers.Timer heartBeatTimer = new System.Timers.Timer(heartBeatTimeSpan.TotalMilliseconds);
+            heartBeatTimer.AutoReset = true;
+            heartBeatTimer.Elapsed += new System.Timers.ElapsedEventHandler(updateHeartBeat);
+            heartBeatTimer.Start();
 
             //start of the infinite loop
             while (true)
@@ -212,7 +221,7 @@ namespace Articuno
         }
 
         //Function to update an heartbeat
-        private static void updateHeartBeat()
+        private static void updateHeartBeat(object sender, ElapsedEventArgs e)
         {
             OpcServer.writeOpcTag(opcServerName, heartBeatTag,
                 !Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, heartBeatTag))
@@ -221,7 +230,7 @@ namespace Articuno
         /// <summary>
         /// Function to handle tasks that should be executed every minute (ie get temperature measurements) and every CTR minute (ie check rotor speed, run calculations, etc.) 
         /// </summary>
-        private static void minuteUpdate()
+        private static void minuteUpdate(object sender, ElapsedEventArgs e)
         {
             //For every minute, read the met tower measurements and the turbine temperature measurements
             for (int i = 1; i <= MetTowerMediator.getNumMetTower(); i++)
@@ -245,7 +254,7 @@ namespace Articuno
             ctrCountdown--;
             if (ctrCountdown == 0)
             {
-                log.DebugFormat("CTR countdown reached 0");
+                log.InfoFormat("CTR countdown reached 0 in ArticunoMain");
                 //Calculate temperature averages from the all the temperature queues
                 for (int i = 1; i <= MetTowerMediator.getNumMetTower(); i++)
                 {
@@ -262,6 +271,13 @@ namespace Articuno
                 }
                 //Set the CTR back to the original value
                 ctrCountdown = articunoCtrTime;
+
+                //Log the contents in the list for debugging purposes
+                log.InfoFormat("Turbines Waiting for Pause: {0}", string.Join(",", turbinesWaitingForPause));
+                log.InfoFormat("Turbines paused by Articuno: {0}", string.Join(",", turbinesPausedByArticuno));
+                log.InfoFormat("Turbines exlucded from Articuno: {0}", string.Join(",", turbinesExcludedList));
+                log.InfoFormat("Turbines awaiting proper condition: {0}", string.Join(",", turbinesConditionNotMet));
+
             }
 
             //Tell the turbines to Decrement thier internal CTR Time. Must be after the met tower code or else turbine might not respond to a met tower icing change event

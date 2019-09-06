@@ -118,10 +118,10 @@ namespace Articuno
         public void decrementCtrTime()
         {
             ctrCountDown--;
-            log.DebugFormat("{0} Current CTR: {1}", getTurbinePrefixValue(), ctrCountDown);
+            log.InfoFormat("{0} Current CTR: {1}", getTurbinePrefixValue(), ctrCountDown);
             if (ctrCountDown <= 0)
             {
-                log.DebugFormat("CTR period for Turbine {0} reached Zero.", getTurbinePrefixValue());
+                log.InfoFormat("CTR period for Turbine {0} reached Zero.", getTurbinePrefixValue());
                 //Reset CTR countdown
                 ctrCountDown = Convert.ToInt32(TurbineCtr);
                 //Call the RotorSPeedCheck function to compare rotor speed for all turbines
