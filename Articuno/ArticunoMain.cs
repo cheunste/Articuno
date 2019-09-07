@@ -273,10 +273,7 @@ namespace Articuno
                 ctrCountdown = articunoCtrTime;
 
                 //Log the contents in the list for debugging purposes
-                log.InfoFormat("Turbines Waiting for Pause: {0}", string.Join(",", turbinesWaitingForPause));
-                log.InfoFormat("Turbines paused by Articuno: {0}", string.Join(",", turbinesPausedByArticuno));
-                log.InfoFormat("Turbines exlucded from Articuno: {0}", string.Join(",", turbinesExcludedList));
-                log.InfoFormat("Turbines awaiting proper condition: {0}", string.Join(",", turbinesConditionNotMet));
+                logCurrentList();
 
             }
 
@@ -359,6 +356,9 @@ namespace Articuno
                     //Case where the site changes the NRS Mode
                     case TurbineMediator.TurbineEnum.NrsMode:
                         checkNrs(prefix, value);
+                        //Log the Current status of the lists
+                        logCurrentList();
+
                         break;
                     //case where the turbine is started by either the site or the NCC
                     case TurbineMediator.TurbineEnum.TurbineStarted:
@@ -370,13 +370,20 @@ namespace Articuno
                         //Start the turbine if a command is sent. This is because dispatchers
                         //Can start it on their whim if they want to 
                         if (Convert.ToInt32(value) == 1) tm.startTurbine(prefix);
+                        //Log the Current status of the lists
+                        logCurrentList();
                         break;
                     //In the case where the turbine went into a different state. This includes pause by the dispatchers, site, curtailment, maintenance, anything non-Articuno 
                     case TurbineMediator.TurbineEnum.OperatingState:
                         checkOperatingState(prefix, value);
+                        //Log the Current status of the lists
+                        logCurrentList();
+
                         break;
                     case TurbineMediator.TurbineEnum.Participation:
                         checkPariticipation(prefix, value);
+                        //Log the Current status of the lists
+                        logCurrentList();
                         break;
                     default:
                         log.DebugFormat("Event CHanged detected for {0}. However, there is nothing to be doen", opcTag);
@@ -496,6 +503,9 @@ namespace Articuno
             {
                 turbinesWaitingForPause.Remove(turbineId);
                 turbinesConditionNotMet.Add(turbineId);
+                //Log the Current status of the lists
+                logCurrentList();
+
             }
         }
 
@@ -508,6 +518,9 @@ namespace Articuno
             {
                 turbinesWaitingForPause.Add(turbineId);
                 turbinesConditionNotMet.Remove(turbineId);
+                //Log the Current status of the lists
+                logCurrentList();
+
             }
         }
 
@@ -521,6 +534,9 @@ namespace Articuno
             turbinesWaitingForPause.Remove(turbineId);
             turbinesPausedByArticuno.Add(turbineId);
             OpcServer.writeOpcTag(opcServerName, numTurbinesPausedTag, turbinesPausedByArticuno.Count);
+            //Log the Current status of the lists
+            logCurrentList();
+
         }
 
         /// <summary>
@@ -533,11 +549,22 @@ namespace Articuno
             turbinesPausedByArticuno.Remove(turbineId);
             //Update the num turb paused
             OpcServer.writeOpcTag(opcServerName, numTurbinesPausedTag, turbinesPausedByArticuno.Count);
+            //Log the Current status of the lists
+            logCurrentList();
+
         }
 
         public static bool isAlreadyPaused(string turbineId)
         {
             return turbinesPausedByArticuno.Contains(turbineId);
+        }
+
+        public static void logCurrentList()
+        {
+            log.InfoFormat("Turbines Waiting for Pause: {0}", string.Join(",", turbinesWaitingForPause));
+            log.InfoFormat("Turbines paused by Articuno: {0}", string.Join(",", turbinesPausedByArticuno));
+            log.InfoFormat("Turbines exlucded from Articuno: {0}", string.Join(",", turbinesExcludedList));
+            log.InfoFormat("Turbines awaiting proper condition: {0}", string.Join(",", turbinesConditionNotMet));
         }
     }
 }
