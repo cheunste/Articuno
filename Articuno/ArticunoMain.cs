@@ -49,7 +49,7 @@ namespace Articuno
         static string numTurbinesPausedTag;
 
         //Constants
-        private static int ONE_MINUTE_POLLING = 60 * 100;
+        private static int ONE_MINUTE_POLLING = 60 * 1000;
         private static int HEARTBEAT_POLLING = 15 * 1000;
         private static int NOISE_LEV = 5;
         private static int RUN_STATE = 100;
