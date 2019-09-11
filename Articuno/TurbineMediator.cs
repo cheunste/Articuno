@@ -251,11 +251,11 @@ namespace Articuno
         }
 
         //These are functions called by the main Articuno class to set an icing protocol condition given a turbine. Remember, the turbine should pause automatically independently of each other
-        public void setTemperatureCondition(string turbineId, bool state) { log.InfoFormat("Temperature condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setTemperatureCondition(state); }
-        public void setOperatingStateCondition(string turbineId, bool state) { log.InfoFormat("Operating status condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setOperatingStateCondition(state); }
-        public void setNrscondition(string turbineId, bool state) { log.InfoFormat("NRS Condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setNrsCondition(state); }
-        public void setTurbinePerformanceCondition(string turbineId, bool state) { log.InfoFormat("Turbine Performance condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setTurbinePerformanceCondition(state); }
-        public void setDeRateCondition(string turbineId, bool state) { log.InfoFormat("De Rate condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setDeRateCondition(state); }
+        public void setTemperatureCondition(string turbineId, bool state) { log.DebugFormat("Temperature condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setTemperatureCondition(state); }
+        public void setOperatingStateCondition(string turbineId, bool state) { log.DebugFormat("Operating status condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setOperatingStateCondition(state); }
+        public void setNrscondition(string turbineId, bool state) { log.DebugFormat("NRS Condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setNrsCondition(state); }
+        public void setTurbinePerformanceCondition(string turbineId, bool state) { log.DebugFormat("Turbine Performance condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setTurbinePerformanceCondition(state); }
+        public void setDeRateCondition(string turbineId, bool state) { log.DebugFormat("De Rate condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setDeRateCondition(state); }
 
         /// <summary>
         /// force a check Ice condition given a turbine Id. Should only be used in testing only

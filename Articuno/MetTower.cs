@@ -65,7 +65,7 @@ namespace Articuno
         public Object RelativeHumidityValue
         {
             set { OpcServer.writeOpcTag( opcServerName, RelativeHumidityTag, value); }
-            get { return OpcServer.readOpcTag( opcServerName, RelativeHumidityTag); }
+            get { return OpcServer.readAnalogTag( opcServerName, RelativeHumidityTag); }
         }
 
         /// <summary>
@@ -75,7 +75,7 @@ namespace Articuno
 
         public Object PrimTemperatureValue
         {
-            get { return OpcServer.readOpcTag( opcServerName, PrimTemperatureTag); }
+            get { return OpcServer.readAnalogTag( opcServerName, PrimTemperatureTag); }
             set { OpcServer.writeOpcTag( opcServerName, PrimTemperatureTag, value); }
         }
 
@@ -88,7 +88,7 @@ namespace Articuno
         /// </summary>
         public Object SecTemperatureValue
         {
-            get { return OpcServer.readOpcTag( opcServerName, SecTemperatureTag); }
+            get { return OpcServer.readAnalogTag( opcServerName, SecTemperatureTag); }
             set { OpcServer.writeOpcTag( opcServerName, SecTemperatureTag, value); }
         }
 
@@ -99,7 +99,7 @@ namespace Articuno
         /// </summary>
         /// <returns></returns>
         public string NoDataAlarmTag { set; get; }
-        public Object NoDataAlarmValue { set { OpcServer.writeOpcTag( opcServerName, NoDataAlarmTag, value); } get { return OpcServer.readOpcTag( opcServerName, NoDataAlarmTag); } }
+        public Object NoDataAlarmValue { set { OpcServer.writeOpcTag( opcServerName, NoDataAlarmTag, value); } get { return OpcServer.readBooleanTag( opcServerName, NoDataAlarmTag); } }
 
         /// <summary>
         /// Gets the IceIndicationValue OPC Value
@@ -108,7 +108,7 @@ namespace Articuno
         public string IceIndicationTag { set; get; }
         public Object IceIndicationValue
         {
-            get { return OpcServer.readOpcTag( opcServerName, IceIndicationTag); }
+            get { return OpcServer.readBooleanTag( opcServerName, IceIndicationTag); }
             set { OpcServer.writeOpcTag( opcServerName, IceIndicationTag, value); }
         }
 
@@ -137,38 +137,38 @@ namespace Articuno
         //The following are for humidity out of range, bad quality, etc.
         public Object HumidityOutOfRng
         {
-            get { return OpcServer.readOpcTag( opcServerName, HumidtyOutOfRangeTag); }
+            get { return OpcServer.readBooleanTag( opcServerName, HumidtyOutOfRangeTag); }
             set { OpcServer.writeOpcTag( opcServerName, HumidtyOutOfRangeTag, value); }
         }
 
         public Object HumidityBadQuality
         {
-            get { return OpcServer.readOpcTag( opcServerName, HumidityBadQualityTag); }
+            get { return OpcServer.readBooleanTag( opcServerName, HumidityBadQualityTag); }
             set { OpcServer.writeOpcTag( opcServerName, HumidityBadQualityTag, value); }
         }
 
         //The following are for temperature out of range, bad quality
         public Object TemperaturePrimOutOfRange
         {
-            get { return OpcServer.readOpcTag( opcServerName, TemperaturePrimOutOfRangeTag); }
+            get { return OpcServer.readBooleanTag( opcServerName, TemperaturePrimOutOfRangeTag); }
             set { OpcServer.writeOpcTag( opcServerName, TemperaturePrimOutOfRangeTag, value); }
         }
 
         public Object TemperaturePrimBadQuality
         {
-            get { return OpcServer.readOpcTag( opcServerName, TemperaturePrimOutOfRangeTag); }
+            get { return OpcServer.readBooleanTag( opcServerName, TemperaturePrimOutOfRangeTag); }
             set { OpcServer.writeOpcTag( opcServerName, TemperaturePrimOutOfRangeTag, value); }
         }
 
         public Object TemperatureSecOutOfRange
         {
-            get { return OpcServer.readOpcTag( opcServerName, TemperatureSecOutOfRangeTag); }
+            get { return OpcServer.readBooleanTag( opcServerName, TemperatureSecOutOfRangeTag); }
             set { OpcServer.writeOpcTag( opcServerName, TemperatureSecOutOfRangeTag, value); }
         }
 
         public Object TemperatureSecBadQuality
         {
-            get { return OpcServer.readOpcTag( opcServerName, TemperatureSecOutOfRangeTag); }
+            get { return OpcServer.readBooleanTag( opcServerName, TemperatureSecOutOfRangeTag); }
             set { OpcServer.writeOpcTag( opcServerName, TemperatureSecOutOfRangeTag, value); }
         }
 
@@ -183,7 +183,7 @@ namespace Articuno
             //DAVtq vtq = (DAVtq) OpcServer.readOpcTag(opcServerName, opcTag);
             //return vtq.Quality.IsGood ? true : false;
 
-            return OpcServer.readOpcTagQuality(opcServerName, opcTag);
+            return Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, opcTag));
         }
 
         //Met Id methods

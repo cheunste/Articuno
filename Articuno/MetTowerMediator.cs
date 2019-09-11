@@ -427,37 +427,37 @@ namespace Articuno
             {
                 case MetTowerEnum.HumidityOutOfRange:
                     if (Convert.ToBoolean(mt.HumidityOutOfRng) != Convert.ToBoolean(status))
-                        log.InfoFormat("{0} Humidity sensor out of range alarm {1}. Humidity Value: {2}", mt.getMetTowerPrefix, logComment, mt.RelativeHumidityValue);
+                        log.DebugFormat("{0} Humidity sensor out of range alarm {1}. Humidity Value: {2}", mt.getMetTowerPrefix, logComment, mt.RelativeHumidityValue);
                     mt.HumidityOutOfRng = Convert.ToBoolean(status);
                     break;
                 case MetTowerEnum.HumidityQuality:
                     if (Convert.ToBoolean(mt.HumidityBadQuality) != Convert.ToBoolean(status))
-                        log.InfoFormat("{0} Humidity sensor bad status alarm {1}. Humidity Value {2}", mt.getMetTowerPrefix, logComment, mt.RelativeHumidityValue);
+                        log.DebugFormat("{0} Humidity sensor bad status alarm {1}. Humidity Value {2}", mt.getMetTowerPrefix, logComment, mt.RelativeHumidityValue);
                     mt.HumidityBadQuality = Convert.ToBoolean(status);
                     break;
                 case MetTowerEnum.PrimSensorQuality:
                     if (Convert.ToBoolean(mt.TemperaturePrimBadQuality) != Convert.ToBoolean(status))
-                        log.InfoFormat("{0} Primary Temperature sensor quality status alarm {1}. Primary Temp: {2}", mt.getMetTowerPrefix, logComment, mt.PrimTemperatureValue);
+                        log.DebugFormat("{0} Primary Temperature sensor quality status alarm {1}. Primary Temp: {2}", mt.getMetTowerPrefix, logComment, mt.PrimTemperatureValue);
                     mt.TemperaturePrimBadQuality = Convert.ToBoolean(status);
                     break;
                 case MetTowerEnum.PrimSensorOutOfRange:
                     if (Convert.ToBoolean(mt.TemperaturePrimOutOfRange) != Convert.ToBoolean(status))
-                        log.InfoFormat("{0} Primary Temperature sensor out of range alarm {1}. Primary Temp: {2}. Alarm Status:{3}", mt.getMetTowerPrefix, logComment, mt.PrimTemperatureValue, status);
+                        log.DebugFormat("{0} Primary Temperature sensor out of range alarm {1}. Primary Temp: {2}. Alarm Status:{3}", mt.getMetTowerPrefix, logComment, mt.PrimTemperatureValue, status);
                     mt.TemperaturePrimOutOfRange = Convert.ToBoolean(status);
                     break;
                 case MetTowerEnum.SecSensorQuality:
                     if (Convert.ToBoolean(mt.TemperatureSecBadQuality) != Convert.ToBoolean(status))
-                        log.InfoFormat("{0} Secondary Temperature sensor quality status alarm {1}. Sec Temp: {2}", mt.getMetTowerPrefix, logComment, mt.SecTemperatureValue);
+                        log.DebugFormat("{0} Secondary Temperature sensor quality status alarm {1}. Sec Temp: {2}", mt.getMetTowerPrefix, logComment, mt.SecTemperatureValue);
                     mt.TemperatureSecBadQuality = Convert.ToBoolean(status);
                     break;
                 case MetTowerEnum.SecSensorOutOfRange:
                     if (Convert.ToBoolean(mt.TemperatureSecOutOfRange) != Convert.ToBoolean(status))
-                        log.InfoFormat("{0} Secondary Temperature sensor out of range alarm {1}. Sec Temp: {2}", mt.getMetTowerPrefix, logComment, mt.SecTemperatureValue);
+                        log.DebugFormat("{0} Secondary Temperature sensor out of range alarm {1}. Sec Temp: {2}", mt.getMetTowerPrefix, logComment, mt.SecTemperatureValue);
                     mt.TemperatureSecOutOfRange = Convert.ToBoolean(status);
                     break;
                 case MetTowerEnum.NoData:
                     if (Convert.ToBoolean(mt.NoDataAlarmValue) != Convert.ToBoolean(status))
-                        log.InfoFormat("{0} No Data alarm {1}. NoData Alarm Value {2}", mt.getMetTowerPrefix, logComment, mt.NoDataAlarmValue);
+                        log.DebugFormat("{0} No Data alarm {1}. NoData Alarm Value {2}", mt.getMetTowerPrefix, logComment, mt.NoDataAlarmValue);
                     mt.NoDataAlarmValue = Convert.ToBoolean(status);
                     break;
             }
@@ -520,7 +520,7 @@ namespace Articuno
                 try
                 {
                     met.IceIndicationValue = true;
-                    log.InfoFormat("Icing conditions met for {0}. \n" +
+                    log.DebugFormat("Icing conditions met for {0}. \n" +
                         "{0} Average Temperature {1}, \n" +
                         "{0} Temperature threshold {2} \n",
                         metId, avgTemperature, tempThreshold);

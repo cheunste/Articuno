@@ -64,15 +64,15 @@ namespace Articuno
         }
 
         //Methods to read the value for the wind speed, rotor speed, etc. value from the OPC Server
-        public Object readWindSpeedValue() { return OpcServer.readOpcTag(OpcServerName, WindSpeedTag); }
-        public Object readRotorSpeedValue() { return OpcServer.readOpcTag(OpcServerName, RotorSpeedTag); }
-        public Object readOperatingStateValue() { return OpcServer.readOpcTag(OpcServerName, OperatingStateTag); }
-        public Object readNrsStateValue() {return OpcServer.readOpcTag(OpcServerName,NrsStateTag);}
-        public Object readTemperatureValue() {return OpcServer.readOpcTag(OpcServerName,TemperatureTag);}
+        public Object readWindSpeedValue() { return OpcServer.readAnalogTag(OpcServerName, WindSpeedTag); }
+        public Object readRotorSpeedValue() { return OpcServer.readAnalogTag(OpcServerName, RotorSpeedTag); }
+        public Object readOperatingStateValue() { return OpcServer.readAnalogTag(OpcServerName, OperatingStateTag); }
+        public Object readNrsStateValue() {return OpcServer.readAnalogTag(OpcServerName,NrsStateTag);}
+        public Object readTemperatureValue() {return OpcServer.readAnalogTag(OpcServerName,TemperatureTag);}
 
-        public Object readTurbineScalingFactorValue() {return OpcServer.readOpcTag(OpcServerName,ScalingFactorTag);}
-        public Object readParticipationValue() {return OpcServer.readOpcTag(OpcServerName,ParticipationTag);}
-        public Object readAlarmValue() {return OpcServer.readOpcTag(OpcServerName,AlarmTag);}
+        public Object readTurbineScalingFactorValue() {return OpcServer.readAnalogTag(OpcServerName,ScalingFactorTag);}
+        public Object readParticipationValue() {return OpcServer.readAnalogTag(OpcServerName,ParticipationTag);}
+        public Object readAlarmValue() {return OpcServer.readAnalogTag(OpcServerName,AlarmTag);}
         public int readCtrCurrentValue() { return ctrCountDown; }
 
         //public Accessors (Getters and Setters)  to set the member variables to the  OPC tag
@@ -99,7 +99,7 @@ namespace Articuno
         //Load shutdown function. Probably the most important function
         public double writeLoadShutdownCmd()
         {
-            log.InfoFormat("Shutdown command for {0} has been sent", this.TurbinePrefix);
+            log.DebugFormat("Shutdown command for {0} has been sent", this.TurbinePrefix);
             try
             {
                 OpcServer.writeOpcTag(OpcServerName, this.LoadShutdownTag, 1.00);
@@ -118,7 +118,7 @@ namespace Articuno
         public void decrementCtrTime()
         {
             ctrCountDown--;
-            log.DebugFormat("{0} Current CTR: {1}", getTurbinePrefixValue(), ctrCountDown);
+            log.InfoFormat("{0} Current CTR: {1}", getTurbinePrefixValue(), ctrCountDown);
             if (ctrCountDown <= 0)
             {
                 log.InfoFormat("CTR period for Turbine {0} reached Zero.", getTurbinePrefixValue());
@@ -174,12 +174,12 @@ namespace Articuno
 
             if (frozenCondition)
             {
-                log.InfoFormat("Icing conditions satisfied for {0}", getTurbinePrefixValue());
+                log.DebugFormat("Icing conditions satisfied for {0}", getTurbinePrefixValue());
                 pauseByArticuno(true);
             }
             else
             {
-                log.InfoFormat("No ice detected for turbine {0}", getTurbinePrefixValue());
+                log.DebugFormat("No ice detected for turbine {0}", getTurbinePrefixValue());
                 pauseByArticuno(false);
             }
         }
@@ -229,13 +229,13 @@ namespace Articuno
             //Unblock Turbine from AGC
             blockTurbine(false);
 
-            log.InfoFormat("Start Command Received for Turbine {0}", getTurbinePrefixValue());
+            log.DebugFormat("Start Command Received for Turbine {0}", getTurbinePrefixValue());
             //Give the turbine some time to start 
             System.Threading.Thread.Sleep(STARTUP_TIME_BUFFER);
-            log.InfoFormat("Waiting {0} seconds to allow turbine to start up....", STARTUP_TIME_BUFFER);
+            log.DebugFormat("Waiting {0} seconds to allow turbine to start up....", STARTUP_TIME_BUFFER);
             writeAlarmTagValue(false);
             emptyQueue();
-            log.InfoFormat("Turbine {0} CTR Value reset to: {1}", getTurbinePrefixValue(), TurbineCtr);
+            log.DebugFormat("Turbine {0} CTR Value reset to: {1}", getTurbinePrefixValue(), TurbineCtr);
             this.ctrCountDown = Convert.ToInt32(TurbineCtr);
         }
 
