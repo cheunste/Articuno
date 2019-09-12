@@ -13,10 +13,10 @@ namespace ArticunoTest
     public class TurbineTest
     {
         TurbineMediator tm;
-        ArticunoMain am;
+        Articuno.Articuno am;
         public TurbineTest()
         {
-            am = new ArticunoMain();
+            am = new Articuno.Articuno();
 
             //Must create the MetTowersingleton first
             MetTowerMediator.Instance.createMetTower();
@@ -140,7 +140,7 @@ namespace ArticunoTest
         [DataRow("T001", true)]
         public void AlgorithmTest(string turbineId, bool state)
         {
-            ArticunoMain am = new ArticunoMain();
+            Articuno.Articuno am = new Articuno.Articuno();
 
             //Reset the CTR time and start the turbine. Set the CTR for one minute
             tm.setCtrTime(turbineId, 1);

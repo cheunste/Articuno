@@ -403,11 +403,11 @@ namespace Articuno
         public void updateMain(TurbineEnum status, string turbineId)
         {
             if (status.Equals(TurbineEnum.PausedByArticuno))
-                ArticunoMain.turbinePausedByArticuno(turbineId);
+                Articuno.turbinePausedByArticuno(turbineId);
             else
-                ArticunoMain.turbineClearedOfIce(turbineId);
+                Articuno.turbineClearedOfIce(turbineId);
         }
 
-        public bool isTurbinePaused(string turbinePrefix) { return ArticunoMain.isAlreadyPaused(turbinePrefix); }
+        public bool isTurbinePaused(string turbinePrefix) { return Articuno.isAlreadyPaused(turbinePrefix); }
     }
 }

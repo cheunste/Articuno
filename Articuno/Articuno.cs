@@ -11,10 +11,11 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Timers;
+using Topshelf;
 
 namespace Articuno
 {
-    sealed internal class ArticunoMain
+    sealed internal class Articuno
     {
         /*
          * These are Lists that are used to keep turbines organized on a site level using their Prefixes (ie T001)
@@ -56,7 +57,7 @@ namespace Articuno
         private static int DRAFT_STATE = 75;
 
         //Log
-        private static readonly ILog log = LogManager.GetLogger(typeof(ArticunoMain));
+        private static readonly ILog log = LogManager.GetLogger(typeof(Articuno));
 
         //Singleton instance declarations
         private static DatabaseInterface dbi;
@@ -64,7 +65,7 @@ namespace Articuno
         private static TurbineMediator tm;
 
         //Constructor. This is only used for unit testing purposes
-        public ArticunoMain()
+        public Articuno()
         {
             dbi = DatabaseInterface.Instance;
             mm = MetTowerMediator.Instance;
@@ -82,6 +83,7 @@ namespace Articuno
 
         static void Main(string[] args)
         {
+
             dbi = DatabaseInterface.Instance;
             mm = MetTowerMediator.Instance;
             tm = TurbineMediator.Instance;
