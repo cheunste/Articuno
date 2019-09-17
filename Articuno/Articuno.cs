@@ -6,6 +6,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -81,7 +82,7 @@ namespace Articuno
             setup();
         }
 
-        static void Main(string[] args)
+        public static void Main(object sender, FileSystemEventArgs e)
         {
 
             dbi = DatabaseInterface.Instance;
@@ -123,14 +124,14 @@ namespace Articuno
             heartBeatTimer.Start();
 
             //start of the infinite loop
-            while (true)
-            {
-                //Run only if articuno is enabled. If not, then wait until something occurs
-                while (articunoEnable)
-                {
+            //while ()
+            //{
+            //    //Run only if articuno is enabled. If not, then wait until something occurs
+            //    //while (articunoEnable)
+            //    //{
 
-                }
-            }
+            //    //}
+            //}
         }
         public static void setup()
         {
@@ -228,6 +229,11 @@ namespace Articuno
             OpcServer.writeOpcTag(opcServerName, heartBeatTag,
                 !Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, heartBeatTag))
                 );
+            gatherSamples();
+        }
+        private static void gatherSamples()
+        {
+
         }
         /// <summary>
         /// Function to handle tasks that should be executed every minute (ie get temperature measurements) and every CTR minute (ie check rotor speed, run calculations, etc.) 
