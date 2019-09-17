@@ -233,14 +233,8 @@ namespace Articuno
         }
         private static void gatherSamples()
         {
-
-        }
-        /// <summary>
-        /// Function to handle tasks that should be executed every minute (ie get temperature measurements) and every CTR minute (ie check rotor speed, run calculations, etc.) 
-        /// </summary>
-        private static void minuteUpdate(object sender, ElapsedEventArgs e)
-        {
-            //For every minute, read the met tower measurements and the turbine temperature measurements
+            //For every heartbeat interval, read the met tower measurements and the turbine temperature measurements
+            //This is so more measurements can be gathered to get a more accurate average after every CTR period
             for (int i = 1; i <= MetTowerMediator.getNumMetTower(); i++)
             {
                 //This is needed because apparently Met Tower 1 is unnumbered.
@@ -257,7 +251,12 @@ namespace Articuno
             //Call the storeWindSpeed function to store a wind speed average into a turbine queue (for all turbines in the list)
             foreach (string prefix in tm.getTurbinePrefixList()) { tm.storeMinuteAverages(prefix); }
 
-
+        }
+        /// <summary>
+        /// Function to handle tasks that should be executed every minute (ie get temperature measurements) and every CTR minute (ie check rotor speed, run calculations, etc.) 
+        /// </summary>
+        private static void minuteUpdate(object sender, ElapsedEventArgs e)
+        {
             //For every CTR minute, do the other calculation stuff. Better set up a  member variable here
             ctrCountdown--;
             if (ctrCountdown == 0)
@@ -282,7 +281,6 @@ namespace Articuno
 
                 //Log the contents in the list for debugging purposes
                 logCurrentList();
-
             }
 
             //Tell the turbines to Decrement thier internal CTR Time. Must be after the met tower code or else turbine might not respond to a met tower icing change event

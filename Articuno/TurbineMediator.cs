@@ -372,7 +372,6 @@ namespace Articuno
         public void decrementTurbineCtrTime()
         {
             foreach (string turbinePrefix in getTurbinePrefixList()) { getTurbine(turbinePrefix).decrementCtrTime(); }
-
         }
 
 
