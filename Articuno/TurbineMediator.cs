@@ -152,6 +152,9 @@ namespace Articuno
 
                 turbine.AlarmTag = reader.Rows[0]["Alarm"].ToString();
                 turbine.AgcBlockingTag = reader.Rows[0]["AGCBlocking"].ToString();
+                turbine.NrsConditionFlag = reader.Rows[0]["NRSFlag"].ToString();
+                turbine.LowRotorSpeedFlagTag = reader.Rows[0]["LowRotorSpeedFlag"].ToString();
+                turbine.CtrCountdownTag = reader.Rows[0]["CTRCountdown"].ToString();
                 //turbine.LoadShutdownTag = reader.Rows[0]["Pause"].ToString();
                 //turbine.StartCommandTag = reader.Rows[0]["Start"].ToString();
 
@@ -233,7 +236,7 @@ namespace Articuno
         /// </summary>
         /// <param name="value"></param>
         public void setCtrTime(string turbineId, int ctrValue) { getTurbine(turbineId).writeTurbineCtrValue(ctrValue); }
-        public int getCtrCountdown(string turbineId) { return getTurbine(turbineId).readCtrCurrentValue(); }
+        public int getCtrCountdown(string turbineId) { return (int) getTurbine(turbineId).readCtrCurrentValue(); }
 
         /// <summary>
         /// Used for testing only. This creates a testing scenario that uses only T001 
@@ -314,11 +317,13 @@ namespace Articuno
         /// </summary>
         /// <param name="turbineId">turbine prefix in string</param>
         //Note all vars are doubles here
-        public void RotorSpeedCheck(string turbineId)
+        public bool RotorSpeedCheck(string turbineId)
         {
             Turbine turbine = getTurbine(turbineId);
             Queue<double> windSpeedQueue = turbine.getWindSpeedQueue();
             Queue<double> rotorSpeedQueue = turbine.getRotorSpeedQueue();
+
+            bool lowRotorSpeedCondition = false;
 
             //bool nrsMode = Convert.ToBoolean(turbine.readNrsStateValue());
             bool nrsMode = Convert.ToInt16(turbine.readNrsStateValue()) >= 5 ? true : false;
@@ -340,11 +345,12 @@ namespace Articuno
             var currentScalingFactor = Convert.ToDouble(turbine.readTurbineScalingFactorValue());
 
             //Set under performance condition to be true. Else, clear it
-            if ((rotorSpeedAverage / rotorSpeedQueueCount) < referenceRotorSpeed - (currentScalingFactor * referenceStdDev)) { turbine.setTurbinePerformanceCondition(true); }
-            else { turbine.setTurbinePerformanceCondition(false); }
+            if ((rotorSpeedAverage / rotorSpeedQueueCount) < referenceRotorSpeed - (currentScalingFactor * referenceStdDev)) { turbine.setTurbinePerformanceCondition(true); lowRotorSpeedCondition = true; }
+            else { turbine.setTurbinePerformanceCondition(false); lowRotorSpeedCondition = false; }
 
             //For sanity check, make sure the windSPeedQueue is empty 
             turbine.emptyQueue();
+            return lowRotorSpeedCondition;
         }
 
         /// <summary>

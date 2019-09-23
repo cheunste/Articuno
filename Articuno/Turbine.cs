@@ -73,7 +73,7 @@ namespace Articuno
         public Object readTurbineScalingFactorValue() {return OpcServer.readAnalogTag(OpcServerName,ScalingFactorTag);}
         public Object readParticipationValue() {return OpcServer.readAnalogTag(OpcServerName,ParticipationTag);}
         public Object readAlarmValue() {return OpcServer.readAnalogTag(OpcServerName,AlarmTag);}
-        public int readCtrCurrentValue() { return ctrCountDown; }
+        public Object readCtrCurrentValue() { return OpcServer.readAnalogTag(OpcServerName,CtrCountdownTag); }
 
         //public Accessors (Getters and Setters)  to set the member variables to the  OPC tag
         // Not entirely sure if these should be public or not, but it does make reading code easier
@@ -81,7 +81,6 @@ namespace Articuno
         public string RotorSpeedTag { set; get; }
         public string OperatingStateTag { set; get; }
         public string NrsStateTag { set; get; }
-        public string LoadShutdownTag { set; get; }
         public string StartCommandTag { internal set; get; }
         public string TurbineCtr { set; get; }
         public string TemperatureTag { set; get; }
@@ -91,7 +90,13 @@ namespace Articuno
         public string AlarmTag { set; get; }
         public string TurbinePrefix { set; get; }
         public string DeRate { set; get; }
+        
+        //THese four tags are meant for Articuno to write to.
+        public string LoadShutdownTag { set; get; }
         public string AgcBlockingTag { set; get; }
+        public string LowRotorSpeedFlagTag { get; set; }
+        public string CtrCountdownTag { get; set; }
+        public string NrsConditionFlag { get; set; }
 
         //Theses are used to write to the OP Tag Values.  There shouldn't be too many of these
         public void writeTurbineCtrValue(int articunoCtrValue) { TurbineCtr = articunoCtrValue.ToString(); ctrCountDown = articunoCtrValue; }
@@ -119,13 +124,15 @@ namespace Articuno
         {
             ctrCountDown--;
             log.InfoFormat("{0} Current CTR: {1}", getTurbinePrefixValue(), ctrCountDown);
-            if (ctrCountDown <= 0)
+            OpcServer.writeOpcTag(OpcServerName,CtrCountdownTag, ctrCountDown);
+            if (ctrCountDown < 0)
             {
                 log.InfoFormat("CTR period for Turbine {0} reached Zero.", getTurbinePrefixValue());
                 //Reset CTR countdown
                 ctrCountDown = Convert.ToInt32(TurbineCtr);
                 //Call the RotorSPeedCheck function to compare rotor speed for all turbines
-                tm.RotorSpeedCheck(getTurbinePrefixValue());
+                bool lowRotorSpeedCondition = tm.RotorSpeedCheck(getTurbinePrefixValue());
+                OpcServer.writeOpcTag(OpcServerName, this.LowRotorSpeedFlagTag,lowRotorSpeedCondition);
 
                 //Does Check the rest of the icing conditions
                 checkIcingConditions();
@@ -147,6 +154,7 @@ namespace Articuno
             //Reset CTR in this condition and empty queue. Essentually, start from scratch
             //This is because a turbine must remain in its NRS without level change the ENTIRE CTR period.
             this.ctrCountDown = Convert.ToInt32(TurbineCtr);
+            OpcServer.writeOpcTag(OpcServerName, NrsConditionFlag, state);
             emptyQueue();
         }
         public void setTurbinePerformanceCondition(bool state) { turbinePerformanceConditionMet = state; }
