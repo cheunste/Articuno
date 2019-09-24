@@ -76,6 +76,7 @@ namespace Articuno
         public Object readCtrCurrentValue() { return OpcServer.readAnalogTag(OpcServerName, CtrCountdownTag); }
         public Object readNrsFlagConditionValue() { return OpcServer.readAnalogTag(OpcServerName, NrsConditionFlagTag); }
         public Object readLowRotorSpeedFlagValue() { return OpcServer.readAnalogTag(OpcServerName, LowRotorSpeedFlagTag); }
+        public Object readAgcBlockValue() { return OpcServer.readBooleanTag(OpcServerName, AgcBlockingTag); }
 
         //public Accessors (Getters and Setters)  to set the member variables to the  OPC tag
         // Not entirely sure if these should be public or not, but it does make reading code easier

@@ -172,6 +172,8 @@ namespace ArticunoTest
             Assert.AreEqual(true, turbine.readNrsFlagConditionValue(),"Turbine NRS is not true");
             Assert.IsTrue(Convert.ToInt32(turbine.readCtrCurrentValue()) < 1,"CTR was not less than 1");
             Assert.IsTrue(Convert.ToBoolean(turbine.readLowRotorSpeedFlagValue()),"Low Rotor Speed flag not triggered");
+            //Assert.AreEqual(1,Convert.ToBoolean(turbine.readAgcBlockValue()),"AGC for turbine isn't being blocked");
+            Assert.AreEqual(0,Convert.ToInt32(turbine.readAgcBlockValue()));
         }
 
         [TestMethod]

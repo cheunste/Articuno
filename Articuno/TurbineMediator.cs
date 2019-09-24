@@ -346,7 +346,7 @@ namespace Articuno
             var currentScalingFactor = Convert.ToDouble(turbine.readTurbineScalingFactorValue());
 
             //Set under performance condition to be true. Else, clear it
-            if ((rotorSpeedAverage / rotorSpeedQueueCount) < referenceRotorSpeed - (currentScalingFactor * referenceStdDev)) { turbine.setTurbinePerformanceCondition(true); lowRotorSpeedCondition = true; }
+            if ((rotorSpeedAverage / rotorSpeedQueueCount) < referenceRotorSpeed - (currentScalingFactor * referenceStdDev)) { turbine.setTurbinePerformanceCondition(true); }
             else { turbine.setTurbinePerformanceCondition(false); }
 
             //For sanity check, make sure the windSPeedQueue is empty 
