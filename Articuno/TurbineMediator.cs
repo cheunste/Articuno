@@ -152,7 +152,7 @@ namespace Articuno
 
                 turbine.AlarmTag = reader.Rows[0]["Alarm"].ToString();
                 turbine.AgcBlockingTag = reader.Rows[0]["AGCBlocking"].ToString();
-                turbine.NrsConditionFlag = reader.Rows[0]["NRSFlag"].ToString();
+                turbine.NrsConditionFlagTag = reader.Rows[0]["NRSFlag"].ToString();
                 turbine.LowRotorSpeedFlagTag = reader.Rows[0]["LowRotorSpeedFlag"].ToString();
                 turbine.CtrCountdownTag = reader.Rows[0]["CTRCountdown"].ToString();
                 //turbine.LoadShutdownTag = reader.Rows[0]["Pause"].ToString();
@@ -198,13 +198,16 @@ namespace Articuno
         public List<Turbine> getTurbineList() { return turbineList; }
 
 
-        //Get methods to get the OPC Tag given a turbine Id
+        //Get methods to get the OPC Tag given a turbine Id. Mainly used for test methods
         public string getTurbineWindSpeedTag(string turbineId) { return getTurbine(turbineId).WindSpeedTag; }
         public string getRotorSpeedTag(string turbineId) { return getTurbine(turbineId).RotorSpeedTag; }
         public string getOperatingStateTag(string turbineId) { return getTurbine(turbineId).OperatingStateTag; }
         public string getNrsStateTag(string turbineId) { return getTurbine(turbineId).NrsStateTag; }
         public string getTemperatureTag(string turbineId) { return getTurbine(turbineId).TemperatureTag; }
         public string getLoadShutdownTag(string turbineId) { return getTurbine(turbineId).LoadShutdownTag; }
+        public string getParticipationState(string turbineId) { return getTurbine(turbineId).ParticipationTag; }
+        public string getLowRotorSpeedFlag(string turbineId) { return getTurbine(turbineId).LowRotorSpeedFlagTag; }
+        public string getCtrRemaining(string turbineId) { return getTurbine(turbineId).CtrCountdownTag; }
 
         public int getTurbineCtrTime(string turbineId) { return Convert.ToInt32(getTurbine(turbineId).TurbineCtr); }
         public string getHumidityTag(string turbineId) { return getTurbine(turbineId).TurbineHumidityTag; }
@@ -317,13 +320,11 @@ namespace Articuno
         /// </summary>
         /// <param name="turbineId">turbine prefix in string</param>
         //Note all vars are doubles here
-        public bool RotorSpeedCheck(string turbineId)
+        public void RotorSpeedCheck(string turbineId)
         {
             Turbine turbine = getTurbine(turbineId);
             Queue<double> windSpeedQueue = turbine.getWindSpeedQueue();
             Queue<double> rotorSpeedQueue = turbine.getRotorSpeedQueue();
-
-            bool lowRotorSpeedCondition = false;
 
             //bool nrsMode = Convert.ToBoolean(turbine.readNrsStateValue());
             bool nrsMode = Convert.ToInt16(turbine.readNrsStateValue()) >= 5 ? true : false;
@@ -346,11 +347,10 @@ namespace Articuno
 
             //Set under performance condition to be true. Else, clear it
             if ((rotorSpeedAverage / rotorSpeedQueueCount) < referenceRotorSpeed - (currentScalingFactor * referenceStdDev)) { turbine.setTurbinePerformanceCondition(true); lowRotorSpeedCondition = true; }
-            else { turbine.setTurbinePerformanceCondition(false); lowRotorSpeedCondition = false; }
+            else { turbine.setTurbinePerformanceCondition(false); }
 
             //For sanity check, make sure the windSPeedQueue is empty 
             turbine.emptyQueue();
-            return lowRotorSpeedCondition;
         }
 
         /// <summary>

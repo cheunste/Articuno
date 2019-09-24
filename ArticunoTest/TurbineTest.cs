@@ -165,8 +165,13 @@ namespace ArticunoTest
             tm.checkIcingConditions(turbineId);
             System.Threading.Thread.Sleep(500);
 
+            //The following asserts are for feedback tags 
+            Turbine turbine = TurbineMediator.getTurbine(turbineId);
             Assert.AreEqual(state,TurbineMediator.Instance.isPausedByArticuno(turbineId));
-
+            Assert.AreEqual(true, turbine.readParticipationValue(),"Turbine is not showing particiating state");
+            Assert.AreEqual(true, turbine.readNrsFlagConditionValue(),"Turbine NRS is not true");
+            Assert.IsTrue(Convert.ToInt32(turbine.readCtrCurrentValue()) < 1,"CTR was not less than 1");
+            Assert.IsTrue(Convert.ToBoolean(turbine.readLowRotorSpeedFlagValue()),"Low Rotor Speed flag not triggered");
         }
 
         [TestMethod]
