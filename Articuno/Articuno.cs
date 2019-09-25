@@ -428,16 +428,18 @@ namespace Articuno
                 conditionsNotMet(turbineId);
                 tm.setOperatingStateCondition(turbineId, false);
             }
-
-
         }
+        //Method that is executed when user checks/unchecks a turbine from participating in Articuno
         private static void checkPariticipation(string turbineId, object value)
         {
             bool partipationStatus = Convert.ToBoolean(value);
-            //do nothing if turbine is already in paused
+            //do nothing if turbine is already in paused by Articuno
             if (isPausedByArticuno(turbineId)) { }
-            if (partipationStatus == false && !turbinesExcludedList.Contains(turbineId)) { conditionsNotMet(turbineId); }
-            else { conditionsMet(turbineId); }
+            if (partipationStatus == false && !turbinesExcludedList.Contains(turbineId))
+            {
+                turbinesExcludedList.Add(turbineId);
+            }
+            else { turbinesExcludedList.Remove(turbineId); }
         }
         //This is a method that is triggered upon any value changes for certain OPC Tags
         static void assetTagChangeHandler(object sender, EasyDAItemChangedEventArgs e)
@@ -509,10 +511,10 @@ namespace Articuno
             {
                 turbinesWaitingForPause.Remove(turbineId);
                 turbinesConditionNotMet.Add(turbineId);
-                //Log the Current status of the lists
-                logCurrentList();
-
             }
+            //Log the Current status of the lists
+            logCurrentList();
+
         }
 
         //Method used to update member lists  when a turbine is ready to be paused by ARticuno
@@ -524,10 +526,9 @@ namespace Articuno
             {
                 turbinesWaitingForPause.Add(turbineId);
                 turbinesConditionNotMet.Remove(turbineId);
-                //Log the Current status of the lists
-                logCurrentList();
-
             }
+            //Log the Current status of the lists
+            logCurrentList();
         }
 
         /// <summary>
@@ -557,16 +558,18 @@ namespace Articuno
             OpcServer.writeOpcTag(opcServerName, numTurbinesPausedTag, turbinesPausedByArticuno.Count);
             //Log the Current status of the lists
             logCurrentList();
-
         }
 
-        public static bool isAlreadyPaused(string turbineId)
-        {
-            return turbinesPausedByArticuno.Contains(turbineId);
-        }
+        //Check to see if a turbine is already pasued or not
+        public static bool isAlreadyPaused(string turbineId) { return turbinesPausedByArticuno.Contains(turbineId); }
 
+        //Logs the current turbines in each of the Articuno lists. Can be empty
         public static void logCurrentList()
         {
+            turbinesWaitingForPause.Sort();
+            turbinesPausedByArticuno.Sort();
+            turbinesExcludedList.Sort();
+            turbinesConditionNotMet.Sort();
             log.InfoFormat("Turbines Waiting for Pause: {0}", string.Join(",", turbinesWaitingForPause.ToArray()));
             log.InfoFormat("Turbines paused by Articuno: {0}", string.Join(",", turbinesPausedByArticuno.ToArray()));
             log.InfoFormat("Turbines exlucded from Articuno: {0}", string.Join(",", turbinesExcludedList.ToArray()));

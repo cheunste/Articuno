@@ -128,11 +128,12 @@ namespace Articuno
             ctrCountDown--;
             log.InfoFormat("{0} Current CTR: {1}", getTurbinePrefixValue(), ctrCountDown);
             OpcServer.writeOpcTag(OpcServerName, CtrCountdownTag, ctrCountDown);
-            if (ctrCountDown < 0)
+            if (ctrCountDown <= 0)
             {
                 log.InfoFormat("CTR period for Turbine {0} reached Zero.", getTurbinePrefixValue());
                 //Reset CTR countdown
                 ctrCountDown = Convert.ToInt32(TurbineCtr);
+                OpcServer.writeOpcTag(OpcServerName, CtrCountdownTag, ctrCountDown);
                 //Call the RotorSPeedCheck function to compare rotor speed for all turbines
                 tm.RotorSpeedCheck(getTurbinePrefixValue());
 
