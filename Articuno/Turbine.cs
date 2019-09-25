@@ -183,8 +183,8 @@ namespace Articuno
         {
 
             bool frozenCondition = Convert.ToBoolean(readParticipationValue()) && temperatureConditionMet && operatingStateConditionMet && nrsConditionMet && turbinePerformanceConditionMet;
-            log.DebugFormat("Checking ice condition for {6}. Frozen condition: {0},Participation: {1}\n" +
-                "Temp Condition: {2}, OperatingState: {3}, NRS:{4}, TurbinePerf Condition {5}", frozenCondition,
+            log.DebugFormat("Checking ice condition for {6}. Frozen condition: {0},Turbine Participation?: {1}\n" +
+                "Icy Temp Condition?: {2}, OperatingState: {3}, NRS Condition?:{4}, Low TurbinePerf Condition?: {5}", frozenCondition,
                 Convert.ToBoolean(readParticipationValue()), temperatureConditionMet, operatingStateConditionMet, nrsConditionMet, turbinePerformanceConditionMet, getTurbinePrefixValue());
 
             if (frozenCondition)
@@ -226,12 +226,12 @@ namespace Articuno
                 {
                     //Block Turbine in AGC
                     blockTurbine(true);
-
                     log.DebugFormat("Sending pause commmand for {0}", getTurbinePrefixValue());
                     writeLoadShutdownCmd();
                     log.DebugFormat("Writing alarm for {0}", getTurbinePrefixValue());
                     writeAlarmTagValue(true);
                     tm.updateMain(TurbineMediator.TurbineEnum.PausedByArticuno, TurbinePrefix);
+                    log.InfoFormat("Turbine {0} is now paused", getTurbinePrefixValue());
                 }
             }
         }
@@ -250,6 +250,7 @@ namespace Articuno
             log.DebugFormat("Waiting {0} seconds to allow turbine to start up....", STARTUP_TIME_BUFFER);
             writeAlarmTagValue(false);
             emptyQueue();
+            log.InfoFormat("Turbine {0} has started",getTurbinePrefixValue());
             log.DebugFormat("Turbine {0} CTR Value reset to: {1}", getTurbinePrefixValue(), TurbineCtr);
             this.ctrCountDown = Convert.ToInt32(TurbineCtr);
         }

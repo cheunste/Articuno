@@ -567,10 +567,10 @@ namespace Articuno
 
         public static void logCurrentList()
         {
-            log.InfoFormat("Turbines Waiting for Pause: {0}", string.Join(",", turbinesWaitingForPause));
-            log.InfoFormat("Turbines paused by Articuno: {0}", string.Join(",", turbinesPausedByArticuno));
-            log.InfoFormat("Turbines exlucded from Articuno: {0}", string.Join(",", turbinesExcludedList));
-            log.InfoFormat("Turbines awaiting proper condition: {0}", string.Join(",", turbinesConditionNotMet));
+            log.InfoFormat("Turbines Waiting for Pause: {0}", string.Join(",", turbinesWaitingForPause.ToArray()));
+            log.InfoFormat("Turbines paused by Articuno: {0}", string.Join(",", turbinesPausedByArticuno.ToArray()));
+            log.InfoFormat("Turbines exlucded from Articuno: {0}", string.Join(",", turbinesExcludedList.ToArray()));
+            log.InfoFormat("Turbines awaiting proper condition: {0}", string.Join(",", turbinesConditionNotMet.ToArray()));
         }
     }
 }
