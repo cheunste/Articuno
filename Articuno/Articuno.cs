@@ -53,7 +53,7 @@ namespace Articuno
         //Constants
         private static int ONE_MINUTE_POLLING = 60 * 1000;
         private static int HEARTBEAT_POLLING = 15 * 1000;
-        private static int NOISE_LEV = 5;
+        private static int ACTIVE_NOISE_LEV = 0;
         private static int RUN_STATE = 100;
         private static int DRAFT_STATE = 75;
 
@@ -398,17 +398,23 @@ namespace Articuno
             }
         }
 
+        /// <summary>
+        /// Checks the NRS upon value change. Should 
+        /// If nrs tag doesn't exist, Then it shouldn't do anything. In that case, just write a non-active value
+        /// </summary>
+        /// <param name="turbineId"></param>
+        /// <param name="value"></param>
         private static void checkNrs(string turbineId, object value)
         {
-            //Site might not be set up for NRS, so check to see if the field is empty, if it is, just set the condition to true
-            if (tm.getNrsStateTag(turbineId).Equals("")) { tm.setNrscondition(turbineId, true); }
+            //Site might not be set up for NRS, so check to see if the tag is empty, if it is, just set the condition to false
+            if (tm.getNrsStateTag(turbineId).Equals("")) { tm.setNrsActive(turbineId, false); }
             else
             {
                 //tm.writeNrsStateTag(turbineId, value);
-                if (Convert.ToInt16(value) == NOISE_LEV)
-                    tm.setNrscondition(turbineId, true);
+                if (Convert.ToInt16(value) == ACTIVE_NOISE_LEV)
+                    tm.setNrsActive(turbineId, true);
                 else
-                    tm.setNrscondition(turbineId, false);
+                    tm.setNrsActive(turbineId, false);
             }
         }
         private static void checkOperatingState(string turbineId, object value)
