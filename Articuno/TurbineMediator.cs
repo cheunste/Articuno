@@ -152,6 +152,9 @@ namespace Articuno
 
                 turbine.AlarmTag = reader.Rows[0]["Alarm"].ToString();
                 turbine.AgcBlockingTag = reader.Rows[0]["AGCBlocking"].ToString();
+                turbine.NrsConditionFlagTag = reader.Rows[0]["NRSFlag"].ToString();
+                turbine.LowRotorSpeedFlagTag = reader.Rows[0]["LowRotorSpeedFlag"].ToString();
+                turbine.CtrCountdownTag = reader.Rows[0]["CTRCountdown"].ToString();
                 //turbine.LoadShutdownTag = reader.Rows[0]["Pause"].ToString();
                 //turbine.StartCommandTag = reader.Rows[0]["Start"].ToString();
 
@@ -195,13 +198,16 @@ namespace Articuno
         public List<Turbine> getTurbineList() { return turbineList; }
 
 
-        //Get methods to get the OPC Tag given a turbine Id
+        //Get methods to get the OPC Tag given a turbine Id. Mainly used for test methods
         public string getTurbineWindSpeedTag(string turbineId) { return getTurbine(turbineId).WindSpeedTag; }
         public string getRotorSpeedTag(string turbineId) { return getTurbine(turbineId).RotorSpeedTag; }
         public string getOperatingStateTag(string turbineId) { return getTurbine(turbineId).OperatingStateTag; }
         public string getNrsStateTag(string turbineId) { return getTurbine(turbineId).NrsStateTag; }
         public string getTemperatureTag(string turbineId) { return getTurbine(turbineId).TemperatureTag; }
         public string getLoadShutdownTag(string turbineId) { return getTurbine(turbineId).LoadShutdownTag; }
+        public string getParticipationState(string turbineId) { return getTurbine(turbineId).ParticipationTag; }
+        public string getLowRotorSpeedFlag(string turbineId) { return getTurbine(turbineId).LowRotorSpeedFlagTag; }
+        public string getCtrRemaining(string turbineId) { return getTurbine(turbineId).CtrCountdownTag; }
 
         public int getTurbineCtrTime(string turbineId) { return Convert.ToInt32(getTurbine(turbineId).TurbineCtr); }
         public string getHumidityTag(string turbineId) { return getTurbine(turbineId).TurbineHumidityTag; }
@@ -233,7 +239,7 @@ namespace Articuno
         /// </summary>
         /// <param name="value"></param>
         public void setCtrTime(string turbineId, int ctrValue) { getTurbine(turbineId).writeTurbineCtrValue(ctrValue); }
-        public int getCtrCountdown(string turbineId) { return getTurbine(turbineId).readCtrCurrentValue(); }
+        public int getCtrCountdown(string turbineId) { return (int) getTurbine(turbineId).readCtrCurrentValue(); }
 
         /// <summary>
         /// Used for testing only. This creates a testing scenario that uses only T001 
@@ -372,7 +378,6 @@ namespace Articuno
         public void decrementTurbineCtrTime()
         {
             foreach (string turbinePrefix in getTurbinePrefixList()) { getTurbine(turbinePrefix).decrementCtrTime(); }
-
         }
 
 
@@ -403,11 +408,11 @@ namespace Articuno
         public void updateMain(TurbineEnum status, string turbineId)
         {
             if (status.Equals(TurbineEnum.PausedByArticuno))
-                ArticunoMain.turbinePausedByArticuno(turbineId);
+                Articuno.turbinePausedByArticuno(turbineId);
             else
-                ArticunoMain.turbineClearedOfIce(turbineId);
+                Articuno.turbineClearedOfIce(turbineId);
         }
 
-        public bool isTurbinePaused(string turbinePrefix) { return ArticunoMain.isAlreadyPaused(turbinePrefix); }
+        public bool isTurbinePaused(string turbinePrefix) { return Articuno.isAlreadyPaused(turbinePrefix); }
     }
 }

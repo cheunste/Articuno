@@ -38,7 +38,7 @@ namespace Articuno
         {
             try
             {
-                                var value = client.ReadItemValue("", serverName, tag);
+                var value = client.ReadItemValue("", serverName, tag);
                 return value.ToString();
             }
             catch (Exception e)

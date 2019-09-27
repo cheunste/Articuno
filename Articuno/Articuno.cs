@@ -6,15 +6,17 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Timers;
+using Topshelf;
 
 namespace Articuno
 {
-    sealed internal class ArticunoMain
+    sealed internal class Articuno
     {
         /*
          * These are Lists that are used to keep turbines organized on a site level using their Prefixes (ie T001)
@@ -56,7 +58,7 @@ namespace Articuno
         private static int DRAFT_STATE = 75;
 
         //Log
-        private static readonly ILog log = LogManager.GetLogger(typeof(ArticunoMain));
+        private static readonly ILog log = LogManager.GetLogger(typeof(Articuno));
 
         //Singleton instance declarations
         private static DatabaseInterface dbi;
@@ -64,7 +66,7 @@ namespace Articuno
         private static TurbineMediator tm;
 
         //Constructor. This is only used for unit testing purposes
-        public ArticunoMain()
+        public Articuno()
         {
             dbi = DatabaseInterface.Instance;
             mm = MetTowerMediator.Instance;
@@ -80,8 +82,9 @@ namespace Articuno
             setup();
         }
 
-        static void Main(string[] args)
+        public static void Main(object sender, FileSystemEventArgs e)
         {
+
             dbi = DatabaseInterface.Instance;
             mm = MetTowerMediator.Instance;
             tm = TurbineMediator.Instance;
@@ -121,14 +124,14 @@ namespace Articuno
             heartBeatTimer.Start();
 
             //start of the infinite loop
-            while (true)
-            {
-                //Run only if articuno is enabled. If not, then wait until something occurs
-                while (articunoEnable)
-                {
+            //while ()
+            //{
+            //    //Run only if articuno is enabled. If not, then wait until something occurs
+            //    //while (articunoEnable)
+            //    //{
 
-                }
-            }
+            //    //}
+            //}
         }
         public static void setup()
         {
@@ -226,13 +229,12 @@ namespace Articuno
             OpcServer.writeOpcTag(opcServerName, heartBeatTag,
                 !Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, heartBeatTag))
                 );
+            gatherSamples();
         }
-        /// <summary>
-        /// Function to handle tasks that should be executed every minute (ie get temperature measurements) and every CTR minute (ie check rotor speed, run calculations, etc.) 
-        /// </summary>
-        private static void minuteUpdate(object sender, ElapsedEventArgs e)
+        private static void gatherSamples()
         {
-            //For every minute, read the met tower measurements and the turbine temperature measurements
+            //For every heartbeat interval, read the met tower measurements and the turbine temperature measurements
+            //This is so more measurements can be gathered to get a more accurate average after every CTR period
             for (int i = 1; i <= MetTowerMediator.getNumMetTower(); i++)
             {
                 //This is needed because apparently Met Tower 1 is unnumbered.
@@ -249,7 +251,12 @@ namespace Articuno
             //Call the storeWindSpeed function to store a wind speed average into a turbine queue (for all turbines in the list)
             foreach (string prefix in tm.getTurbinePrefixList()) { tm.storeMinuteAverages(prefix); }
 
-
+        }
+        /// <summary>
+        /// Function to handle tasks that should be executed every minute (ie get temperature measurements) and every CTR minute (ie check rotor speed, run calculations, etc.) 
+        /// </summary>
+        private static void minuteUpdate(object sender, ElapsedEventArgs e)
+        {
             //For every CTR minute, do the other calculation stuff. Better set up a  member variable here
             ctrCountdown--;
             if (ctrCountdown == 0)
@@ -274,7 +281,6 @@ namespace Articuno
 
                 //Log the contents in the list for debugging purposes
                 logCurrentList();
-
             }
 
             //Tell the turbines to Decrement thier internal CTR Time. Must be after the met tower code or else turbine might not respond to a met tower icing change event
@@ -422,16 +428,18 @@ namespace Articuno
                 conditionsNotMet(turbineId);
                 tm.setOperatingStateCondition(turbineId, false);
             }
-
-
         }
+        //Method that is executed when user checks/unchecks a turbine from participating in Articuno
         private static void checkPariticipation(string turbineId, object value)
         {
             bool partipationStatus = Convert.ToBoolean(value);
-            //do nothing if turbine is already in paused
+            //do nothing if turbine is already in paused by Articuno
             if (isPausedByArticuno(turbineId)) { }
-            if (partipationStatus == false && !turbinesExcludedList.Contains(turbineId)) { conditionsNotMet(turbineId); }
-            else { conditionsMet(turbineId); }
+            if (partipationStatus == false && !turbinesExcludedList.Contains(turbineId))
+            {
+                turbinesExcludedList.Add(turbineId);
+            }
+            else { turbinesExcludedList.Remove(turbineId); }
         }
         //This is a method that is triggered upon any value changes for certain OPC Tags
         static void assetTagChangeHandler(object sender, EasyDAItemChangedEventArgs e)
@@ -503,10 +511,10 @@ namespace Articuno
             {
                 turbinesWaitingForPause.Remove(turbineId);
                 turbinesConditionNotMet.Add(turbineId);
-                //Log the Current status of the lists
-                logCurrentList();
-
             }
+            //Log the Current status of the lists
+            logCurrentList();
+
         }
 
         //Method used to update member lists  when a turbine is ready to be paused by ARticuno
@@ -518,10 +526,9 @@ namespace Articuno
             {
                 turbinesWaitingForPause.Add(turbineId);
                 turbinesConditionNotMet.Remove(turbineId);
-                //Log the Current status of the lists
-                logCurrentList();
-
             }
+            //Log the Current status of the lists
+            logCurrentList();
         }
 
         /// <summary>
@@ -551,20 +558,22 @@ namespace Articuno
             OpcServer.writeOpcTag(opcServerName, numTurbinesPausedTag, turbinesPausedByArticuno.Count);
             //Log the Current status of the lists
             logCurrentList();
-
         }
 
-        public static bool isAlreadyPaused(string turbineId)
-        {
-            return turbinesPausedByArticuno.Contains(turbineId);
-        }
+        //Check to see if a turbine is already pasued or not
+        public static bool isAlreadyPaused(string turbineId) { return turbinesPausedByArticuno.Contains(turbineId); }
 
+        //Logs the current turbines in each of the Articuno lists. Can be empty
         public static void logCurrentList()
         {
-            log.InfoFormat("Turbines Waiting for Pause: {0}", string.Join(",", turbinesWaitingForPause));
-            log.InfoFormat("Turbines paused by Articuno: {0}", string.Join(",", turbinesPausedByArticuno));
-            log.InfoFormat("Turbines exlucded from Articuno: {0}", string.Join(",", turbinesExcludedList));
-            log.InfoFormat("Turbines awaiting proper condition: {0}", string.Join(",", turbinesConditionNotMet));
+            turbinesWaitingForPause.Sort();
+            turbinesPausedByArticuno.Sort();
+            turbinesExcludedList.Sort();
+            turbinesConditionNotMet.Sort();
+            log.InfoFormat("Turbines Waiting for Pause: {0}", string.Join(",", turbinesWaitingForPause.ToArray()));
+            log.InfoFormat("Turbines paused by Articuno: {0}", string.Join(",", turbinesPausedByArticuno.ToArray()));
+            log.InfoFormat("Turbines exlucded from Articuno: {0}", string.Join(",", turbinesExcludedList.ToArray()));
+            log.InfoFormat("Turbines awaiting proper condition: {0}", string.Join(",", turbinesConditionNotMet.ToArray()));
         }
     }
 }
