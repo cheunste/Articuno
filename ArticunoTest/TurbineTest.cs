@@ -13,10 +13,10 @@ namespace ArticunoTest
     public class TurbineTest
     {
         TurbineMediator tm;
-        ArticunoMain am;
+        Articuno.Articuno am;
         public TurbineTest()
         {
-            am = new ArticunoMain();
+            am = new Articuno.Articuno();
 
             //Must create the MetTowersingleton first
             MetTowerMediator.Instance.createMetTower();
@@ -140,7 +140,7 @@ namespace ArticunoTest
         [DataRow("T001", true)]
         public void AlgorithmTest(string turbineId, bool state)
         {
-            ArticunoMain am = new ArticunoMain();
+            Articuno.Articuno am = new Articuno.Articuno();
 
             //Reset the CTR time and start the turbine. Set the CTR for one minute
             tm.setCtrTime(turbineId, 1);
@@ -165,8 +165,15 @@ namespace ArticunoTest
             tm.checkIcingConditions(turbineId);
             System.Threading.Thread.Sleep(500);
 
+            //The following asserts are for feedback tags 
+            Turbine turbine = TurbineMediator.getTurbine(turbineId);
             Assert.AreEqual(state,TurbineMediator.Instance.isPausedByArticuno(turbineId));
-
+            Assert.AreEqual(true, turbine.readParticipationValue(),"Turbine is not showing particiating state");
+            Assert.AreEqual(true, turbine.readNrsFlagConditionValue(),"Turbine NRS is not true");
+            Assert.IsTrue(Convert.ToInt32(turbine.readCtrCurrentValue()) < 1,"CTR was not less than 1");
+            Assert.IsTrue(Convert.ToBoolean(turbine.readLowRotorSpeedFlagValue()),"Low Rotor Speed flag not triggered");
+            //Assert.AreEqual(1,Convert.ToBoolean(turbine.readAgcBlockValue()),"AGC for turbine isn't being blocked");
+            Assert.AreEqual(0,Convert.ToInt32(turbine.readAgcBlockValue()));
         }
 
         [TestMethod]
