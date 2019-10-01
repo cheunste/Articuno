@@ -161,7 +161,7 @@ namespace Articuno
                     case 1: enableArticunoTag = tag; break;
                     case 2: articunoCtrTag = tag; break;
                     case 3: deltaThresholdTag = tag; break;
-                    case 4: dewThresholdTag = tag; break;
+                    case 4: break;
                     case 5: break;
                     case 6: break;
                 }
