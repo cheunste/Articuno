@@ -70,7 +70,7 @@ namespace ArticunoTest
             //Note complete. Do this later once you get the delegates figured out
             tm.setTemperatureCondition(turbineId, state);
             tm.setOperatingStateCondition(turbineId, state);
-            tm.setNrscondition(turbineId, state);
+            tm.setNrsActive(turbineId, state);
             tm.setTurbinePerformanceCondition(turbineId, state);
             tm.setDeRateCondition(turbineId, state);
         }
@@ -202,7 +202,7 @@ namespace ArticunoTest
         {
             tm.setTemperatureCondition(turbineId, state);
             tm.setOperatingStateCondition(turbineId, state);
-            tm.setNrscondition(turbineId, state);
+            tm.setNrsActive(turbineId, state);
             tm.setTurbinePerformanceCondition(turbineId, state);
             tm.setDeRateCondition(turbineId, state);
 

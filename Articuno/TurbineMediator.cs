@@ -89,6 +89,8 @@ namespace Articuno
 
         //Lines for singleton usage
         public static TurbineMediator Instance { get { return Nested.instance; } }
+
+
         private class Nested
         {
             static Nested() { }
@@ -117,7 +119,11 @@ namespace Articuno
                 //Note that NRS can be empty, so that's why there is a try/catch here. If it is empty, just set it to an empty string
                 //Or it can be an empty string in the database
                 try { turbine.NrsStateTag = reader.Rows[0]["NrsMode"].ToString(); }
-                catch (NullReferenceException e) { turbine.NrsStateTag = ""; }
+                catch (NullReferenceException e) {
+                    turbine.NrsStateTag = "";
+                    ///Because the turbine doesn't use NRS, just set this to true
+                    turbine.setNrsActive(false);
+                }
 
                 turbine.OperatingStateTag = reader.Rows[0]["OperatingState"].ToString();
                 turbine.RotorSpeedTag = reader.Rows[0]["RotorSpeed"].ToString();
@@ -152,7 +158,6 @@ namespace Articuno
 
                 turbine.AlarmTag = reader.Rows[0]["Alarm"].ToString();
                 turbine.AgcBlockingTag = reader.Rows[0]["AGCBlocking"].ToString();
-                turbine.NrsConditionFlagTag = reader.Rows[0]["NRSFlag"].ToString();
                 turbine.LowRotorSpeedFlagTag = reader.Rows[0]["LowRotorSpeedFlag"].ToString();
                 turbine.CtrCountdownTag = reader.Rows[0]["CTRCountdown"].ToString();
                 //turbine.LoadShutdownTag = reader.Rows[0]["Pause"].ToString();
@@ -259,7 +264,7 @@ namespace Articuno
         //These are functions called by the main Articuno class to set an icing protocol condition given a turbine. Remember, the turbine should pause automatically independently of each other
         public void setTemperatureCondition(string turbineId, bool state) { log.DebugFormat("Temperature condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setTemperatureCondition(state); }
         public void setOperatingStateCondition(string turbineId, bool state) { log.DebugFormat("Operating status condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setOperatingStateCondition(state); }
-        public void setNrscondition(string turbineId, bool state) { log.DebugFormat("NRS Condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setNrsCondition(state); }
+        public void setNrsActive(string turbineId, bool state) { log.DebugFormat("NRS Condition for {0} {1}", turbineId, state ? "active" : "not active"); getTurbine(turbineId).setNrsActive(state); }
         public void setTurbinePerformanceCondition(string turbineId, bool state) { log.DebugFormat("Turbine Performance condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setTurbinePerformanceCondition(state); }
         public void setDeRateCondition(string turbineId, bool state) { log.DebugFormat("De Rate condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setDeRateCondition(state); }
 
@@ -327,7 +332,7 @@ namespace Articuno
             Queue<double> rotorSpeedQueue = turbine.getRotorSpeedQueue();
 
             //bool nrsMode = Convert.ToBoolean(turbine.readNrsStateValue());
-            bool nrsMode = Convert.ToInt16(turbine.readNrsStateValue()) >= 5 ? true : false;
+            bool nrsMode = Convert.ToInt16(turbine.readNrsStateValue()) == 0 ? true : false;
 
             var windSpeedQueueCount = windSpeedQueue.Count;
             var windSpeedAverage = 0.0;

@@ -45,7 +45,6 @@ namespace Articuno
         private static string enableArticunoTag;
         private static string articunoCtrTag;
         private static string deltaThresholdTag;
-        private static string dewThresholdTag;
         private static string heartBeatTag;
         static string icePossibleAlarmTag;
         static string numTurbinesPausedTag;
@@ -53,9 +52,13 @@ namespace Articuno
         //Constants
         private static int ONE_MINUTE_POLLING = 60 * 1000;
         private static int HEARTBEAT_POLLING = 15 * 1000;
-        private static int NOISE_LEV = 5;
+        private static int ACTIVE_NOISE_LEV = 0;
         private static int RUN_STATE = 100;
         private static int DRAFT_STATE = 75;
+
+        private static int MAX_CTR_TIME = 60;
+        private static int MIN_CTR_TIME = 1;
+        private static int ENABLE = 1;
 
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(Articuno));
@@ -158,7 +161,7 @@ namespace Articuno
                     case 1: enableArticunoTag = tag; break;
                     case 2: articunoCtrTag = tag; break;
                     case 3: deltaThresholdTag = tag; break;
-                    case 4: dewThresholdTag = tag; break;
+                    case 4: break;
                     case 5: break;
                     case 6: break;
                 }
@@ -237,7 +240,7 @@ namespace Articuno
             //This is so more measurements can be gathered to get a more accurate average after every CTR period
             for (int i = 1; i <= MetTowerMediator.getNumMetTower(); i++)
             {
-                //This is needed because apparently Met Tower 1 is unnumbered.
+                //This is needed because apparently Met Tower 1 is unnumbered, and so the following strips the '1' essentually. 
                 string j = (i == 1) ? "" : Convert.ToString(i);
                 //Get all measurements from the met tower. Note that it will get turbine 
                 //temperature if the temperature coming from the met tower is bad qualtiy
@@ -347,7 +350,7 @@ namespace Articuno
                         mm.switchMetTower(prefix);
                         break;
                     default:
-                        log.DebugFormat("Event CHanged detected for {0}. However, there is nothing to be done", opcTag);
+                        log.DebugFormat("Event Changed detected for {0}. However, there is nothing to be done", opcTag);
                         break;
                 }
 
@@ -398,17 +401,22 @@ namespace Articuno
             }
         }
 
+        /// <summary>
+        /// Checks the NRS upon value change. Should 
+        /// If nrs tag doesn't exist, Then it shouldn't do anything. In that case, just write a non-active value
+        /// </summary>
+        /// <param name="turbineId"></param>
+        /// <param name="value"></param>
         private static void checkNrs(string turbineId, object value)
         {
-            //Site might not be set up for NRS, so check to see if the field is empty, if it is, just set the condition to true
-            if (tm.getNrsStateTag(turbineId).Equals("")) { tm.setNrscondition(turbineId, true); }
+            //Site might not be set up for NRS, so check to see if the tag is empty, if it is, just set the condition to false
+            if (tm.getNrsStateTag(turbineId).Equals("")) { tm.setNrsActive(turbineId, false); }
             else
             {
-                //tm.writeNrsStateTag(turbineId, value);
-                if (Convert.ToInt16(value) == NOISE_LEV)
-                    tm.setNrscondition(turbineId, true);
+                if (Convert.ToInt16(value) == ACTIVE_NOISE_LEV)
+                    tm.setNrsActive(turbineId, true);
                 else
-                    tm.setNrscondition(turbineId, false);
+                    tm.setNrsActive(turbineId, false);
             }
         }
         private static void checkOperatingState(string turbineId, object value)
@@ -461,10 +469,9 @@ namespace Articuno
         /*
          * Event Handler that is executed whenever  the system input tags changed
          * System input tags are the following:
-            - Articuno.TmpThreshold
+            - Articuno.TmpThreshold (Temperature Threshold)
             - Articuno.CurtailEna (Most important)
             - Articuno.EvalTm  (CTR Period should be updated in both the ArticunoMain and the Turbine classes)
-            - Articuno.TmpDelta (requires met tower to perform update)
             - Articuno.TmpDew (requires met tower to perform update)
          * 
          */
@@ -477,11 +484,15 @@ namespace Articuno
                 int value = Convert.ToInt16(e.Vtq.Value);
                 if (tag.Equals(enableArticunoTag))
                 {
-                    articunoEnable = (value == 1) ? true : false;
+                    articunoEnable = (value == ENABLE) ? true : false;
                     log.DebugFormat("Articuno is : {0}", articunoEnable ? "Enabled" : "Disabled");
                 }
                 if (tag.Equals(articunoCtrTag))
                 {
+                    if (value <= MIN_CTR_TIME)
+                        value = MIN_CTR_TIME;
+                    else if (value >= MAX_CTR_TIME)
+                        value = MAX_CTR_TIME;
                     articunoCtrTime = value;
                     ctrCountdown = value;
                     tm.writeCtrTime(value);
@@ -564,7 +575,10 @@ namespace Articuno
         public static bool isAlreadyPaused(string turbineId) { return turbinesPausedByArticuno.Contains(turbineId); }
 
         //Logs the current turbines in each of the Articuno lists. Can be empty
-        public static void logCurrentList()
+        /// <summary>
+        /// Logs the content of the current internal lists in articuno. Will inform users of what turbines are paused in Articuno, what isn't paused, blah blah blah
+        /// </summary>
+        private static void logCurrentList()
         {
             turbinesWaitingForPause.Sort();
             turbinesPausedByArticuno.Sort();
