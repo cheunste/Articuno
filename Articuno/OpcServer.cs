@@ -19,7 +19,7 @@ namespace Articuno
         private string serverName;
 
         //log
-        private static readonly ILog log = LogManager.GetLogger(typeof(MetTower));
+        private static readonly ILog log = LogManager.GetLogger(typeof(OpcServer));
 
         //Constructor. Tages in a server name and sets the 
         public OpcServer(String serverName) {
