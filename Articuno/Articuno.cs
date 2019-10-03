@@ -232,7 +232,8 @@ namespace Articuno
             OpcServer.writeOpcTag(opcServerName, heartBeatTag,
                 !Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, heartBeatTag))
                 );
-            gatherSamples();
+            if(articunoEnable)
+                gatherSamples();
         }
         private static void gatherSamples()
         {
@@ -276,7 +277,9 @@ namespace Articuno
 
                     //Send this temperature to the Met Mediator and determine if met tower is freezing or not
                     bool metFrozen = mm.setFrozenCondition("Met" + j, tempAvg, humidityAvg);
-                    OpcServer.writeOpcTag(opcServerName, icePossibleAlarmTag, metFrozen);
+
+                    bool currentIcePossible = Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, icePossibleAlarmTag));
+                    OpcServer.writeOpcTag(opcServerName, icePossibleAlarmTag, metFrozen || currentIcePossible);
                     tm.checkMetTowerFrozen("Met" + j);
                 }
                 //Set the CTR back to the original value
@@ -287,7 +290,8 @@ namespace Articuno
             }
 
             //Tell the turbines to Decrement thier internal CTR Time. Must be after the met tower code or else turbine might not respond to a met tower icing change event
-            tm.decrementTurbineCtrTime();
+            if(articunoEnable)
+                tm.decrementTurbineCtrTime();
 
         }
 
@@ -340,14 +344,14 @@ namespace Articuno
             string prefix = matchLookup.ToString();
 
             //If it matches the met tower
-            //TODO: Implement this. You should only have the me ttower switch. Thresholds are dealt with in SystemInputOnChange()
             if (matchLookup.Value.ToUpper().Contains("MET"))
             {
                 Enum metEnum = mm.findMetTowerTag(matchLookup.Value, opcTag);
                 switch (metEnum)
                 {
                     case MetTowerMediator.MetTowerEnum.Switched:
-                        mm.switchMetTower(prefix);
+                        bool currentStateAfterSwitch=mm.switchMetTower(prefix);
+                        log.InfoFormat("{0} switched status: {1}",prefix, currentStateAfterSwitch);
                         break;
                     default:
                         log.DebugFormat("Event Changed detected for {0}. However, there is nothing to be done", opcTag);

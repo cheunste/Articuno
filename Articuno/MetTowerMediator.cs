@@ -154,10 +154,11 @@ namespace Articuno
         /// 
         /// </summary>
         /// <param name="metId"></param>
-        public void switchMetTower(string metId)
+        public bool switchMetTower(string metId)
         {
             MetTower met = getMetTower(metId);
             met.MetSwitchValue = !met.MetSwitchValue;
+            return met.MetSwitchValue;
         }
 
         /// <summary>
