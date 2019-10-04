@@ -6,14 +6,17 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Timers;
+using Topshelf;
 
 namespace Articuno
 {
-    sealed internal class ArticunoMain
+    sealed internal class Articuno
     {
         /*
          * These are Lists that are used to keep turbines organized on a site level using their Prefixes (ie T001)
@@ -42,7 +45,6 @@ namespace Articuno
         private static string enableArticunoTag;
         private static string articunoCtrTag;
         private static string deltaThresholdTag;
-        private static string dewThresholdTag;
         private static string heartBeatTag;
         static string icePossibleAlarmTag;
         static string numTurbinesPausedTag;
@@ -50,12 +52,16 @@ namespace Articuno
         //Constants
         private static int ONE_MINUTE_POLLING = 60 * 1000;
         private static int HEARTBEAT_POLLING = 15 * 1000;
-        private static int NOISE_LEV = 5;
+        private static int ACTIVE_NOISE_LEV = 0;
         private static int RUN_STATE = 100;
         private static int DRAFT_STATE = 75;
 
+        private static int MAX_CTR_TIME = 60;
+        private static int MIN_CTR_TIME = 1;
+        private static int ENABLE = 1;
+
         //Log
-        private static readonly ILog log = LogManager.GetLogger(typeof(ArticunoMain));
+        private static readonly ILog log = LogManager.GetLogger(typeof(Articuno));
 
         //Singleton instance declarations
         private static DatabaseInterface dbi;
@@ -63,7 +69,7 @@ namespace Articuno
         private static TurbineMediator tm;
 
         //Constructor. This is only used for unit testing purposes
-        public ArticunoMain()
+        public Articuno()
         {
             dbi = DatabaseInterface.Instance;
             mm = MetTowerMediator.Instance;
@@ -79,8 +85,9 @@ namespace Articuno
             setup();
         }
 
-        static void Main(string[] args)
+        public static void Main(object sender, FileSystemEventArgs e)
         {
+
             dbi = DatabaseInterface.Instance;
             mm = MetTowerMediator.Instance;
             tm = TurbineMediator.Instance;
@@ -103,23 +110,31 @@ namespace Articuno
         {
             //The following lines starts a threading lambda and executes a function every minute. THis is used for events that require minute polling and CTR polling 
             //var startTimeSpan = TimeSpan.Zero;
-            var startTimeSpan = TimeSpan.FromMilliseconds(ONE_MINUTE_POLLING);
             var periodTimeSpan = TimeSpan.FromMilliseconds(ONE_MINUTE_POLLING);
             var heartBeatTimeSpan = TimeSpan.FromMilliseconds(HEARTBEAT_POLLING);
-            var heartBeatPeriodTimeSpan = TimeSpan.FromMilliseconds(HEARTBEAT_POLLING);
 
-            var timer = new System.Threading.Timer((e) => { minuteUpdate(); }, null, startTimeSpan, periodTimeSpan);
-            var heartBeatTimer = new System.Threading.Timer((e) => { updateHeartBeat(); }, null, heartBeatTimeSpan, heartBeatPeriodTimeSpan);
+            //var timer = new System.Threading.Timer((e) => { minuteUpdate(); }, null, startTimeSpan, periodTimeSpan);
+            //var heartBeatTimer = new System.Threading.Timer((e) => { updateHeartBeat(e); }, null, heartBeatTimeSpan, heartBeatPeriodTimeSpan);
+
+            System.Timers.Timer minuteTimer = new System.Timers.Timer(periodTimeSpan.TotalMilliseconds);
+            minuteTimer.AutoReset = true;
+            minuteTimer.Elapsed += new System.Timers.ElapsedEventHandler(minuteUpdate);
+            minuteTimer.Start();
+
+            System.Timers.Timer heartBeatTimer = new System.Timers.Timer(heartBeatTimeSpan.TotalMilliseconds);
+            heartBeatTimer.AutoReset = true;
+            heartBeatTimer.Elapsed += new System.Timers.ElapsedEventHandler(updateHeartBeat);
+            heartBeatTimer.Start();
 
             //start of the infinite loop
-            while (true)
-            {
-                //Run only if articuno is enabled. If not, then wait until something occurs
-                while (articunoEnable)
-                {
+            //while ()
+            //{
+            //    //Run only if articuno is enabled. If not, then wait until something occurs
+            //    //while (articunoEnable)
+            //    //{
 
-                }
-            }
+            //    //}
+            //}
         }
         public static void setup()
         {
@@ -146,7 +161,7 @@ namespace Articuno
                     case 1: enableArticunoTag = tag; break;
                     case 2: articunoCtrTag = tag; break;
                     case 3: deltaThresholdTag = tag; break;
-                    case 4: dewThresholdTag = tag; break;
+                    case 4: break;
                     case 5: break;
                     case 6: break;
                 }
@@ -212,21 +227,21 @@ namespace Articuno
         }
 
         //Function to update an heartbeat
-        private static void updateHeartBeat()
+        private static void updateHeartBeat(object sender, ElapsedEventArgs e)
         {
             OpcServer.writeOpcTag(opcServerName, heartBeatTag,
-                !Convert.ToBoolean(OpcServer.readOpcTag(opcServerName, heartBeatTag))
+                !Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, heartBeatTag))
                 );
+            if(articunoEnable)
+                gatherSamples();
         }
-        /// <summary>
-        /// Function to handle tasks that should be executed every minute (ie get temperature measurements) and every CTR minute (ie check rotor speed, run calculations, etc.) 
-        /// </summary>
-        private static void minuteUpdate()
+        private static void gatherSamples()
         {
-            //For every minute, read the met tower measurements and the turbine temperature measurements
+            //For every heartbeat interval, read the met tower measurements and the turbine temperature measurements
+            //This is so more measurements can be gathered to get a more accurate average after every CTR period
             for (int i = 1; i <= MetTowerMediator.getNumMetTower(); i++)
             {
-                //This is needed because apparently Met Tower 1 is unnumbered.
+                //This is needed because apparently Met Tower 1 is unnumbered, and so the following strips the '1' essentually. 
                 string j = (i == 1) ? "" : Convert.ToString(i);
                 //Get all measurements from the met tower. Note that it will get turbine 
                 //temperature if the temperature coming from the met tower is bad qualtiy
@@ -240,12 +255,17 @@ namespace Articuno
             //Call the storeWindSpeed function to store a wind speed average into a turbine queue (for all turbines in the list)
             foreach (string prefix in tm.getTurbinePrefixList()) { tm.storeMinuteAverages(prefix); }
 
-
+        }
+        /// <summary>
+        /// Function to handle tasks that should be executed every minute (ie get temperature measurements) and every CTR minute (ie check rotor speed, run calculations, etc.) 
+        /// </summary>
+        private static void minuteUpdate(object sender, ElapsedEventArgs e)
+        {
             //For every CTR minute, do the other calculation stuff. Better set up a  member variable here
             ctrCountdown--;
             if (ctrCountdown == 0)
             {
-                log.InfoFormat("CTR countdown reached 0");
+                log.InfoFormat("CTR countdown reached 0 in ArticunoMain");
                 //Calculate temperature averages from the all the temperature queues
                 for (int i = 1; i <= MetTowerMediator.getNumMetTower(); i++)
                 {
@@ -257,15 +277,21 @@ namespace Articuno
 
                     //Send this temperature to the Met Mediator and determine if met tower is freezing or not
                     bool metFrozen = mm.setFrozenCondition("Met" + j, tempAvg, humidityAvg);
-                    OpcServer.writeOpcTag(opcServerName, icePossibleAlarmTag, metFrozen);
+
+                    bool currentIcePossible = Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, icePossibleAlarmTag));
+                    OpcServer.writeOpcTag(opcServerName, icePossibleAlarmTag, metFrozen || currentIcePossible);
                     tm.checkMetTowerFrozen("Met" + j);
                 }
                 //Set the CTR back to the original value
                 ctrCountdown = articunoCtrTime;
+
+                //Log the contents in the list for debugging purposes
+                logCurrentList();
             }
 
             //Tell the turbines to Decrement thier internal CTR Time. Must be after the met tower code or else turbine might not respond to a met tower icing change event
-            tm.decrementTurbineCtrTime();
+            if(articunoEnable)
+                tm.decrementTurbineCtrTime();
 
         }
 
@@ -318,17 +344,17 @@ namespace Articuno
             string prefix = matchLookup.ToString();
 
             //If it matches the met tower
-            //TODO: Implement this. You should only have the me ttower switch. Thresholds are dealt with in SystemInputOnChange()
             if (matchLookup.Value.ToUpper().Contains("MET"))
             {
                 Enum metEnum = mm.findMetTowerTag(matchLookup.Value, opcTag);
                 switch (metEnum)
                 {
                     case MetTowerMediator.MetTowerEnum.Switched:
-                        mm.switchMetTower(prefix);
+                        string referencedMet = mm.isMetTowerSwitched(prefix);
+                        log.InfoFormat("{0} switched to {1}",prefix, referencedMet);
                         break;
                     default:
-                        log.DebugFormat("Event CHanged detected for {0}. However, there is nothing to be done", opcTag);
+                        log.DebugFormat("Event Changed detected for {0}. However, there is nothing to be done", opcTag);
                         break;
                 }
 
@@ -343,6 +369,9 @@ namespace Articuno
                     //Case where the site changes the NRS Mode
                     case TurbineMediator.TurbineEnum.NrsMode:
                         checkNrs(prefix, value);
+                        //Log the Current status of the lists
+                        logCurrentList();
+
                         break;
                     //case where the turbine is started by either the site or the NCC
                     case TurbineMediator.TurbineEnum.TurbineStarted:
@@ -354,13 +383,20 @@ namespace Articuno
                         //Start the turbine if a command is sent. This is because dispatchers
                         //Can start it on their whim if they want to 
                         if (Convert.ToInt32(value) == 1) tm.startTurbine(prefix);
+                        //Log the Current status of the lists
+                        logCurrentList();
                         break;
                     //In the case where the turbine went into a different state. This includes pause by the dispatchers, site, curtailment, maintenance, anything non-Articuno 
                     case TurbineMediator.TurbineEnum.OperatingState:
                         checkOperatingState(prefix, value);
+                        //Log the Current status of the lists
+                        logCurrentList();
+
                         break;
                     case TurbineMediator.TurbineEnum.Participation:
                         checkPariticipation(prefix, value);
+                        //Log the Current status of the lists
+                        logCurrentList();
                         break;
                     default:
                         log.DebugFormat("Event CHanged detected for {0}. However, there is nothing to be doen", opcTag);
@@ -369,17 +405,22 @@ namespace Articuno
             }
         }
 
+        /// <summary>
+        /// Checks the NRS upon value change. Should 
+        /// If nrs tag doesn't exist, Then it shouldn't do anything. In that case, just write a non-active value
+        /// </summary>
+        /// <param name="turbineId"></param>
+        /// <param name="value"></param>
         private static void checkNrs(string turbineId, object value)
         {
-            //Site might not be set up for NRS, so check to see if the field is empty, if it is, just set the condition to true
-            if (tm.getNrsStateTag(turbineId).Equals("")) { tm.setNrscondition(turbineId, true); }
+            //Site might not be set up for NRS, so check to see if the tag is empty, if it is, just set the condition to false
+            if (tm.getNrsStateTag(turbineId).Equals("")) { tm.setNrsActive(turbineId, false); }
             else
             {
-                tm.writeNrsStateTag(turbineId, value);
-                if (Convert.ToInt16(value) == NOISE_LEV)
-                    tm.setNrscondition(turbineId, true);
+                if (Convert.ToInt16(value) == ACTIVE_NOISE_LEV)
+                    tm.setNrsActive(turbineId, true);
                 else
-                    tm.setNrscondition(turbineId, false);
+                    tm.setNrsActive(turbineId, false);
             }
         }
         private static void checkOperatingState(string turbineId, object value)
@@ -399,16 +440,18 @@ namespace Articuno
                 conditionsNotMet(turbineId);
                 tm.setOperatingStateCondition(turbineId, false);
             }
-
-
         }
+        //Method that is executed when user checks/unchecks a turbine from participating in Articuno
         private static void checkPariticipation(string turbineId, object value)
         {
             bool partipationStatus = Convert.ToBoolean(value);
-            //do nothing if turbine is already in paused
+            //do nothing if turbine is already in paused by Articuno
             if (isPausedByArticuno(turbineId)) { }
-            if (partipationStatus == false && !turbinesExcludedList.Contains(turbineId)) { conditionsNotMet(turbineId); }
-            else { conditionsMet(turbineId); }
+            if (partipationStatus == false && !turbinesExcludedList.Contains(turbineId))
+            {
+                turbinesExcludedList.Add(turbineId);
+            }
+            else { turbinesExcludedList.Remove(turbineId); }
         }
         //This is a method that is triggered upon any value changes for certain OPC Tags
         static void assetTagChangeHandler(object sender, EasyDAItemChangedEventArgs e)
@@ -430,10 +473,9 @@ namespace Articuno
         /*
          * Event Handler that is executed whenever  the system input tags changed
          * System input tags are the following:
-            - Articuno.TmpThreshold
+            - Articuno.TmpThreshold (Temperature Threshold)
             - Articuno.CurtailEna (Most important)
             - Articuno.EvalTm  (CTR Period should be updated in both the ArticunoMain and the Turbine classes)
-            - Articuno.TmpDelta (requires met tower to perform update)
             - Articuno.TmpDew (requires met tower to perform update)
          * 
          */
@@ -446,25 +488,29 @@ namespace Articuno
                 int value = Convert.ToInt16(e.Vtq.Value);
                 if (tag.Equals(enableArticunoTag))
                 {
-                    articunoEnable = (value == 1) ? true : false;
-                    log.InfoFormat("Articuno is : {0}", articunoEnable ? "Enabled" : "Disabled");
+                    articunoEnable = (value == ENABLE) ? true : false;
+                    log.DebugFormat("Articuno is : {0}", articunoEnable ? "Enabled" : "Disabled");
                 }
                 if (tag.Equals(articunoCtrTag))
                 {
+                    if (value <= MIN_CTR_TIME)
+                        value = MIN_CTR_TIME;
+                    else if (value >= MAX_CTR_TIME)
+                        value = MAX_CTR_TIME;
                     articunoCtrTime = value;
                     ctrCountdown = value;
                     tm.writeCtrTime(value);
-                    log.InfoFormat("Articuno CTR updated to: {0} minute", value);
+                    log.DebugFormat("Articuno CTR updated to: {0} minute", value);
                 }
                 if (tag.Equals(tempThresholdTag))
                 {
                     mm.writeTemperatureThreshold(value);
-                    log.InfoFormat("Articuno Temperature Threshold updated to: {0} deg C", value);
+                    log.DebugFormat("Articuno Temperature Threshold updated to: {0} deg C", value);
                 }
                 if (tag.Equals(deltaThresholdTag))
                 {
                     mm.writeDeltaThreshold(value);
-                    log.InfoFormat("Articuno Temperature Delta updated to: {0} deg C", value);
+                    log.DebugFormat("Articuno Temperature Delta updated to: {0} deg C", value);
                 }
 
             }
@@ -481,6 +527,9 @@ namespace Articuno
                 turbinesWaitingForPause.Remove(turbineId);
                 turbinesConditionNotMet.Add(turbineId);
             }
+            //Log the Current status of the lists
+            logCurrentList();
+
         }
 
         //Method used to update member lists  when a turbine is ready to be paused by ARticuno
@@ -493,6 +542,8 @@ namespace Articuno
                 turbinesWaitingForPause.Add(turbineId);
                 turbinesConditionNotMet.Remove(turbineId);
             }
+            //Log the Current status of the lists
+            logCurrentList();
         }
 
         /// <summary>
@@ -505,6 +556,9 @@ namespace Articuno
             turbinesWaitingForPause.Remove(turbineId);
             turbinesPausedByArticuno.Add(turbineId);
             OpcServer.writeOpcTag(opcServerName, numTurbinesPausedTag, turbinesPausedByArticuno.Count);
+            //Log the Current status of the lists
+            logCurrentList();
+
         }
 
         /// <summary>
@@ -517,11 +571,27 @@ namespace Articuno
             turbinesPausedByArticuno.Remove(turbineId);
             //Update the num turb paused
             OpcServer.writeOpcTag(opcServerName, numTurbinesPausedTag, turbinesPausedByArticuno.Count);
+            //Log the Current status of the lists
+            logCurrentList();
         }
 
-        public static bool isAlreadyPaused(string turbineId)
+        //Check to see if a turbine is already pasued or not
+        public static bool isAlreadyPaused(string turbineId) { return turbinesPausedByArticuno.Contains(turbineId); }
+
+        //Logs the current turbines in each of the Articuno lists. Can be empty
+        /// <summary>
+        /// Logs the content of the current internal lists in articuno. Will inform users of what turbines are paused in Articuno, what isn't paused, blah blah blah
+        /// </summary>
+        private static void logCurrentList()
         {
-            return turbinesPausedByArticuno.Contains(turbineId);
+            turbinesWaitingForPause.Sort();
+            turbinesPausedByArticuno.Sort();
+            turbinesExcludedList.Sort();
+            turbinesConditionNotMet.Sort();
+            log.InfoFormat("Turbines Waiting for Pause: {0}", string.Join(",", turbinesWaitingForPause.ToArray()));
+            log.InfoFormat("Turbines paused by Articuno: {0}", string.Join(",", turbinesPausedByArticuno.ToArray()));
+            log.InfoFormat("Turbines exlucded from Articuno: {0}", string.Join(",", turbinesExcludedList.ToArray()));
+            log.InfoFormat("Turbines awaiting proper condition: {0}", string.Join(",", turbinesConditionNotMet.ToArray()));
         }
     }
 }

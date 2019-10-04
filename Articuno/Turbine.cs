@@ -27,9 +27,10 @@ namespace Articuno
         //Member variables for algorithm
         private bool temperatureConditionMet;
         private bool operatingStateConditionMet;
-        private bool nrsConditionMet;
+        private bool nrsActive;
         private bool turbinePerformanceConditionMet;
         private bool derateConditionMet;
+        private static TurbineMediator tm;
 
         //CTR Time. This is used to count down to zero. NOT set it.
         private int ctrCountDown;
@@ -42,8 +43,14 @@ namespace Articuno
         //this determines if the turbine is participating in Articuno or not. This must be a 'high priority check'  
         private bool articunoParicipation;
 
+        //Constants
         //Startup buffer
-        private readonly int STARTUP_TIME_BUFFER = 30000;
+        private readonly int STARTUP_TIME_BUFFER = 100;
+        private readonly double AGC_BLOCK_COMMAND = 0.00;
+        private readonly double AGC_UNBLOCK_COMMAND = 1.00;
+        public static readonly int NRS_NOT_ACTIVE = 5;
+        public static readonly int NRS_ACTIVE = 0;
+
 
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(Turbine));
@@ -55,20 +62,27 @@ namespace Articuno
             this.OpcServerName = OpcServerName;
             windSpeedQueue = new Queue<double>();
             rotorSpeedQueue = new Queue<double>();
+            tm = TurbineMediator.Instance;
 
         }
 
         //Methods to read the value for the wind speed, rotor speed, etc. value from the OPC Server
-        public Object readWindSpeedValue() { return OpcServer.readOpcTag(OpcServerName, WindSpeedTag); }
-        public Object readRotorSpeedValue() { return OpcServer.readOpcTag(OpcServerName, RotorSpeedTag); }
-        public Object readOperatingStateValue() { return OpcServer.readOpcTag(OpcServerName, OperatingStateTag); }
-        public Object readNrsStateValue() {return OpcServer.readOpcTag(OpcServerName,NrsStateTag);}
-        public Object readTemperatureValue() {return OpcServer.readOpcTag(OpcServerName,TemperatureTag);}
+        public Object readWindSpeedValue() { return OpcServer.readAnalogTag(OpcServerName, WindSpeedTag); }
+        public Object readRotorSpeedValue() { return OpcServer.readAnalogTag(OpcServerName, RotorSpeedTag); }
+        public Object readOperatingStateValue() { return OpcServer.readAnalogTag(OpcServerName, OperatingStateTag); }
+        public Object readNrsStateValue()
+        {
+            if (NrsStateTag.Equals("")) { return NRS_NOT_ACTIVE; }
+            else { return OpcServer.readAnalogTag(OpcServerName, NrsStateTag); }
+        }
+        public Object readTemperatureValue() { return OpcServer.readAnalogTag(OpcServerName, TemperatureTag); }
 
-        public Object readTurbineScalingFactorValue() {return OpcServer.readOpcTag(OpcServerName,ScalingFactorTag);}
-        public Object readParticipationValue() {return OpcServer.readOpcTag(OpcServerName,ParticipationTag);}
-        public Object readAlarmValue() {return OpcServer.readOpcTag(OpcServerName,AlarmTag);}
-        public int readCtrCurrentValue() { return ctrCountDown; }
+        public Object readTurbineScalingFactorValue() { return OpcServer.readAnalogTag(OpcServerName, ScalingFactorTag); }
+        public Object readParticipationValue() { return OpcServer.readAnalogTag(OpcServerName, ParticipationTag); }
+        public Object readAlarmValue() { return OpcServer.readAnalogTag(OpcServerName, AlarmTag); }
+        public Object readCtrCurrentValue() { return OpcServer.readAnalogTag(OpcServerName, CtrCountdownTag); }
+        public Object readLowRotorSpeedFlagValue() { return OpcServer.readAnalogTag(OpcServerName, LowRotorSpeedFlagTag); }
+        public Object readAgcBlockValue() { return OpcServer.readBooleanTag(OpcServerName, AgcBlockingTag); }
 
         //public Accessors (Getters and Setters)  to set the member variables to the  OPC tag
         // Not entirely sure if these should be public or not, but it does make reading code easier
@@ -76,7 +90,6 @@ namespace Articuno
         public string RotorSpeedTag { set; get; }
         public string OperatingStateTag { set; get; }
         public string NrsStateTag { set; get; }
-        public string LoadShutdownTag { set; get; }
         public string StartCommandTag { internal set; get; }
         public string TurbineCtr { set; get; }
         public string TemperatureTag { set; get; }
@@ -87,13 +100,19 @@ namespace Articuno
         public string TurbinePrefix { set; get; }
         public string DeRate { set; get; }
 
+        //THese four tags are meant for Articuno to write to.
+        public string LoadShutdownTag { set; get; }
+        public string AgcBlockingTag { set; get; }
+        public string LowRotorSpeedFlagTag { get; set; }
+        public string CtrCountdownTag { get; set; }
+
         //Theses are used to write to the OP Tag Values.  There shouldn't be too many of these
         public void writeTurbineCtrValue(int articunoCtrValue) { TurbineCtr = articunoCtrValue.ToString(); ctrCountDown = articunoCtrValue; }
 
         //Load shutdown function. Probably the most important function
         public double writeLoadShutdownCmd()
         {
-            log.InfoFormat("Shutdown command for {0} has been sent", this.TurbinePrefix);
+            log.DebugFormat("Shutdown command for {0} has been sent", this.TurbinePrefix);
             try
             {
                 OpcServer.writeOpcTag(OpcServerName, this.LoadShutdownTag, 1.00);
@@ -107,19 +126,25 @@ namespace Articuno
         }
         //public void writeAlarmTagValue(Object value) { OpcServer.writeOpcTag( OpcServerName, AlarmTag, Convert.ToDouble(value)); }
         public void writeAlarmTagValue(Object value) { OpcServer.writeOpcTag(OpcServerName, AlarmTag, Convert.ToBoolean(value)); }
-        public void writeNoiseLevel(Object value) { OpcServer.writeOpcTag(OpcServerName, NrsStateTag, Convert.ToDouble(value)); }
+        public void writeNoiseLevel(Object value) {
+            //Don't write anything if tag doesn't exist
+            if (NrsStateTag.Equals("")) { }
+            else { OpcServer.writeOpcTag(OpcServerName, NrsStateTag, Convert.ToDouble(value)); }
+        }
         public void writeOperatingState(Object value) { OpcServer.writeOpcTag(OpcServerName, OperatingStateTag, Convert.ToDouble(value)); }
         public void decrementCtrTime()
         {
             ctrCountDown--;
-            log.DebugFormat("{0} Current CTR: {1}", getTurbinePrefixValue(), ctrCountDown);
+            log.InfoFormat("{0} Current CTR: {1}", getTurbinePrefixValue(), ctrCountDown);
+            OpcServer.writeOpcTag(OpcServerName, CtrCountdownTag, ctrCountDown);
             if (ctrCountDown <= 0)
             {
                 log.InfoFormat("CTR period for Turbine {0} reached Zero.", getTurbinePrefixValue());
                 //Reset CTR countdown
                 ctrCountDown = Convert.ToInt32(TurbineCtr);
+                OpcServer.writeOpcTag(OpcServerName, CtrCountdownTag, ctrCountDown);
                 //Call the RotorSPeedCheck function to compare rotor speed for all turbines
-                TurbineMediator.Instance.RotorSpeedCheck(getTurbinePrefixValue());
+                tm.RotorSpeedCheck(getTurbinePrefixValue());
 
                 //Does Check the rest of the icing conditions
                 checkIcingConditions();
@@ -134,16 +159,25 @@ namespace Articuno
         //algorithms are true
         public void setTemperatureCondition(bool state) { this.temperatureConditionMet = state; }
         public void setOperatingStateCondition(bool state) { this.operatingStateConditionMet = state; }
-        
-        //Changing the NRS condition also resets the CTR
-        public void setNrsCondition(bool state) {
-            this.nrsConditionMet = state;
+
+        /// <summary>
+        /// Method to set NRS mode from the turbine. false means NRS not active. true means NRS is active. 
+        /// Changing the NRS condition also resets the CTR and clears all stored queues
+        /// </summary>
+        /// <param name="state">A boolean</param>
+        public void setNrsActive(bool state)
+        {
+            this.nrsActive = state;
             //Reset CTR in this condition and empty queue. Essentually, start from scratch
             //This is because a turbine must remain in its NRS without level change the ENTIRE CTR period.
             this.ctrCountDown = Convert.ToInt32(TurbineCtr);
             emptyQueue();
         }
-        public void setTurbinePerformanceCondition(bool state) { turbinePerformanceConditionMet = state; }
+        public void setTurbinePerformanceCondition(bool state)
+        {
+            turbinePerformanceConditionMet = state;
+            OpcServer.writeOpcTag(OpcServerName, this.LowRotorSpeedFlagTag, state);
+        }
         public void setDeRateCondition(bool state) { derateConditionMet = state; }
 
         /*
@@ -161,19 +195,19 @@ namespace Articuno
         public void checkIcingConditions()
         {
 
-            bool frozenCondition = Convert.ToBoolean(readParticipationValue()) && temperatureConditionMet && operatingStateConditionMet && nrsConditionMet && turbinePerformanceConditionMet;
-            log.DebugFormat("Checking ice condition for {6}. Frozen condition: {0},Participation: {1}\n" +
-                "Temp Condition: {2}, OperatingState: {3}, NRS:{4}, TurbinePerf Condition {5}", frozenCondition,
-                Convert.ToBoolean(readParticipationValue()), temperatureConditionMet, operatingStateConditionMet, nrsConditionMet, turbinePerformanceConditionMet, getTurbinePrefixValue());
+            bool frozenCondition = Convert.ToBoolean(readParticipationValue()) && temperatureConditionMet && operatingStateConditionMet && nrsActive && turbinePerformanceConditionMet;
+            log.DebugFormat("Checking ice condition for {6}. Frozen condition: {0},Turbine Participation?: {1}\n" +
+                "Icy Temp Condition?: {2}, OperatingState: {3}, NRS Condition?:{4}, Low TurbinePerf Condition?: {5}", frozenCondition,
+                Convert.ToBoolean(readParticipationValue()), temperatureConditionMet, operatingStateConditionMet, nrsActive, turbinePerformanceConditionMet, getTurbinePrefixValue());
 
             if (frozenCondition)
             {
-                log.InfoFormat("Icing conditions satisfied for {0}", getTurbinePrefixValue());
+                log.DebugFormat("Icing conditions satisfied for {0}", getTurbinePrefixValue());
                 pauseByArticuno(true);
             }
             else
             {
-                log.InfoFormat("No ice detected for turbine {0}", getTurbinePrefixValue());
+                log.DebugFormat("No ice detected for turbine {0}", getTurbinePrefixValue());
                 pauseByArticuno(false);
             }
         }
@@ -201,13 +235,16 @@ namespace Articuno
         {
             if (pause)
             {
-                if (!ArticunoMain.isAlreadyPaused(TurbinePrefix))
+                if (!tm.isTurbinePaused(TurbinePrefix))
                 {
+                    //Block Turbine in AGC
+                    blockTurbine(true);
                     log.DebugFormat("Sending pause commmand for {0}", getTurbinePrefixValue());
                     writeLoadShutdownCmd();
                     log.DebugFormat("Writing alarm for {0}", getTurbinePrefixValue());
                     writeAlarmTagValue(true);
-                    TurbineMediator.Instance.updateMain(TurbineMediator.TurbineEnum.PausedByArticuno, TurbinePrefix);
+                    tm.updateMain(TurbineMediator.TurbineEnum.PausedByArticuno, TurbinePrefix);
+                    log.InfoFormat("Turbine {0} is now paused", getTurbinePrefixValue());
                 }
             }
         }
@@ -217,15 +254,31 @@ namespace Articuno
         /// </summary>
         public void startTurbine()
         {
+            //Unblock Turbine from AGC
+            blockTurbine(false);
 
-            log.InfoFormat("Start Command Received for Turbine {0}", getTurbinePrefixValue());
+            log.DebugFormat("Start Command Received for Turbine {0}", getTurbinePrefixValue());
             //Give the turbine some time to start 
             System.Threading.Thread.Sleep(STARTUP_TIME_BUFFER);
-            log.InfoFormat("Waiting {0} seconds to allow turbine to start up....", STARTUP_TIME_BUFFER);
+            log.DebugFormat("Waiting {0} seconds to allow turbine to start up....", STARTUP_TIME_BUFFER);
             writeAlarmTagValue(false);
             emptyQueue();
-            log.InfoFormat("Turbine {0} CTR Value reset to: {1}", getTurbinePrefixValue(), TurbineCtr);
+            log.InfoFormat("Turbine {0} has started", getTurbinePrefixValue());
+            log.DebugFormat("Turbine {0} CTR Value reset to: {1}", getTurbinePrefixValue(), TurbineCtr);
             this.ctrCountDown = Convert.ToInt32(TurbineCtr);
+        }
+
+        //Function to block/remove turbine in AGC until startup.
+        /// <summary>
+        /// function to block the turbine from AGC.
+        /// </summary>
+        /// <param name="state"></param>
+        private void blockTurbine(bool state)
+        {
+            if (state)
+                OpcServer.writeOpcTag(OpcServerName, AgcBlockingTag, Convert.ToDouble(AGC_BLOCK_COMMAND));
+            else
+                OpcServer.writeOpcTag(OpcServerName, AgcBlockingTag, Convert.ToDouble(AGC_UNBLOCK_COMMAND));
         }
 
     }

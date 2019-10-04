@@ -1,0 +1,79 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="Articuno.ArticunoMain" Collapsed="true">
+    <Position X="0.5" Y="0.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AsggABAgAADwRCkiCQAASEEIABkIEJAECABADBAEAAA=</HashCode>
+      <FileName>ArticunoMain.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Articuno.DatabaseInterface" Collapsed="true">
+    <Position X="6.25" Y="0.5" Width="3.75" />
+    <TypeIdentifier>
+      <HashCode>BAAAAAAAAAAAAAABAAIACAAAAAACAAAAQCAAAAAAAAA=</HashCode>
+      <FileName>DatabaseInterface.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Articuno.MetTower" Collapsed="true">
+    <Position X="6.25" Y="2.75" Width="3.75" />
+    <TypeIdentifier>
+      <HashCode>AAEBgQAFYoSuAwBYkogkiEKCABkANREQgAAAsQDCACA=</HashCode>
+      <FileName>MetTower.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Articuno.MetTowerMediator" Collapsed="true">
+    <Position X="6.25" Y="2" Width="3" />
+    <TypeIdentifier>
+      <HashCode>BAEYEAAkYIgUgCgEAQCACNEAAAGAgEAA0AAAAZEAEMA=</HashCode>
+      <FileName>MetTowerMediator.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Articuno.OpcServer" Collapsed="true">
+    <Position X="6.25" Y="1.25" Width="3.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAIAAAAAAAAAACAQAAAAAAAAgAAEgBAEAAAA=</HashCode>
+      <FileName>OpcServer.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Articuno.RotorSpeedFilter" Collapsed="true">
+    <Position X="4" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAIAAAIAQAgAQAAAAQAAAAAAAABAAAACAAIQAAAAA=</HashCode>
+      <FileName>RotorSpeedFilter.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Articuno.Turbine" Collapsed="true">
+    <Position X="6.25" Y="3.5" Width="3.75" />
+    <TypeIdentifier>
+      <HashCode>bQEQBgBBBIQARAAAwIBoCQYIYrwWYiAARAFDIAAABBA=</HashCode>
+      <FileName>Turbine.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Articuno.TurbineMediator" Collapsed="true">
+    <Position X="3.25" Y="2.5" Width="2.75" />
+    <NestedTypes>
+      <Class Name="Articuno.TurbineMediator.Nested" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>TurbineMediator.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+      <Enum Name="Articuno.TurbineMediator.TurbineEnum" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>TurbineMediator.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>DAEhDgAMRAAIACgAQAAgDMYAIEUSUAQASAFHABAIBGQ=</HashCode>
+      <FileName>TurbineMediator.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Delegate Name="Articuno.IcingDelegates">
+    <Position X="3.5" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAgACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>TurbineMediator.cs</FileName>
+    </TypeIdentifier>
+  </Delegate>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
