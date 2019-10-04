@@ -350,8 +350,8 @@ namespace Articuno
                 switch (metEnum)
                 {
                     case MetTowerMediator.MetTowerEnum.Switched:
-                        bool currentStateAfterSwitch=mm.switchMetTower(prefix);
-                        log.InfoFormat("{0} switched status: {1}",prefix, currentStateAfterSwitch);
+                        string referencedMet = mm.isMetTowerSwitched(prefix);
+                        log.InfoFormat("{0} switched to {1}",prefix, referencedMet);
                         break;
                     default:
                         log.DebugFormat("Event Changed detected for {0}. However, there is nothing to be done", opcTag);
