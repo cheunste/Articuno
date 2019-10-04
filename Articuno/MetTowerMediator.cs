@@ -324,7 +324,7 @@ namespace Articuno
             //Bad Quality
             //Set primay relative humidty to either 0 (if below 0) or 100 (if above zero)
             //Also Raise alarm
-            if (rh <= minValue || rh >= maxValue)
+            if (rh < minValue || rh > maxValue)
             {
                 qualityState = MetQualityEnum.MET_BAD_QUALITY;
                 alarm(met, MetTowerEnum.HumidityOutOfRange, qualityState);
@@ -333,7 +333,7 @@ namespace Articuno
                 log.DebugFormat("Humidity exceeded allowable range. Capping Relative Humidity of {0} at {1}", metId, rh);
             }
             //CLear the out of range alarm
-            else if (rh > minValue && rh < maxValue)
+            else if (rh >= minValue && rh <= maxValue)
             {
                 alarm(met, MetTowerEnum.HumidityOutOfRange, qualityState);
                 alarm(met, MetTowerEnum.HumidityQuality, qualityState);
@@ -356,7 +356,7 @@ namespace Articuno
             double minValue = -20.0;
             double maxValue = 60.0;
             //Bad Quality
-            if (tempValue <= minValue || tempValue >= maxValue)
+            if (tempValue < minValue || tempValue > maxValue)
             {
                 var newTemperature = ((tempValue <= minValue) ? minValue : maxValue);
                 log.DebugFormat("Temperature sensor of tag {0} out of range. Capping temperature at {1}", temperatureTag, newTemperature);
