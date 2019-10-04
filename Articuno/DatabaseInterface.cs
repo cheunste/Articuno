@@ -18,7 +18,7 @@ namespace Articuno
         static string ConnectionString = String.Format("Data Source ={0};Version=3;", dataSource);
 
         //Log
-        private static readonly ILog log = LogManager.GetLogger(typeof(Articuno));
+        private static readonly ILog log = LogManager.GetLogger(typeof(DatabaseInterface));
 
         private DatabaseInterface()
         {

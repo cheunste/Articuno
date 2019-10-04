@@ -149,15 +149,16 @@ namespace Articuno
         }
 
         /// <summary>
+        /// SHOULD ONLY BE USED FOR UNIT TESTING 
         /// This function switches the met tower to use the backup met tower.
         /// For example, if Met is passed in, then it will use Met2 and vice versa.
-        /// 
         /// </summary>
         /// <param name="metId"></param>
-        public void switchMetTower(string metId)
+        public bool switchMetTower(string metId)
         {
             MetTower met = getMetTower(metId);
             met.MetSwitchValue = !met.MetSwitchValue;
+            return met.MetSwitchValue;
         }
 
         /// <summary>
@@ -167,6 +168,7 @@ namespace Articuno
         /// <returns>A metId. Returns the original metId if it is not switched. Returns a the backup metId otherwise</returns>
         public string isMetTowerSwitched(string metId)
         {
+           bool temp = (getMetTower(metId).MetSwitchValue);
             if (Convert.ToBoolean(getMetTower(metId).MetSwitchValue))
                 return metId.Equals("Met") ? "Met2" : "Met";
             else
