@@ -19,7 +19,7 @@ namespace Articuno
         private string serverName;
 
         //log
-        private static readonly ILog log = LogManager.GetLogger(typeof(MetTower));
+        private static readonly ILog log = LogManager.GetLogger(typeof(OpcServer));
 
         //Constructor. Tages in a server name and sets the 
         public OpcServer(String serverName) {
@@ -109,15 +109,8 @@ namespace Articuno
             }
             catch (Exception e)
             {
-                //Log Exception here
-                //log.ErrorFormat("Reading tag: {0} failed. Does {0} exist on the server or is it bad quality?", tag);
-                //log.ErrorFormat("Error:\n{0}", e);
-                //return null;
-                object value = opcServer.GetPropertyValue("",serverName,tag, DAPropertyIds.Value);
-                object quality = opcServer.GetPropertyValue("",serverName,tag, DAPropertyIds.Quality);
-                log.DebugFormat("{0}: {1}. Qual: {2}",tag,value,quality);
-                return value;
-
+                log.DebugFormat("Error relating to tag: {0}\nDetails: {1}", tag,e);
+                return null;
             }
         }
 

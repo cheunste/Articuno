@@ -252,11 +252,11 @@ namespace Articuno
         public void createTestTurbines()
         {
             turbinePrefixList.Clear();
-            //turbinePrefixList.Add("T001");
-            for (int i = 1; i <= 5; i++)
-            {
-                turbinePrefixList.Add("T00"+i.ToString());
-            }
+            turbinePrefixList.Add("T001");
+            //for (int i = 1; i <= 5; i++)
+            //{
+            //    turbinePrefixList.Add("T00"+i.ToString());
+            //}
             getOpcServerName();
             createTurbines();
         }
