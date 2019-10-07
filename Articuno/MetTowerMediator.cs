@@ -108,6 +108,9 @@ namespace Articuno
                 met.HumidityBadQualityTag = reader.Rows[0]["HumidityBadQualityTag"].ToString();
                 met.IceIndicationTag = reader.Rows[0]["IceIndicationTag"].ToString();
                 met.NoDataAlarmTag = reader.Rows[0]["NoDataAlarmTag"].ToString();
+                met.CtrTemperatureTag = reader.Rows[0]["CtrTemperature"].ToString();
+                met.CtrDewTag = reader.Rows[0]["CtrDew"].ToString();
+                met.CtrHumidityTag = reader.Rows[0]["CtrHumidity"].ToString();
 
                 metTowerList.Add(met);
             }
@@ -213,22 +216,38 @@ namespace Articuno
 
         internal double calculateCtrAvgTemperature(string metId)
         {
-            Queue<double> tempQueue = getMetTower(metId).getTemperatureQueue();
+            MetTower met = getMetTower(metId);
+            Queue<double> tempQueue = met.getTemperatureQueue();
             double temperatureCtrAverage = 0.0;
             double count = tempQueue.Count;
             while (tempQueue.Count != 0) { temperatureCtrAverage += tempQueue.Dequeue(); }
-            return temperatureCtrAverage / count;
+
+            double average =temperatureCtrAverage/count;
+            met.CtrTemperatureValue = average;
+
+            return average;
 
         }
 
         internal double calculateCtrAvgHumidity(string metId)
         {
-            Queue<double> humidityQueue = getMetTower(metId).getHumidityQueue();
+            MetTower met = getMetTower(metId);
+            Queue<double> humidityQueue = met.getHumidityQueue();
             double humidityCtrAverage = 0.0;
             double count = humidityQueue.Count;
             while (humidityQueue.Count != 0) { humidityCtrAverage += humidityQueue.Dequeue(); }
-            return humidityCtrAverage / count;
+
+            double average = humidityCtrAverage / count;
+            met.CtrHumidityValue = average;
+            return average;
         }
+
+        internal void updateDewPoint(string metId,double ctrTemperature, double ctrHumidity)
+        {
+            double dew=calculateDewPoint(ctrHumidity, ctrTemperature);
+            getMetTower(metId).CtrDewValue = dew;
+        }
+
 
         /// <summary>
         /// Write Temperature Threshold for all the met tower
@@ -324,7 +343,7 @@ namespace Articuno
             //Bad Quality
             //Set primay relative humidty to either 0 (if below 0) or 100 (if above zero)
             //Also Raise alarm
-            if (rh <= minValue || rh >= maxValue)
+            if (rh < minValue || rh > maxValue)
             {
                 qualityState = MetQualityEnum.MET_BAD_QUALITY;
                 alarm(met, MetTowerEnum.HumidityOutOfRange, qualityState);
@@ -333,7 +352,7 @@ namespace Articuno
                 log.DebugFormat("Humidity exceeded allowable range. Capping Relative Humidity of {0} at {1}", metId, rh);
             }
             //CLear the out of range alarm
-            else if (rh > minValue && rh < maxValue)
+            else if (rh >= minValue && rh <= maxValue)
             {
                 alarm(met, MetTowerEnum.HumidityOutOfRange, qualityState);
                 alarm(met, MetTowerEnum.HumidityQuality, qualityState);
@@ -356,7 +375,7 @@ namespace Articuno
             double minValue = -20.0;
             double maxValue = 60.0;
             //Bad Quality
-            if (tempValue <= minValue || tempValue >= maxValue)
+            if (tempValue < minValue || tempValue > maxValue)
             {
                 var newTemperature = ((tempValue <= minValue) ? minValue : maxValue);
                 log.DebugFormat("Temperature sensor of tag {0} out of range. Capping temperature at {1}", temperatureTag, newTemperature);

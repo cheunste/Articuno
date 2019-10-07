@@ -278,6 +278,9 @@ namespace Articuno
                     //Send this temperature to the Met Mediator and determine if met tower is freezing or not
                     bool metFrozen = mm.setFrozenCondition("Met" + j, tempAvg, humidityAvg);
 
+                    //Update the Dew Point calculation. This value will show up on the faceplate
+                    mm.updateDewPoint("Met" + j, tempAvg, humidityAvg);
+
                     bool currentIcePossible = Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, icePossibleAlarmTag));
                     OpcServer.writeOpcTag(opcServerName, icePossibleAlarmTag, metFrozen || currentIcePossible);
                     tm.checkMetTowerFrozen("Met" + j);
