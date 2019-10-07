@@ -238,7 +238,9 @@ namespace Articuno
             while (humidityQueue.Count != 0) { humidityCtrAverage += humidityQueue.Dequeue(); }
 
             double average = humidityCtrAverage / count;
-            met.CtrHumidityValue = average;
+            //You need to multiple the CtrHumidityValue by 100 because it is currently in decimal form. 
+            //This needs to be displayed in percentage form
+            met.CtrHumidityValue = average*100.0;
             return average;
         }
 
