@@ -138,6 +138,11 @@ namespace Articuno
         public string TemperatureSecBadQualityTag { get; set; }
         public string TemperatureSecOutOfRangeTag { get; set; }
 
+        //CTR average values from the met tower
+
+        public string CtrTemperatureTag { get; set; }
+        public string CtrHumidityTag { get; set; }
+        public string CtrDewTag { get; set; }
         //The following are for humidity out of range, bad quality, etc.
         public Object HumidityOutOfRng
         {
@@ -175,7 +180,24 @@ namespace Articuno
             get { return OpcServer.readBooleanTag(opcServerName, TemperatureSecOutOfRangeTag); }
             set { OpcServer.writeOpcTag(opcServerName, TemperatureSecOutOfRangeTag, value); }
         }
-
+        /// <summary>
+        /// Sets the average temperture to the output 
+        /// </summary>
+        public Object CtrTemperatureValue
+        {
+            get { return OpcServer.readBooleanTag(opcServerName, CtrTemperatureTag); }
+            set { OpcServer.writeOpcTag(opcServerName, CtrTemperatureTag, value); }
+        }
+        public Object CtrHumidityValue
+        {
+            get { return OpcServer.readBooleanTag(opcServerName, CtrHumidityTag); }
+            set { OpcServer.writeOpcTag(opcServerName, CtrHumidityTag, value); }
+        }
+        public Object CtrDewValue
+        {
+            get { return OpcServer.readBooleanTag(opcServerName, CtrDewTag); }
+            set { OpcServer.writeOpcTag(opcServerName, CtrDewTag, value); }
+        }
         /// <summary>
         /// Verifies whether a quality is good or not
         /// </summary>
