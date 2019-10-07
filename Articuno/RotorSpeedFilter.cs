@@ -24,7 +24,9 @@ namespace Articuno
 
         //private lists
         /*
-         * These lists contain the data (FilterList) and the other is a list of keys that's used to find the item in the filterList
+         * These lists contain the data (FilterList) and the other is a list of keys that's used to find the item in the filterList.
+         * 
+         * Yeah, now that I think about it, I might not really need another class, but the TurbineMediator class is already getting too busy
          * 
          */
         List<FilterElement> filterList;

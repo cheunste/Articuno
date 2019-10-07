@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Articuno
 {
-    class DatabaseInterface
+    sealed internal class DatabaseInterface
     {
 
         private static readonly string SYSTEM_INPUT_TABLE = "SystemInputTags";
@@ -18,7 +18,7 @@ namespace Articuno
         static string ConnectionString = String.Format("Data Source ={0};Version=3;", dataSource);
 
         //Log
-        private static readonly ILog log = LogManager.GetLogger(typeof(ArticunoMain));
+        private static readonly ILog log = LogManager.GetLogger(typeof(DatabaseInterface));
 
         private DatabaseInterface()
         {

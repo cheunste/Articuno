@@ -34,7 +34,7 @@ namespace Articuno
      * Both the above returns a list
      * 
      */
-    class TurbineMediator
+    sealed internal class TurbineMediator
     {
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(TurbineMediator));
@@ -51,17 +51,17 @@ namespace Articuno
 
         //Instance of OpcServer. Might not be needed
         private string opcServerName;
-        private EasyDAClient client = new EasyDAClient();
 
         //Rotor Speed
         private RotorSpeedFilter filterTable;
 
-        //Member delegates
-        IcingDelegates tempDelegate, operatingStateDelegate, nrsDelegate, turbinePerfDelegate, deRateConditionDelegate;
-
         //Tag-Enum Dictionary
         Dictionary<TurbineEnum, string> tagEnum = new Dictionary<TurbineEnum, string>();
 
+        //SQL statement constants
+        private readonly string TURBINE_FIND_TURBINEID = "SELECT TurbineId FROM TurbineInputTags;";
+        private readonly string TURBINE_INPUT_COLUMN_QUERY = "SELECT * from TurbineInputTags WHERE TurbineId='{0}'";
+        private readonly string TURBINE_OUTPUT_COLUMN_QUERY = "SELECT * from TurbineOutputTags WHERE TurbineId='{0}'";
         /// <summary>
         /// constructor for the TurbineMediator class. 
         /// </summary>
@@ -75,22 +75,13 @@ namespace Articuno
 
             //For RotorSpeed Filter Table. There should only be one instance of this. 
             filterTable = new RotorSpeedFilter();
-
-            tempDelegate = setTemperatureCondition;
-            operatingStateDelegate = setOperatingStateCondition;
-            nrsDelegate = setNrscondition;
-            turbinePerfDelegate = setTurbinePerformanceCondition;
-            deRateConditionDelegate = setDeRateCondition;
         }
 
-        private string getOpcServerName()
-        {
-            return DatabaseInterface.Instance.getOpcServer();
-        }
+        private string getOpcServerName() { return DatabaseInterface.Instance.getOpcServer(); }
 
         public void createPrefixList()
         {
-            DataTable reader = DatabaseInterface.Instance.readCommand("SELECT TurbineId FROM TurbineInputTags;");
+            DataTable reader = DatabaseInterface.Instance.readCommand(TURBINE_FIND_TURBINEID);
             foreach (DataRow item in reader.Rows) { turbinePrefixList.Add(item["TurbineId"].ToString()); }
         }
 
@@ -98,6 +89,8 @@ namespace Articuno
 
         //Lines for singleton usage
         public static TurbineMediator Instance { get { return Nested.instance; } }
+
+
         private class Nested
         {
             static Nested() { }
@@ -120,11 +113,17 @@ namespace Articuno
 
                 //For Turbine tags from the  TurbineInputTags Table
                 string cmd =
-                    String.Format("SELECT * " +
-                    "from TurbineInputTags WHERE TurbineId='{0}'", turbinePrefix);
+                    String.Format(TURBINE_INPUT_COLUMN_QUERY, turbinePrefix);
                 DataTable reader = dbi.readCommand(cmd);
+
+                //Note that NRS can be empty, so that's why there is a try/catch here. If it is empty, just set it to an empty string
+                //Or it can be an empty string in the database
                 try { turbine.NrsStateTag = reader.Rows[0]["NrsMode"].ToString(); }
-                catch (NullReferenceException e) { turbine.NrsStateTag = ""; }
+                catch (NullReferenceException e) {
+                    turbine.NrsStateTag = "";
+                    ///Because the turbine doesn't use NRS, just set this to true
+                    turbine.setNrsActive(false);
+                }
 
                 turbine.OperatingStateTag = reader.Rows[0]["OperatingState"].ToString();
                 turbine.RotorSpeedTag = reader.Rows[0]["RotorSpeed"].ToString();
@@ -132,10 +131,12 @@ namespace Articuno
                 turbine.WindSpeedTag = reader.Rows[0]["WindSpeed"].ToString();
                 turbine.ParticipationTag = reader.Rows[0]["Participation"].ToString();
                 turbine.ScalingFactorTag = reader.Rows[0]["ScalingFactor"].ToString();
+                turbine.LoadShutdownTag = reader.Rows[0]["Pause"].ToString();
+                turbine.StartCommandTag = reader.Rows[0]["Start"].ToString();
 
                 string primMetTower = reader.Rows[0]["MetReference"].ToString();
-                MetTower metTower = MetTowerMediator.Instance.getMetTower(primMetTower);
-                turbine.setMetTower(metTower);
+                //turbine.setMetTower(primMetTower);
+                turbine.MetTowerPrefix = primMetTower;
 
                 try
                 {
@@ -152,12 +153,15 @@ namespace Articuno
                 catch (Exception e) { }
 
                 //For Turbine tags from the TurbineOutputTags Table There might be duplicates
-                cmd = String.Format("SELECT * " +
-                    "from TurbineOutputTags WHERE TurbineId='{0}'", turbinePrefix);
+                cmd = String.Format(TURBINE_OUTPUT_COLUMN_QUERY, turbinePrefix);
                 reader = dbi.readCommand(cmd);
 
                 turbine.AlarmTag = reader.Rows[0]["Alarm"].ToString();
-                turbine.LoadShutdownTag = reader.Rows[0]["Pause"].ToString();
+                turbine.AgcBlockingTag = reader.Rows[0]["AGCBlocking"].ToString();
+                turbine.LowRotorSpeedFlagTag = reader.Rows[0]["LowRotorSpeedFlag"].ToString();
+                turbine.CtrCountdownTag = reader.Rows[0]["CTRCountdown"].ToString();
+                //turbine.LoadShutdownTag = reader.Rows[0]["Pause"].ToString();
+                //turbine.StartCommandTag = reader.Rows[0]["Start"].ToString();
 
                 //Add turbine to the turbine list
                 turbineList.Add(turbine);
@@ -165,36 +169,20 @@ namespace Articuno
         }
 
         /// <summary>
-        /// Command to pause a turbine given a Turbine object. Also known as loadshutdown
+        /// Returns a bool to see if a Turbine is paused by Articuno or not.
         /// </summary>
-        /// <param name="turbine"></param>
-        public void pauseTurbine(Turbine turbine)
-        {
-            foreach (Turbine turbineInList in turbineList)
-            {
-                if (turbineInList.Equals(turbine))
-                {
-                    log.DebugFormat("Attempting to pause turbine {0} from TurbineMediator", turbine.getTurbinePrefixValue());
-                    turbine.writeLoadShutdownCmd();
-                }
-            }
-        }
-
-        public bool pausedByArticuno(String turbineId) { return Convert.ToBoolean(getTurbine(turbineId).readAlarmValue()); }
+        /// <param name="turbineId"></param>
+        /// <returns></returns>
+        public bool isPausedByArticuno(String turbineId) { return Convert.ToBoolean(getTurbine(turbineId).readAlarmValue()); }
+       
         /// <summary>
-        /// Command to pause a turbine given a Turbine prefix. Also known as loadshutdown
+        /// Command to start a turbine given a turbineId 
         /// </summary>
-        /// <param name="turbine"></param>
-        public void pauseTurbine(string turbinePrefix)
+        /// <param name="turbineId">A turbine prefix</param>
+        public void startTurbine(string turbineId)
         {
-            foreach (Turbine turbineInList in turbineList)
-            {
-                if (turbineInList.getTurbinePrefixValue().Equals(turbinePrefix))
-                {
-                    log.DebugFormat("Attempting to pause turbine {0} from TurbineMediator", turbineInList.getTurbinePrefixValue());
-                    turbineInList.writeLoadShutdownCmd();
-                }
-            }
+            log.DebugFormat("Attempting to start turbine {0} from TurbineMeidator", turbineId);
+            getTurbine(turbineId).startTurbine();
         }
 
         /// <summary>
@@ -215,15 +203,19 @@ namespace Articuno
         public List<Turbine> getTurbineList() { return turbineList; }
 
 
-        //Get methods to get the OPC Tag given a turbine Id
-        public  string getTurbineWindSpeedTag(string turbineId) { return getTurbine(turbineId).WindSpeedTag; }
-        public  string getRotorSpeedTag(string turbineId) { return getTurbine(turbineId).RotorSpeedTag; }
-        public  string getOperatingStateTag(string turbineId) { return getTurbine(turbineId).OperatingStateTag; }
-        public  string getNrsStateTag(string turbineId) { return getTurbine(turbineId).NrsStateTag; }
-        public  string getTemperatureTag(string turbineId) { return getTurbine(turbineId).TemperatureTag; }
-        public  string getLoadShutdownTag(string turbineId) { return getTurbine(turbineId).LoadShutdownTag; }
-        public  string getTurbineCtrTag(string turbineId) { return getTurbine(turbineId).TurbineCtrTag; }
-        public  string getHumidityTag(string turbineId) { return getTurbine(turbineId).TurbineHumidityTag; }
+        //Get methods to get the OPC Tag given a turbine Id. Mainly used for test methods
+        public string getTurbineWindSpeedTag(string turbineId) { return getTurbine(turbineId).WindSpeedTag; }
+        public string getRotorSpeedTag(string turbineId) { return getTurbine(turbineId).RotorSpeedTag; }
+        public string getOperatingStateTag(string turbineId) { return getTurbine(turbineId).OperatingStateTag; }
+        public string getNrsStateTag(string turbineId) { return getTurbine(turbineId).NrsStateTag; }
+        public string getTemperatureTag(string turbineId) { return getTurbine(turbineId).TemperatureTag; }
+        public string getLoadShutdownTag(string turbineId) { return getTurbine(turbineId).LoadShutdownTag; }
+        public string getParticipationState(string turbineId) { return getTurbine(turbineId).ParticipationTag; }
+        public string getLowRotorSpeedFlag(string turbineId) { return getTurbine(turbineId).LowRotorSpeedFlagTag; }
+        public string getCtrRemaining(string turbineId) { return getTurbine(turbineId).CtrCountdownTag; }
+
+        public int getTurbineCtrTime(string turbineId) { return Convert.ToInt32(getTurbine(turbineId).TurbineCtr); }
+        public string getHumidityTag(string turbineId) { return getTurbine(turbineId).TurbineHumidityTag; }
 
         //For reading OPC value using turbineId
         /// <summary>
@@ -231,18 +223,16 @@ namespace Articuno
         /// </summary>
         /// <param name="turbineId"></param>
         /// <returns></returns>
-        public Object readWindSpeedValue(string turbineId) { return client.ReadItemValue("", opcServerName, getTurbineWindSpeedTag(turbineId)); }
+        public Object readWindSpeedValue(string turbineId) { return getTurbine(turbineId).readWindSpeedValue(); }
         /// <summary>
         /// Deprecated in favor of design change. This is now in storeMinuteAverages
         /// </summary>
         /// <param name="turbineId"></param>
         /// <returns></returns>
-        public Object readRotorSpeedValue(string turbineId) { return client.ReadItemValue("", opcServerName, getRotorSpeedTag(turbineId)); }
-        public Object readOperatingStateValue(string turbineId) { return client.ReadItemValue("", opcServerName, getOperatingStateTag(turbineId)); }
-        public Object readNrsStateValue(string turbineId) { return client.ReadItemValue("", opcServerName, getNrsStateTag(turbineId)); }
-        public Object readTemperatureValue(string turbineId) { return client.ReadItemValue("", opcServerName, getTemperatureTag(turbineId)); }
-        public Object readTurbineCtrValue(string turbineId) { return client.ReadItemValue("", opcServerName, getTurbineCtrTag(turbineId)); }
-        public Object readHumidityValue(string turbineId) { return client.ReadItemValue("", opcServerName, getHumidityTag(turbineId)); }
+        public Object readRotorSpeedValue(string turbineId) { return getTurbine(turbineId).readRotorSpeedValue(); }
+        public Object readOperatingStateValue(string turbineId) { return getTurbine(turbineId).readOperatingStateValue(); }
+        public Object readNrsStateValue(string turbineId) { return getTurbine(turbineId).readNrsStateValue(); }
+        public Object readTemperatureValue(string turbineId) { return getTurbine(turbineId).readTemperatureValue(); }
 
         //For writing (using turbineId). Note that the mediator really shouldn't be writing to all the availble turbine tags. If you need to test something, you need to create a turbine object 
         public void writeNrsStateTag(string turbineId, object value) { getTurbine(turbineId).writeNoiseLevel(value); }
@@ -253,8 +243,8 @@ namespace Articuno
         /// sets the CTR time for this turbine
         /// </summary>
         /// <param name="value"></param>
-        public void setCtrTime(string turbineId, int ctrValue) { getTurbine(turbineId).writeCtrTimeValue(ctrValue); }
-        public int getCtrTime(string turbineId) { return getTurbine(turbineId).readCtrValue(); }
+        public void setCtrTime(string turbineId, int ctrValue) { getTurbine(turbineId).writeTurbineCtrValue(ctrValue); }
+        public int getCtrCountdown(string turbineId) { return (int) getTurbine(turbineId).readCtrCurrentValue(); }
 
         /// <summary>
         /// Used for testing only. This creates a testing scenario that uses only T001 
@@ -263,18 +253,26 @@ namespace Articuno
         {
             turbinePrefixList.Clear();
             turbinePrefixList.Add("T001");
+            //for (int i = 1; i <= 5; i++)
+            //{
+            //    turbinePrefixList.Add("T00"+i.ToString());
+            //}
             getOpcServerName();
             createTurbines();
         }
 
         //These are functions called by the main Articuno class to set an icing protocol condition given a turbine. Remember, the turbine should pause automatically independently of each other
-        public void setTemperatureCondition(string turbineId, bool state) { getTurbine(turbineId).setTemperatureCondition(state); checkIcingConditions(turbineId); }
-        public void setOperatingStateCondition(string turbineId, bool state) { getTurbine(turbineId).setOperatingStateCondition(state); checkIcingConditions(turbineId); }
-        public void setNrscondition(string turbineId, bool state) { getTurbine(turbineId).setNrsCondition(state); checkIcingConditions(turbineId); }
-        public void setTurbinePerformanceCondition(string turbineId, bool state) { getTurbine(turbineId).setTurbinePerformanceCondition(state); checkIcingConditions(turbineId); }
-        public void setDeRateCondition(string turbineId, bool state) { getTurbine(turbineId).setDeRateCondition(state); checkIcingConditions(turbineId); }
+        public void setTemperatureCondition(string turbineId, bool state) { log.DebugFormat("Temperature condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setTemperatureCondition(state); }
+        public void setOperatingStateCondition(string turbineId, bool state) { log.DebugFormat("Operating status condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setOperatingStateCondition(state); }
+        public void setNrsActive(string turbineId, bool state) { log.DebugFormat("NRS Condition for {0} {1}", turbineId, state ? "active" : "not active"); getTurbine(turbineId).setNrsActive(state); }
+        public void setTurbinePerformanceCondition(string turbineId, bool state) { log.DebugFormat("Turbine Performance condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setTurbinePerformanceCondition(state); }
+        public void setDeRateCondition(string turbineId, bool state) { log.DebugFormat("De Rate condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setDeRateCondition(state); }
 
-        private void checkIcingConditions(string turbineId)
+        /// <summary>
+        /// force a check Ice condition given a turbine Id. Should only be used in testing only
+        /// </summary>
+        /// <param name="turbineId"></param>
+        public void checkIcingConditions(string turbineId)
         {
             Turbine turbine = getTurbine(turbineId);
             turbine.checkIcingConditions();
@@ -300,6 +298,7 @@ namespace Articuno
             else if (tag.ToUpper().Equals(tempTurbine.TemperatureTag.ToUpper())) { return TurbineEnum.Temperature; }
             else if (tag.ToUpper().Equals(tempTurbine.WindSpeedTag.ToUpper())) { return TurbineEnum.WindSpeed; }
             else if (tag.ToUpper().Equals(tempTurbine.ParticipationTag.ToUpper())) { return TurbineEnum.Participation; }
+            else if (tag.ToUpper().Equals(tempTurbine.StartCommandTag.ToUpper())) { return TurbineEnum.TurbineStarted; }
             //If it reaches here, I have no freaking clue what's going on, but whatever is calling it needs to handle it 
             else return null;
         }
@@ -313,7 +312,10 @@ namespace Articuno
             RotorSpeed,
             Temperature,
             WindSpeed,
-            Participation
+            Participation,
+            PausedByArticuno,
+            TurbineStarted,
+            ClearBySite
         }
 
         //FUnction to determine whether or not a turbine is underperforming due to ice
@@ -330,7 +332,7 @@ namespace Articuno
             Queue<double> rotorSpeedQueue = turbine.getRotorSpeedQueue();
 
             //bool nrsMode = Convert.ToBoolean(turbine.readNrsStateValue());
-            bool nrsMode = Convert.ToInt16(turbine.readNrsStateValue()) >= 5 ? true : false;
+            bool nrsMode = Convert.ToInt16(turbine.readNrsStateValue()) == 0 ? true : false;
 
             var windSpeedQueueCount = windSpeedQueue.Count;
             var windSpeedAverage = 0.0;
@@ -344,12 +346,12 @@ namespace Articuno
             var filterTuple = filterTable.search(windSpeedAverage / windSpeedQueueCount, nrsMode);
 
             var referenceRotorSpeed = filterTuple.Item1;
-            var referenceStdDev = filterTuple.Item1;
+            var referenceStdDev = filterTuple.Item2;
 
             var currentScalingFactor = Convert.ToDouble(turbine.readTurbineScalingFactorValue());
 
             //Set under performance condition to be true. Else, clear it
-            if (rotorSpeedAverage < referenceRotorSpeed - (currentScalingFactor * referenceStdDev)) { turbine.setTurbinePerformanceCondition(true); }
+            if ((rotorSpeedAverage / rotorSpeedQueueCount) < referenceRotorSpeed - (currentScalingFactor * referenceStdDev)) { turbine.setTurbinePerformanceCondition(true); }
             else { turbine.setTurbinePerformanceCondition(false); }
 
             //For sanity check, make sure the windSPeedQueue is empty 
@@ -372,11 +374,50 @@ namespace Articuno
         /// <summary>
         /// Write CTR Time for all the turbines. 
         /// </summary>
-        /// <param name="value"></param>
-        public void writeCtrTime(int value)
+        /// <param name="articunoCtrTime"></param>
+        public void writeCtrTime(int articunoCtrTime)
         {
-            foreach (string turbinePrefix in getTurbinePrefixList()) { writeTurbineCtrTag(turbinePrefix, value); }
+            foreach (string turbinePrefix in getTurbinePrefixList()) { writeTurbineCtrTag(turbinePrefix, articunoCtrTime); }
         }
 
+        public void decrementTurbineCtrTime()
+        {
+            foreach (string turbinePrefix in getTurbinePrefixList()) { getTurbine(turbinePrefix).decrementCtrTime(); }
+        }
+
+
+        /// <summary>
+        /// This function is used to inform all Turbines to check if their mapped met tower is frozen up
+        /// </summary>
+        /// <param name="metId">A met tower prefix</param>
+        //Note that met tower can be switched
+        public void checkMetTowerFrozen(string metId)
+        {
+            foreach (string turbinePrefix in getTurbinePrefixList())
+            {
+                string temp = getTurbine(turbinePrefix).MetTowerPrefix;
+                string metPrefix = MetTowerMediator.Instance.isMetTowerSwitched(temp);
+                bool isMetFrozen = MetTowerMediator.Instance.isMetFrozen(metPrefix);
+
+                if (metId.Equals(metPrefix) && isMetFrozen)
+                    setTemperatureCondition(turbinePrefix, true);
+                else
+                    setTemperatureCondition(turbinePrefix, false);
+            }
+
+        }
+
+        /// <summary>
+        /// Method to signal the Articuno Main method that the turbines have paused by the program or cleared by the site
+        /// </summary>
+        public void updateMain(TurbineEnum status, string turbineId)
+        {
+            if (status.Equals(TurbineEnum.PausedByArticuno))
+                Articuno.turbinePausedByArticuno(turbineId);
+            else
+                Articuno.turbineClearedOfIce(turbineId);
+        }
+
+        public bool isTurbinePaused(string turbinePrefix) { return Articuno.isAlreadyPaused(turbinePrefix); }
     }
 }
