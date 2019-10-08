@@ -39,6 +39,7 @@ namespace Articuno
         private static int articunoCtrTime;
         private static int ctrCountdown;
         private static bool articunoEnable;
+        private static string sitePrefix;
 
         //OpcTag getters and setters
         private static string tempThresholdTag;
@@ -76,7 +77,8 @@ namespace Articuno
             tm = TurbineMediator.Instance;
 
             mm.createMetTower();
-            tm.createTestTurbines();
+            //tm.createTestTurbines();
+            tm.createTurbines();
             turbinesExcludedList = new List<string>();
             turbinesPausedByArticuno = new List<string>();
             turbinesWaitingForPause = new List<string>();
@@ -92,10 +94,18 @@ namespace Articuno
             mm = MetTowerMediator.Instance;
             tm = TurbineMediator.Instance;
 
+            //Get the OPC Server name
+            DataTable reader = dbi.readCommand("SELECT * from SystemInputTags WHERE Description='OpcServerName'");
+            opcServerName= dbi.getOpcServer();
+
+            //Get the Site Prefix
+            reader = dbi.readCommand("SELECT * from SystemInputTags WHERE Description='SitePrefix'");
+            sitePrefix = dbi.getSitePrefix();
+
             //Call the create methods
             mm.createMetTower();
-            //tm.createTurbines();
-            tm.createTestTurbines();
+            tm.createTurbines();
+            //tm.createTestTurbines();
 
             turbinesExcludedList = new List<string>();
             turbinesPausedByArticuno = new List<string>();
@@ -138,19 +148,18 @@ namespace Articuno
         }
         public static void setup()
         {
-            //Get the OPC Server name
-            DataTable reader = dbi.readCommand("SELECT * from SystemInputTags WHERE Description='OpcServerName'");
-            opcServerName = reader.Rows[0]["OpcTag"].ToString();
             string tag;
+            sitePrefix = dbi.getSitePrefix();
+            opcServerName = dbi.getOpcServer();
 
             //A speicifc client that will respond to System Tag input changes. 
             var systemInputClient = new EasyDAClient();
             systemInputClient.ItemChanged += SystemInputOnChange;
             List<DAItemGroupArguments> systemInputTags = new List<DAItemGroupArguments>();
-            reader = dbi.readCommand("SELECT * from SystemInputTags WHERE Description!='SitePrefix' AND Description!='OpcServerName' order by Description ASC");
+            DataTable reader = dbi.readCommand("SELECT * from SystemInputTags WHERE Description!='SitePrefix' AND Description!='OpcServerName' AND OpcTag !='' order by Description ASC");
             for (int i = 0; i < reader.Rows.Count; i++)
             {
-                tag = reader.Rows[i]["OpcTag"].ToString();
+                tag = sitePrefix + reader.Rows[i]["OpcTag"].ToString();
                 //The following switch statement is ambiguious
                 //because the query always return the OPC tag column in a certain order, 
                 //the switch statement acts as a setter and set the tag from the database into the member variable of this class
@@ -174,7 +183,7 @@ namespace Articuno
             reader = dbi.readCommand("SELECT * from SystemOutputTags order by Description ASC");
             for (int i = 0; i < reader.Rows.Count; i++)
             {
-                tag = reader.Rows[i]["OpcTag"].ToString();
+                tag = sitePrefix + reader.Rows[i]["OpcTag"].ToString();
                 switch (i)
                 {
                     case 0: heartBeatTag = tag; break;
@@ -196,13 +205,13 @@ namespace Articuno
                     try
                     {
                         assetInputTags.Add(new DAItemGroupArguments("",
-                            opcServerName, reader.Rows[i]["OperatingState"].ToString(), 1000, null));
+                            opcServerName, sitePrefix + reader.Rows[i]["OperatingState"].ToString(), 1000, null));
                         assetInputTags.Add(new DAItemGroupArguments("",
-                            opcServerName, reader.Rows[i]["Participation"].ToString(), 1000, null));
+                            opcServerName, sitePrefix + reader.Rows[i]["Participation"].ToString(), 1000, null));
                         assetInputTags.Add(new DAItemGroupArguments("",
-                            opcServerName, reader.Rows[i]["NrsMode"].ToString(), 1000, null));
+                            opcServerName, sitePrefix + reader.Rows[i]["NrsMode"].ToString(), 1000, null));
                         assetInputTags.Add(new DAItemGroupArguments("",
-                            opcServerName, reader.Rows[i]["Start"].ToString(), 1000, null));
+                            opcServerName, sitePrefix + reader.Rows[i]["Start"].ToString(), 1000, null));
 
                     }
                     catch (Exception e) { log.ErrorFormat("Error when attempting to add to assetInputTags list. {0}", e); }
@@ -218,7 +227,7 @@ namespace Articuno
                 try
                 {
                     assetInputTags.Add(new DAItemGroupArguments("",
-                        opcServerName, reader.Rows[i]["Switch"].ToString(), 1000, null));
+                        opcServerName, sitePrefix + reader.Rows[i]["Switch"].ToString(), 1000, null));
                 }
                 catch (Exception e) { log.ErrorFormat("Error when attempting to add {0} to assetInputTags list. {1}", switchTag, e); }
             }
@@ -232,7 +241,7 @@ namespace Articuno
             OpcServer.writeOpcTag(opcServerName, heartBeatTag,
                 !Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, heartBeatTag))
                 );
-            if(articunoEnable)
+            if (articunoEnable)
                 gatherSamples();
         }
         private static void gatherSamples()
@@ -293,7 +302,7 @@ namespace Articuno
             }
 
             //Tell the turbines to Decrement thier internal CTR Time. Must be after the met tower code or else turbine might not respond to a met tower icing change event
-            if(articunoEnable)
+            if (articunoEnable)
                 tm.decrementTurbineCtrTime();
 
         }
@@ -354,7 +363,7 @@ namespace Articuno
                 {
                     case MetTowerMediator.MetTowerEnum.Switched:
                         string referencedMet = mm.isMetTowerSwitched(prefix);
-                        log.InfoFormat("{0} switched to {1}",prefix, referencedMet);
+                        log.InfoFormat("{0} switched to {1}", prefix, referencedMet);
                         break;
                     default:
                         log.DebugFormat("Event Changed detected for {0}. However, there is nothing to be done", opcTag);

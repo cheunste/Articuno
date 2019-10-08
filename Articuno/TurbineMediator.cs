@@ -51,6 +51,7 @@ namespace Articuno
 
         //Instance of OpcServer. Might not be needed
         private string opcServerName;
+        private string sitePrefix;
 
         //Rotor Speed
         private RotorSpeedFilter filterTable;
@@ -71,13 +72,13 @@ namespace Articuno
             turbineList = new List<Turbine>();
             tempList = new List<string>();
             tempObjectList = new List<Object>();
-            this.opcServerName = getOpcServerName();
+            this.opcServerName = DatabaseInterface.Instance.getOpcServer();
+            this.sitePrefix = DatabaseInterface.Instance.getSitePrefix();
 
             //For RotorSpeed Filter Table. There should only be one instance of this. 
             filterTable = new RotorSpeedFilter();
         }
 
-        private string getOpcServerName() { return DatabaseInterface.Instance.getOpcServer(); }
 
         public void createPrefixList()
         {
@@ -107,6 +108,7 @@ namespace Articuno
             turbineList = new List<Turbine>();
             turbineList.Clear();
             DatabaseInterface dbi = DatabaseInterface.Instance;
+            createPrefixList();
             foreach (string turbinePrefix in turbinePrefixList)
             {
                 Turbine turbine = new Turbine(turbinePrefix, opcServerName);
@@ -118,24 +120,24 @@ namespace Articuno
 
                 //Note that NRS can be empty, so that's why there is a try/catch here. If it is empty, just set it to an empty string
                 //Or it can be an empty string in the database
-                try { turbine.NrsStateTag = reader.Rows[0]["NrsMode"].ToString(); }
+                try { turbine.NrsStateTag = sitePrefix+reader.Rows[0]["NrsMode"].ToString(); }
                 catch (NullReferenceException e) {
                     turbine.NrsStateTag = "";
                     ///Because the turbine doesn't use NRS, just set this to true
                     turbine.setNrsActive(false);
                 }
 
-                turbine.OperatingStateTag = reader.Rows[0]["OperatingState"].ToString();
-                turbine.RotorSpeedTag = reader.Rows[0]["RotorSpeed"].ToString();
-                turbine.TemperatureTag = reader.Rows[0]["Temperature"].ToString();
-                turbine.WindSpeedTag = reader.Rows[0]["WindSpeed"].ToString();
-                turbine.ParticipationTag = reader.Rows[0]["Participation"].ToString();
-                turbine.ScalingFactorTag = reader.Rows[0]["ScalingFactor"].ToString();
-                turbine.LoadShutdownTag = reader.Rows[0]["Pause"].ToString();
-                turbine.StartCommandTag = reader.Rows[0]["Start"].ToString();
+                turbine.OperatingStateTag = sitePrefix+reader.Rows[0]["OperatingState"].ToString();
+                turbine.RotorSpeedTag = sitePrefix+reader.Rows[0]["RotorSpeed"].ToString();
+                turbine.TemperatureTag = sitePrefix+reader.Rows[0]["Temperature"].ToString();
+                turbine.WindSpeedTag = sitePrefix+reader.Rows[0]["WindSpeed"].ToString();
+                turbine.ParticipationTag = sitePrefix+reader.Rows[0]["Participation"].ToString();
+                turbine.ScalingFactorTag = sitePrefix+reader.Rows[0]["ScalingFactor"].ToString();
+                turbine.LoadShutdownTag = sitePrefix+reader.Rows[0]["Pause"].ToString();
+                turbine.StartCommandTag = sitePrefix+reader.Rows[0]["Start"].ToString();
 
+                //Do not include the site prefix for this column. 
                 string primMetTower = reader.Rows[0]["MetReference"].ToString();
-                //turbine.setMetTower(primMetTower);
                 turbine.MetTowerPrefix = primMetTower;
 
                 try
@@ -145,6 +147,7 @@ namespace Articuno
                     //In case a met tower fails
                     if (reader.Rows[0]["RedundancyForMet"].ToString() != null)
                     {
+                        //Do not include the site prefix for this column
                         string backupMetTower = reader.Rows[0]["RedundancyForMet"].ToString();
                         MetTowerMediator.Instance.setTurbineBackup(backupMetTower, turbine);
                     }
@@ -156,10 +159,10 @@ namespace Articuno
                 cmd = String.Format(TURBINE_OUTPUT_COLUMN_QUERY, turbinePrefix);
                 reader = dbi.readCommand(cmd);
 
-                turbine.AlarmTag = reader.Rows[0]["Alarm"].ToString();
-                turbine.AgcBlockingTag = reader.Rows[0]["AGCBlocking"].ToString();
-                turbine.LowRotorSpeedFlagTag = reader.Rows[0]["LowRotorSpeedFlag"].ToString();
-                turbine.CtrCountdownTag = reader.Rows[0]["CTRCountdown"].ToString();
+                turbine.AlarmTag = sitePrefix+reader.Rows[0]["Alarm"].ToString();
+                turbine.AgcBlockingTag = sitePrefix+reader.Rows[0]["AGCBlocking"].ToString();
+                turbine.LowRotorSpeedFlagTag = sitePrefix+reader.Rows[0]["LowRotorSpeedFlag"].ToString();
+                turbine.CtrCountdownTag = sitePrefix+reader.Rows[0]["CTRCountdown"].ToString();
                 //turbine.LoadShutdownTag = reader.Rows[0]["Pause"].ToString();
                 //turbine.StartCommandTag = reader.Rows[0]["Start"].ToString();
 
@@ -257,7 +260,8 @@ namespace Articuno
             //{
             //    turbinePrefixList.Add("T00"+i.ToString());
             //}
-            getOpcServerName();
+            this.opcServerName = DatabaseInterface.Instance.getOpcServer();
+            this.sitePrefix = DatabaseInterface.Instance.getSitePrefix();
             createTurbines();
         }
 
