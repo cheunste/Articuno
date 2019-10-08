@@ -126,7 +126,8 @@ namespace Articuno
         }
         //public void writeAlarmTagValue(Object value) { OpcServer.writeOpcTag( OpcServerName, AlarmTag, Convert.ToDouble(value)); }
         public void writeAlarmTagValue(Object value) { OpcServer.writeOpcTag(OpcServerName, AlarmTag, Convert.ToBoolean(value)); }
-        public void writeNoiseLevel(Object value) {
+        public void writeNoiseLevel(Object value)
+        {
             //Don't write anything if tag doesn't exist
             if (NrsStateTag.Equals("")) { }
             else { OpcServer.writeOpcTag(OpcServerName, NrsStateTag, Convert.ToDouble(value)); }
@@ -140,15 +141,21 @@ namespace Articuno
             if (ctrCountDown <= 0)
             {
                 log.InfoFormat("CTR period for Turbine {0} reached Zero.", getTurbinePrefixValue());
-                //Reset CTR countdown
-                ctrCountDown = Convert.ToInt32(TurbineCtr);
-                OpcServer.writeOpcTag(OpcServerName, CtrCountdownTag, ctrCountDown);
+                resetCtrTime();
                 //Call the RotorSPeedCheck function to compare rotor speed for all turbines
                 tm.RotorSpeedCheck(getTurbinePrefixValue());
 
                 //Does Check the rest of the icing conditions
                 checkIcingConditions();
             }
+        }
+
+        //Function to restart the Ctr Time. 
+        private void resetCtrTime()
+        {
+            //Reset CTR countdown
+            ctrCountDown = Convert.ToInt32(TurbineCtr);
+            OpcServer.writeOpcTag(OpcServerName, CtrCountdownTag, ctrCountDown);
         }
 
         //Misc functions
@@ -170,7 +177,8 @@ namespace Articuno
             this.nrsActive = state;
             //Reset CTR in this condition and empty queue. Essentually, start from scratch
             //This is because a turbine must remain in its NRS without level change the ENTIRE CTR period.
-            this.ctrCountDown = Convert.ToInt32(TurbineCtr);
+            //this.ctrCountDown = Convert.ToInt32(TurbineCtr);
+            resetCtrTime();
             emptyQueue();
         }
         public void setTurbinePerformanceCondition(bool state)
@@ -195,10 +203,10 @@ namespace Articuno
         public void checkIcingConditions()
         {
 
-            bool frozenCondition = Convert.ToBoolean(readParticipationValue()) && temperatureConditionMet && operatingStateConditionMet && nrsActive && turbinePerformanceConditionMet;
-            log.DebugFormat("Checking ice condition for {6}. Frozen condition: {0},Turbine Participation?: {1}\n" +
-                "Icy Temp Condition?: {2}, OperatingState: {3}, NRS Condition?:{4}, Low TurbinePerf Condition?: {5}", frozenCondition,
-                Convert.ToBoolean(readParticipationValue()), temperatureConditionMet, operatingStateConditionMet, nrsActive, turbinePerformanceConditionMet, getTurbinePrefixValue());
+            bool frozenCondition = Convert.ToBoolean(readParticipationValue()) && temperatureConditionMet && operatingStateConditionMet && turbinePerformanceConditionMet;
+            log.DebugFormat("Checking ice condition for {5}.  Paused by Articuno: {0}\nTurbine Participation?: {1} " +
+                "Icy Temp Condition?: {2}, OperatingState: {3}, Low TurbinePerf Condition?: {4}", frozenCondition,
+                Convert.ToBoolean(readParticipationValue()), temperatureConditionMet, operatingStateConditionMet, turbinePerformanceConditionMet, getTurbinePrefixValue());
 
             if (frozenCondition)
             {

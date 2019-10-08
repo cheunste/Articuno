@@ -63,7 +63,7 @@ namespace Articuno
         private readonly string TURBINE_FIND_TURBINEID = "SELECT TurbineId FROM TurbineInputTags;";
         private readonly string TURBINE_INPUT_COLUMN_QUERY = "SELECT * from TurbineInputTags WHERE TurbineId='{0}'";
         private readonly string TURBINE_OUTPUT_COLUMN_QUERY = "SELECT * from TurbineOutputTags WHERE TurbineId='{0}'";
-        private readonly string SCALING_FACTOR_QUERY = "sELECT * from SystemInputTags where Description='ScalingFactor';";
+        private readonly string SCALING_FACTOR_QUERY = "SELECT * from SystemInputTags where Description='ScalingFactor';";
         /// <summary>
         /// constructor for the TurbineMediator class. 
         /// </summary>
@@ -164,7 +164,6 @@ namespace Articuno
                 //no operation. Reaching here implies this met tower isn't set up for redundancy 
                 catch (Exception e) { }
 
-                turbine.ScalingFactorTag = sitePrefix+reader.Rows[0]["ScalingFactor"].ToString();
                 //For Turbine tags from the TurbineOutputTags Table There might be duplicates
                 cmd = String.Format(TURBINE_OUTPUT_COLUMN_QUERY, turbinePrefix);
                 reader = dbi.readCommand(cmd);
