@@ -70,15 +70,17 @@ namespace Articuno
         private static TurbineMediator tm;
 
         //Constructor. This is only used for unit testing purposes
-        public Articuno()
+        public Articuno(bool testMode)
         {
             dbi = DatabaseInterface.Instance;
             mm = MetTowerMediator.Instance;
             tm = TurbineMediator.Instance;
 
             mm.createMetTower();
-            //tm.createTestTurbines();
-            tm.createTurbines();
+            if (testMode)
+                tm.createTestTurbines();
+            else
+                tm.createTurbines();
             turbinesExcludedList = new List<string>();
             turbinesPausedByArticuno = new List<string>();
             turbinesWaitingForPause = new List<string>();
@@ -96,7 +98,7 @@ namespace Articuno
 
             //Get the OPC Server name
             DataTable reader = dbi.readCommand("SELECT * from SystemInputTags WHERE Description='OpcServerName'");
-            opcServerName= dbi.getOpcServer();
+            opcServerName = dbi.getOpcServer();
 
             //Get the Site Prefix
             reader = dbi.readCommand("SELECT * from SystemInputTags WHERE Description='SitePrefix'");
@@ -105,12 +107,20 @@ namespace Articuno
             //Call the create methods
             mm.createMetTower();
             tm.createTurbines();
+
             //tm.createTestTurbines();
 
             turbinesExcludedList = new List<string>();
             turbinesPausedByArticuno = new List<string>();
             turbinesWaitingForPause = new List<string>();
             turbinesConditionNotMet = new List<string>();
+
+            //Add each turbine prefix to the turbinesWaitingForPause list
+            foreach (string prefix in tm.getTurbinePrefixList())
+            {
+                turbinesWaitingForPause.Add(prefix);
+            }
+
 
             setup();
             start();
@@ -381,9 +391,6 @@ namespace Articuno
                     //Case where the site changes the NRS Mode
                     case TurbineMediator.TurbineEnum.NrsMode:
                         checkNrs(prefix, value);
-                        //Log the Current status of the lists
-                        logCurrentList();
-
                         break;
                     //case where the turbine is started by either the site or the NCC
                     case TurbineMediator.TurbineEnum.TurbineStarted:
@@ -394,26 +401,22 @@ namespace Articuno
                         }
                         //Start the turbine if a command is sent. This is because dispatchers
                         //Can start it on their whim if they want to 
-                        if (Convert.ToInt32(value) == 1) tm.startTurbine(prefix);
-                        //Log the Current status of the lists
-                        logCurrentList();
+                        if (Convert.ToInt32(value) == 1)
+                            tm.startTurbine(prefix);
                         break;
                     //In the case where the turbine went into a different state. This includes pause by the dispatchers, site, curtailment, maintenance, anything non-Articuno 
                     case TurbineMediator.TurbineEnum.OperatingState:
                         checkOperatingState(prefix, value);
-                        //Log the Current status of the lists
-                        logCurrentList();
-
                         break;
                     case TurbineMediator.TurbineEnum.Participation:
                         checkPariticipation(prefix, value);
-                        //Log the Current status of the lists
-                        logCurrentList();
                         break;
                     default:
                         log.DebugFormat("Event CHanged detected for {0}. However, there is nothing to be doen", opcTag);
                         break;
                 }
+                //Log the Current status of the lists
+                //logCurrentList();
             }
         }
 
@@ -538,9 +541,9 @@ namespace Articuno
             {
                 turbinesWaitingForPause.Remove(turbineId);
                 turbinesConditionNotMet.Add(turbineId);
-            }
             //Log the Current status of the lists
             logCurrentList();
+            }
 
         }
 
@@ -553,9 +556,10 @@ namespace Articuno
             {
                 turbinesWaitingForPause.Add(turbineId);
                 turbinesConditionNotMet.Remove(turbineId);
-            }
             //Log the Current status of the lists
             logCurrentList();
+
+            }
         }
 
         /// <summary>
