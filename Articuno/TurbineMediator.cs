@@ -63,6 +63,7 @@ namespace Articuno
         private readonly string TURBINE_FIND_TURBINEID = "SELECT TurbineId FROM TurbineInputTags;";
         private readonly string TURBINE_INPUT_COLUMN_QUERY = "SELECT * from TurbineInputTags WHERE TurbineId='{0}'";
         private readonly string TURBINE_OUTPUT_COLUMN_QUERY = "SELECT * from TurbineOutputTags WHERE TurbineId='{0}'";
+        private readonly string SCALING_FACTOR_QUERY = "sELECT * from SystemInputTags where Description='ScalingFactor';";
         /// <summary>
         /// constructor for the TurbineMediator class. 
         /// </summary>
@@ -109,14 +110,20 @@ namespace Articuno
             turbineList.Clear();
             DatabaseInterface dbi = DatabaseInterface.Instance;
             createPrefixList();
+
+            string cmd = String.Format(SCALING_FACTOR_QUERY);
+            DataTable reader = dbi.readCommand(cmd);
+            reader =dbi.readCommand(cmd);
+            string scalingFactor = reader.Rows[0]["DefaultValue"].ToString();
+
             foreach (string turbinePrefix in turbinePrefixList)
             {
                 Turbine turbine = new Turbine(turbinePrefix, opcServerName);
 
                 //For Turbine tags from the  TurbineInputTags Table
-                string cmd =
+                cmd =
                     String.Format(TURBINE_INPUT_COLUMN_QUERY, turbinePrefix);
-                DataTable reader = dbi.readCommand(cmd);
+                reader = dbi.readCommand(cmd);
 
                 //Note that NRS can be empty, so that's why there is a try/catch here. If it is empty, just set it to an empty string
                 //Or it can be an empty string in the database
@@ -132,9 +139,11 @@ namespace Articuno
                 turbine.TemperatureTag = sitePrefix+reader.Rows[0]["Temperature"].ToString();
                 turbine.WindSpeedTag = sitePrefix+reader.Rows[0]["WindSpeed"].ToString();
                 turbine.ParticipationTag = sitePrefix+reader.Rows[0]["Participation"].ToString();
-                turbine.ScalingFactorTag = sitePrefix+reader.Rows[0]["ScalingFactor"].ToString();
                 turbine.LoadShutdownTag = sitePrefix+reader.Rows[0]["Pause"].ToString();
                 turbine.StartCommandTag = sitePrefix+reader.Rows[0]["Start"].ToString();
+                //For scaling factor. This does not require a prefix as a systeminput value
+                //turbine.ScalingFactorTag = sitePrefix+reader.Rows[0]["ScalingFactor"].ToString();
+                turbine.ScalingFactorTag = scalingFactor;
 
                 //Do not include the site prefix for this column. 
                 string primMetTower = reader.Rows[0]["MetReference"].ToString();
@@ -155,6 +164,7 @@ namespace Articuno
                 //no operation. Reaching here implies this met tower isn't set up for redundancy 
                 catch (Exception e) { }
 
+                turbine.ScalingFactorTag = sitePrefix+reader.Rows[0]["ScalingFactor"].ToString();
                 //For Turbine tags from the TurbineOutputTags Table There might be duplicates
                 cmd = String.Format(TURBINE_OUTPUT_COLUMN_QUERY, turbinePrefix);
                 reader = dbi.readCommand(cmd);
@@ -403,10 +413,12 @@ namespace Articuno
                 string metPrefix = MetTowerMediator.Instance.isMetTowerSwitched(temp);
                 bool isMetFrozen = MetTowerMediator.Instance.isMetFrozen(metPrefix);
 
-                if (metId.Equals(metPrefix) && isMetFrozen)
-                    setTemperatureCondition(turbinePrefix, true);
-                else
-                    setTemperatureCondition(turbinePrefix, false);
+                if (metId.Equals(metPrefix))
+                    setTemperatureCondition(turbinePrefix, isMetFrozen);
+                //if (metId.Equals(metPrefix) && isMetFrozen)
+                //    setTemperatureCondition(turbinePrefix, true);
+                //else
+                //    setTemperatureCondition(turbinePrefix, false);
             }
 
         }
