@@ -65,7 +65,7 @@ namespace ArticunoTest
         public void FullIcingTest(string turbineId, bool state)
         {
 
-            articuno = new Articuno.Articuno();
+            articuno = new Articuno.Articuno(true);
 
             //Note complete. Do this later once you get the delegates figured out
             tm.setTemperatureCondition(turbineId, state);
@@ -79,7 +79,7 @@ namespace ArticunoTest
         public void SetAndClearTest()
         {
 
-            articuno = new Articuno.Articuno();
+            articuno = new Articuno.Articuno(true);
             string turbineId = "T001";
             bool state = true;
             IcedConditions(turbineId, true);
@@ -109,7 +109,7 @@ namespace ArticunoTest
         [TestMethod]
         public void SystemInputEventChangeTest()
         {
-            articuno = new Articuno.Articuno();
+            articuno = new Articuno.Articuno(true);
             OpcServer server = new OpcServer("SV.OPCDAServer.1");
             List<String> systemInputTags = new List<String>();
             DataTable reader = di.readCommand("SELECT * from SystemInputTags WHERE Description!='SitePrefix' AND Description!='OpcServerName' order by Description ASC");
@@ -141,7 +141,7 @@ namespace ArticunoTest
         [DataRow(1)]
         public void CTRChangeTest(int ctrTime)
         {
-            articuno = new Articuno.Articuno();
+            articuno = new Articuno.Articuno(true);
             string turbineId = "T001";
 
             Thread.Sleep(500);
@@ -174,7 +174,7 @@ namespace ArticunoTest
         {
             OpcServer server = new OpcServer("SV.OPCDAServer.1");
             string turbineId = "T001";
-            articuno = new Articuno.Articuno();
+            articuno = new Articuno.Articuno(true);
             IcedConditions(turbineId, true);
 
             //Set Command to false and turbine state to PAUSE (75)
