@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace Articuno
 {
@@ -64,6 +65,7 @@ namespace Articuno
         private readonly string TURBINE_INPUT_COLUMN_QUERY = "SELECT * from TurbineInputTags WHERE TurbineId='{0}'";
         private readonly string TURBINE_OUTPUT_COLUMN_QUERY = "SELECT * from TurbineOutputTags WHERE TurbineId='{0}'";
         private readonly string SCALING_FACTOR_QUERY = "SELECT * from SystemInputTags where Description='ScalingFactor';";
+        private readonly string TURBINE_STARTUP_TIME = "SELECT * from SystemInputTags where Description='TurbineStartupTime';";
         /// <summary>
         /// constructor for the TurbineMediator class. 
         /// </summary>
@@ -111,10 +113,15 @@ namespace Articuno
             DatabaseInterface dbi = DatabaseInterface.Instance;
             createPrefixList();
 
+            //Get the Scaling Factor from the system input tag
             string cmd = String.Format(SCALING_FACTOR_QUERY);
             DataTable reader = dbi.readCommand(cmd);
             reader =dbi.readCommand(cmd);
             string scalingFactor = reader.Rows[0]["DefaultValue"].ToString();
+            //Turbine startup time
+            cmd = String.Format(TURBINE_STARTUP_TIME);
+            reader =dbi.readCommand(cmd);
+            string startupTime= reader.Rows[0]["DefaultValue"].ToString();
 
             foreach (string turbinePrefix in turbinePrefixList)
             {
@@ -131,7 +138,7 @@ namespace Articuno
                 catch (NullReferenceException e) {
                     turbine.NrsStateTag = "";
                     ///Because the turbine doesn't use NRS, just set this to true
-                    turbine.setNrsActive(false);
+                    turbine.setNrsMode(false);
                 }
 
                 turbine.OperatingStateTag = sitePrefix+reader.Rows[0]["OperatingState"].ToString();
@@ -142,8 +149,9 @@ namespace Articuno
                 turbine.LoadShutdownTag = sitePrefix+reader.Rows[0]["Pause"].ToString();
                 turbine.StartCommandTag = sitePrefix+reader.Rows[0]["Start"].ToString();
                 //For scaling factor. This does not require a prefix as a systeminput value
-                //turbine.ScalingFactorTag = sitePrefix+reader.Rows[0]["ScalingFactor"].ToString();
                 turbine.ScalingFactorValue = scalingFactor;
+                //For Start up time. This does not require a prefix as a systeminput value
+                turbine.StartupTime = startupTime;
 
                 //Do not include the site prefix for this column. 
                 string primMetTower = reader.Rows[0]["MetReference"].ToString();
@@ -168,7 +176,7 @@ namespace Articuno
                 cmd = String.Format(TURBINE_OUTPUT_COLUMN_QUERY, turbinePrefix);
                 reader = dbi.readCommand(cmd);
 
-                turbine.AlarmTag = sitePrefix+reader.Rows[0]["Alarm"].ToString();
+                turbine.StoppedAlarmTag = sitePrefix+reader.Rows[0]["Alarm"].ToString();
                 turbine.AgcBlockingTag = sitePrefix+reader.Rows[0]["AGCBlocking"].ToString();
                 turbine.LowRotorSpeedFlagTag = sitePrefix+reader.Rows[0]["LowRotorSpeedFlag"].ToString();
                 turbine.CtrCountdownTag = sitePrefix+reader.Rows[0]["CTRCountdown"].ToString();
@@ -243,7 +251,6 @@ namespace Articuno
         /// <returns></returns>
         public Object readRotorSpeedValue(string turbineId) { return getTurbine(turbineId).readRotorSpeedValue(); }
         public Object readOperatingStateValue(string turbineId) { return getTurbine(turbineId).readOperatingStateValue(); }
-        public Object readNrsStateValue(string turbineId) { return getTurbine(turbineId).readNrsStateValue(); }
         public Object readTemperatureValue(string turbineId) { return getTurbine(turbineId).readTemperatureValue(); }
 
         //For writing (using turbineId). Note that the mediator really shouldn't be writing to all the availble turbine tags. If you need to test something, you need to create a turbine object 
@@ -277,7 +284,7 @@ namespace Articuno
         //These are functions called by the main Articuno class to set an icing protocol condition given a turbine. Remember, the turbine should pause automatically independently of each other
         public void setTemperatureCondition(string turbineId, bool state) { log.DebugFormat("Temperature condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setTemperatureCondition(state); }
         public void setOperatingStateCondition(string turbineId, bool state) { log.DebugFormat("Operating status condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setOperatingStateCondition(state); }
-        public void setNrsActive(string turbineId, bool state) { log.DebugFormat("NRS Condition for {0} {1}", turbineId, state ? "active" : "not active"); getTurbine(turbineId).setNrsActive(state); }
+        public void setNrsActive(string turbineId, bool state) { log.DebugFormat("NRS Condition for {0} {1}", turbineId, state ? "active" : "not active"); getTurbine(turbineId).setNrsMode(state); }
         public void setTurbinePerformanceCondition(string turbineId, bool state) { log.DebugFormat("Turbine Performance condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setTurbinePerformanceCondition(state); }
 
         /// <summary>
@@ -343,8 +350,7 @@ namespace Articuno
             Queue<double> windSpeedQueue = turbine.getWindSpeedQueue();
             Queue<double> rotorSpeedQueue = turbine.getRotorSpeedQueue();
 
-            //bool nrsMode = Convert.ToBoolean(turbine.readNrsStateValue());
-            bool nrsMode = Convert.ToInt16(turbine.readNrsStateValue()) == 0 ? true : false;
+            bool nrsMode = turbine.isNrsActive();
 
             var windSpeedQueueCount = windSpeedQueue.Count;
             var windSpeedAverage = 0.0;
