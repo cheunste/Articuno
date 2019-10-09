@@ -143,7 +143,7 @@ namespace Articuno
                 turbine.StartCommandTag = sitePrefix+reader.Rows[0]["Start"].ToString();
                 //For scaling factor. This does not require a prefix as a systeminput value
                 //turbine.ScalingFactorTag = sitePrefix+reader.Rows[0]["ScalingFactor"].ToString();
-                turbine.ScalingFactorTag = scalingFactor;
+                turbine.ScalingFactorValue = scalingFactor;
 
                 //Do not include the site prefix for this column. 
                 string primMetTower = reader.Rows[0]["MetReference"].ToString();

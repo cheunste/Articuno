@@ -77,7 +77,9 @@ namespace Articuno
         }
         public Object readTemperatureValue() { return OpcServer.readAnalogTag(OpcServerName, TemperatureTag); }
 
-        public Object readTurbineScalingFactorValue() { return OpcServer.readAnalogTag(OpcServerName, ScalingFactorTag); }
+        public Object readTurbineScalingFactorValue() {
+            return ScalingFactorValue;
+        }
         public Object readParticipationValue() { return OpcServer.readAnalogTag(OpcServerName, ParticipationTag); }
         public Object readAlarmValue() { return OpcServer.readAnalogTag(OpcServerName, AlarmTag); }
         public Object readCtrCurrentValue() { return OpcServer.readAnalogTag(OpcServerName, CtrCountdownTag); }
@@ -105,6 +107,7 @@ namespace Articuno
         public string AgcBlockingTag { set; get; }
         public string LowRotorSpeedFlagTag { get; set; }
         public string CtrCountdownTag { get; set; }
+        public string ScalingFactorValue { get; set; }
 
         //Theses are used to write to the OP Tag Values.  There shouldn't be too many of these
         public void writeTurbineCtrValue(int articunoCtrValue) { TurbineCtr = articunoCtrValue.ToString(); ctrCountDown = articunoCtrValue; }
@@ -177,7 +180,6 @@ namespace Articuno
             this.nrsActive = state;
             //Reset CTR in this condition and empty queue. Essentually, start from scratch
             //This is because a turbine must remain in its NRS without level change the ENTIRE CTR period.
-            //this.ctrCountDown = Convert.ToInt32(TurbineCtr);
             resetCtrTime();
             emptyQueue();
         }
