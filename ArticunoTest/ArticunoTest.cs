@@ -18,6 +18,8 @@ namespace ArticunoTest
         MetTowerMediator mm;
         TurbineMediator tm;
         DatabaseInterface di;
+        Setup setup;
+        string opcServerName = "SV.OPCDAServer.1";
         public ArticunoTest()
         {
             mm = MetTowerMediator.Instance;
@@ -26,6 +28,7 @@ namespace ArticunoTest
 
             mm.createMetTower();
             tm.createTestTurbines();
+            setup = new Setup();
         }
 
         #region Additional test attributes
@@ -52,10 +55,22 @@ namespace ArticunoTest
 
         [TestMethod]
         [DataTestMethod]
-        [DataRow("Met1", -20, -20, 90.0)]
+        [DataRow("Met", -15, -15, 90.0)]
         public void IcedTowerTest(string metId, double temp1, double temp2, double humidity)
         {
-            Assert.Fail();
+            int time = 3;
+            OpcServer.writeOpcTag(opcServerName, setup.CtrTime, time);
+            setup.DefaultCase();
+            string siteName = setup.sitePrefix;
+            OpcServer.writeOpcTag(opcServerName, setup.TmpThreshold, 5);
+            mm.writePrimTemperature(metId, temp1);
+            mm.writeSecTemperature(metId, temp2);
+            mm.writeHumidity(metId, humidity);
+
+
+            Articuno.Articuno.Main(null, null);
+            Thread.Sleep(time * 60 * 1000);
+            Assert.AreEqual(OpcServer.readBooleanTag(opcServerName, siteName + "Articuno."+metId+".IcePossible"), true); 
         }
 
         [TestMethod]
@@ -83,26 +98,7 @@ namespace ArticunoTest
             bool state = true;
             IcedConditions(turbineId, true);
             IcedConditions(turbineId, false);
-
-            //tm.setTemperatureCondition(turbineId, state);
-            //tm.setOperatingStateCondition(turbineId, state);
-            //tm.setNrscondition(turbineId, state);
-            //tm.setTurbinePerformanceCondition(turbineId, state);
-            //tm.setDeRateCondition(turbineId, state);
-
-            //state = false;
-            //tm.setTemperatureCondition(turbineId, state);
-            //tm.setOperatingStateCondition(turbineId, state);
-            //tm.setNrscondition(turbineId, state);
-            //tm.setTurbinePerformanceCondition(turbineId, state);
-            //tm.setDeRateCondition(turbineId, state);
-
-        }
-
-        [TestMethod]
-        public void PariticipationTest()
-        {
-
+       
         }
 
         [TestMethod]
@@ -164,9 +160,6 @@ namespace ArticunoTest
             Console.WriteLine("ctrTime Input: {0} turbineCtrTime: {1}", ctrTime.ToString(), turbineCtrTime);
             Assert.IsTrue(ctrTime.ToString().Equals(turbineCtrTime), "The written and turbine read time are not equal");
         }
-
-        [TestMethod]
-        public void OPCServerAliveTest() { }
 
         [TestMethod]
         public void SiteClearTest()
