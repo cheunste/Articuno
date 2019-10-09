@@ -279,7 +279,6 @@ namespace Articuno
         public void setOperatingStateCondition(string turbineId, bool state) { log.DebugFormat("Operating status condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setOperatingStateCondition(state); }
         public void setNrsActive(string turbineId, bool state) { log.DebugFormat("NRS Condition for {0} {1}", turbineId, state ? "active" : "not active"); getTurbine(turbineId).setNrsActive(state); }
         public void setTurbinePerformanceCondition(string turbineId, bool state) { log.DebugFormat("Turbine Performance condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setTurbinePerformanceCondition(state); }
-        public void setDeRateCondition(string turbineId, bool state) { log.DebugFormat("De Rate condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setDeRateCondition(state); }
 
         /// <summary>
         /// force a check Ice condition given a turbine Id. Should only be used in testing only

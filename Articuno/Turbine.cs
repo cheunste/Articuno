@@ -27,9 +27,7 @@ namespace Articuno
         //Member variables for algorithm
         private bool temperatureConditionMet;
         private bool operatingStateConditionMet;
-        private bool nrsActive;
         private bool turbinePerformanceConditionMet;
-        private bool derateConditionMet;
         private static TurbineMediator tm;
 
         //CTR Time. This is used to count down to zero. NOT set it.
@@ -177,7 +175,6 @@ namespace Articuno
         /// <param name="state">A boolean</param>
         public void setNrsActive(bool state)
         {
-            this.nrsActive = state;
             //Reset CTR in this condition and empty queue. Essentually, start from scratch
             //This is because a turbine must remain in its NRS without level change the ENTIRE CTR period.
             resetCtrTime();
@@ -188,7 +185,6 @@ namespace Articuno
             turbinePerformanceConditionMet = state;
             OpcServer.writeOpcTag(OpcServerName, this.LowRotorSpeedFlagTag, state);
         }
-        public void setDeRateCondition(bool state) { derateConditionMet = state; }
 
         /*
          * Met Tower accessor. Note that it only takes a prefix (ie Met1, Met2)

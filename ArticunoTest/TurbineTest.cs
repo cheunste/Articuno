@@ -158,7 +158,6 @@ namespace ArticunoTest
             tm.setOperatingStateCondition(turbineId, state);
             tm.setNrsActive(turbineId, state);
             tm.setTurbinePerformanceCondition(turbineId, state);
-            tm.setDeRateCondition(turbineId, state);
 
             //If all five are true, then this turbine should be paused due to Ice
             //Force the mediator to check icing conditions. I don't want to wait.

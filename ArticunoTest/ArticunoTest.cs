@@ -72,7 +72,6 @@ namespace ArticunoTest
             tm.setOperatingStateCondition(turbineId, state);
             tm.setNrsActive(turbineId, state);
             tm.setTurbinePerformanceCondition(turbineId, state);
-            tm.setDeRateCondition(turbineId, state);
         }
 
         [TestMethod]
@@ -204,7 +203,6 @@ namespace ArticunoTest
             tm.setOperatingStateCondition(turbineId, state);
             tm.setNrsActive(turbineId, state);
             tm.setTurbinePerformanceCondition(turbineId, state);
-            tm.setDeRateCondition(turbineId, state);
 
         }
     }
