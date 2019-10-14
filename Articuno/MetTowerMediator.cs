@@ -407,6 +407,7 @@ namespace Articuno
             var primTempQuality = primTempCheckTuple.Item1;
             var secTempQuality = secTempCheckTuple.Item1;
 
+            //Note that Quality doesn't really mean much since Articuno has no flatline criterias
             if (primTempQuality.Equals(MetQualityEnum.MET_GOOD_QUALITY))
             {
                 alarm(met, MetTowerEnum.PrimSensorOutOfRange, MetQualityEnum.MET_GOOD_QUALITY);

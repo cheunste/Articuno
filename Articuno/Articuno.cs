@@ -166,7 +166,7 @@ namespace Articuno
             var systemInputClient = new EasyDAClient();
             systemInputClient.ItemChanged += SystemInputOnChange;
             List<DAItemGroupArguments> systemInputTags = new List<DAItemGroupArguments>();
-            DataTable reader = dbi.readCommand("SELECT * from SystemInputTags WHERE Description!='SitePrefix' AND Description!='OpcServerName' AND OpcTag !='' order by Description ASC");
+            DataTable reader = dbi.readCommand("SELECT * from SystemInputTags WHERE OpcTag !='' order by Description ASC");
             for (int i = 0; i < reader.Rows.Count; i++)
             {
                 tag = sitePrefix + reader.Rows[i]["OpcTag"].ToString();
