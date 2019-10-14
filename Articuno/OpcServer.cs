@@ -104,7 +104,7 @@ namespace Articuno
                 object quality = opcServer.GetPropertyValue("",serverName,tag, DAPropertyIds.Quality);
                 object value = opcServer.GetPropertyValue("",serverName,tag, DAPropertyIds.Value);
 
-                log.DebugFormat("{0}: {1}. Qual: {2}",tag,value,quality);
+                //log.DebugFormat("{0}: {1}. Qual: {2}",tag,value,quality);
                 return value;
             }
             catch (Exception e)

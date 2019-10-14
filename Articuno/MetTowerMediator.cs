@@ -29,6 +29,7 @@ namespace Articuno
         private static string SELECT_QUERY = "SELECT Count(*) as num FROM MetTowerInputTags";
 
         private string opcServerName;
+        private string sitePrefix;
         private static List<MetTower> metTowerList = new List<MetTower>();
         private static List<String> metPrefixList = new List<String>();
 
@@ -42,9 +43,9 @@ namespace Articuno
             metPrefixList = new List<string>();
             metTowerList = new List<MetTower>();
             dbi = DatabaseInterface.Instance;
-            opcServerName = getOpcServerName();
+            opcServerName = DatabaseInterface.Instance.getOpcServer();
+            sitePrefix = DatabaseInterface.Instance.getSitePrefix();
         }
-        private string getOpcServerName() { return DatabaseInterface.Instance.getOpcServer(); }
         public static MetTowerMediator Instance { get { return Nested.instance; } }
 
         private class Nested
@@ -88,29 +89,29 @@ namespace Articuno
                 DataTable reader = dbi.readCommand(cmd);
 
                 //Set the tags from the MeTowerInputTags table to the accessors
-                met.PrimTemperatureTag = reader.Rows[0]["PrimTempValueTag"].ToString();
-                met.SecTemperatureTag = reader.Rows[0]["SecTempValueTag"].ToString();
-                met.RelativeHumidityTag = reader.Rows[0]["PrimHumidityValueTag"].ToString();
-                met.HumidityPrimValueTag = reader.Rows[0]["PrimHumidityValueTag"].ToString();
-                met.HumiditySecValueTag = reader.Rows[0]["SecHumidityValueTag"].ToString();
-                met.MetSwitchTag = reader.Rows[0]["Switch"].ToString();
+                met.PrimTemperatureTag = sitePrefix+reader.Rows[0]["PrimTempValueTag"].ToString();
+                met.SecTemperatureTag = sitePrefix+reader.Rows[0]["SecTempValueTag"].ToString();
+                met.RelativeHumidityTag = sitePrefix+reader.Rows[0]["PrimHumidityValueTag"].ToString();
+                met.HumidityPrimValueTag = sitePrefix+reader.Rows[0]["PrimHumidityValueTag"].ToString();
+                met.HumiditySecValueTag = sitePrefix+reader.Rows[0]["SecHumidityValueTag"].ToString();
+                met.MetSwitchTag = sitePrefix+reader.Rows[0]["Switch"].ToString();
 
                 //For Met Tower tags from the MetTowerInputTags table
                 cmd = String.Format(MET_OUTPUT_TABLE_TAGS, metPrefix);
                 reader = dbi.readCommand(cmd);
 
                 //Set the tags from the MeTowerInputTags table to the accessors
-                met.TemperaturePrimBadQualityTag = reader.Rows[0]["TempPrimBadQualityTag"].ToString();
-                met.TemperaturePrimOutOfRangeTag = reader.Rows[0]["TempPrimOutOfRangeTag"].ToString();
-                met.TemperatureSecOutOfRangeTag = reader.Rows[0]["TempSecOutOfRangeTag"].ToString();
-                met.TemperatureSecBadQualityTag = reader.Rows[0]["TempSecBadQualityTag"].ToString();
-                met.HumidtyOutOfRangeTag = reader.Rows[0]["HumidityOutOfRangeTag"].ToString();
-                met.HumidityBadQualityTag = reader.Rows[0]["HumidityBadQualityTag"].ToString();
-                met.IceIndicationTag = reader.Rows[0]["IceIndicationTag"].ToString();
-                met.NoDataAlarmTag = reader.Rows[0]["NoDataAlarmTag"].ToString();
-                met.CtrTemperatureTag = reader.Rows[0]["CtrTemperature"].ToString();
-                met.CtrDewTag = reader.Rows[0]["CtrDew"].ToString();
-                met.CtrHumidityTag = reader.Rows[0]["CtrHumidity"].ToString();
+                met.TemperaturePrimBadQualityTag =sitePrefix+reader.Rows[0]["TempPrimBadQualityTag"].ToString();
+                met.TemperaturePrimOutOfRangeTag =sitePrefix+reader.Rows[0]["TempPrimOutOfRangeTag"].ToString();
+                met.TemperatureSecOutOfRangeTag = sitePrefix+reader.Rows[0]["TempSecOutOfRangeTag"].ToString();
+                met.TemperatureSecBadQualityTag = sitePrefix+reader.Rows[0]["TempSecBadQualityTag"].ToString();
+                met.HumidtyOutOfRangeTag = sitePrefix+reader.Rows[0]["HumidityOutOfRangeTag"].ToString();
+                met.HumidityBadQualityTag = sitePrefix+reader.Rows[0]["HumidityBadQualityTag"].ToString();
+                met.IceIndicationTag = sitePrefix+reader.Rows[0]["IceIndicationTag"].ToString();
+                met.NoDataAlarmTag = sitePrefix+reader.Rows[0]["NoDataAlarmTag"].ToString();
+                met.CtrTemperatureTag = sitePrefix+reader.Rows[0]["CtrTemperature"].ToString();
+                met.CtrDewTag = sitePrefix+reader.Rows[0]["CtrDew"].ToString();
+                met.CtrHumidityTag = sitePrefix+reader.Rows[0]["CtrHumidity"].ToString();
 
                 metTowerList.Add(met);
             }
@@ -129,7 +130,7 @@ namespace Articuno
         /// <returns>A Met Tower Object if exist. Null otherwise. createMetTower() must be called before using this fucntion</returns>
         public MetTower getMetTower(string metTowerId)
         {
-            for (int i = 0; i <= metTowerList.Count; i++)
+            for (int i = 0; i < metTowerList.Count; i++)
             {
                 if (metTowerList.ElementAt(i).getMetTowerPrefix.Equals(metTowerId)) { return metTowerList.ElementAt(i); }
             }
@@ -238,7 +239,9 @@ namespace Articuno
             while (humidityQueue.Count != 0) { humidityCtrAverage += humidityQueue.Dequeue(); }
 
             double average = humidityCtrAverage / count;
-            met.CtrHumidityValue = average;
+            //You need to multiple the CtrHumidityValue by 100 because it is currently in decimal form. 
+            //This needs to be displayed in percentage form
+            met.CtrHumidityValue = average*100.0;
             return average;
         }
 
@@ -404,6 +407,7 @@ namespace Articuno
             var primTempQuality = primTempCheckTuple.Item1;
             var secTempQuality = secTempCheckTuple.Item1;
 
+            //Note that Quality doesn't really mean much since Articuno has no flatline criterias
             if (primTempQuality.Equals(MetQualityEnum.MET_GOOD_QUALITY))
             {
                 alarm(met, MetTowerEnum.PrimSensorOutOfRange, MetQualityEnum.MET_GOOD_QUALITY);
