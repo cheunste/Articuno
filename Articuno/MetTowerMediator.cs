@@ -462,18 +462,18 @@ namespace Articuno
             //For the secondary sensors
             if (secTempQuality.Equals(MetQualityEnum.MET_GOOD_QUALITY) && secTempFlatlineQuality.Equals(MetQualityEnum.MET_GOOD_QUALITY))
             {
-                alarm(met, MetTowerEnum.PrimSensorOutOfRange, MetQualityEnum.MET_GOOD_QUALITY);
-                alarm(met, MetTowerEnum.PrimSensorQuality, MetQualityEnum.MET_GOOD_QUALITY);
+                alarm(met, MetTowerEnum.SecSensorOutOfRange, MetQualityEnum.MET_GOOD_QUALITY);
+                alarm(met, MetTowerEnum.SecSensorQuality, MetQualityEnum.MET_GOOD_QUALITY);
             }
             else if (secTempQuality.Equals(MetQualityEnum.MET_GOOD_QUALITY) && secTempFlatlineQuality.Equals(MetQualityEnum.MET_BAD_QUALITY))
             {
-                alarm(met, MetTowerEnum.PrimSensorOutOfRange, MetQualityEnum.MET_GOOD_QUALITY);
-                alarm(met, MetTowerEnum.PrimSensorQuality, MetQualityEnum.MET_BAD_QUALITY);
+                alarm(met, MetTowerEnum.SecSensorOutOfRange, MetQualityEnum.MET_GOOD_QUALITY);
+                alarm(met, MetTowerEnum.SecSensorQuality, MetQualityEnum.MET_BAD_QUALITY);
             }
             else
             {
-                alarm(met, MetTowerEnum.PrimSensorOutOfRange, MetQualityEnum.MET_BAD_QUALITY);
-                alarm(met, MetTowerEnum.PrimSensorQuality, MetQualityEnum.MET_BAD_QUALITY);
+                alarm(met, MetTowerEnum.SecSensorOutOfRange, MetQualityEnum.MET_BAD_QUALITY);
+                alarm(met, MetTowerEnum.SecSensorQuality, MetQualityEnum.MET_BAD_QUALITY);
             }
 
             return new Tuple<MetQualityEnum, MetQualityEnum, double, double>(primTempQuality, secTempQuality, primTempRangeCheckTuple.Item2, secTempRangeCheckTuple.Item2);
