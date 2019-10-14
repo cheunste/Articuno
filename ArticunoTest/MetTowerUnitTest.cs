@@ -280,7 +280,7 @@ namespace ArticunoTest
             Console.WriteLine("Temperature of {0}: {1}", metId, temperature);
             Console.WriteLine("Temperature from Turbine: {0}", turbineTemp);
             //Make sure the temperature from both the met tower and its backup turbine are not the same.
-            Assert.AreEqual(temperature, turbineTemp, 0.001,"Not euqal. Turbine: {0}, Met Temp {1}",turbineTemp,temperature);
+            Assert.AreNotEqual(temperature, turbineTemp, 0.001,"The Temperatures are equal. Turbine: {0}, Met Temp {1}",turbineTemp,temperature);
         }
 
         [TestMethod]
@@ -375,6 +375,12 @@ namespace ArticunoTest
 
             bool primOutOfRange = Convert.ToBoolean(met.TemperaturePrimOutOfRange.ToString());
             bool secOutOfRange = Convert.ToBoolean(met.TemperatureSecOutOfRange.ToString());
+
+            var readTemp1 = met.PrimTemperatureValue;
+            var readTemp2 = met.SecTemperatureValue;
+
+            Console.WriteLine("Primary Temperature sensor value: {0}", readTemp1);
+            Console.WriteLine("Secondary Temperature sensor value: {0}", readTemp2);
 
             bool primQuaality = Convert.ToBoolean(met.TemperaturePrimBadQuality.ToString());
             bool secQuaality = Convert.ToBoolean(met.TemperatureSecBadQuality.ToString());

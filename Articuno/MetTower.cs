@@ -26,6 +26,9 @@ namespace Articuno
         private double ambTempThreshold;
         private double deltaTempThreshold;
 
+        public int frozenTemperatureCnt;
+        public int frozenHumidityCnt;
+
         //Queues
         private Queue<double> temperatureQueue;
         private Queue<double> humidityQueue;
@@ -55,6 +58,10 @@ namespace Articuno
 
             temperatureQueue = new Queue<double>();
             humidityQueue = new Queue<double>();
+            frozenHumidityCnt = 0;
+            frozenTemperatureCnt = 0;
+            SampleTemperature = 0;
+            SampleHumidity = 0;
         }
 
         /// <summary>
@@ -203,14 +210,11 @@ namespace Articuno
         /// </summary>
         /// <param name="opcTag"></param>
         /// <returns></returns>
-        public bool isQualityGood(string opcTag)
-        {
-            //DAVtq vtq = client.ReadItem(opcServerName, opcTag);
-            //DAVtq vtq = (DAVtq) OpcServer.readOpcTag(opcServerName, opcTag);
-            //return vtq.Quality.IsGood ? true : false;
+        public bool isQualityGood(string opcTag) { return Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, opcTag)); }
 
-            return Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, opcTag));
-        }
+        public double SampleTemperature { get;set; }
+        public double SampleHumidity { get;set; }
+
 
         //Met Id methods
         public string getMetTowerPrefix { set { } get { return this.metTowerPrefix; } }
