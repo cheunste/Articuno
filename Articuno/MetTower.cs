@@ -60,7 +60,8 @@ namespace Articuno
             humidityQueue = new Queue<double>();
             frozenHumidityCnt = 0;
             frozenTemperatureCnt = 0;
-
+            SampleTemperature = 0;
+            SampleHumidity = 0;
         }
 
         /// <summary>
