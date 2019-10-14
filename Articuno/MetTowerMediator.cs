@@ -397,18 +397,19 @@ namespace Articuno
         /// <returns></returns>
         private MetQualityEnum temperatureFlatlineCheck(MetTower met, double currentTemp, string temperatureTag)
         {
+            double tolerance = 0.00001;
             double lastSampledTemperature = met.SampleTemperature;
+
             //If the current temperature is equal to the last stored sample, then increment the frozenTemperatureCnt
-            if (lastSampledTemperature.Equals(currentTemp)) { met.frozenTemperatureCnt++; }
+            // Note that temperatures are doubles
+            if (Math.Abs(lastSampledTemperature - currentTemp) <= tolerance) { met.frozenTemperatureCnt++; }
             //Reset the frozenTemperatureCnt if it isn't equal
-            else
-            {
-                met.frozenTemperatureCnt = 0;
-            }
+            else { met.frozenTemperatureCnt = 0; }
+
             //Set the sample Temperature to the current temperature
             met.SampleTemperature = currentTemp;
 
-            //If there are 50 or so samples (or whatever) that are equally the same, that implies the temperature from the sensor is flatlined. At this point, raise a bad quality alert.
+            //If there are 50 or so samples (or whatever) that are equally the same, that implies the temperature from the sensor is flatlined. At this point, return a bad quality alert.
             //TODO: Replace 50 with an adjustable number from the database 
             if (met.frozenTemperatureCnt >= 50)
             {
@@ -437,29 +438,42 @@ namespace Articuno
             var primTempQuality = primTempRangeCheckTuple.Item1;
             var secTempQuality = secTempRangeCheckTuple.Item1;
 
-            var primTempFlatlineQuality = temperatureFlatlineCheck(met, primTempRangeCheckTuple.Item2,primTempTag);
-            var secTempFlatlineQuality = temperatureFlatlineCheck(met, secTempRangeCheckTuple.Item2,secTempTag);
+            var primTempFlatlineQuality = temperatureFlatlineCheck(met, primTempRangeCheckTuple.Item2, primTempTag);
+            var secTempFlatlineQuality = temperatureFlatlineCheck(met, secTempRangeCheckTuple.Item2, secTempTag);
 
             //Note that Quality doesn't really mean much since Articuno has no flatline criterias
+            //For the primary sensors
             if (primTempQuality.Equals(MetQualityEnum.MET_GOOD_QUALITY) && primTempFlatlineQuality.Equals(MetQualityEnum.MET_GOOD_QUALITY))
             {
                 alarm(met, MetTowerEnum.PrimSensorOutOfRange, MetQualityEnum.MET_GOOD_QUALITY);
                 alarm(met, MetTowerEnum.PrimSensorQuality, MetQualityEnum.MET_GOOD_QUALITY);
+            }
+            else if (primTempQuality.Equals(MetQualityEnum.MET_GOOD_QUALITY) && primTempFlatlineQuality.Equals(MetQualityEnum.MET_BAD_QUALITY))
+            {
+                alarm(met, MetTowerEnum.PrimSensorOutOfRange, MetQualityEnum.MET_GOOD_QUALITY);
+                alarm(met, MetTowerEnum.PrimSensorQuality, MetQualityEnum.MET_BAD_QUALITY);
             }
             else
             {
                 alarm(met, MetTowerEnum.PrimSensorOutOfRange, MetQualityEnum.MET_BAD_QUALITY);
                 alarm(met, MetTowerEnum.PrimSensorQuality, MetQualityEnum.MET_BAD_QUALITY);
             }
-            if (secTempQuality.Equals(MetQualityEnum.MET_GOOD_QUALITY) && secTempFlatlineQuality.Equals(MetQualityEnum.MET_BAD_QUALITY))
+
+            //For the secondary sensors
+            if (secTempQuality.Equals(MetQualityEnum.MET_GOOD_QUALITY) && secTempFlatlineQuality.Equals(MetQualityEnum.MET_GOOD_QUALITY))
             {
-                alarm(met, MetTowerEnum.SecSensorOutOfRange, MetQualityEnum.MET_GOOD_QUALITY);
-                alarm(met, MetTowerEnum.SecSensorQuality, MetQualityEnum.MET_GOOD_QUALITY);
+                alarm(met, MetTowerEnum.PrimSensorOutOfRange, MetQualityEnum.MET_GOOD_QUALITY);
+                alarm(met, MetTowerEnum.PrimSensorQuality, MetQualityEnum.MET_GOOD_QUALITY);
+            }
+            else if (secTempQuality.Equals(MetQualityEnum.MET_GOOD_QUALITY) && secTempFlatlineQuality.Equals(MetQualityEnum.MET_BAD_QUALITY))
+            {
+                alarm(met, MetTowerEnum.PrimSensorOutOfRange, MetQualityEnum.MET_GOOD_QUALITY);
+                alarm(met, MetTowerEnum.PrimSensorQuality, MetQualityEnum.MET_BAD_QUALITY);
             }
             else
             {
-                alarm(met, MetTowerEnum.SecSensorOutOfRange, MetQualityEnum.MET_BAD_QUALITY);
-                alarm(met, MetTowerEnum.SecSensorQuality, MetQualityEnum.MET_BAD_QUALITY);
+                alarm(met, MetTowerEnum.PrimSensorOutOfRange, MetQualityEnum.MET_BAD_QUALITY);
+                alarm(met, MetTowerEnum.PrimSensorQuality, MetQualityEnum.MET_BAD_QUALITY);
             }
 
             return new Tuple<MetQualityEnum, MetQualityEnum, double, double>(primTempQuality, secTempQuality, primTempRangeCheckTuple.Item2, secTempRangeCheckTuple.Item2);
