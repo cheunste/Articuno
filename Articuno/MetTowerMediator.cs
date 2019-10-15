@@ -402,16 +402,22 @@ namespace Articuno
 
             //If the current temperature is equal to the last stored sample, then increment the frozenTemperatureCnt
             // Note that temperatures are doubles
-            if (Math.Abs(lastSampledTemperature - currentTemp) <= tolerance) { met.frozenTemperatureCnt++; }
+            if (Math.Abs(lastSampledTemperature - currentTemp) <= tolerance)
+            {
+                met.incrementFrozen(temperatureTag);
+            }
             //Reset the frozenTemperatureCnt if it isn't equal
-            else { met.frozenTemperatureCnt = 0; }
+            else
+            {
+                met.resetFrozenIncrement(temperatureTag);
+            }
 
             //Set the sample Temperature to the current temperature
             met.SampleTemperature = currentTemp;
 
             //If there are 50 or so samples (or whatever) that are equally the same, that implies the temperature from the sensor is flatlined. At this point, return a bad quality alert.
             //TODO: Replace 50 with an adjustable number from the database 
-            if (met.frozenTemperatureCnt >= 50)
+            if (met.getFrozenIncrement(temperatureTag) >= 50)
             {
                 log.InfoFormat("Flatlien detected for {0}", temperatureTag);
                 return MetQualityEnum.MET_BAD_QUALITY;
