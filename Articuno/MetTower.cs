@@ -26,8 +26,9 @@ namespace Articuno
         private double ambTempThreshold;
         private double deltaTempThreshold;
 
-        public int frozenTemperatureCnt;
-        public int frozenHumidityCnt;
+        private int frozenPrimTempCnt;
+        private int frozenSecTempCnt;
+        private int frozenHumidityCnt;
 
         //Queues
         private Queue<double> temperatureQueue;
@@ -59,7 +60,8 @@ namespace Articuno
             temperatureQueue = new Queue<double>();
             humidityQueue = new Queue<double>();
             frozenHumidityCnt = 0;
-            frozenTemperatureCnt = 0;
+            frozenPrimTempCnt = 0;
+            frozenSecTempCnt = 0;
             SampleTemperature = 0;
             SampleHumidity = 0;
         }
@@ -172,8 +174,8 @@ namespace Articuno
 
         public Object TemperaturePrimBadQuality
         {
-            get { return OpcServer.readBooleanTag(opcServerName, TemperaturePrimOutOfRangeTag); }
-            set { OpcServer.writeOpcTag(opcServerName, TemperaturePrimOutOfRangeTag, value); }
+            get { return OpcServer.readBooleanTag(opcServerName, TemperaturePrimBadQualityTag); }
+            set { OpcServer.writeOpcTag(opcServerName, TemperaturePrimBadQualityTag, value); }
         }
 
         public Object TemperatureSecOutOfRange
@@ -184,8 +186,8 @@ namespace Articuno
 
         public Object TemperatureSecBadQuality
         {
-            get { return OpcServer.readBooleanTag(opcServerName, TemperatureSecOutOfRangeTag); }
-            set { OpcServer.writeOpcTag(opcServerName, TemperatureSecOutOfRangeTag, value); }
+            get { return OpcServer.readBooleanTag(opcServerName, TemperatureSecBadQualityTag); }
+            set { OpcServer.writeOpcTag(opcServerName, TemperatureSecBadQualityTag, value); }
         }
         /// <summary>
         /// Sets the average temperture to the output 
@@ -212,8 +214,8 @@ namespace Articuno
         /// <returns></returns>
         public bool isQualityGood(string opcTag) { return Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, opcTag)); }
 
-        public double SampleTemperature { get;set; }
-        public double SampleHumidity { get;set; }
+        public double SampleTemperature { get; set; }
+        public double SampleHumidity { get; set; }
 
 
         //Met Id methods
@@ -232,5 +234,29 @@ namespace Articuno
 
         public Queue<double> getTemperatureQueue() { return this.temperatureQueue; }
         public Queue<double> getHumidityQueue() { return this.humidityQueue; }
+
+        public void incrementFrozen(string opcTag)
+        {
+            if (opcTag.Equals(PrimTemperatureTag))
+                frozenPrimTempCnt++;
+            else
+                frozenSecTempCnt++;
+        }
+
+        public int getFrozenIncrement(string opcTag)
+        {
+            if (opcTag.Equals(PrimTemperatureTag))
+                return frozenPrimTempCnt;
+            else
+                return frozenSecTempCnt;
+        }
+
+        public void resetFrozenIncrement(string opcTag)
+        {
+            if (opcTag.Equals(PrimTemperatureTag))
+                frozenPrimTempCnt = 0;
+            else
+                frozenSecTempCnt = 0;
+        }
     }
 }
