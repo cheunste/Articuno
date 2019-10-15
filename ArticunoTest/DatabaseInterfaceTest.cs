@@ -35,7 +35,7 @@ namespace ArticunoTest
 
             for (int i = 0; i < reader.Rows.Count; i++)
             {
-                Console.WriteLine(reader.Rows[i]["Default"].ToString());
+                Console.WriteLine(reader.Rows[i]["DefaultValue"].ToString());
             }
         }
 

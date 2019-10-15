@@ -29,6 +29,7 @@ namespace Articuno
         private static string SELECT_QUERY = "SELECT Count(*) as num FROM MetTowerInputTags";
 
         private string opcServerName;
+        private string sitePrefix;
         private static List<MetTower> metTowerList = new List<MetTower>();
         private static List<String> metPrefixList = new List<String>();
 
@@ -37,14 +38,15 @@ namespace Articuno
 
         //Database
         static DatabaseInterface dbi;
-        private MetTowerMediator() {
+        private MetTowerMediator()
+        {
 
             metPrefixList = new List<string>();
             metTowerList = new List<MetTower>();
             dbi = DatabaseInterface.Instance;
-            opcServerName = getOpcServerName();
+            opcServerName = DatabaseInterface.Instance.getOpcServer();
+            sitePrefix = DatabaseInterface.Instance.getSitePrefix();
         }
-        private string getOpcServerName() { return DatabaseInterface.Instance.getOpcServer(); }
         public static MetTowerMediator Instance { get { return Nested.instance; } }
 
         private class Nested
@@ -88,29 +90,29 @@ namespace Articuno
                 DataTable reader = dbi.readCommand(cmd);
 
                 //Set the tags from the MeTowerInputTags table to the accessors
-                met.PrimTemperatureTag = reader.Rows[0]["PrimTempValueTag"].ToString();
-                met.SecTemperatureTag = reader.Rows[0]["SecTempValueTag"].ToString();
-                met.RelativeHumidityTag = reader.Rows[0]["PrimHumidityValueTag"].ToString();
-                met.HumidityPrimValueTag = reader.Rows[0]["PrimHumidityValueTag"].ToString();
-                met.HumiditySecValueTag = reader.Rows[0]["SecHumidityValueTag"].ToString();
-                met.MetSwitchTag = reader.Rows[0]["Switch"].ToString();
+                met.PrimTemperatureTag = sitePrefix + reader.Rows[0]["PrimTempValueTag"].ToString();
+                met.SecTemperatureTag = sitePrefix + reader.Rows[0]["SecTempValueTag"].ToString();
+                met.RelativeHumidityTag = sitePrefix + reader.Rows[0]["PrimHumidityValueTag"].ToString();
+                met.HumidityPrimValueTag = sitePrefix + reader.Rows[0]["PrimHumidityValueTag"].ToString();
+                met.HumiditySecValueTag = sitePrefix + reader.Rows[0]["SecHumidityValueTag"].ToString();
+                met.MetSwitchTag = sitePrefix + reader.Rows[0]["Switch"].ToString();
 
                 //For Met Tower tags from the MetTowerInputTags table
                 cmd = String.Format(MET_OUTPUT_TABLE_TAGS, metPrefix);
                 reader = dbi.readCommand(cmd);
 
                 //Set the tags from the MeTowerInputTags table to the accessors
-                met.TemperaturePrimBadQualityTag = reader.Rows[0]["TempPrimBadQualityTag"].ToString();
-                met.TemperaturePrimOutOfRangeTag = reader.Rows[0]["TempPrimOutOfRangeTag"].ToString();
-                met.TemperatureSecOutOfRangeTag = reader.Rows[0]["TempSecOutOfRangeTag"].ToString();
-                met.TemperatureSecBadQualityTag = reader.Rows[0]["TempSecBadQualityTag"].ToString();
-                met.HumidtyOutOfRangeTag = reader.Rows[0]["HumidityOutOfRangeTag"].ToString();
-                met.HumidityBadQualityTag = reader.Rows[0]["HumidityBadQualityTag"].ToString();
-                met.IceIndicationTag = reader.Rows[0]["IceIndicationTag"].ToString();
-                met.NoDataAlarmTag = reader.Rows[0]["NoDataAlarmTag"].ToString();
-                met.CtrTemperatureTag = reader.Rows[0]["CtrTemperature"].ToString();
-                met.CtrDewTag = reader.Rows[0]["CtrDew"].ToString();
-                met.CtrHumidityTag = reader.Rows[0]["CtrHumidity"].ToString();
+                met.TemperaturePrimBadQualityTag = sitePrefix + reader.Rows[0]["TempPrimBadQualityTag"].ToString();
+                met.TemperaturePrimOutOfRangeTag = sitePrefix + reader.Rows[0]["TempPrimOutOfRangeTag"].ToString();
+                met.TemperatureSecOutOfRangeTag = sitePrefix + reader.Rows[0]["TempSecOutOfRangeTag"].ToString();
+                met.TemperatureSecBadQualityTag = sitePrefix + reader.Rows[0]["TempSecBadQualityTag"].ToString();
+                met.HumidtyOutOfRangeTag = sitePrefix + reader.Rows[0]["HumidityOutOfRangeTag"].ToString();
+                met.HumidityBadQualityTag = sitePrefix + reader.Rows[0]["HumidityBadQualityTag"].ToString();
+                met.IceIndicationTag = sitePrefix + reader.Rows[0]["IceIndicationTag"].ToString();
+                met.NoDataAlarmTag = sitePrefix + reader.Rows[0]["NoDataAlarmTag"].ToString();
+                met.CtrTemperatureTag = sitePrefix + reader.Rows[0]["CtrTemperature"].ToString();
+                met.CtrDewTag = sitePrefix + reader.Rows[0]["CtrDew"].ToString();
+                met.CtrHumidityTag = sitePrefix + reader.Rows[0]["CtrHumidity"].ToString();
 
                 metTowerList.Add(met);
             }
@@ -129,7 +131,7 @@ namespace Articuno
         /// <returns>A Met Tower Object if exist. Null otherwise. createMetTower() must be called before using this fucntion</returns>
         public MetTower getMetTower(string metTowerId)
         {
-            for (int i = 0; i <= metTowerList.Count; i++)
+            for (int i = 0; i < metTowerList.Count; i++)
             {
                 if (metTowerList.ElementAt(i).getMetTowerPrefix.Equals(metTowerId)) { return metTowerList.ElementAt(i); }
             }
@@ -171,7 +173,7 @@ namespace Articuno
         /// <returns>A metId. Returns the original metId if it is not switched. Returns a the backup metId otherwise</returns>
         public string isMetTowerSwitched(string metId)
         {
-           bool temp = (getMetTower(metId).MetSwitchValue);
+            bool temp = (getMetTower(metId).MetSwitchValue);
             if (Convert.ToBoolean(getMetTower(metId).MetSwitchValue))
                 return metId.Equals("Met") ? "Met2" : "Met";
             else
@@ -222,7 +224,7 @@ namespace Articuno
             double count = tempQueue.Count;
             while (tempQueue.Count != 0) { temperatureCtrAverage += tempQueue.Dequeue(); }
 
-            double average =temperatureCtrAverage/count;
+            double average = temperatureCtrAverage / count;
             met.CtrTemperatureValue = average;
 
             return average;
@@ -240,13 +242,13 @@ namespace Articuno
             double average = humidityCtrAverage / count;
             //You need to multiple the CtrHumidityValue by 100 because it is currently in decimal form. 
             //This needs to be displayed in percentage form
-            met.CtrHumidityValue = average*100.0;
+            met.CtrHumidityValue = average * 100.0;
             return average;
         }
 
-        internal void updateDewPoint(string metId,double ctrTemperature, double ctrHumidity)
+        internal void updateDewPoint(string metId, double ctrTemperature, double ctrHumidity)
         {
-            double dew=calculateDewPoint(ctrHumidity, ctrTemperature);
+            double dew = calculateDewPoint(ctrHumidity, ctrTemperature);
             getMetTower(metId).CtrDewValue = dew;
         }
 
@@ -299,7 +301,7 @@ namespace Articuno
         /// <param name="ambTemp">The ambient temperature value (Celcius) from the met tower in double format</param>
         /// <param name="dewPointTemp">The dew point temperature from calculateDewPoint</param>
         /// <returns>The delta temperature in double format</returns>
-        public double calculateDelta(double ambTemp, double dewPointTemp)=> Math.Round(Math.Abs(ambTemp - dewPointTemp), 3); 
+        public double calculateDelta(double ambTemp, double dewPointTemp) => Math.Round(Math.Abs(ambTemp - dewPointTemp), 3);
 
         /// <summary>
         /// Check the quality of the met tower. Returns True if the data is 'bad quality'. Returns False if met tower data is 'good quality
@@ -334,7 +336,7 @@ namespace Articuno
         {
             MetTower met = getMetTower(metId);
             //IMPORTANT: The OPC Value is read as a percentage, but this program needs the humidity as a decimal (ie between 0 and 1)
-            double rh = Convert.ToDouble(met.RelativeHumidityValue)/100.00;
+            double rh = Convert.ToDouble(met.RelativeHumidityValue) / 100.00;
             double minValue = 0.0;
             double maxValue = 1.0;
             double minCapValue = 0.00;
@@ -372,7 +374,7 @@ namespace Articuno
         /// </summary>
         /// <param name="temperatureTag">The OPC tag for temperature (either prim or sec)</param>
         /// <returns>Returns True if good quality, False if bad</returns>
-        private Tuple<MetQualityEnum, double> tempValueCheck(string temperatureTag, double tempValue)
+        private Tuple<MetQualityEnum, double> temperatureRangeCheck(string temperatureTag, double tempValue)
         {
             double minValue = -20.0;
             double maxValue = 60.0;
@@ -388,6 +390,42 @@ namespace Articuno
         }
 
         /// <summary>
+        /// method to check to see if a temperature sensor is flatlined or not. Returns a MetQualityEnum
+        /// </summary>
+        /// <param name="met"></param>
+        /// <param name="currentTemp"></param>
+        /// <returns></returns>
+        private MetQualityEnum temperatureFlatlineCheck(MetTower met, double currentTemp, string temperatureTag)
+        {
+            double tolerance = 0.00001;
+            double lastSampledTemperature = met.SampleTemperature;
+
+            //If the current temperature is equal to the last stored sample, then increment the frozenTemperatureCnt
+            // Note that temperatures are doubles
+            if (Math.Abs(lastSampledTemperature - currentTemp) <= tolerance)
+            {
+                met.incrementFrozen(temperatureTag);
+            }
+            //Reset the frozenTemperatureCnt if it isn't equal
+            else
+            {
+                met.resetFrozenIncrement(temperatureTag);
+            }
+
+            //Set the sample Temperature to the current temperature
+            met.SampleTemperature = currentTemp;
+
+            //If there are 50 or so samples (or whatever) that are equally the same, that implies the temperature from the sensor is flatlined. At this point, return a bad quality alert.
+            //TODO: Replace 50 with an adjustable number from the database 
+            if (met.getFrozenIncrement(temperatureTag) >= 50)
+            {
+                log.InfoFormat("Flatlien detected for {0}", temperatureTag);
+                return MetQualityEnum.MET_BAD_QUALITY;
+            }
+            return MetQualityEnum.MET_GOOD_QUALITY;
+        }
+
+        /// <summary>
         /// Check the temperature quality of both the primary and secondary sensors
         /// </summary>
         /// <returns>Returns True if good quality, False if bad</returns>
@@ -400,13 +438,18 @@ namespace Articuno
             double secTempValue = Convert.ToDouble(met.SecTemperatureValue);
 
             //call the ValueQuatliyCheck method to verify
-            var primTempCheckTuple = tempValueCheck(primTempTag, primTempValue);
-            var secTempCheckTuple = tempValueCheck(secTempTag, secTempValue);
+            var primTempRangeCheckTuple = temperatureRangeCheck(primTempTag, primTempValue);
+            var secTempRangeCheckTuple = temperatureRangeCheck(secTempTag, secTempValue);
 
-            var primTempQuality = primTempCheckTuple.Item1;
-            var secTempQuality = secTempCheckTuple.Item1;
+            var primTempRangeQuality = primTempRangeCheckTuple.Item1;
+            var secTempRangeQuality = secTempRangeCheckTuple.Item1;
 
-            if (primTempQuality.Equals(MetQualityEnum.MET_GOOD_QUALITY))
+            var primTempFlatlineQuality = temperatureFlatlineCheck(met, primTempRangeCheckTuple.Item2, primTempTag);
+            var secTempFlatlineQuality = temperatureFlatlineCheck(met, secTempRangeCheckTuple.Item2, secTempTag);
+
+            //Note that Quality doesn't really mean much since Articuno has no flatline criterias
+            //For the primary sensors
+            if (primTempRangeQuality.Equals(MetQualityEnum.MET_GOOD_QUALITY) )
             {
                 alarm(met, MetTowerEnum.PrimSensorOutOfRange, MetQualityEnum.MET_GOOD_QUALITY);
                 alarm(met, MetTowerEnum.PrimSensorQuality, MetQualityEnum.MET_GOOD_QUALITY);
@@ -416,7 +459,9 @@ namespace Articuno
                 alarm(met, MetTowerEnum.PrimSensorOutOfRange, MetQualityEnum.MET_BAD_QUALITY);
                 alarm(met, MetTowerEnum.PrimSensorQuality, MetQualityEnum.MET_BAD_QUALITY);
             }
-            if (secTempQuality.Equals(MetQualityEnum.MET_GOOD_QUALITY))
+
+            //For the secondary sensors
+            if (secTempRangeQuality.Equals(MetQualityEnum.MET_GOOD_QUALITY) )
             {
                 alarm(met, MetTowerEnum.SecSensorOutOfRange, MetQualityEnum.MET_GOOD_QUALITY);
                 alarm(met, MetTowerEnum.SecSensorQuality, MetQualityEnum.MET_GOOD_QUALITY);
@@ -427,9 +472,8 @@ namespace Articuno
                 alarm(met, MetTowerEnum.SecSensorQuality, MetQualityEnum.MET_BAD_QUALITY);
             }
 
-            return new Tuple<MetQualityEnum, MetQualityEnum, double, double>(primTempQuality, secTempQuality, primTempCheckTuple.Item2, secTempCheckTuple.Item2);
+            return new Tuple<MetQualityEnum, MetQualityEnum, double, double>(primTempRangeQuality, secTempRangeQuality, primTempRangeCheckTuple.Item2, secTempRangeCheckTuple.Item2);
         }
-
 
         /// <summary>
         /// Method to raise or clear alarm
@@ -530,15 +574,15 @@ namespace Articuno
             double tempThreshold = readTemperatureThreshold(metId);
             double deltaThreshold = readDeltaThreshold(metId);
 
-            double dewPoint =calculateDewPoint(avgHumidity, avgTemperature);
-            double delta =calculateDelta(avgTemperature, dewPoint);
+            double dewPoint = calculateDewPoint(avgHumidity, avgTemperature);
+            double delta = calculateDelta(avgTemperature, dewPoint);
 
             Console.WriteLine("Temp Threshold {0}", tempThreshold);
             Console.WriteLine("Delta Threshold {0}", deltaThreshold);
 
             MetTower met = getMetTower(metId);
             //Freezing Conditions met
-            if ((avgTemperature <= tempThreshold) && (delta<=deltaThreshold))
+            if ((avgTemperature <= tempThreshold) && (delta <= deltaThreshold))
             {
                 try
                 {
