@@ -161,5 +161,10 @@ namespace Articuno
             return vtq.Quality.IsGood ? true : false;
         }
 
+        public static bool isActiveUCC(string serverName,string tag)
+        {
+            return Convert.ToBoolean(readOpcTag(serverName, tag));
+        }
+
     }
 }
