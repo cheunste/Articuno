@@ -571,6 +571,9 @@ namespace Articuno
         /// </summary>
         public bool setFrozenCondition(string metId, double avgTemperature, double avgHumidity)
         {
+
+            MetTower met = getMetTower(metId);
+
             double tempThreshold = readTemperatureThreshold(metId);
             double deltaThreshold = readDeltaThreshold(metId);
 
@@ -580,9 +583,35 @@ namespace Articuno
             Console.WriteLine("Temp Threshold {0}", tempThreshold);
             Console.WriteLine("Delta Threshold {0}", deltaThreshold);
 
-            MetTower met = getMetTower(metId);
-            //Freezing Conditions met
-            if ((avgTemperature <= tempThreshold) && (delta <= deltaThreshold))
+            //If the humidity quality is bad, then do not use it and only rely on temperature
+            bool isHumidityBad = Convert.ToBoolean(met.HumidityBadQuality);
+            if (isHumidityBad)
+            {
+                log.InfoFormat("{0} Humidity is bad quality. Ignoring and currently using avg temperature {1}", metId,avgTemperature);
+                try
+                {
+                    met.IceIndicationValue = true;
+                    log.DebugFormat("Icing conditions met for {0}. \n" +
+                        "{0} Average Temperature {1}, \n" +
+                        "{0} Temperature threshold {2} \n",
+                        metId, avgTemperature, tempThreshold);
+                }
+                catch (Exception e)
+                {
+                    //in case you can't write to OPC
+                    log.ErrorFormat("Error when writing to the " +
+                        "Ice indication.\n" +
+                        "Error: {0}. \n" +
+                        "Met: {1}, \n" +
+                        "avgTemp: {2}, \n" +
+                        "tempThreshold {3}\n",
+                        e, metId, avgTemperature, tempThreshold);
+                    log.ErrorFormat("Error:\n{0}", e);
+                }
+
+            }
+            //Freezing Conditions met (regular case)
+            else if ((avgTemperature <= tempThreshold) && (delta <= deltaThreshold))
             {
                 try
                 {

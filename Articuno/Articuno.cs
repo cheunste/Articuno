@@ -40,6 +40,7 @@ namespace Articuno
         private static int ctrCountdown;
         private static bool articunoEnable;
         private static string sitePrefix;
+        private static string uccActiveTag;
 
         //OpcTag getters and setters
         private static string tempThresholdTag;
@@ -104,6 +105,9 @@ namespace Articuno
             reader = dbi.readCommand("SELECT * from SystemInputTags WHERE Description='SitePrefix'");
             sitePrefix = dbi.getSitePrefix();
 
+            //Get the tag to see if UCC is active
+            uccActiveTag = dbi.getActiveUCCTag();
+
             //Call the create methods
             mm.createMetTower();
             tm.createTurbines();
@@ -166,7 +170,7 @@ namespace Articuno
             var systemInputClient = new EasyDAClient();
             systemInputClient.ItemChanged += SystemInputOnChange;
             List<DAItemGroupArguments> systemInputTags = new List<DAItemGroupArguments>();
-            DataTable reader = dbi.readCommand("SELECT * from SystemInputTags WHERE OpcTag !='' order by Description ASC");
+            DataTable reader = dbi.readCommand("SELECT * from SystemInputTags WHERE OpcTag !='' AND Description !='ActiveUCC' order by Description ASC");
             for (int i = 0; i < reader.Rows.Count; i++)
             {
                 tag = sitePrefix + reader.Rows[i]["OpcTag"].ToString();
@@ -251,7 +255,7 @@ namespace Articuno
             OpcServer.writeOpcTag(opcServerName, heartBeatTag,
                 !Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, heartBeatTag))
                 );
-            if (articunoEnable)
+            if (articunoEnable && OpcServer.isActiveUCC(opcServerName,uccActiveTag))
                 gatherSamples();
         }
         private static void gatherSamples()
@@ -312,7 +316,7 @@ namespace Articuno
             }
 
             //Tell the turbines to Decrement thier internal CTR Time. Must be after the met tower code or else turbine might not respond to a met tower icing change event
-            if (articunoEnable)
+            if (articunoEnable && OpcServer.isActiveUCC(opcServerName,uccActiveTag))
                 tm.decrementTurbineCtrTime();
 
         }

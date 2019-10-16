@@ -422,6 +422,30 @@ namespace ArticunoTest
             Assert.AreEqual(inputStatus, primQuaality, "Input Status: {0},prim Humidity Quality{1}, Read Value: {2}", inputStatus, primQuaality, readValue);
         }
 
+        //Test to see if given a bad humidity, Articuno will use temperature only
+        [TestMethod]
+        [DataTestMethod]
+        [DataRow("Met", -1, 0)]
+        [DataRow("Met", 97, -3)]
+        [DataRow("Met", 101, -3)]
+        public void UseTemperatureOnlyTest(string metId, double humidity, double temperature)
+        {
+
+            tm.createTestTurbines();
+            var turbine = tm.getTurbinePrefixList()[0];
+
+            mm.writeHumidity(metId, humidity);
+            mm.writePrimTemperature(metId,temperature);
+            mm.writeSecTemperature(metId,temperature);
+
+            MetTower met = mm.getMetTower(metId);
+            mm.setFrozenCondition(metId, temperature, humidity);
+            bool isFrozen = mm.isMetFrozen(metId);
+
+
+            Assert.IsTrue(isFrozen,"Met Tower isn't declaring freezing even though humidity is bad.");
+        }
+
         [TestMethod]
         [DataTestMethod]
         [DataRow("Met", 20, .15, false)]
@@ -439,29 +463,9 @@ namespace ArticunoTest
             mm.setFrozenCondition(metId, temperature, humidity);
             Console.WriteLine("Ice Indication Value: {0}", met.IceIndicationValue);
             Assert.AreEqual(expectedFrozenState, Convert.ToBoolean(met.IceIndicationValue));
-        }
-
-        [TestMethod]
-        [DataTestMethod]
-        [DataRow("Met", 20, .15)]
-        [DataRow("Met", 90, .15)]
-        public void flatlineTest(string metId, double temperature, double humidity)
-        {
-            MetTower met = mm.getMetTower(metId);
-            met.PrimTemperatureValue = temperature;
-            met.RelativeHumidityValue = humidity;
-
-            for (int i = 0; i <= 70; i++)
-            {
-                mm.getAllMeasurements(metId);
-            }
-
-            Assert.IsTrue(met.getFrozenIncrement(Convert.ToString(met.PrimTemperatureValue)) >= 50, "frozen Temperature count is under 50");
-            //Assert.IsTrue(met.frozenHumidityCnt > 50, "frozen Humidity count is under 50");
-
-            Assert.IsTrue(Convert.ToBoolean(met.TemperaturePrimBadQuality) == true, "Primary sensor is still in good quality");
 
 
         }
+
     }
 }

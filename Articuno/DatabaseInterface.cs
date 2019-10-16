@@ -89,7 +89,13 @@ namespace Articuno
         public string getSitePrefix()
         {
             DataTable result = readCommand(String.Format("SELECT DefaultValue from {0} WHERE Description ='SitePrefix' ", SYSTEM_INPUT_TABLE));
-            return Convert.ToString(result.Rows[0]["DefaultValue"])+".";
+            return Convert.ToString(result.Rows[0]["DefaultValue"]) + ".";
+        }
+
+        public string getActiveUCCTag()
+        {
+            DataTable result = readCommand(String.Format("SELECT OpcTag from {0} WHERE Description ='ActiveUCC' ", SYSTEM_INPUT_TABLE));
+            return Convert.ToString(result.Rows[0]["OpcTag"]);
 
         }
     }
