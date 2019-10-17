@@ -398,7 +398,8 @@ namespace Articuno
         private MetQualityEnum temperatureFlatlineCheck(MetTower met, double currentTemp, string temperatureTag)
         {
             double tolerance = 0.00001;
-            double lastSampledTemperature = met.SampleTemperature;
+
+            double lastSampledTemperature = met.getLastStoredSample(temperatureTag);
 
             //If the current temperature is equal to the last stored sample, then increment the frozenTemperatureCnt
             // Note that temperatures are doubles
@@ -413,7 +414,7 @@ namespace Articuno
             }
 
             //Set the sample Temperature to the current temperature
-            met.SampleTemperature = currentTemp;
+            met.setLastStoredSample(temperatureTag, currentTemp);
 
             //If there are 50 or so samples (or whatever) that are equally the same, that implies the temperature from the sensor is flatlined. At this point, return a bad quality alert.
             //TODO: Replace 50 with an adjustable number from the database 
@@ -432,47 +433,52 @@ namespace Articuno
         public Tuple<MetQualityEnum, MetQualityEnum, double, double> tempQualityCheck(string metId)
         {
             MetTower met = getMetTower(metId);
-            string primTempTag = met.PrimTemperatureTag;
-            string secTempTag = met.SecTemperatureTag;
             double primTempValue = Convert.ToDouble(met.PrimTemperatureValue);
             double secTempValue = Convert.ToDouble(met.SecTemperatureValue);
 
             //call the ValueQuatliyCheck method to verify
-            var primTempRangeCheckTuple = temperatureRangeCheck(primTempTag, primTempValue);
-            var secTempRangeCheckTuple = temperatureRangeCheck(secTempTag, secTempValue);
+            var primTempRangeCheckTuple = temperatureRangeCheck(met.PrimTemperatureTag, primTempValue);
+            bool isPrimTempRangeQuality = Convert.ToBoolean(primTempRangeCheckTuple.Item1);
+            bool isPrimTempFlatline = Convert.ToBoolean(temperatureFlatlineCheck(met, primTempRangeCheckTuple.Item2, met.PrimTemperatureTag));
 
-            var primTempRangeQuality = primTempRangeCheckTuple.Item1;
-            var secTempRangeQuality = secTempRangeCheckTuple.Item1;
+            //Set to bad quality at first...then set to good quality once it reaches that case
+            var primTempQuality = MetQualityEnum.MET_BAD_QUALITY;
+            var secTempQuality = MetQualityEnum.MET_BAD_QUALITY;
 
-            var primTempFlatlineQuality = temperatureFlatlineCheck(met, primTempRangeCheckTuple.Item2, primTempTag);
-            var secTempFlatlineQuality = temperatureFlatlineCheck(met, secTempRangeCheckTuple.Item2, secTempTag);
+            //If either the temperature sensor is flatlined or if the range check quality is not good, then it is bad quality
+            //Other wise, it is good quality
+            if (!isPrimTempFlatline || !isPrimTempRangeQuality) { alarm(met, MetTowerEnum.PrimSensorQuality, MetQualityEnum.MET_BAD_QUALITY); }
+            //if only the range quality is bad
+            if (!isPrimTempRangeQuality) { alarm(met, MetTowerEnum.PrimSensorOutOfRange, MetQualityEnum.MET_BAD_QUALITY); }
 
-            //Note that Quality doesn't really mean much since Articuno has no flatline criterias
-            //For the primary sensors
-            if (primTempRangeQuality.Equals(MetQualityEnum.MET_GOOD_QUALITY) )
+            //If temperatue is within range and if there are no flatlines occuring
+            if (isPrimTempRangeQuality && isPrimTempFlatline)
             {
                 alarm(met, MetTowerEnum.PrimSensorOutOfRange, MetQualityEnum.MET_GOOD_QUALITY);
                 alarm(met, MetTowerEnum.PrimSensorQuality, MetQualityEnum.MET_GOOD_QUALITY);
-            }
-            else
-            {
-                alarm(met, MetTowerEnum.PrimSensorOutOfRange, MetQualityEnum.MET_BAD_QUALITY);
-                alarm(met, MetTowerEnum.PrimSensorQuality, MetQualityEnum.MET_BAD_QUALITY);
+                primTempQuality = MetQualityEnum.MET_GOOD_QUALITY;
+
             }
 
-            //For the secondary sensors
-            if (secTempRangeQuality.Equals(MetQualityEnum.MET_GOOD_QUALITY) )
+            //For secondary temperature sensor
+            var secTempRangeCheckTuple = temperatureRangeCheck(met.SecTemperatureTag, secTempValue);
+            bool isSecTempRangeQuality = Convert.ToBoolean(secTempRangeCheckTuple.Item1);
+            bool isSecTempFlatline = Convert.ToBoolean(temperatureFlatlineCheck(met, secTempRangeCheckTuple.Item2, met.SecTemperatureTag));
+
+
+            if (!isSecTempFlatline || !isSecTempRangeQuality) { alarm(met, MetTowerEnum.SecSensorQuality, MetQualityEnum.MET_BAD_QUALITY); }
+            //if only the range quality is bad
+            if (!isSecTempRangeQuality) { alarm(met, MetTowerEnum.SecSensorOutOfRange, MetQualityEnum.MET_BAD_QUALITY); }
+
+            //If temperatue is within range and if there are no flatlines occuring
+            if (isSecTempRangeQuality && isSecTempFlatline)
             {
                 alarm(met, MetTowerEnum.SecSensorOutOfRange, MetQualityEnum.MET_GOOD_QUALITY);
                 alarm(met, MetTowerEnum.SecSensorQuality, MetQualityEnum.MET_GOOD_QUALITY);
-            }
-            else
-            {
-                alarm(met, MetTowerEnum.SecSensorOutOfRange, MetQualityEnum.MET_BAD_QUALITY);
-                alarm(met, MetTowerEnum.SecSensorQuality, MetQualityEnum.MET_BAD_QUALITY);
+                secTempQuality = MetQualityEnum.MET_GOOD_QUALITY;
             }
 
-            return new Tuple<MetQualityEnum, MetQualityEnum, double, double>(primTempRangeQuality, secTempRangeQuality, primTempRangeCheckTuple.Item2, secTempRangeCheckTuple.Item2);
+            return new Tuple<MetQualityEnum, MetQualityEnum, double, double>(primTempQuality, secTempQuality, primTempRangeCheckTuple.Item2, secTempRangeCheckTuple.Item2);
         }
 
         /// <summary>
@@ -587,7 +593,7 @@ namespace Articuno
             bool isHumidityBad = Convert.ToBoolean(met.HumidityBadQuality);
             if (isHumidityBad)
             {
-                log.InfoFormat("{0} Humidity is bad quality. Ignoring and currently using avg temperature {1}", metId,avgTemperature);
+                log.InfoFormat("{0} Humidity is bad quality. Ignoring and currently using avg temperature {1}", metId, avgTemperature);
                 try
                 {
                     met.IceIndicationValue = true;

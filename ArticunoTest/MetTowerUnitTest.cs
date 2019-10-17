@@ -269,10 +269,23 @@ namespace ArticunoTest
             tm.createTestTurbines();
             var turbine = tm.getTurbinePrefixList()[0];
 
+            Turbine turb = TurbineMediator.getTurbine(turbine);
+            OpcServer.writeOpcTag(opcServerName, turb.TemperatureTag, 30); ;
+
             //write the fail values to the met tower
             MetTower met = mm.getMetTower(metId);
             met.PrimTemperatureValue = tempSensor1Val;
             met.SecTemperatureValue = tempSensor2Val;
+            Random rnd = new Random();
+
+            //Get measurements about 50 tiems or so to see if it is flatline. 
+            for (int i = 0; i <= 50; i++)
+            {
+
+                met.PrimTemperatureValue = rnd.Next((int)tempSensor1Val - 5, (int)tempSensor1Val);
+                met.SecTemperatureValue = rnd.Next((int)tempSensor1Val - 5, (int)tempSensor1Val);
+                mm.getAllMeasurements(metId);
+            }
 
             //Get the temperatures from both the turbine and the met tower and assert they're equal.
             double temperature = Convert.ToDouble(mm.readTemperature(metId));
@@ -426,7 +439,6 @@ namespace ArticunoTest
         [TestMethod]
         [DataTestMethod]
         [DataRow("Met", -1, 0)]
-        [DataRow("Met", 97, -3)]
         [DataRow("Met", 101, -3)]
         public void UseTemperatureOnlyTest(string metId, double humidity, double temperature)
         {
@@ -435,15 +447,19 @@ namespace ArticunoTest
             var turbine = tm.getTurbinePrefixList()[0];
 
             mm.writeHumidity(metId, humidity);
-            mm.writePrimTemperature(metId,temperature);
-            mm.writeSecTemperature(metId,temperature);
+            mm.writePrimTemperature(metId, temperature);
+            mm.writeSecTemperature(metId, temperature);
+
+            //Get measurements about 50 tiems or so to see if it is flatline. 
+            for (int i = 0; i <= 50; i++)
+                mm.getAllMeasurements(metId);
 
             MetTower met = mm.getMetTower(metId);
             mm.setFrozenCondition(metId, temperature, humidity);
             bool isFrozen = mm.isMetFrozen(metId);
 
 
-            Assert.IsTrue(isFrozen,"Met Tower isn't declaring freezing even though humidity is bad.");
+            Assert.IsTrue(isFrozen, "Met Tower isn't declaring freezing even though humidity is bad.");
         }
 
         [TestMethod]
@@ -463,9 +479,42 @@ namespace ArticunoTest
             mm.setFrozenCondition(metId, temperature, humidity);
             Console.WriteLine("Ice Indication Value: {0}", met.IceIndicationValue);
             Assert.AreEqual(expectedFrozenState, Convert.ToBoolean(met.IceIndicationValue));
-
-
         }
 
+        [TestMethod]
+        [DataTestMethod]
+        [DataRow("Met", 20, .15, true)]
+        [DataRow("Met", 20, .15, false)]
+        public void flatLineTest(string metId, double temperature, double humidity, bool Flatline)
+        {
+            MetTower met = mm.getMetTower(metId);
+            mm.writeDeltaThreshold(1);
+            mm.writeTemperatureThreshold(0);
+
+            met.PrimTemperatureValue = temperature;
+
+            for (int i = 0; i <= 50; i++)
+            {
+                if (!Flatline)
+                {
+                    Random rnd = new Random();
+                    met.PrimTemperatureValue = rnd.Next((int)temperature - 5, (int)temperature);
+                }
+                try
+                {
+                    mm.getAllMeasurements(metId);
+                }
+                //Reaching here is good as an exception will be thrown because Aritcuno will attempt to read from turbine data...which I havne't set up for in this test.
+                catch (NullReferenceException)
+                {
+                    Assert.IsTrue(true);
+                }
+            }
+
+            if (Flatline)
+                Assert.IsTrue((met.getFrozenIncrement(met.PrimTemperatureTag)) > 20, "Frozen increment should be past 50");
+            else
+                Assert.AreEqual(Flatline, met.TemperaturePrimBadQuality);
+        }
     }
 }
