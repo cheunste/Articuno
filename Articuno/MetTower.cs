@@ -29,6 +29,8 @@ namespace Articuno
         private int frozenPrimTempCnt;
         private int frozenSecTempCnt;
         private int frozenHumidityCnt;
+        private double lastPrimTemp;
+        private double lastSecTemp;
 
         //Queues
         private Queue<double> temperatureQueue;
@@ -62,7 +64,9 @@ namespace Articuno
             frozenHumidityCnt = 0;
             frozenPrimTempCnt = 0;
             frozenSecTempCnt = 0;
-            SampleTemperature = 0;
+            lastPrimTemp= 0;
+            lastSecTemp= 0;
+
             SampleHumidity = 0;
         }
 
@@ -214,7 +218,24 @@ namespace Articuno
         /// <returns></returns>
         public bool isQualityGood(string opcTag) { return Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, opcTag)); }
 
-        public double SampleTemperature { get; set; }
+        public double SamplePrimTemperature { get; set; }
+        public double SampleSecTemperature { get; set; }
+        public void setLastStoredSample(string opcTag,double sampledTemp)
+        {
+            if (opcTag.Equals(PrimTemperatureTag))
+                lastPrimTemp=sampledTemp;
+            else
+                lastSecTemp=sampledTemp;
+        }
+
+        public double getLastStoredSample(string opcTag)
+        {
+            if (opcTag.Equals(PrimTemperatureTag))
+                return lastPrimTemp;
+            else
+                return lastSecTemp;
+
+        } 
         public double SampleHumidity { get; set; }
 
 
