@@ -93,16 +93,15 @@ namespace Articuno
         public static void Main(object sender, FileSystemEventArgs e)
         {
 
+            DataTable reader;
             dbi = DatabaseInterface.Instance;
             mm = MetTowerMediator.Instance;
             tm = TurbineMediator.Instance;
 
             //Get the OPC Server name
-            DataTable reader = dbi.readCommand("SELECT * from SystemInputTags WHERE Description='OpcServerName'");
             opcServerName = dbi.getOpcServer();
 
             //Get the Site Prefix
-            reader = dbi.readCommand("SELECT * from SystemInputTags WHERE Description='SitePrefix'");
             sitePrefix = dbi.getSitePrefix();
 
             //Get the tag to see if UCC is active
@@ -255,7 +254,7 @@ namespace Articuno
             OpcServer.writeOpcTag(opcServerName, heartBeatTag,
                 !Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, heartBeatTag))
                 );
-            if (articunoEnable && OpcServer.isActiveUCC(opcServerName,uccActiveTag))
+            if (articunoEnable && OpcServer.isActiveUCC(opcServerName, uccActiveTag))
                 gatherSamples();
         }
         private static void gatherSamples()
@@ -316,7 +315,7 @@ namespace Articuno
             }
 
             //Tell the turbines to Decrement thier internal CTR Time. Must be after the met tower code or else turbine might not respond to a met tower icing change event
-            if (articunoEnable && OpcServer.isActiveUCC(opcServerName,uccActiveTag))
+            if (articunoEnable && OpcServer.isActiveUCC(opcServerName, uccActiveTag))
                 tm.decrementTurbineCtrTime();
 
         }
@@ -545,8 +544,8 @@ namespace Articuno
             {
                 turbinesWaitingForPause.Remove(turbineId);
                 turbinesConditionNotMet.Add(turbineId);
-            //Log the Current status of the lists
-            logCurrentList();
+                //Log the Current status of the lists
+                logCurrentList();
             }
 
         }
@@ -560,8 +559,8 @@ namespace Articuno
             {
                 turbinesWaitingForPause.Add(turbineId);
                 turbinesConditionNotMet.Remove(turbineId);
-            //Log the Current status of the lists
-            logCurrentList();
+                //Log the Current status of the lists
+                logCurrentList();
 
             }
         }

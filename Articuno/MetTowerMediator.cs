@@ -418,7 +418,7 @@ namespace Articuno
 
             //If there are 50 or so samples (or whatever) that are equally the same, that implies the temperature from the sensor is flatlined. At this point, return a bad quality alert.
             //TODO: Replace 50 with an adjustable number from the database 
-            if (met.getFrozenIncrement(temperatureTag) >= 50)
+            if (met.getFrozenIncrement(temperatureTag) >= dbi.getFlatlineCount())
             {
                 log.InfoFormat("Flatlien detected for {0}", temperatureTag);
                 return MetQualityEnum.MET_BAD_QUALITY;

@@ -20,19 +20,13 @@ namespace Articuno
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(DatabaseInterface));
 
-        private DatabaseInterface()
-        {
-
-        }
+        private DatabaseInterface() { }
 
         public static DatabaseInterface Instance { get { return Nested.instance; } }
 
         private class Nested
         {
-            static Nested()
-            {
-
-            }
+            static Nested() { }
             internal static readonly DatabaseInterface instance = new DatabaseInterface();
         }
 
@@ -54,7 +48,6 @@ namespace Articuno
                 }
             }
             return dt;
-            //SQLiteCommand cmd = new SQLiteCommand(command, articunoDBConnection);
         }
 
         /// <summary>
@@ -96,7 +89,12 @@ namespace Articuno
         {
             DataTable result = readCommand(String.Format("SELECT OpcTag from {0} WHERE Description ='ActiveUCC' ", SYSTEM_INPUT_TABLE));
             return Convert.ToString(result.Rows[0]["OpcTag"]);
+        }
 
+        public int getFlatlineCount()
+        {
+            DataTable result = readCommand(String.Format("SELECT DefaultValue from {0} WHERE Description ='FlatlineSamples' ", SYSTEM_INPUT_TABLE));
+            return Convert.ToInt32(result.Rows[0]["DefaultValue"]);
         }
     }
 }
