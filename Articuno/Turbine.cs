@@ -143,7 +143,13 @@ namespace Articuno
         {
             //Don't write anything if tag doesn't exist
             if (NrsStateTag.Equals("")) { }
-            else { OpcServer.writeOpcTag(OpcServerName, NrsStateTag, Convert.ToDouble(value)); }
+            else
+            {
+                //Write the new state of the CTR
+                OpcServer.writeOpcTag(OpcServerName, NrsStateTag, Convert.ToDouble(value));
+                //Reset CTR on noise level change
+                resetCtrTime();
+            }
         }
         public void writeOperatingState(Object value) { OpcServer.writeOpcTag(OpcServerName, OperatingStateTag, Convert.ToDouble(value)); }
         public void decrementCtrTime()
@@ -287,8 +293,9 @@ namespace Articuno
             writeAlarmTagValue(false);
             emptyQueue();
             log.InfoFormat("Turbine {0} has started", getTurbinePrefixValue());
-            log.DebugFormat("Turbine {0} CTR Value reset to: {1}", getTurbinePrefixValue(), TurbineCtr+startupTime);
+            log.DebugFormat("Turbine {0} CTR Value reset to: {1}", getTurbinePrefixValue(), (Convert.ToInt32(TurbineCtr)) + startupTime);
             this.ctrCountDown = Convert.ToInt32(TurbineCtr) + startupTime;
+            OpcServer.writeOpcTag(OpcServerName, CtrCountdownTag, ctrCountDown);
         }
 
         //Function to block/remove turbine in AGC until startup.
