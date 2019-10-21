@@ -147,9 +147,10 @@ namespace Articuno
             {
                 //Write the new state of the CTR
                 OpcServer.writeOpcTag(OpcServerName, NrsStateTag, Convert.ToDouble(value));
-                //Reset CTR on noise level change
-                resetCtrTime();
             }
+            //Reset CTR on noise level change
+            resetCtrTime();
+
         }
         public void writeOperatingState(Object value) { OpcServer.writeOpcTag(OpcServerName, OperatingStateTag, Convert.ToDouble(value)); }
         public void decrementCtrTime()
