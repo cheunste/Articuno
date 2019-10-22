@@ -50,7 +50,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>Articuno.Program</StartupObject>
+    <StartupObject>Articuno.ServiceWrapper</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
@@ -104,7 +104,7 @@
     <Compile Include="Articuno.cs" />
     <Compile Include="ArticunoService.cs" />
     <Compile Include="DatabaseInterface.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="ServiceWrapper.cs" />
     <Compile Include="MetTower.cs" />
     <Compile Include="MetTowerMediator.cs" />
     <Compile Include="OpcServer.cs" />

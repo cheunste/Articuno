@@ -136,7 +136,6 @@ namespace Articuno
                 return -1.0;
             }
         }
-        //public void writeAlarmTagValue(Object value) { OpcServer.writeOpcTag( OpcServerName, AlarmTag, Convert.ToDouble(value)); }
         //Write Articuno Alarm
         public void writeAlarmTagValue(Object value) { OpcServer.writeOpcTag(OpcServerName, StoppedAlarmTag, Convert.ToBoolean(value)); }
         public void writeNoiseLevel(Object value)

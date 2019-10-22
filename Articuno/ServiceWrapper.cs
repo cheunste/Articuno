@@ -8,7 +8,7 @@ using System.IO;
 
 namespace Articuno
 {
-    class Program
+    class ServiceWrapper
     {
         static void Main(string[] args)
         {
