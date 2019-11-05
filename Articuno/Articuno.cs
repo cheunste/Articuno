@@ -254,7 +254,7 @@ namespace Articuno
             OpcServer.writeOpcTag(opcServerName, heartBeatTag,
                 !Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, heartBeatTag))
                 );
-            if (articunoEnable && OpcServer.isActiveUCC(opcServerName, uccActiveTag))
+            if (articunoEnable)
                 gatherSamples();
         }
         private static void gatherSamples()
@@ -296,6 +296,8 @@ namespace Articuno
 
                     double tempAvg = mm.calculateCtrAvgTemperature("Met" + j);
                     double humidityAvg = mm.calculateCtrAvgHumidity("Met" + j);
+
+                    log.DebugFormat("CTR avg temp: {0}, avg Humidity: {1}", tempAvg, humidityAvg);
 
                     //Send this temperature to the Met Mediator and determine if met tower is freezing or not
                     bool metFrozen = mm.setFrozenCondition("Met" + j, tempAvg, humidityAvg);
@@ -467,9 +469,15 @@ namespace Articuno
             if (isPausedByArticuno(turbineId)) { }
             if (partipationStatus == false && !turbinesExcludedList.Contains(turbineId))
             {
+                turbinesWaitingForPause.Remove(turbineId);
+                turbinesConditionNotMet.Remove(turbineId);
                 turbinesExcludedList.Add(turbineId);
             }
-            else { turbinesExcludedList.Remove(turbineId); }
+            //At this point, partipationStatus should be true, so get it out of the Excludedlist and put it into the waitingForPause
+            else {
+                turbinesExcludedList.Remove(turbineId);
+                turbinesWaitingForPause.Remove(turbineId);
+            }
         }
         //This is a method that is triggered upon any value changes for certain OPC Tags
         static void assetTagChangeHandler(object sender, EasyDAItemChangedEventArgs e)
