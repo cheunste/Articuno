@@ -317,7 +317,7 @@ namespace Articuno
             }
 
             //Tell the turbines to Decrement thier internal CTR Time. Must be after the met tower code or else turbine might not respond to a met tower icing change event
-            if (articunoEnable && OpcServer.isActiveUCC(opcServerName, uccActiveTag))
+            if (articunoEnable)
                 tm.decrementTurbineCtrTime();
 
         }

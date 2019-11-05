@@ -101,7 +101,7 @@ namespace Articuno
         public string OperatingStateTag { set; get; }
         public string NrsStateTag { set; get; }
         public string StartCommandTag { internal set; get; }
-        public int TurbineCtr { set { } get { return Convert.ToInt32(OpcServer.readAnalogTag(OpcServerName,CtrCountdownTag)); } }
+        public string TurbineCtr { set; get; }
         public string TemperatureTag { set; get; }
         public string TurbineHumidityTag { set; get; }
         public string ScalingFactorTag { set; get; }
@@ -119,17 +119,7 @@ namespace Articuno
         public string ScalingFactorValue { get; set; }
 
         //Theses are used to write to the OP Tag Values.  There shouldn't be too many of these
-        public void writeTurbineCtrValue(int articunoCtrValue) {
-            TurbineCtr = articunoCtrValue;
-
-            //Only set the CtrCountdown to aritcunoCtrValue if and only if CtrCountDown is less than or equal to articunoCtrValue
-            //This is because it can be great
-            if(ctrCountDown < articunoCtrValue)
-            {
-                ctrCountDown = articunoCtrValue;
-                OpcServer.writeOpcTag(OpcServerName, CtrCountdownTag, articunoCtrValue);
-            }
-        }
+        public void writeTurbineCtrValue(int articunoCtrValue) { TurbineCtr = articunoCtrValue.ToString(); ctrCountDown = articunoCtrValue; }
 
         //Load shutdown function. Probably the most important function
         public double writeLoadShutdownCmd()
@@ -164,7 +154,7 @@ namespace Articuno
         public void writeOperatingState(Object value) { OpcServer.writeOpcTag(OpcServerName, OperatingStateTag, Convert.ToDouble(value)); }
         public void decrementCtrTime()
         {
-            ctrCountDown = TurbineCtr;
+            ctrCountDown--;
             log.InfoFormat("{0} Current CTR: {1}", getTurbinePrefixValue(), ctrCountDown);
             OpcServer.writeOpcTag(OpcServerName, CtrCountdownTag, ctrCountDown);
 
