@@ -30,6 +30,7 @@ namespace Articuno
 
         private string opcServerName;
         private string sitePrefix;
+        private string uccActiveTag;
         private static List<MetTower> metTowerList = new List<MetTower>();
         private static List<String> metPrefixList = new List<String>();
 
@@ -116,6 +117,10 @@ namespace Articuno
 
                 metTowerList.Add(met);
             }
+
+            //Get the tag to see if UCC is active
+            uccActiveTag = dbi.getActiveUCCTag();
+
         }
 
         public void createPrefixList()
@@ -225,7 +230,9 @@ namespace Articuno
             while (tempQueue.Count != 0) { temperatureCtrAverage += tempQueue.Dequeue(); }
 
             double average = temperatureCtrAverage / count;
-            met.CtrTemperatureValue = average;
+            //Only write if and only if the UCC is active
+            if(OpcServer.isActiveUCC(opcServerName,uccActiveTag))
+                met.CtrTemperatureValue = average;
 
             return average;
 
@@ -242,14 +249,20 @@ namespace Articuno
             double average = humidityCtrAverage / count;
             //You need to multiple the CtrHumidityValue by 100 because it is currently in decimal form. 
             //This needs to be displayed in percentage form
-            met.CtrHumidityValue = average * 100.0;
+            //Also, this should only write if and only if the UCC is active
+            if(OpcServer.isActiveUCC(opcServerName,uccActiveTag))
+                met.CtrHumidityValue = average * 100.0;
             return average;
         }
 
         internal void updateDewPoint(string metId, double ctrTemperature, double ctrHumidity)
         {
             double dew = calculateDewPoint(ctrHumidity, ctrTemperature);
-            getMetTower(metId).CtrDewValue = dew;
+            log.DebugFormat("CTR Dew: {0}", dew);
+            //Only write the dew point temperature if and only if the UCC is active
+            if(OpcServer.isActiveUCC(opcServerName,uccActiveTag))
+                getMetTower(metId).CtrDewValue = dew;
+
         }
 
 
