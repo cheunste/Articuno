@@ -66,6 +66,10 @@ namespace Articuno
         private readonly string TURBINE_OUTPUT_COLUMN_QUERY = "SELECT * from TurbineOutputTags WHERE TurbineId='{0}'";
         private readonly string SCALING_FACTOR_QUERY = "SELECT * from SystemInputTags where Description='ScalingFactor';";
         private readonly string TURBINE_STARTUP_TIME = "SELECT * from SystemInputTags where Description='TurbineStartupTime';";
+
+        //Other member variables
+        private static string uccActiveTag;
+
         /// <summary>
         /// constructor for the TurbineMediator class. 
         /// </summary>
@@ -75,6 +79,8 @@ namespace Articuno
             turbineList = new List<Turbine>();
             tempList = new List<string>();
             tempObjectList = new List<Object>();
+            //UCC Active Tag
+            uccActiveTag = DatabaseInterface.Instance.getActiveUCCTag();
             this.opcServerName = DatabaseInterface.Instance.getOpcServer();
             this.sitePrefix = DatabaseInterface.Instance.getSitePrefix();
 
@@ -263,7 +269,7 @@ namespace Articuno
         /// </summary>
         /// <param name="value"></param>
         public void setCtrTime(string turbineId, int ctrValue) { getTurbine(turbineId).writeTurbineCtrValue(ctrValue); }
-        public int getCtrCountdown(string turbineId) { return (int) getTurbine(turbineId).readCtrCurrentValue(); }
+        public int getCtrCountdown(string turbineId) { return Convert.ToInt32(getTurbine(turbineId).readCtrCurrentValue()); }
 
         /// <summary>
         /// Used for testing only. This creates a testing scenario that uses only T001 
@@ -419,10 +425,6 @@ namespace Articuno
 
                 if (metId.Equals(metPrefix))
                     setTemperatureCondition(turbinePrefix, isMetFrozen);
-                //if (metId.Equals(metPrefix) && isMetFrozen)
-                //    setTemperatureCondition(turbinePrefix, true);
-                //else
-                //    setTemperatureCondition(turbinePrefix, false);
             }
 
         }
@@ -439,5 +441,10 @@ namespace Articuno
         }
 
         public bool isTurbinePaused(string turbinePrefix) { return Articuno.isAlreadyPaused(turbinePrefix); }
+
+        public bool isUCCActive()
+        {
+            return Convert.ToBoolean(OpcServer.isActiveUCC(opcServerName, uccActiveTag));
+        }
     }
 }

@@ -91,7 +91,8 @@ namespace ArticunoTest
                 double temp = turbine.writeLoadShutdownCmd();
                 //Console.WriteLine(turbine.writeLoadShutdownCmd());
                 Assert.AreEqual(temp, 1.00, 1.001);
-                Assert.AreEqual(turbine.readAgcBlockValue(), false);
+                Assert.AreEqual(Convert.ToBoolean(turbine.readAgcBlockValue()), false);
+
             }
         }
 
