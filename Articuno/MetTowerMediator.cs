@@ -274,7 +274,7 @@ namespace Articuno
         {
             foreach (MetTower tower in metTowerList) { tower.AmbTempThreshold = value; }
         }
-        public double readTemperatureThreshold(string metTowerId) { return getMetTower(metTowerId).DeltaTempThreshold; }
+        public double readTemperatureThreshold(string metTowerId) { return getMetTower(metTowerId).AmbTempThreshold; }
 
         /// <summary>
         /// Writes the delta threshold for all the met tower
