@@ -231,7 +231,7 @@ namespace Articuno
 
             double average = temperatureCtrAverage / count;
             //Only write if and only if the UCC is active
-            if(OpcServer.isActiveUCC(opcServerName,uccActiveTag))
+            if (OpcServer.isActiveUCC(opcServerName, uccActiveTag))
                 met.CtrTemperatureValue = average;
 
             return average;
@@ -250,7 +250,7 @@ namespace Articuno
             //You need to multiple the CtrHumidityValue by 100 because it is currently in decimal form. 
             //This needs to be displayed in percentage form
             //Also, this should only write if and only if the UCC is active
-            if(OpcServer.isActiveUCC(opcServerName,uccActiveTag))
+            if (OpcServer.isActiveUCC(opcServerName, uccActiveTag))
                 met.CtrHumidityValue = average * 100.0;
             return average;
         }
@@ -260,7 +260,7 @@ namespace Articuno
             double dew = calculateDewPoint(ctrHumidity, ctrTemperature);
             log.DebugFormat("CTR Dew: {0}", dew);
             //Only write the dew point temperature if and only if the UCC is active
-            if(OpcServer.isActiveUCC(opcServerName,uccActiveTag))
+            if (OpcServer.isActiveUCC(opcServerName, uccActiveTag))
                 getMetTower(metId).CtrDewValue = dew;
 
         }
@@ -598,9 +598,6 @@ namespace Articuno
             double dewPoint = calculateDewPoint(avgHumidity, avgTemperature);
             double delta = calculateDelta(avgTemperature, dewPoint);
 
-            Console.WriteLine("Temp Threshold {0}", tempThreshold);
-            Console.WriteLine("Delta Threshold {0}", deltaThreshold);
-
             //If the humidity quality is bad, then do not use it and only rely on temperature
             bool isHumidityBad = Convert.ToBoolean(met.HumidityBadQuality);
             if (isHumidityBad)
@@ -634,25 +631,45 @@ namespace Articuno
                 try
                 {
                     met.IceIndicationValue = true;
-                    log.DebugFormat("Icing conditions met for {0}. \n" +
+                    log.InfoFormat("No Ice detected for met {0}.\n" +
                         "{0} Average Temperature {1}, \n" +
-                        "{0} Temperature threshold {2} \n",
-                        metId, avgTemperature, tempThreshold);
+                        "{0} Temperature threshold {2} \n" +
+                        "{0} Average Humidity {3}, \n" +
+                        "{0} Delta threshold {4} \n"
+                        ,
+                        metId, avgTemperature, tempThreshold, avgHumidity, deltaThreshold
+                        );
+
                 }
                 catch (Exception e)
                 {
                     //in case you can't write to OPC
-                    log.ErrorFormat("Error when writing to the " +
-                        "Ice indication.\n" +
-                        "Error: {0}. \n" +
-                        "Met: {1}, \n" +
-                        "avgTemp: {2}, \n" +
-                        "tempThreshold {3}\n",
-                        e, metId, avgTemperature, tempThreshold);
+                    log.ErrorFormat("No Ice detected for met {0}.\n" +
+                        "{0} Average Temperature {1}, \n" +
+                        "{0} Temperature threshold {2} \n" +
+                        "{0} Average Humidity {3}, \n" +
+                        "{0} Delta threshold {4} \n"
+                        ,
+                        metId, avgTemperature, tempThreshold, avgHumidity, deltaThreshold
+                        );
+
                     log.ErrorFormat("Error:\n{0}", e);
                 }
             }
-            else { met.IceIndicationValue = false; }
+            //Else, no ice detected
+            else
+            {
+                met.IceIndicationValue = false;
+                log.DebugFormat("No Ice detected for met {0}.\n" +
+                    "{0} Average Temperature {1}, \n" +
+                    "{0} Temperature threshold {2} \n" +
+                    "{0} Average Humidity {3}, \n" +
+                    "{0} Delta threshold {4} \n"
+                    ,
+                    metId, avgTemperature, tempThreshold, avgHumidity, deltaThreshold
+                    );
+
+            }
 
             return Convert.ToBoolean(met.IceIndicationValue);
         }
