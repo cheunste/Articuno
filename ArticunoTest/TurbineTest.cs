@@ -91,6 +91,7 @@ namespace ArticunoTest
                 double temp = turbine.writeLoadShutdownCmd();
                 //Console.WriteLine(turbine.writeLoadShutdownCmd());
                 Assert.AreEqual(temp, 1.00, 1.001);
+                Assert.AreEqual(turbine.readAgcBlockValue(), false);
             }
         }
 
@@ -184,6 +185,7 @@ namespace ArticunoTest
                 //TurbineMediator.Instance.setCtrTime(prefix, value);
                 TurbineMediator.Instance.writeCtrTime(value);
             }
+            Assert.AreEqual(value, TurbineMediator.Instance.getCtrCountdown("T001"));
 
 
         }
