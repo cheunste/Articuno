@@ -476,7 +476,7 @@ namespace Articuno
             //At this point, partipationStatus should be true, so get it out of the Excludedlist and put it into the waitingForPause
             else {
                 turbinesExcludedList.Remove(turbineId);
-                turbinesWaitingForPause.Remove(turbineId);
+                turbinesWaitingForPause.Add(turbineId);
             }
         }
         //This is a method that is triggered upon any value changes for certain OPC Tags
