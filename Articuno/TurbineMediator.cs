@@ -278,16 +278,12 @@ namespace Articuno
         {
             turbinePrefixList.Clear();
             turbinePrefixList.Add("T001");
-            //for (int i = 1; i <= 5; i++)
-            //{
-            //    turbinePrefixList.Add("T00"+i.ToString());
-            //}
             this.opcServerName = DatabaseInterface.Instance.getOpcServer();
             this.sitePrefix = DatabaseInterface.Instance.getSitePrefix();
             createTurbines();
         }
 
-        //These are functions called by the main Articuno class to set an icing protocol condition given a turbine. Remember, the turbine should pause automatically independently of each other
+        //The following four functions are called by the main Articuno class to set an icing protocol condition given a turbine Id. Remember, the turbine should pause automatically independently of each other
         public void setTemperatureCondition(string turbineId, bool state) { log.DebugFormat("Temperature condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setTemperatureCondition(state); }
         public void setOperatingStateCondition(string turbineId, bool state) { log.DebugFormat("Operating status condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setOperatingStateCondition(state); }
         public void setNrsActive(string turbineId, bool state) { log.DebugFormat("NRS Condition for {0} {1}", turbineId, state ? "active" : "not active"); getTurbine(turbineId).setNrsMode(state); }
@@ -309,7 +305,7 @@ namespace Articuno
          */
 
         /// <summary>
-        /// This method takes a turbine id and a tag name and then returns a TurbineEnum object Only used by the main Articuno class and nothing else 
+        /// This method takes a turbine id and a tag name and then returns a TurbineEnum object Only used by the main Articuno class and nothing else. Returns a NULL is a tag is not found
         /// </summary>
         /// <param name="turbineId"></param>
         /// <param name="tag"></param>

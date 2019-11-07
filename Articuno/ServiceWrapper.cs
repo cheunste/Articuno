@@ -8,6 +8,14 @@ using System.IO;
 
 namespace Articuno
 {
+    /// <summary>
+    /// The entry point of Articuno. This is used so Articuno will start as a service. 
+    /// To install as a service, you need to do 
+    /// Articuno.exe install
+    /// from the the command line
+    /// 
+    /// However, because the service isn't being used, there really isn't a point to having this class. However, this is still useful for/when PcVue becomes a service in the (unforseeable) future
+    /// </summary>
     class ServiceWrapper
     {
         static void Main(string[] args)
