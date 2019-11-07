@@ -241,14 +241,11 @@ namespace Articuno
         private static void updateHeartBeat(object sender, ElapsedEventArgs e)
         {
             //Only update heartbeat if the UCC is active
-            if (OpcServer.isActiveUCC(opcServerName, uccActiveTag))
-            {
-                OpcServer.writeOpcTag(opcServerName, heartBeatTag,
-                    !Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, heartBeatTag))
-                    );
-                if (articunoEnable)
-                    gatherSamples();
-            }
+            OpcServer.writeOpcTag(opcServerName, heartBeatTag,
+                !Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, heartBeatTag))
+                );
+            if (articunoEnable)
+                gatherSamples();
         }
         private static void gatherSamples()
         {
@@ -276,45 +273,41 @@ namespace Articuno
         /// </summary>
         private static void minuteUpdate(object sender, ElapsedEventArgs e)
         {
-            //Only update heartbeat if the UCC is active
-            if (OpcServer.isActiveUCC(opcServerName, uccActiveTag))
+            //For every CTR minute, do the other calculation stuff. Better set up a  member variable here
+            ctrCountdown--;
+            if (ctrCountdown == 0)
             {
-                //For every CTR minute, do the other calculation stuff. Better set up a  member variable here
-                ctrCountdown--;
-                if (ctrCountdown == 0)
+                log.InfoFormat("CTR countdown reached 0 in ArticunoMain");
+                //Calculate temperature averages from the all the temperature queues
+                for (int i = 1; i <= MetTowerMediator.getNumMetTower(); i++)
                 {
-                    log.InfoFormat("CTR countdown reached 0 in ArticunoMain");
-                    //Calculate temperature averages from the all the temperature queues
-                    for (int i = 1; i <= MetTowerMediator.getNumMetTower(); i++)
-                    {
-                        //This is needed because apparently Met Tower 1 is unnumbered.
-                        string j = (i == 1) ? "" : Convert.ToString(i);
+                    //This is needed because apparently Met Tower 1 is unnumbered.
+                    string j = (i == 1) ? "" : Convert.ToString(i);
 
-                        double tempAvg = mm.calculateCtrAvgTemperature("Met" + j);
-                        double humidityAvg = mm.calculateCtrAvgHumidity("Met" + j);
+                    double tempAvg = mm.calculateCtrAvgTemperature("Met" + j);
+                    double humidityAvg = mm.calculateCtrAvgHumidity("Met" + j);
 
-                        log.DebugFormat("CTR avg temp: {0}, avg Humidity: {1}", tempAvg, humidityAvg);
+                    log.DebugFormat("CTR avg temp: {0}, avg Humidity: {1}", tempAvg, humidityAvg);
 
-                        //Send this temperature to the Met Mediator and determine if met tower is freezing or not
-                        bool metFrozen = mm.setFrozenCondition("Met" + j, tempAvg, humidityAvg);
+                    //Send this temperature to the Met Mediator and determine if met tower is freezing or not
+                    bool metFrozen = mm.setFrozenCondition("Met" + j, tempAvg, humidityAvg);
 
-                        //Update the Dew Point calculation. This value will show up on the faceplate
-                        mm.updateDewPoint("Met" + j, tempAvg, humidityAvg);
+                    //Update the Dew Point calculation. This value will show up on the faceplate
+                    mm.updateDewPoint("Met" + j, tempAvg, humidityAvg);
 
-                        bool currentIcePossible = Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, icePossibleAlarmTag));
-                        OpcServer.writeOpcTag(opcServerName, icePossibleAlarmTag, metFrozen || currentIcePossible);
-                        tm.checkMetTowerFrozen("Met" + j);
-                    }
-                    //Set the CTR back to the original value
-                    ctrCountdown = articunoCtrTime;
-
-                    //Log the contents in the list for debugging purposes
-                    logCurrentList();
+                    bool currentIcePossible = Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, icePossibleAlarmTag));
+                    OpcServer.writeOpcTag(opcServerName, icePossibleAlarmTag, metFrozen || currentIcePossible);
+                    tm.checkMetTowerFrozen("Met" + j);
                 }
+                //Set the CTR back to the original value
+                ctrCountdown = articunoCtrTime;
+
+                //Log the contents in the list for debugging purposes
+                logCurrentList();
             }
 
             //Tell the turbines to Decrement thier internal CTR Time. Must be after the met tower code or else turbine might not respond to a met tower icing change event
-            if (articunoEnable && tm.isUCCActive())
+            if (articunoEnable)
                 tm.decrementTurbineCtrTime();
 
         }

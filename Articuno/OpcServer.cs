@@ -62,7 +62,11 @@ namespace Articuno
         {
             try
             {
-                client.WriteItemValue(serverName, tag, value);
+                //Only write to OPC Server if the UCC is active
+                if (isActiveUCC())
+                {
+                    client.WriteItemValue(serverName, tag, value);
+                }
                 return true;
             }
             catch (Exception e)
@@ -124,7 +128,15 @@ namespace Articuno
         /// <param name="serverName">The OPC server Name</param>
         public static void writeOpcTag(string serverName, string tag, object value)
         {
-            try { opcServer.WriteItemValue(serverName, tag, value); }
+            try
+            {
+                //Only write to OPC Server if the UCC is active
+                if (isActiveUCC())
+                {
+                    opcServer.WriteItemValue(serverName, tag, value);
+                }
+
+            }
             catch (Exception e)
             {
                 log.ErrorFormat("Write to tag: {0} failed. Does {0} exist on the server? Did the server die?", tag);
@@ -141,6 +153,11 @@ namespace Articuno
         public static bool isActiveUCC(string serverName, string tag)
         {
             return Convert.ToBoolean(readOpcTag(serverName, tag));
+        }
+
+        public static bool isActiveUCC()
+        {
+            return Convert.ToBoolean(readOpcTag(DatabaseInterface.Instance.getOpcServer(), DatabaseInterface.Instance.getActiveUCCTag()));
         }
 
     }
