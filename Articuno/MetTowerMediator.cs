@@ -681,6 +681,20 @@ namespace Articuno
         /// <returns>Boolean. True if frozen, false otherwise</returns>
         public bool isMetFrozen(string metTowerId) { return Convert.ToBoolean(getMetTower(metTowerId).IceIndicationValue); }
 
+        /// <summary>
+        /// This function checks to see if icing is occuring for either of hte met towers on site. 
+        /// </summary>
+        /// <returns>a Boolean indicating if either of the met tower has froze up</returns>
+        public bool icingPossible()
+        {
+            bool icingPossible=false;
+            foreach (string metPrefix in metPrefixList)
+            {
+                icingPossible |= Convert.ToBoolean(getMetTower(metPrefix).IceIndicationValue);
+            }
+            return icingPossible;
+        }
+
         public Enum findMetTowerTag(string metTowerId, string tag)
         {
             MetTower tempMet = getMetTower(metTowerId);
