@@ -212,8 +212,9 @@ namespace Articuno
                             opcServerName, sitePrefix + reader.Rows[i]["Participation"].ToString(), 1000, null));
                         assetInputTags.Add(new DAItemGroupArguments("",
                             opcServerName, sitePrefix + reader.Rows[i]["NrsMode"].ToString(), 1000, null));
+                        //Important. The "Start cmd" event listener MUST be fast as PcVue changes it in 200 ms. 100 ms should be enough
                         assetInputTags.Add(new DAItemGroupArguments("",
-                            opcServerName, sitePrefix + reader.Rows[i]["Start"].ToString(), 1000, null));
+                            opcServerName, sitePrefix + reader.Rows[i]["Start"].ToString(), 100, null));
 
                     }
                     catch (Exception e) { log.ErrorFormat("Error when attempting to add to assetInputTags list. {0}", e); }
@@ -466,7 +467,7 @@ namespace Articuno
         //Method that is executed when user checks/unchecks a turbine from participating in Articuno
         private static void checkPariticipation(string turbineId, object value)
         {
-            bool participationStatus = Convert.ToBoolean(tm.getParticipationState(turbineId));
+            bool participationStatus = Convert.ToBoolean(tm.readParticipationValue(turbineId));
             log.InfoFormat("Turbine {0} Participation in Articuno {1} OnChangeValue {2}", turbineId, participationStatus,value);
             //do nothing if turbine is already in paused by Articuno
             if (isPausedByArticuno(turbineId)) { }

@@ -258,6 +258,7 @@ namespace Articuno
         public Object readRotorSpeedValue(string turbineId) { return getTurbine(turbineId).readRotorSpeedValue(); }
         public Object readOperatingStateValue(string turbineId) { return getTurbine(turbineId).readOperatingStateValue(); }
         public Object readTemperatureValue(string turbineId) { return getTurbine(turbineId).readTemperatureValue(); }
+        public Object readParticipationValue(string turbineId) { return getTurbine(turbineId).readParticipationValue(); }
 
         //For writing (using turbineId). Note that the mediator really shouldn't be writing to all the availble turbine tags. If you need to test something, you need to create a turbine object 
         public void writeNrsStateTag(string turbineId, object value) { getTurbine(turbineId).writeNoiseLevel(value); }
