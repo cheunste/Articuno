@@ -429,7 +429,7 @@ namespace Articuno
             if (tm.getNrsStateTag(turbineId).Equals("")) { tm.setNrsActive(turbineId, false); }
             else
             {
-                if (Convert.ToInt16(value) == ACTIVE_NOISE_LEV)
+                if (Convert.ToInt16(value) == ACTIVE_NOISE_LEV )
                     tm.setNrsActive(turbineId, true);
                 else
                     tm.setNrsActive(turbineId, false);
@@ -437,8 +437,8 @@ namespace Articuno
         }
         private static void checkOperatingState(string turbineId, object value)
         {
-            int state = Convert.ToInt16(value);
-            log.InfoFormat("{0} Current Operating State: {1}", turbineId, state);
+            int state = Convert.ToInt32(tm.readOperatingStateValue(turbineId));
+            log.InfoFormat("{0} Current Operating State: {1} onChangeValue: {2}", turbineId, state,value);
             //If already paused by Articuno, then there's nothing to do
             if (isPausedByArticuno(turbineId)) { }
             //If not paused by Aritcuno, then you need to check the operating state of the turbine
@@ -466,8 +466,8 @@ namespace Articuno
         //Method that is executed when user checks/unchecks a turbine from participating in Articuno
         private static void checkPariticipation(string turbineId, object value)
         {
-            bool participationStatus = Convert.ToBoolean(value);
-            log.InfoFormat("Turbine {0} Participation in Articuno {1}", turbineId, participationStatus);
+            bool participationStatus = Convert.ToBoolean(tm.getParticipationState(turbineId));
+            log.InfoFormat("Turbine {0} Participation in Articuno {1} OnChangeValue {2}", turbineId, participationStatus,value);
             //do nothing if turbine is already in paused by Articuno
             if (isPausedByArticuno(turbineId)) { }
             //If turbine not paused by Articuno, then you check for participation status
@@ -560,7 +560,9 @@ namespace Articuno
             //Check to see if conditions are not met...and if it isn't in the excluded list
             if (turbinesWaitingForPause.Contains(turbineId))
             {
-                turbinesWaitingForPause.RemoveAll(x => x.Equals(turbineId));
+                turbinesWaitingForPause.RemoveAll(x => x.Equals(turbineId));    //Log the contents in the list for debugging purposes
+                logCurrentList();
+
                 turbinesConditionNotMet.Add(turbineId);
                 //Log the Current status of the lists
                 logCurrentList();
