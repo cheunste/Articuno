@@ -37,6 +37,12 @@ namespace Articuno
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(MetTowerMediator));
 
+        //Constants
+        private double MIN_TEMP_VALUE = -20.0;
+        private double MAX_TEMP_VALUE = 60.0;
+        private double MIN_HUMIDITY_VALUE = 0.0;
+        private double MAX_HUMIDITY_VALUE = 0.99;
+
         //Database
         static DatabaseInterface dbi;
         private MetTowerMediator()
@@ -114,6 +120,9 @@ namespace Articuno
                 met.CtrTemperatureTag = sitePrefix + reader.Rows[0]["CtrTemperature"].ToString();
                 met.CtrDewTag = sitePrefix + reader.Rows[0]["CtrDew"].ToString();
                 met.CtrHumidityTag = sitePrefix + reader.Rows[0]["CtrHumidity"].ToString();
+
+                //Create the sensors for the met tower. Must be declared after every variable has been set
+                met.createSensors();
 
                 metTowerList.Add(met);
             }
