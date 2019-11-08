@@ -119,7 +119,11 @@ namespace Articuno
         public string ScalingFactorValue { get; set; }
 
         //Theses are used to write to the OP Tag Values.  There shouldn't be too many of these
-        public void writeTurbineCtrValue(int articunoCtrValue) { TurbineCtr = articunoCtrValue.ToString(); ctrCountDown = articunoCtrValue; }
+        public void writeTurbineCtrValue(int articunoCtrValue) {
+            TurbineCtr = articunoCtrValue.ToString();
+            ctrCountDown = articunoCtrValue;
+            OpcServer.writeOpcTag(OpcServerName, CtrCountdownTag, articunoCtrValue);
+        }
 
         //Load shutdown function. Probably the most important function
         public double writeLoadShutdownCmd()
