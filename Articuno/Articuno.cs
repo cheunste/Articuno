@@ -62,6 +62,8 @@ namespace Articuno
         private static int MIN_CTR_TIME = 1;
         private static int ENABLE = 1;
 
+        private static int START_CMD_SENT = 1;
+
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(Articuno));
 
@@ -396,7 +398,7 @@ namespace Articuno
                         }
                         //Start the turbine if a command is sent. This is because dispatchers
                         //Can start it on their whim if they want to 
-                        if (Convert.ToInt32(value) == 1)
+                        if (Convert.ToInt32(value) == START_CMD_SENT)
                             tm.startTurbine(prefix);
                         break;
                     //In the case where the turbine went into a different state. This includes pause by the dispatchers, site, curtailment, maintenance, anything non-Articuno 
@@ -439,7 +441,7 @@ namespace Articuno
             Console.WriteLine("Current Operating State: {0}", state);
             //If already paused by Articuno, then there's nothing to do
             if (isPausedByArticuno(turbineId)) { }
-            //If turbine isn't in run or draft, then that means it is derated or in emergency, or something else
+            //If turbine is NOT in run or draft, then that means it is derated or in emergency, or something else and must be removed from the waiting for Pause list
             if ((state == RUN_STATE || state == DRAFT_STATE))
             {
                 conditionsMet(turbineId);
@@ -452,6 +454,7 @@ namespace Articuno
             }
         }
         //Method that is executed when user checks/unchecks a turbine from participating in Articuno
+        //If a turbine is not participating, then it should be removed from the Waiting for Pause list and into the Excluded List
         private static void checkPariticipation(string turbineId, object value)
         {
             bool partipationStatus = Convert.ToBoolean(value);
@@ -463,7 +466,7 @@ namespace Articuno
                 turbinesConditionNotMet.Remove(turbineId);
                 turbinesExcludedList.Add(turbineId);
             }
-            //At this point, partipationStatus should be true, so get it out of the Excludedlist and put it into the waitingForPause
+            //At this point, partipationStatus should be true, so get it out of the Excludedlist and put it into the waitingForPause. 
             else
             {
                 turbinesExcludedList.Remove(turbineId);
@@ -510,6 +513,7 @@ namespace Articuno
                 }
                 if (tag.Equals(articunoCtrTag))
                 {
+                    //Checks to see if hte CTR entered is over 60 or 0. If so, then cap the value
                     if (value <= MIN_CTR_TIME)
                         value = MIN_CTR_TIME;
                     else if (value >= MAX_CTR_TIME)
