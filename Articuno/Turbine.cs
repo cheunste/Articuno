@@ -182,7 +182,7 @@ namespace Articuno
         }
 
         //Function to restart the Ctr Time. 
-        private void resetCtrTime()
+        public void resetCtrTime()
         {
             //Reset CTR countdown
             ctrCountDown = Convert.ToInt32(TurbineCtr);

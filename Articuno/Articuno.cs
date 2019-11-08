@@ -439,17 +439,26 @@ namespace Articuno
             Console.WriteLine("Current Operating State: {0}", state);
             //If already paused by Articuno, then there's nothing to do
             if (isPausedByArticuno(turbineId)) { }
-            //If turbine isn't in run or draft, then that means it is derated or in emergency, or something else. 
-            //If the turbine is in either run or draft, then it meets condition. But make sure it also isn't in the list already
-            if ((state == RUN_STATE || state == DRAFT_STATE))
-            {
-                conditionsMet(turbineId);
-                tm.setOperatingStateCondition(turbineId, true);
-            }
+            //If not paused by Aritcuno, then you need to check the operating state of the turbine
             else
             {
-                conditionsNotMet(turbineId);
-                tm.setOperatingStateCondition(turbineId, false);
+                //If turbine isn't in run or draft, then that means it is derated or in emergency, or something else. 
+                //If the turbine is in either run or draft, then it meets condition. But make sure it also isn't in the list already
+                if ((state == RUN_STATE || state == DRAFT_STATE))
+                {
+                    //This prevents a double insert scenario if the turbine was in run...then draft...then run again
+                    if (!turbinesWaitingForPause.Contains(turbineId))
+                    {
+                        conditionsMet(turbineId);
+                        tm.setOperatingStateCondition(turbineId, true);
+                        tm.resetCtr(turbineId);
+                    }
+                }
+                else
+                {
+                    conditionsNotMet(turbineId);
+                    tm.setOperatingStateCondition(turbineId, false);
+                }
             }
         }
         //Method that is executed when user checks/unchecks a turbine from participating in Articuno
@@ -458,17 +467,21 @@ namespace Articuno
             bool partipationStatus = Convert.ToBoolean(value);
             //do nothing if turbine is already in paused by Articuno
             if (isPausedByArticuno(turbineId)) { }
-            if (partipationStatus == false && !turbinesExcludedList.Contains(turbineId))
+            //If turbine not paused by Articuno, then you check for participation status
+            else
             {
-                turbinesWaitingForPause.RemoveAll(x => x.Equals(turbineId));
-                turbinesConditionNotMet.RemoveAll(x => x.Equals(turbineId));
-                turbinesExcludedList.Add(turbineId);
-            }
-            //At this point, partipationStatus should be true, so get it out of the Excludedlist and put it into the waitingForPause
-            else if (!turbinesWaitingForPause.Contains(turbineId))
-            {
-                turbinesExcludedList.RemoveAll(x => x.Equals(turbineId));
-                turbinesWaitingForPause.Add(turbineId);
+                if (!partipationStatus)
+                {
+                    turbinesWaitingForPause.RemoveAll(x => x.Equals(turbineId));
+                    turbinesConditionNotMet.RemoveAll(x => x.Equals(turbineId));
+                    turbinesExcludedList.Add(turbineId);
+                }
+                //At this point, partipationStatus should be true, so get it out of the Excludedlist and put it into the waitingForPause
+                else if (partipationStatus)
+                {
+                    turbinesExcludedList.RemoveAll(x => x.Equals(turbineId));
+                    turbinesWaitingForPause.Add(turbineId);
+                }
             }
         }
         //This is a method that is triggered upon any value changes for certain OPC Tags

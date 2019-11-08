@@ -440,6 +440,12 @@ namespace Articuno
                 Articuno.turbineClearedOfIce(turbineId);
         }
 
+        public void resetCtr(string turbineId)
+        {
+            getTurbine(turbineId).resetCtrTime();
+            getTurbine(turbineId).emptyQueue();
+        }
+
         public bool isTurbinePaused(string turbinePrefix) { return Articuno.isAlreadyPaused(turbinePrefix); }
 
         public bool isUCCActive()
