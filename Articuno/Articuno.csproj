@@ -104,6 +104,7 @@
     <Compile Include="Articuno.cs" />
     <Compile Include="ArticunoService.cs" />
     <Compile Include="DatabaseInterface.cs" />
+    <Compile Include="MetTowerSensor.cs" />
     <Compile Include="ServiceWrapper.cs" />
     <Compile Include="MetTower.cs" />
     <Compile Include="MetTowerMediator.cs" />
