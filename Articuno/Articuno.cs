@@ -302,13 +302,13 @@ namespace Articuno
                 //Set the CTR back to the original value
                 ctrCountdown = articunoCtrTime;
 
-                //Log the contents in the list for debugging purposes
-                logCurrentList();
             }
 
             //Tell the turbines to Decrement thier internal CTR Time. Must be after the met tower code or else turbine might not respond to a met tower icing change event
             if (articunoEnable)
                 tm.decrementTurbineCtrTime();
+            //Log the contents in the list for debugging purposes
+            logCurrentList();
 
         }
 
@@ -430,7 +430,7 @@ namespace Articuno
             if (tm.getNrsStateTag(turbineId).Equals("")) { tm.setNrsActive(turbineId, false); }
             else
             {
-                if (Convert.ToInt16(value) == ACTIVE_NOISE_LEV )
+                if (Convert.ToInt16(value) == ACTIVE_NOISE_LEV)
                     tm.setNrsActive(turbineId, true);
                 else
                     tm.setNrsActive(turbineId, false);
@@ -439,7 +439,7 @@ namespace Articuno
         private static void checkOperatingState(string turbineId, object value)
         {
             int state = Convert.ToInt32(tm.readOperatingStateValue(turbineId));
-            log.InfoFormat("{0} Current Operating State: {1} onChangeValue: {2}", turbineId, state,value);
+            log.InfoFormat("{0} Current Operating State: {1} onChangeValue: {2}", turbineId, state, value);
             //If already paused by Articuno, then there's nothing to do
             if (isPausedByArticuno(turbineId)) { }
             //If not paused by Aritcuno, then you need to check the operating state of the turbine
@@ -468,7 +468,7 @@ namespace Articuno
         private static void checkPariticipation(string turbineId, object value)
         {
             bool participationStatus = Convert.ToBoolean(tm.readParticipationValue(turbineId));
-            log.InfoFormat("Turbine {0} Participation in Articuno {1} OnChangeValue {2}", turbineId, participationStatus,value);
+            log.InfoFormat("Turbine {0} Participation in Articuno {1} OnChangeValue {2}", turbineId, participationStatus, value);
             //do nothing if turbine is already in paused by Articuno
             if (isPausedByArticuno(turbineId)) { }
             //If turbine not paused by Articuno, then you check for participation status
@@ -562,12 +562,10 @@ namespace Articuno
             if (turbinesWaitingForPause.Contains(turbineId))
             {
                 turbinesWaitingForPause.RemoveAll(x => x.Equals(turbineId));    //Log the contents in the list for debugging purposes
-                logCurrentList();
-
                 turbinesConditionNotMet.Add(turbineId);
-                //Log the Current status of the lists
-                logCurrentList();
             }
+            //Log the Current status of the lists
+            logCurrentList();
 
         }
 
@@ -626,6 +624,8 @@ namespace Articuno
             log.DebugFormat("Turbine {0} is {1} ", turbineId, turbinesPausedByArticuno.Contains(turbineId));
             logCurrentList();
             return turbinesPausedByArticuno.Contains(turbineId);
+            //Log the Current status of the lists
+            logCurrentList();
         }
 
         //Logs the current turbines in each of the Articuno lists. Can be empty
