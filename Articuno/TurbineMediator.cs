@@ -241,7 +241,6 @@ namespace Articuno
         public string getCtrRemaining(string turbineId) { return getTurbine(turbineId).CtrCountdownTag; }
 
         public int getTurbineCtrTime(string turbineId) { return Convert.ToInt32(getTurbine(turbineId).TurbineCtr); }
-        public string getHumidityTag(string turbineId) { return getTurbine(turbineId).TurbineHumidityTag; }
 
         //For reading OPC value using turbineId
         /// <summary>

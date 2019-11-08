@@ -104,7 +104,6 @@ namespace Articuno
         public string TurbineCtr { set; get; }
         public string TemperatureTag { set; get; }
         public string TurbineHumidityTag { set; get; }
-        public string ScalingFactorTag { set; get; }
         public string ParticipationTag { set; get; }
         public string StoppedAlarmTag { set; get; }
         public string TurbinePrefix { set; get; }
@@ -191,7 +190,6 @@ namespace Articuno
 
         //Misc functions
         public string getTurbinePrefixValue() { return this.TurbinePrefix; }
-        public string isDerated() { return this.DeRate; }
 
         //The following five fucntions are set by the main Articuno class. They show if each of the four/five 
         //algorithms are true
@@ -220,12 +218,6 @@ namespace Articuno
          * Met Tower accessor. Note that it only takes a prefix (ie Met1, Met2)
          */
         public string MetTowerPrefix { set; get; }
-
-        //Function to determine turbine participation in Articuno
-        public void setParticipation(bool participationStatus) { articunoParicipation = participationStatus; }
-        public bool getParticipation() { return articunoParicipation; }
-
-        public bool Participation { get; set; }
 
         //The actual method that checks all conditions and throws a load shutdown command if needed
         public void checkIcingConditions()
