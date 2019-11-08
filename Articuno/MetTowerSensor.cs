@@ -10,7 +10,7 @@ namespace Articuno
     /// <summary>
     /// This is a class representing a generic met tower sensor. This is a generic class and must be implemented
     /// </summary>
-    abstract class MetTowerSensor
+    public class MetTowerSensor
     {
 
         //Member variables
