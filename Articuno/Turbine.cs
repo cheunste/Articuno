@@ -181,10 +181,10 @@ namespace Articuno
         }
 
         //Function to restart the Ctr Time. 
-        public void resetCtrTime()
+        public void resetCtrTime(int startupTime=0)
         {
             //Reset CTR countdown
-            ctrCountDown = Convert.ToInt32(TurbineCtr);
+            ctrCountDown = Convert.ToInt32(TurbineCtr)+startupTime;
             OpcServer.writeOpcTag(OpcServerName, CtrCountdownTag, ctrCountDown);
         }
 
@@ -293,7 +293,7 @@ namespace Articuno
             emptyQueue();
             log.InfoFormat("Turbine {0} has started", getTurbinePrefixValue());
             log.DebugFormat("Turbine {0} CTR Value reset to: {1}", getTurbinePrefixValue(), (Convert.ToInt32(TurbineCtr)) + startupTime);
-            this.ctrCountDown = Convert.ToInt32(TurbineCtr) + startupTime;
+            resetCtrTime(startupTime);
             OpcServer.writeOpcTag(OpcServerName, CtrCountdownTag, ctrCountDown);
         }
 
