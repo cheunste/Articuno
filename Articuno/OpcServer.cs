@@ -22,7 +22,8 @@ namespace Articuno
         private static readonly ILog log = LogManager.GetLogger(typeof(OpcServer));
 
         //Constructor. Tages in a server name and sets the 
-        public OpcServer(String serverName) {
+        public OpcServer(String serverName)
+        {
             this.serverName = serverName;
             EasyDAClient.SharedParameters.TopicParameters.SlowdownWeight = 0.0f;
             EasyDAClient.SharedParameters.TopicParameters.SpeedupWeight = 0.0f;
@@ -61,7 +62,11 @@ namespace Articuno
         {
             try
             {
-                client.WriteItemValue(serverName, tag, value);
+                //Only write to OPC Server if the UCC is active
+                if (isActiveUCC())
+                {
+                    client.WriteItemValue(serverName, tag, value);
+                }
                 return true;
             }
             catch (Exception e)
@@ -72,44 +77,19 @@ namespace Articuno
             }
         }
 
-        /// <summary>
-        /// method to read a value from the OPC server. Returns an Object. Use this for production. Use readTagValue for testing
-        /// </summary>
-        /// <param name="tag">The OPC tag name (String format)</param>
-        /// <param name="serverName">The OPC server name. String.</param>
-        /// <returns>An Object if tag is in good quality, a null if tag isbad quality </returns>
-        //public static Object readOpcTag(string serverName, string tag)
-        //{
-        //    try
-        //    {
-        //        object value = opcServer.ReadItemValue("", serverName, tag);
-        //        return value;
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        //Log Exception here
-        //        log.ErrorFormat("Reading tag: {0} failed. Does {0} exist on the server?", tag);
-        //        log.ErrorFormat("Error:\n{0}", e);
-        //        return null;
-        //    }
-        //}
         private static Object readOpcTag(string serverName, string tag)
         {
             try
             {
-                //object derp = opcServer.GetPropertyValue("",serverName,tag, DAPropertyIds.Value);
-                //return derp;
-                //object value = opcServer.ReadItemValue("", serverName, tag);
-
-                object quality = opcServer.GetPropertyValue("",serverName,tag, DAPropertyIds.Quality);
-                object value = opcServer.GetPropertyValue("",serverName,tag, DAPropertyIds.Value);
+                object quality = opcServer.GetPropertyValue("", serverName, tag, DAPropertyIds.Quality);
+                object value = opcServer.GetPropertyValue("", serverName, tag, DAPropertyIds.Value);
 
                 //log.DebugFormat("{0}: {1}. Qual: {2}",tag,value,quality);
                 return value;
             }
             catch (Exception e)
             {
-                log.DebugFormat("Error relating to tag: {0}\nDetails: {1}", tag,e);
+                log.DebugFormat("Error relating to tag: {0}\nDetails: {1}", tag, e);
                 return null;
             }
         }
@@ -118,24 +98,24 @@ namespace Articuno
         {
             Object obj = readOpcTag(serverName, tag);
             if (obj == null)
-                log.ErrorFormat("Issue reading tag: {0}. Will be sending back an {1} to Artiucno  ",tag,0);
+                log.ErrorFormat("Issue reading tag: {0}. Will be sending back an {1} to Artiucno  ", tag, 0);
             return (obj ?? 0);
         }
 
-        public static Object readStringTag(string serverName,string tag)
+        public static Object readStringTag(string serverName, string tag)
         {
             Object obj = readOpcTag(serverName, tag);
             if (obj == null)
-                log.ErrorFormat("Issue reading tag: {0}. Will be sending back an {1} to Artiucno  ",tag," empty string ");
+                log.ErrorFormat("Issue reading tag: {0}. Will be sending back an {1} to Artiucno  ", tag, " empty string ");
 
             return (obj ?? "");
         }
 
-        public static Object readBooleanTag(string serverName,string tag)
+        public static Object readBooleanTag(string serverName, string tag)
         {
             Object obj = readOpcTag(serverName, tag);
             if (obj == null)
-                log.ErrorFormat("Issue reading tag: {0}. Will be sending back an {1} to Artiucno  ",tag,false);
+                log.ErrorFormat("Issue reading tag: {0}. Will be sending back an {1} to Artiucno  ", tag, false);
             return (obj ?? false);
         }
 
@@ -148,8 +128,17 @@ namespace Articuno
         /// <param name="serverName">The OPC server Name</param>
         public static void writeOpcTag(string serverName, string tag, object value)
         {
-            try { opcServer.WriteItemValue(serverName, tag, value); }
-            catch (Exception e) {
+            try
+            {
+                //Only write to OPC Server if the UCC is active
+                if (isActiveUCC())
+                {
+                    opcServer.WriteItemValue(serverName, tag, value);
+                }
+
+            }
+            catch (Exception e)
+            {
                 log.ErrorFormat("Write to tag: {0} failed. Does {0} exist on the server? Did the server die?", tag);
                 log.ErrorFormat("Error:\n{0}", e);
             }
@@ -161,9 +150,14 @@ namespace Articuno
             return vtq.Quality.IsGood ? true : false;
         }
 
-        public static bool isActiveUCC(string serverName,string tag)
+        public static bool isActiveUCC(string serverName, string tag)
         {
             return Convert.ToBoolean(readOpcTag(serverName, tag));
+        }
+
+        public static bool isActiveUCC()
+        {
+            return Convert.ToBoolean(readOpcTag(DatabaseInterface.Instance.getOpcServer(), DatabaseInterface.Instance.getActiveUCCTag()));
         }
 
     }

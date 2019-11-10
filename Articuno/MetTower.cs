@@ -32,6 +32,12 @@ namespace Articuno
         private double lastPrimTemp;
         private double lastSecTemp;
 
+        //Constants
+        private double MIN_TEMP_VALUE = -20.0;
+        private double MAX_TEMP_VALUE = 60.0;
+        private double MIN_HUMIDITY_VALUE = 0.0;
+        private double MAX_HUMIDITY_VALUE = 0.99;
+
         //Queues
         private Queue<double> temperatureQueue;
         private Queue<double> humidityQueue;
@@ -44,6 +50,12 @@ namespace Articuno
 
         //opc server
         private string opcServerName;
+
+        //Sensors
+        MetTowerSensor primTempSensor;
+        MetTowerSensor secTempSensor;
+        MetTowerSensor primHumidSensor;
+
 
         //log
         private static readonly ILog log = LogManager.GetLogger(typeof(MetTower));
@@ -70,6 +82,18 @@ namespace Articuno
             SampleHumidity = 0;
         }
 
+        public void createSensors()
+        {
+            this.primTempSensor = new MetTowerSensor(opcServerName, PrimTemperatureTag, TemperaturePrimOutOfRangeTag, TemperaturePrimBadQualityTag, MIN_TEMP_VALUE, MAX_TEMP_VALUE);
+            this.secTempSensor = new MetTowerSensor(opcServerName, SecTemperatureTag, TemperatureSecOutOfRangeTag, TemperatureSecBadQualityTag, MIN_TEMP_VALUE, MAX_TEMP_VALUE);
+            this.primHumidSensor = new MetTowerSensor(opcServerName,HumidityPrimValueTag,HumidtyOutOfRangeTag,HumidityBadQualityTag,MIN_HUMIDITY_VALUE,MAX_HUMIDITY_VALUE); 
+
+        }
+
+        public MetTowerSensor getPrimaryTemperatureSensor() => primTempSensor;
+        public MetTowerSensor getSecondaryTemperatureSensor() => secTempSensor;
+        public MetTowerSensor getPrimaryHumiditySensor() => primHumidSensor;
+
         /// <summary>
         /// Accessor the RelativeHumidity OPC Tag
         /// </summary>
@@ -80,6 +104,8 @@ namespace Articuno
             set { OpcServer.writeOpcTag(opcServerName, RelativeHumidityTag, value); }
             get { return OpcServer.readAnalogTag(opcServerName, RelativeHumidityTag); }
         }
+
+
 
         /// <summary>
         /// Accessor for the Primary Temperature OPC Tag

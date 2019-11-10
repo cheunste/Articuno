@@ -30,11 +30,18 @@ namespace Articuno
 
         private string opcServerName;
         private string sitePrefix;
+        private string uccActiveTag;
         private static List<MetTower> metTowerList = new List<MetTower>();
         private static List<String> metPrefixList = new List<String>();
 
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(MetTowerMediator));
+
+        //Constants
+        private double MIN_TEMP_VALUE = -20.0;
+        private double MAX_TEMP_VALUE = 60.0;
+        private double MIN_HUMIDITY_VALUE = 0.0;
+        private double MAX_HUMIDITY_VALUE = 0.99;
 
         //Database
         static DatabaseInterface dbi;
@@ -114,8 +121,15 @@ namespace Articuno
                 met.CtrDewTag = sitePrefix + reader.Rows[0]["CtrDew"].ToString();
                 met.CtrHumidityTag = sitePrefix + reader.Rows[0]["CtrHumidity"].ToString();
 
+                //Create the sensors for the met tower. Must be declared after every variable has been set
+                met.createSensors();
+
                 metTowerList.Add(met);
             }
+
+            //Get the tag to see if UCC is active
+            uccActiveTag = dbi.getActiveUCCTag();
+
         }
 
         public void createPrefixList()
@@ -143,14 +157,102 @@ namespace Articuno
         /// </summary>
         /// <param name="metId">the met tower id (ie Met) in string</param>
         /// <returns>Tuple of doubles</returns>
-        public Tuple<double, double, double, double> getAllMeasurements(string metId)
+        public void getAllMeasurements(string metId)
         {
-            double temperature = (double)readTemperature(metId);
-            double rh = readHumidity(metId);
-            double dew = calculateDewPoint(rh, temperature);
+            MetTower met = getMetTower(metId);
+            double temperature = readTemperature(met);
+            var humidity = readHumidity(met);
+            double dew = calculateDewPoint(Convert.ToDouble(humidity), temperature);
             double delta = calculateDelta(temperature, dew);
-            log.DebugFormat("{0}, temp: {1}, rh: {2}, dew:{3}, delta: {4}", metId, temperature, rh, dew, delta);
-            return new Tuple<double, double, double, double>(temperature, rh, dew, delta);
+            log.DebugFormat("{0}, temp: {1}, rh: {2}, dew:{3}, delta: {4}", metId, temperature, humidity, dew, delta);
+        }
+
+        ///EXPERIMENTAL. Not tested
+        /// <summary>
+        /// Calculates Dew Poing and Delta based on the average temperature and average humidty
+        /// </summary>
+        /// <param name="metId"></param>
+        public void calculate(string metId)
+        {
+            MetTower met = getMetTower(metId);
+
+            double temperature = Convert.ToDouble(met.CtrTemperatureValue);
+            double humidity = Convert.ToDouble(met.CtrHumidityValue);
+            double dew = calculateDewPoint(Convert.ToDouble(humidity), temperature);
+            double delta = calculateDelta(temperature, dew);
+            log.DebugFormat("{0}, temp: {1}, rh: {2}, dew:{3}, delta: {4}", metId, temperature, humidity, dew, delta);
+
+        }
+
+        /// <summary>
+        ///  Gets the one minute average temperature of a met tower primary or secondary sensor. 
+        /// </summary>
+        /// <param name="metId"></param>
+        /// <returns>A double if the quality is good for either the primary or secondary sensor. Returns the turbine temperature otherwise
+        /// </returns>
+        public double readTemperature(MetTower met)
+        {
+            var primTempSensor = met.getPrimaryTemperatureSensor();
+            var secTempSensor = met.getSecondaryTemperatureSensor();
+
+            double temperature = 0.00;
+
+            //Check if primary sensor is bad quality
+            if (primTempSensor.isSensorBadQuality())
+            {
+                //Check if sensory sensor is bad quality
+                if (secTempSensor.isSensorBadQuality())
+                {
+                    //At this point, use the turbine sensro
+                    temperature = Convert.ToDouble(met.getNearestTurbine().readTemperatureValue());
+                }
+                //secondary sensor is in good qualtiy
+                else { temperature = secTempSensor.readValue(); }
+            }
+            //primary temperature is in good quality
+            else { temperature = primTempSensor.readValue(); }
+
+            return temperature;
+        }
+        public double readTemperature(String metId)
+        {
+             metId = isMetTowerSwitched(metId);
+           MetTower met = getMetTower(metId);
+            var primTempSensor = met.getPrimaryTemperatureSensor();
+            var secTempSensor = met.getSecondaryTemperatureSensor();
+
+            double temperature = 0.00;
+
+            //Check if primary sensor is bad quality
+            if (primTempSensor.isSensorBadQuality())
+            {
+                //Check if sensory sensor is bad quality
+                if (secTempSensor.isSensorBadQuality())
+                {
+                    //At this point, use the turbine sensro
+                    temperature = Convert.ToDouble(met.getNearestTurbine().readTemperatureValue());
+                }
+                //secondary sensor is in good qualtiy
+                else { temperature = secTempSensor.readValue(); }
+            }
+            //primary temperature is in good quality
+            else { temperature = primTempSensor.readValue(); }
+
+            return temperature;
+        }
+        public double readHumidity(MetTower met)
+        {
+            var humiditySensor = met.getPrimaryHumiditySensor();
+            return humiditySensor.readValue();
+
+        }
+        public double readHumidity(String metId)
+        {
+            metId = isMetTowerSwitched(metId);
+            MetTower met = getMetTower(metId);
+            var humiditySensor = met.getPrimaryHumiditySensor();
+            return humiditySensor.readValue();
+
         }
 
         /// <summary>
@@ -180,39 +282,7 @@ namespace Articuno
                 return metId;
         }
 
-        /// <summary>
-        ///  Gets the one minute average temperature of a met tower primary or secondary sensor. 
-        /// </summary>
-        /// <param name="metId"></param>
-        /// <returns>A double if the quality is good for either the primary or secondary sensor. Returns the turbine temperature otherwise
-        /// </returns>
-        public Object readTemperature(string metId)
-        {
-            metId = isMetTowerSwitched(metId);
-            var tuple = tempQualityCheck(metId);
-            var primSensorQuality = tuple.Item1;
-            var secSensorQuality = tuple.Item2;
-            var primSensorValue = tuple.Item3;
-            var secSensorValue = tuple.Item4;
 
-
-            if (primSensorQuality.Equals(MetQualityEnum.MET_GOOD_QUALITY))
-            {
-                log.DebugFormat("{0} good quality. Using Primary Temperature Sensor value. Current temperature : {1}", metId, primSensorValue);
-                return primSensorValue;
-            }
-            else if (secSensorQuality.Equals(MetQualityEnum.MET_GOOD_QUALITY))
-            {
-                log.DebugFormat("{0} bad quality. Using Secondary Temperature Sensor Value. Current temperature : {1}", metId, secSensorValue);
-                return secSensorValue;
-            }
-            else
-            {
-                Object newTemp = getMetTower(metId).getNearestTurbine().readTemperatureValue();
-                log.DebugFormat("{0} both sensors bad quality. Using Turbine Temperature. Current Temperature: {1}. Quality S1: {2}, S2: {3}", metId, Convert.ToDouble(newTemp), primSensorQuality, secSensorQuality);
-                return newTemp;
-            }
-        }
 
         internal void writeToQueue(string metId, double temperature, double humidity) { getMetTower(metId).writeToQueue(temperature, humidity); }
 
@@ -225,7 +295,9 @@ namespace Articuno
             while (tempQueue.Count != 0) { temperatureCtrAverage += tempQueue.Dequeue(); }
 
             double average = temperatureCtrAverage / count;
-            met.CtrTemperatureValue = average;
+            //Only write if and only if the UCC is active
+            if (OpcServer.isActiveUCC(opcServerName, uccActiveTag))
+                met.CtrTemperatureValue = average;
 
             return average;
 
@@ -242,14 +314,20 @@ namespace Articuno
             double average = humidityCtrAverage / count;
             //You need to multiple the CtrHumidityValue by 100 because it is currently in decimal form. 
             //This needs to be displayed in percentage form
-            met.CtrHumidityValue = average * 100.0;
+            //Also, this should only write if and only if the UCC is active
+            if (OpcServer.isActiveUCC(opcServerName, uccActiveTag))
+                met.CtrHumidityValue = average * 100.0;
             return average;
         }
 
         internal void updateDewPoint(string metId, double ctrTemperature, double ctrHumidity)
         {
             double dew = calculateDewPoint(ctrHumidity, ctrTemperature);
-            getMetTower(metId).CtrDewValue = dew;
+            log.DebugFormat("CTR Dew: {0}", dew);
+            //Only write the dew point temperature if and only if the UCC is active
+            if (OpcServer.isActiveUCC(opcServerName, uccActiveTag))
+                getMetTower(metId).CtrDewValue = dew;
+
         }
 
 
@@ -261,7 +339,7 @@ namespace Articuno
         {
             foreach (MetTower tower in metTowerList) { tower.AmbTempThreshold = value; }
         }
-        public double readTemperatureThreshold(string metTowerId) { return getMetTower(metTowerId).DeltaTempThreshold; }
+        public double readTemperatureThreshold(string metTowerId) { return getMetTower(metTowerId).AmbTempThreshold; }
 
         /// <summary>
         /// Writes the delta threshold for all the met tower
@@ -275,12 +353,6 @@ namespace Articuno
 
         public void writeSecTemperature(string metId, double value) { getMetTower(metId).SecTemperatureValue = value; }
 
-        public double readHumidity(string metId)
-        {
-            metId = isMetTowerSwitched(metId);
-            var rhQuality = humidQualityCheck(metId);
-            return rhQuality.Item2;
-        }
         public void writeHumidity(string metId, double value)
         {
             MetTower met = getMetTower(metId);
@@ -417,10 +489,9 @@ namespace Articuno
             met.setLastStoredSample(temperatureTag, currentTemp);
 
             //If there are 50 or so samples (or whatever) that are equally the same, that implies the temperature from the sensor is flatlined. At this point, return a bad quality alert.
-            //TODO: Replace 50 with an adjustable number from the database 
-            if (met.getFrozenIncrement(temperatureTag) >= 50)
+            if (met.getFrozenIncrement(temperatureTag) >= dbi.getFlatlineCount())
             {
-                log.InfoFormat("Flatlien detected for {0}", temperatureTag);
+                log.InfoFormat("Flatline detected for {0}", temperatureTag);
                 return MetQualityEnum.MET_BAD_QUALITY;
             }
             return MetQualityEnum.MET_GOOD_QUALITY;
@@ -586,17 +657,15 @@ namespace Articuno
             double dewPoint = calculateDewPoint(avgHumidity, avgTemperature);
             double delta = calculateDelta(avgTemperature, dewPoint);
 
-            Console.WriteLine("Temp Threshold {0}", tempThreshold);
-            Console.WriteLine("Delta Threshold {0}", deltaThreshold);
-
             //If the humidity quality is bad, then do not use it and only rely on temperature
-            bool isHumidityBad = Convert.ToBoolean(met.HumidityBadQuality);
-            if (isHumidityBad)
+            bool isHumidityBad = Convert.ToBoolean(met.getPrimaryHumiditySensor().isSensorBadQuality());
+            if (isHumidityBad && (avgTemperature <= tempThreshold))
             {
                 log.InfoFormat("{0} Humidity is bad quality. Ignoring and currently using avg temperature {1}", metId, avgTemperature);
                 try
                 {
                     met.IceIndicationValue = true;
+
                     log.DebugFormat("Icing conditions met for {0}. \n" +
                         "{0} Average Temperature {1}, \n" +
                         "{0} Temperature threshold {2} \n",
@@ -622,25 +691,45 @@ namespace Articuno
                 try
                 {
                     met.IceIndicationValue = true;
-                    log.DebugFormat("Icing conditions met for {0}. \n" +
+                    log.InfoFormat("No Ice detected for met {0}.\n" +
                         "{0} Average Temperature {1}, \n" +
-                        "{0} Temperature threshold {2} \n",
-                        metId, avgTemperature, tempThreshold);
+                        "{0} Temperature threshold {2} \n" +
+                        "{0} Average Humidity {3}, \n" +
+                        "{0} Delta threshold {4} \n"
+                        ,
+                        metId, avgTemperature, tempThreshold, avgHumidity, deltaThreshold
+                        );
+
                 }
                 catch (Exception e)
                 {
                     //in case you can't write to OPC
-                    log.ErrorFormat("Error when writing to the " +
-                        "Ice indication.\n" +
-                        "Error: {0}. \n" +
-                        "Met: {1}, \n" +
-                        "avgTemp: {2}, \n" +
-                        "tempThreshold {3}\n",
-                        e, metId, avgTemperature, tempThreshold);
+                    log.ErrorFormat("No Ice detected for met {0}.\n" +
+                        "{0} Average Temperature {1}, \n" +
+                        "{0} Temperature threshold {2} \n" +
+                        "{0} Average Humidity {3}, \n" +
+                        "{0} Delta threshold {4} \n"
+                        ,
+                        metId, avgTemperature, tempThreshold, avgHumidity, deltaThreshold
+                        );
+
                     log.ErrorFormat("Error:\n{0}", e);
                 }
             }
-            else { met.IceIndicationValue = false; }
+            //Else, no ice detected
+            else
+            {
+                met.IceIndicationValue = false;
+                log.DebugFormat("No Ice detected for met {0}.\n" +
+                    "{0} Average Temperature {1}, \n" +
+                    "{0} Temperature threshold {2} \n" +
+                    "{0} Average Humidity {3}, \n" +
+                    "{0} Delta threshold {4} \n"
+                    ,
+                    metId, avgTemperature, tempThreshold, avgHumidity, deltaThreshold
+                    );
+
+            }
 
             return Convert.ToBoolean(met.IceIndicationValue);
         }
@@ -651,6 +740,20 @@ namespace Articuno
         /// <param name="metTowerId"></param>
         /// <returns>Boolean. True if frozen, false otherwise</returns>
         public bool isMetFrozen(string metTowerId) { return Convert.ToBoolean(getMetTower(metTowerId).IceIndicationValue); }
+
+        /// <summary>
+        /// This function checks to see if icing is occuring for either of hte met towers on site. 
+        /// </summary>
+        /// <returns>a Boolean indicating if either of the met tower has froze up</returns>
+        public bool icingPossible()
+        {
+            bool icingPossible = false;
+            foreach (string metPrefix in metPrefixList)
+            {
+                icingPossible |= Convert.ToBoolean(getMetTower(metPrefix).IceIndicationValue);
+            }
+            return icingPossible;
+        }
 
         public Enum findMetTowerTag(string metTowerId, string tag)
         {

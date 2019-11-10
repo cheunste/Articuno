@@ -9,6 +9,11 @@ using System;
 
 namespace Articuno
 {
+    /// <summary>
+    /// This class handles service states for Articuno and is used with the ServiceWrapper Class.
+    /// This handles service states such as start, pause, etc.
+    /// Unfortunately, because PcVue is not a service, this is technically, not used
+    /// </summary>
     class ArticunoService
     {
         private FileSystemWatcher watcher;
