@@ -90,6 +90,10 @@ namespace Articuno
 
         }
 
+        public MetTowerSensor getPrimaryTemperatureSensor() => primTempSensor;
+        public MetTowerSensor getSecondaryTemperatureSensor() => secTempSensor;
+        public MetTowerSensor getPrimaryHumiditySensor() => primHumidSensor;
+
         /// <summary>
         /// Accessor the RelativeHumidity OPC Tag
         /// </summary>

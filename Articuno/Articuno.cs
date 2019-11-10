@@ -258,10 +258,10 @@ namespace Articuno
                 string j = (i == 1) ? "" : Convert.ToString(i);
                 //Get all measurements from the met tower. Note that it will get turbine 
                 //temperature if the temperature coming from the met tower is bad qualtiy
-                Tuple<double, double, double, double> metMeasurements = mm.getAllMeasurements("Met" + j);
 
-                double temperature = metMeasurements.Item1;
-                double humidity = metMeasurements.Item2;
+                double temperature = mm.readTemperature("Met" + j);
+                double humidity = mm.readHumidity("Met" + j);
+
                 mm.writeToQueue("Met" + j, temperature, humidity);
             }
 
