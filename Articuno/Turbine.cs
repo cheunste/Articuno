@@ -118,7 +118,8 @@ namespace Articuno
         public string ScalingFactorValue { get; set; }
 
         //Theses are used to write to the OP Tag Values.  There shouldn't be too many of these
-        public void writeTurbineCtrValue(int articunoCtrValue) {
+        public void writeTurbineCtrValue(int articunoCtrValue)
+        {
             TurbineCtr = articunoCtrValue.ToString();
             ctrCountDown = articunoCtrValue;
             OpcServer.writeOpcTag(OpcServerName, CtrCountdownTag, articunoCtrValue);
@@ -175,17 +176,26 @@ namespace Articuno
 
                 //Does Check the rest of the icing conditions
                 //Do NOT call the check Ice function if the UCC is not active
-                if(tm.isUCCActive())
+                if (tm.isUCCActive())
                     checkIcingConditions();
             }
         }
 
         //Function to restart the Ctr Time. 
-        public void resetCtrTime(int startupTime=0)
+        public void resetCtrTime(int startupTime = 0)
         {
+            //Read Current CTR
+            double currCtr = Convert.ToInt32(readCtrCurrentValue());
+
             //Reset CTR countdown
-            ctrCountDown = Convert.ToInt32(TurbineCtr)+startupTime;
-            OpcServer.writeOpcTag(OpcServerName, CtrCountdownTag, ctrCountDown);
+            //If the current CTR is larger than the TurbineCtr, then don't do anything. 
+            //This means it was recently started and the turbine state hasn't changed (because a turbine takes a while to get started)
+            //However, if the currCtr is less than TuirbineCtr, that means it recently went to 0 and needs a restart
+            if (Convert.ToInt32(TurbineCtr) >= currCtr)
+            {
+                ctrCountDown = Convert.ToInt32(TurbineCtr) + startupTime;
+                OpcServer.writeOpcTag(OpcServerName, CtrCountdownTag, ctrCountDown);
+            }
         }
 
         //Misc functions
@@ -294,7 +304,6 @@ namespace Articuno
             log.InfoFormat("Turbine {0} has started", getTurbinePrefixValue());
             log.DebugFormat("Turbine {0} CTR Value reset to: {1}", getTurbinePrefixValue(), (Convert.ToInt32(TurbineCtr)) + startupTime);
             resetCtrTime(startupTime);
-            OpcServer.writeOpcTag(OpcServerName, CtrCountdownTag, ctrCountDown);
         }
 
         //Function to block/remove turbine in AGC until startup.
