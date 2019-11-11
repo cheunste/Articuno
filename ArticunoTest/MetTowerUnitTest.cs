@@ -135,19 +135,13 @@ namespace ArticunoTest
             met.PrimTemperatureValue = tempVal1;
             met.SecTemperatureValue = tempVal1;
 
-            //var met1Values = mm.getAllMeasurements(metId);
+            var met1Temp1 = Convert.ToDouble(mm.getMetTower(metId).PrimTemperatureValue);
+            var met1Temp2 = Convert.ToDouble(mm.getMetTower(metId).SecTemperatureValue);
+            var met1Humd1 = Convert.ToDouble(mm.getMetTower(metId).RelativeHumidityValue);
 
-            //Console.WriteLine(met1Values.Item1);
-            //Console.WriteLine(met1Values.Item2);
-            //Console.WriteLine(met1Values.Item3);
-            //Console.WriteLine(met1Values.Item4);
-
-            //Assert.AreEqual(met1Values.Item1, tempVal1, 0.001, "temperature value not equal");
-            //Assert.AreEqual(met1Values.Item2, hmdVal / 100, 0.001, "Humidty values are not equal");
-
-            ////Warning, all I can do for the dew point and delta calcs are check if they're not null. Mainly because I didn't come up with the formula for this
-            //Assert.IsNotNull(met1Values.Item3);
-            //Assert.IsNotNull(met1Values.Item4);
+            Assert.AreEqual(met1Temp1, tempVal1, 0.001, "temperature on sensor 1 value not equal");
+            Assert.AreEqual(met1Temp2, tempVal1, 0.001, "temperature on sensor 2 value not equal");
+            Assert.AreEqual(met1Humd1, hmdVal/100.0, 0.001, "Humidty values are not equal");
         }
 
         [TestMethod]
@@ -175,23 +169,39 @@ namespace ArticunoTest
 
         [TestMethod]
         //Set bad quality to assert met tower throws an alarm
-        [DataRow("Met", 300.0, 120.0, 1.100, 200.0)]
-        public void checkMetTower(string metId, double tempVal1, double tempVal2, double hmdVal1, double hmdVal2)
+        [DataRow(300.0, 120.0, 1.100, 200.0)]
+        public void checkMetTower(double tempVal1, double tempVal2, double hmdVal1, double hmdVal2)
         {
-            MetTower met = mm.getMetTower(metId);
+            //Assert.Fail();
+            //For this test, you need both met towers because you do not want to fall back on redundancy
+            string metId1 = "Met";
+            string metId2 = "Met2";
+            MetTower met = mm.getMetTower(metId1);
+            MetTower met2 = mm.getMetTower(metId2);
 
             met.RelativeHumidityValue = hmdVal1;
             met.PrimTemperatureValue = tempVal1;
             met.SecTemperatureValue = tempVal1;
-            bool alarm = Convert.ToBoolean(met.NoDataAlarmValue);
-            Console.WriteLine("Met Tower Quality: {0}", mm.checkMetTowerQuality(metId));
-            Console.WriteLine("Met Tower Temperature Quality: {0}", mm.tempQualityCheck(metId));
-            Console.WriteLine("Met Tower Humidity Quality: {0}", mm.humidQualityCheck(metId));
 
-            Console.WriteLine("{0}", Convert.ToBoolean(met.TemperaturePrimOutOfRange));
-            Console.WriteLine("{0}", Convert.ToBoolean(met.HumidityOutOfRng));
-            Console.WriteLine("{0}", Convert.ToBoolean(met.HumidityBadQuality));
-            Console.WriteLine("{0}", Convert.ToBoolean(met.TemperaturePrimBadQuality));
+            var humid=met.RelativeHumidityValue;
+            var temp1=met.PrimTemperatureValue;
+            var temp2=met.SecTemperatureValue;
+
+            met.isAllSensorGood();
+
+            bool alarm = Convert.ToBoolean(met.NoDataAlarmValue);
+
+            Assert.IsTrue(alarm, 
+                String.Format("The NoDataAlarm Value is not true for ",metId1)
+                );
+            //Console.WriteLine("Met Tower Quality: {0}", mm.checkMetTowerQuality(metId));
+            //Console.WriteLine("Met Tower Temperature Quality: {0}", mm.tempQualityCheck(metId));
+            //Console.WriteLine("Met Tower Humidity Quality: {0}", mm.humidQualityCheck(metId));
+
+            //Console.WriteLine("{0}", Convert.ToBoolean(met.TemperaturePrimOutOfRange));
+            //Console.WriteLine("{0}", Convert.ToBoolean(met.HumidityOutOfRng));
+            //Console.WriteLine("{0}", Convert.ToBoolean(met.HumidityBadQuality));
+            //Console.WriteLine("{0}", Convert.ToBoolean(met.TemperaturePrimBadQuality));
         }
 
         [TestMethod]
@@ -303,20 +313,26 @@ namespace ArticunoTest
         [DataRow("Met", 10.0, -50.0, 60.0, MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY, MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY, MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY)]
         public void noDataTest(string metId, double tempVal1, double tempVal2, double hmdVal, Object expectedTempQual, Object expectedHumiQual, Object nodata)
         {
+            //Test needs to be redone after refactoring
+            Assert.Fail();
             mm.writePrimTemperature(metId, tempVal1);
             mm.writeSecTemperature(metId, tempVal2);
             mm.writeHumidity(metId, hmdVal);
             Thread.Sleep(500);
 
-            var tempTuple = mm.tempQualityCheck(metId);
-            var primTempQuality = tempTuple.Item1;
-            var secTempQuality = tempTuple.Item2;
-            var humidTuple = mm.humidQualityCheck(metId);
+            //var primTempQuality = tempTuple.Item1;
+            //var secTempQuality = tempTuple.Item2;
+            //var humidTuple = mm.humidQualityCheck(metId);
+            //var metTowerQuality = mm.checkMetTowerQuality(metId);
+
+            var primTempQuality = mm.getMetTower(metId).getPrimaryTemperatureSensor().isSensorBadQuality();
+            var secTempQuality = mm.getMetTower(metId).getSecondaryTemperatureSensor().isSensorBadQuality();
+            var humidQuality = mm.getMetTower(metId).getPrimaryHumiditySensor().isSensorBadQuality();
             var metTowerQuality = mm.checkMetTowerQuality(metId);
 
             Thread.Sleep(500);
             Assert.AreEqual(expectedTempQual, primTempQuality, "Primary Temperature alarm is {0}, Expected: {1}", primTempQuality, expectedTempQual);
-            Assert.AreEqual(expectedHumiQual, humidTuple.Item1, "Primary Humidity alarm is {0}, Expected: {1}", humidTuple.Item1, expectedHumiQual);
+            Assert.AreEqual(expectedHumiQual, humidQuality, "Primary Humidity alarm is {0}, Expected: {1}", humidQuality, expectedHumiQual);
             Assert.AreEqual(metTowerQuality, nodata, "No data alarm status not equal. Seeing {0}. Expected {1}, ", metTowerQuality, nodata);
         }
 
@@ -450,9 +466,13 @@ namespace ArticunoTest
             mm.writePrimTemperature(metId, temperature);
             mm.writeSecTemperature(metId, temperature);
 
+            var threshold = mm.getMetTower(metId).AmbTempThreshold;
+
             //Get measurements about 50 tiems or so to see if it is flatline. 
-            for (int i = 0; i <= 50; i++)
-                mm.getAllMeasurements(metId);
+            //for (int i = 0; i <= 50; i++)
+            //    mm.getAllMeasurements(metId);
+
+            Console.WriteLine("Threshold: {0} Temp {1} Humid {2}", threshold, temperature, humidity);
 
             MetTower met = mm.getMetTower(metId);
             mm.setFrozenCondition(metId, temperature, humidity);
@@ -491,6 +511,7 @@ namespace ArticunoTest
             mm.writeDeltaThreshold(1);
             mm.writeTemperatureThreshold(0);
 
+            //Check Temperature
             met.PrimTemperatureValue = temperature;
 
             for (int i = 0; i <= 50; i++)
@@ -502,7 +523,7 @@ namespace ArticunoTest
                 }
                 try
                 {
-                    mm.getAllMeasurements(metId);
+                    var temp = mm.getMetTower(metId).PrimTemperatureValue;
                 }
                 //Reaching here is good as an exception will be thrown because Aritcuno will attempt to read from turbine data...which I havne't set up for in this test.
                 catch (NullReferenceException)
@@ -512,9 +533,36 @@ namespace ArticunoTest
             }
 
             if (Flatline)
-                Assert.IsTrue((met.getFrozenIncrement(met.PrimTemperatureTag)) > 20, "Frozen increment should be past 50");
+                Assert.IsTrue(met.getPrimaryTemperatureSensor().badQualityCheck(), "Frozen increment should be past 50, but it is {0}");
             else
                 Assert.AreEqual(Flatline, met.TemperaturePrimBadQuality);
+
+            //Check Humidity
+            met.RelativeHumidityValue = humidity;
+
+            for (int i = 0; i <= 50; i++)
+            {
+                if (!Flatline)
+                {
+                    Random rnd = new Random();
+                    met.RelativeHumidityValue = rnd.Next((int)humidity - 5, (int)humidity);
+                }
+                try
+                {
+                    var temp = mm.getMetTower(metId).RelativeHumidityValue;
+                }
+                //Reaching here is good as an exception will be thrown because Aritcuno will attempt to read from turbine data...which I havne't set up for in this test.
+                catch (NullReferenceException)
+                {
+                    Assert.IsTrue(true);
+                }
+            }
+
+            if (Flatline)
+                Assert.IsTrue(met.getPrimaryHumiditySensor().badQualityCheck(), "Frozen increment should be past 50, but it is {0}");
+            else
+                Assert.AreEqual(Flatline, met.HumidityBadQuality);
+
         }
     }
 }

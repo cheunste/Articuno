@@ -25,7 +25,7 @@ namespace Articuno
         private string sensorBadQualtiyTag;
 
         //Database
-        static DatabaseInterface dbi;
+        static DatabaseInterface dbi=DatabaseInterface.Instance;
 
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(MetTowerSensor));
@@ -36,6 +36,7 @@ namespace Articuno
         //Constructor
         public MetTowerSensor(string serverName, string valueTag, string outOfRangeTag, string badQualityTag, double minValue, double maxValue)
         {
+
             sensorTag = valueTag;
             opcServerName = serverName;
             sensorOutofRangeTag = outOfRangeTag;
@@ -75,6 +76,7 @@ namespace Articuno
         {
             double value = Convert.ToDouble(OpcServer.readAnalogTag(opcServerName, sensorTag));
             checkStale(value);
+            badQualityCheck();
             return outOfRangeCheck(value);
         }
 

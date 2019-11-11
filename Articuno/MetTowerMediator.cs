@@ -216,8 +216,8 @@ namespace Articuno
         }
         public double readTemperature(String metId)
         {
-             metId = isMetTowerSwitched(metId);
-           MetTower met = getMetTower(metId);
+            metId = isMetTowerSwitched(metId);
+            MetTower met = getMetTower(metId);
             var primTempSensor = met.getPrimaryTemperatureSensor();
             var secTempSensor = met.getSecondaryTemperatureSensor();
 
@@ -658,22 +658,43 @@ namespace Articuno
             double delta = calculateDelta(avgTemperature, dewPoint);
 
             //If the humidity quality is bad, then do not use it and only rely on temperature
-            bool isHumidityBad = Convert.ToBoolean(met.getPrimaryHumiditySensor().isSensorBadQuality());
-            if (isHumidityBad && (avgTemperature <= tempThreshold))
+            bool isHumidityBad = Convert.ToBoolean(met.getPrimaryHumiditySensor().isSensorBadQuality()) || Convert.ToBoolean(met.getPrimaryHumiditySensor().isSensorOutofRange());
+
+
+            if (avgTemperature <= tempThreshold)
             {
-                log.InfoFormat("{0} Humidity is bad quality. Ignoring and currently using avg temperature {1}", metId, avgTemperature);
                 try
                 {
-                    met.IceIndicationValue = true;
+                    //If Humidity is bad, then only relie on temperature
+                    if (isHumidityBad)
+                    {
+                        log.InfoFormat("{0} Humidity is bad quality. Ignoring and currently using avg temperature {1}", metId, avgTemperature);
+                        met.IceIndicationValue = true;
+                        log.DebugFormat("Icing conditions met for {0}. \n" +
+                            "{0} Average Temperature {1}, \n" +
+                            "{0} Temperature threshold {2} \n",
+                            metId, avgTemperature, tempThreshold);
 
-                    log.DebugFormat("Icing conditions met for {0}. \n" +
-                        "{0} Average Temperature {1}, \n" +
-                        "{0} Temperature threshold {2} \n",
-                        metId, avgTemperature, tempThreshold);
+                    }
+                    //Freezing Conditions met with good humidity(regular case)
+                    else if (delta <= deltaThreshold)
+                    {
+                        met.IceIndicationValue = true;
+                        log.InfoFormat("No Ice detected for met {0}.\n" +
+                            "{0} Average Temperature {1}, \n" +
+                            "{0} Temperature threshold {2} \n" +
+                            "{0} Average Humidity {3}, \n" +
+                            "{0} Delta threshold {4} \n"
+                            ,
+                            metId, avgTemperature, tempThreshold, avgHumidity, deltaThreshold
+                            );
+                    }
+                    //Reaching here still implies there's no ice. But it shouldn't ever reach here because at this point, avgTemperature should be > tempThreshold
+                    else { }
                 }
                 catch (Exception e)
                 {
-                    //in case you can't write to OPC
+                    //in case you can't write to OPC Server
                     log.ErrorFormat("Error when writing to the " +
                         "Ice indication.\n" +
                         "Error: {0}. \n" +
@@ -682,41 +703,11 @@ namespace Articuno
                         "tempThreshold {3}\n",
                         e, metId, avgTemperature, tempThreshold);
                     log.ErrorFormat("Error:\n{0}", e);
-                }
 
-            }
-            //Freezing Conditions met (regular case)
-            else if ((avgTemperature <= tempThreshold) && (delta <= deltaThreshold))
-            {
-                try
-                {
-                    met.IceIndicationValue = true;
-                    log.InfoFormat("No Ice detected for met {0}.\n" +
-                        "{0} Average Temperature {1}, \n" +
-                        "{0} Temperature threshold {2} \n" +
-                        "{0} Average Humidity {3}, \n" +
-                        "{0} Delta threshold {4} \n"
-                        ,
-                        metId, avgTemperature, tempThreshold, avgHumidity, deltaThreshold
-                        );
-
-                }
-                catch (Exception e)
-                {
-                    //in case you can't write to OPC
-                    log.ErrorFormat("No Ice detected for met {0}.\n" +
-                        "{0} Average Temperature {1}, \n" +
-                        "{0} Temperature threshold {2} \n" +
-                        "{0} Average Humidity {3}, \n" +
-                        "{0} Delta threshold {4} \n"
-                        ,
-                        metId, avgTemperature, tempThreshold, avgHumidity, deltaThreshold
-                        );
-
-                    log.ErrorFormat("Error:\n{0}", e);
                 }
             }
-            //Else, no ice detected
+
+            //No ice condition (essentually)
             else
             {
                 met.IceIndicationValue = false;
@@ -728,9 +719,7 @@ namespace Articuno
                     ,
                     metId, avgTemperature, tempThreshold, avgHumidity, deltaThreshold
                     );
-
             }
-
             return Convert.ToBoolean(met.IceIndicationValue);
         }
 
