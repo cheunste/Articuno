@@ -13,6 +13,7 @@ namespace Articuno
     {
 
         private static readonly string SYSTEM_INPUT_TABLE = "SystemInputTags";
+        private static readonly string SYSTEM_OUTPUT_TABLE = "SystemOutputTags";
 
         static string dataSource = ".\\articuno.db";
         static string ConnectionString = String.Format("Data Source ={0};Version=3;", dataSource);
@@ -95,6 +96,13 @@ namespace Articuno
         {
             DataTable result = readCommand(String.Format("SELECT DefaultValue from {0} WHERE Description ='FlatlineSamples' ", SYSTEM_INPUT_TABLE));
             return Convert.ToInt32(result.Rows[0]["DefaultValue"]);
+        }
+
+        public string getMetCountdownTag()
+        {
+            DataTable result = readCommand(String.Format("SELECT OpcTag from {0} WHERE Description ='MetTowerCtrCountdown' ", SYSTEM_OUTPUT_TABLE));
+            return Convert.ToString(result.Rows[0]["OpcTag"]);
+
         }
     }
 }

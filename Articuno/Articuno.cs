@@ -301,8 +301,10 @@ namespace Articuno
                 }
                 //Set the CTR back to the original value
                 ctrCountdown = articunoCtrTime;
-
             }
+
+            //Write the MetTower CTR to the tag
+            OpcServer.writeOpcTag(opcServerName, dbi.getMetCountdownTag(), ctrCountdown);
 
             //Tell the turbines to Decrement thier internal CTR Time. Must be after the met tower code or else turbine might not respond to a met tower icing change event
             if (articunoEnable)
@@ -389,8 +391,9 @@ namespace Articuno
                         break;
                     //case where the turbine is started by either the site or the NCC
                     case TurbineMediator.TurbineEnum.TurbineStarted:
-                        //Start the turbine if a command is sent. 
-                        if (Convert.ToInt32(value) == 1)
+                        //If the turbine feedback tag is true, that means the turbine is either running (or in draft). Which means the NCC has started the turbine
+                        //You only want to listen to if this becomes true
+                        if (Convert.ToBoolean(value) == true)
                         {
                             tm.startTurbine(prefix);
                             log.InfoFormat("Turbine {0} has started from NCC or site", prefix);
@@ -413,8 +416,6 @@ namespace Articuno
                         log.DebugFormat("Event CHanged detected for {0}. However, there is nothing to be doen", opcTag);
                         break;
                 }
-                //Log the Current status of the lists
-                //logCurrentList();
             }
         }
 
