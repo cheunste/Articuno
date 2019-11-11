@@ -212,9 +212,9 @@ namespace Articuno
                             opcServerName, sitePrefix + reader.Rows[i]["Participation"].ToString(), 100, null));
                         assetInputTags.Add(new DAItemGroupArguments("",
                             opcServerName, sitePrefix + reader.Rows[i]["NrsMode"].ToString(), 100, null));
-                        //Important. The "Start cmd" event listener MUST be fast as PcVue changes it in 200 ms. 100 ms should be enough
+                        //Important. The "Start cmd" event listener MUST be fast as PcVue changes it in 200 ms. 50 ms should be enough
                         assetInputTags.Add(new DAItemGroupArguments("",
-                            opcServerName, sitePrefix + reader.Rows[i]["Start"].ToString(), 100, null));
+                            opcServerName, sitePrefix + reader.Rows[i]["Start"].ToString(), 50, null));
 
                     }
                     catch (Exception e) { log.ErrorFormat("Error when attempting to add to assetInputTags list. {0}", e); }
@@ -390,7 +390,7 @@ namespace Articuno
                     //case where the turbine is started by either the site or the NCC
                     case TurbineMediator.TurbineEnum.TurbineStarted:
                         //Start the turbine if a command is sent. 
-                        if (Convert.ToInt32(value) == 1)
+                        if (Convert.ToBoolean(value) == true) 
                         {
                             tm.startTurbine(prefix);
                             log.InfoFormat("Turbine {0} has started from NCC or site", prefix);

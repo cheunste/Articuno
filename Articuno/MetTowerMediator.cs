@@ -600,28 +600,49 @@ namespace Articuno
 
             //If the humidity quality is bad, then do not use it and only rely on temperature
             bool isHumidityBad = Convert.ToBoolean(met.HumidityBadQuality);
+            //11/11/19: This is a temporary line for the time being. The problem is that Humidty is still going beyond 100%, which Articuno is detecting as bad quality
+            //This is a stop gap until v1.1.0
+            isHumidityBad = false;
+
             if (isHumidityBad)
             {
                 log.InfoFormat("{0} Humidity is bad quality. Ignoring and currently using avg temperature {1}", metId, avgTemperature);
-                try
+                if (avgTemperature <= tempThreshold)
                 {
-                    met.IceIndicationValue = true;
-                    log.DebugFormat("Icing conditions met for {0}. \n" +
-                        "{0} Average Temperature {1}, \n" +
-                        "{0} Temperature threshold {2} \n",
-                        metId, avgTemperature, tempThreshold);
+                    try
+                    {
+                        met.IceIndicationValue = true;
+                        log.DebugFormat("Icing conditions met for {0}. \n" +
+                            "{0} Average Temperature {1}, \n" +
+                            "{0} Temperature threshold {2} \n",
+                            metId, avgTemperature, tempThreshold);
+                    }
+                    catch (Exception e)
+                    {
+                        //in case you can't write to OPC
+                        log.ErrorFormat("Error when writing to the " +
+                            "Ice indication.\n" +
+                            "Error: {0}. \n" +
+                            "Met: {1}, \n" +
+                            "avgTemp: {2}, \n" +
+                            "tempThreshold {3}\n",
+                            e, metId, avgTemperature, tempThreshold);
+                        log.ErrorFormat("Error:\n{0}", e);
+                    }
                 }
-                catch (Exception e)
+                //Else, no ice detected
+                else
                 {
-                    //in case you can't write to OPC
-                    log.ErrorFormat("Error when writing to the " +
-                        "Ice indication.\n" +
-                        "Error: {0}. \n" +
-                        "Met: {1}, \n" +
-                        "avgTemp: {2}, \n" +
-                        "tempThreshold {3}\n",
-                        e, metId, avgTemperature, tempThreshold);
-                    log.ErrorFormat("Error:\n{0}", e);
+                    met.IceIndicationValue = false;
+                    log.DebugFormat("No Ice detected for met {0}.\n" +
+                        "{0} Average Temperature {1}, \n" +
+                        "{0} Temperature threshold {2} \n" +
+                        "{0} Average Humidity {3}, \n" +
+                        "{0} Delta threshold {4} \n"
+                        ,
+                        metId, avgTemperature, tempThreshold, avgHumidity, deltaThreshold
+                        );
+
                 }
 
             }
@@ -687,7 +708,7 @@ namespace Articuno
         /// <returns>a Boolean indicating if either of the met tower has froze up</returns>
         public bool icingPossible()
         {
-            bool icingPossible=false;
+            bool icingPossible = false;
             foreach (string metPrefix in metPrefixList)
             {
                 icingPossible |= Convert.ToBoolean(getMetTower(metPrefix).IceIndicationValue);
