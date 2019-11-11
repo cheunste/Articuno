@@ -70,11 +70,15 @@ namespace Articuno
 
         /// <summary>
         /// Method to read the value from the OPC server. It will also check for stale data and out of range values as well.
+        /// If it is a humidity sensor, then it will divide by 100
         /// </summary>
-        /// <returns>A double</returns>
-        public double readValue()
+        /// <param name="isHumiditySensor">Optional Parameter</param>
+        /// <returns></returns>
+        public double readValue(bool isHumiditySensor=false)
         {
             double value = Convert.ToDouble(OpcServer.readAnalogTag(opcServerName, sensorTag));
+            if (isHumiditySensor)
+                value = value / 100.0;
             checkStale(value);
             badQualityCheck();
             return outOfRangeCheck(value);

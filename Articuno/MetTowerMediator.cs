@@ -183,20 +183,18 @@ namespace Articuno
 
             double temperature = 0.00;
 
-            //Check if primary sensor is bad quality
+            //Get the primary sensor temperature. If its quality is bad, then get turbine temeprature
+            temperature = primTempSensor.readValue();
             if (primTempSensor.isSensorBadQuality())
             {
-                //Check if sensory sensor is bad quality
+                //Read secondary sensor. If its quality is bad, then get turbine temperature
+                temperature = secTempSensor.readValue();
                 if (secTempSensor.isSensorBadQuality())
                 {
                     //At this point, use the turbine sensro
                     temperature = Convert.ToDouble(met.getNearestTurbine().readTemperatureValue());
                 }
-                //secondary sensor is in good qualtiy
-                else { temperature = secTempSensor.readValue(); }
             }
-            //primary temperature is in good quality
-            else { temperature = primTempSensor.readValue(); }
 
             return temperature;
         }

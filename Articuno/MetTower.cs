@@ -110,7 +110,7 @@ namespace Articuno
         public Object RelativeHumidityValue
         {
             set { OpcServer.writeOpcTag(opcServerName, RelativeHumidityTag, value); }
-            get { return primHumidSensor.readValue() / 100.0; }
+            get { return primHumidSensor.readValue(true); }
         }
 
         /// <summary>
