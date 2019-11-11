@@ -37,12 +37,6 @@ namespace Articuno
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(MetTowerMediator));
 
-        //Constants
-        private double MIN_TEMP_VALUE = -20.0;
-        private double MAX_TEMP_VALUE = 60.0;
-        private double MIN_HUMIDITY_VALUE = 0.0;
-        private double MAX_HUMIDITY_VALUE = 0.99;
-
         //Database
         static DatabaseInterface dbi;
         private MetTowerMediator()
@@ -123,13 +117,10 @@ namespace Articuno
 
                 //Create the sensors for the met tower. Must be declared after every variable has been set
                 met.createSensors();
-
                 metTowerList.Add(met);
             }
-
             //Get the tag to see if UCC is active
             uccActiveTag = dbi.getActiveUCCTag();
-
         }
 
         public void createPrefixList()
@@ -159,9 +150,8 @@ namespace Articuno
         /// <returns>Tuple of doubles</returns>
         public void getAllMeasurements(string metId)
         {
-            MetTower met = getMetTower(metId);
-            double temperature = readTemperature(met);
-            var humidity = readHumidity(met);
+            double temperature = readTemperature(metId);
+            var humidity = readHumidity(metId);
             double dew = calculateDewPoint(Convert.ToDouble(humidity), temperature);
             double delta = calculateDelta(temperature, dew);
             log.DebugFormat("{0}, temp: {1}, rh: {2}, dew:{3}, delta: {4}", metId, temperature, humidity, dew, delta);
@@ -184,36 +174,6 @@ namespace Articuno
 
         }
 
-        /// <summary>
-        ///  Gets the one minute average temperature of a met tower primary or secondary sensor. 
-        /// </summary>
-        /// <param name="metId"></param>
-        /// <returns>A double if the quality is good for either the primary or secondary sensor. Returns the turbine temperature otherwise
-        /// </returns>
-        public double readTemperature(MetTower met)
-        {
-            var primTempSensor = met.getPrimaryTemperatureSensor();
-            var secTempSensor = met.getSecondaryTemperatureSensor();
-
-            double temperature = 0.00;
-
-            //Check if primary sensor is bad quality
-            if (primTempSensor.isSensorBadQuality())
-            {
-                //Check if sensory sensor is bad quality
-                if (secTempSensor.isSensorBadQuality())
-                {
-                    //At this point, use the turbine sensro
-                    temperature = Convert.ToDouble(met.getNearestTurbine().readTemperatureValue());
-                }
-                //secondary sensor is in good qualtiy
-                else { temperature = secTempSensor.readValue(); }
-            }
-            //primary temperature is in good quality
-            else { temperature = primTempSensor.readValue(); }
-
-            return temperature;
-        }
         public double readTemperature(String metId)
         {
             metId = isMetTowerSwitched(metId);
@@ -240,19 +200,11 @@ namespace Articuno
 
             return temperature;
         }
-        public double readHumidity(MetTower met)
-        {
-            var humiditySensor = met.getPrimaryHumiditySensor();
-            return humiditySensor.readValue();
 
-        }
         public double readHumidity(String metId)
         {
             metId = isMetTowerSwitched(metId);
-            MetTower met = getMetTower(metId);
-            var humiditySensor = met.getPrimaryHumiditySensor();
-            return humiditySensor.readValue();
-
+            return Convert.ToDouble(getMetTower(metId).RelativeHumidityValue);
         }
 
         /// <summary>
@@ -281,8 +233,6 @@ namespace Articuno
             else
                 return metId;
         }
-
-
 
         internal void writeToQueue(string metId, double temperature, double humidity) { getMetTower(metId).writeToQueue(temperature, humidity); }
 
@@ -339,6 +289,11 @@ namespace Articuno
         {
             foreach (MetTower tower in metTowerList) { tower.AmbTempThreshold = value; }
         }
+        /// <summary>
+        /// Reads the Ambient Temperature threshold from the OPC tag
+        /// </summary>
+        /// <param name="metTowerId"></param>
+        /// <returns></returns>
         public double readTemperatureThreshold(string metTowerId) { return getMetTower(metTowerId).AmbTempThreshold; }
 
         /// <summary>
@@ -346,13 +301,9 @@ namespace Articuno
         /// </summary>
         /// <param name="value">A double vlaue that represents the delta threshold<</param>
         public void writeDeltaThreshold(double value) { foreach (MetTower tower in metTowerList) { tower.DeltaTempThreshold = value; } }
-
         public double readDeltaThreshold(string metTowerId) { return getMetTower(metTowerId).DeltaTempThreshold; }
-
         public void writePrimTemperature(string metId, double value) { getMetTower(metId).PrimTemperatureValue = value; }
-
         public void writeSecTemperature(string metId, double value) { getMetTower(metId).SecTemperatureValue = value; }
-
         public void writeHumidity(string metId, double value)
         {
             MetTower met = getMetTower(metId);
@@ -376,236 +327,36 @@ namespace Articuno
         public double calculateDelta(double ambTemp, double dewPointTemp) => Math.Round(Math.Abs(ambTemp - dewPointTemp), 3);
 
         /// <summary>
-        /// Check the quality of the met tower. Returns True if the data is 'bad quality'. Returns False if met tower data is 'good quality
+        /// Check the quality of the met tower. Returns True If the met tower is good qualty. False if the met tower is bad quality
         /// </summary>
+        /// <param name="metId"></param>
         /// <returns></returns>
-        public MetQualityEnum checkMetTowerQuality(string metId)
+        // The met tower quality is determined if all sensors are bad quality. So if both the temperatrure quality and the humidty quality is bad, then there will be no data for the met tower
+        //Note that unlike the sensor quality, noData does NOT imply quality, so if there really is no data, then it will be True, False otherwise
+        public bool checkMetTowerQuality(string metId)
         {
-            //Todo: Implement
-            var tempTuple = tempQualityCheck(metId);
-            var humidTuple = humidQualityCheck(metId);
             MetQualityEnum noData = MetQualityEnum.MET_GOOD_QUALITY;
             MetTower met = getMetTower(metId);
-            //If both the temperature quality and the humidity quality is bad quality (aka false), then there will be no data
-            //Note that unlike the quality, noData does NOT imply quality, so if there really is no data, then it will be True, False otherwise
-            if (tempTuple.Item1 == MetQualityEnum.MET_BAD_QUALITY && tempTuple.Item2 == MetQualityEnum.MET_BAD_QUALITY && humidTuple.Item1 == MetQualityEnum.MET_BAD_QUALITY)
+            bool currentNoDataState = Convert.ToBoolean(met.NoDataAlarmValue);
+            //Checks to see if the snesor is good or not. Note that the call to isAllSensorGood will raise/clear the 'no data' alarm. This function logs it
+
+            //If all the sensors are bad
+            if (!met.isAllSensorGood())
             {
-                noData = MetQualityEnum.MET_BAD_QUALITY;
-                alarm(met, MetTowerEnum.NoData, noData);
+                //Log it
+                log.DebugFormat("{0} No Data alarm {1}. NoData Alarm Value {2}", metId, "raised", met.NoDataAlarmValue);
+                return false;
             }
-            else
-                alarm(met, MetTowerEnum.NoData, noData);
-
-            return noData;
-        }
-
-        /// <summary>
-        /// Checks the quality of the relative humidity of the current met tower. 
-        /// Returns true if quality is good. False otherwise. IMPORTANT: This function will convert the Humidty from % to decimal
-        /// </summary>
-        /// <returns>Returns True if good quality, False if bad</returns>
-        public Tuple<MetQualityEnum, double> humidQualityCheck(string metId)
-        {
-            MetTower met = getMetTower(metId);
-            //IMPORTANT: The OPC Value is read as a percentage, but this program needs the humidity as a decimal (ie between 0 and 1)
-            double rh = Convert.ToDouble(met.RelativeHumidityValue) / 100.00;
-            double minValue = 0.0;
-            double maxValue = 1.0;
-            double minCapValue = 0.00;
-            double maxCapValue = 0.99;
-
-            var qualityState = MetQualityEnum.MET_GOOD_QUALITY;
-
-            //Bad Quality
-            //Set primay relative humidty to either 0 (if below 0) or 100 (if above zero)
-            //Also Raise alarm
-            if (rh < minValue || rh > maxValue)
-            {
-                qualityState = MetQualityEnum.MET_BAD_QUALITY;
-                alarm(met, MetTowerEnum.HumidityOutOfRange, qualityState);
-                alarm(met, MetTowerEnum.HumidityQuality, qualityState);
-                rh = (rh <= minValue) ? minCapValue : maxCapValue;
-                log.DebugFormat("Humidity exceeded allowable range. Capping Relative Humidity of {0} at {1}", metId, rh);
-            }
-            //CLear the out of range alarm
-            else if (rh >= minValue && rh <= maxValue)
-            {
-                alarm(met, MetTowerEnum.HumidityOutOfRange, qualityState);
-                alarm(met, MetTowerEnum.HumidityQuality, qualityState);
-            }
-
-            //If the quality for the relative humidity tag is bad, then immediately make the local  variable bad
-            if (!(met.isQualityGood(met.RelativeHumidityTag))) { qualityState = MetQualityEnum.MET_BAD_QUALITY; }
-
-            return new Tuple<MetQualityEnum, double>(qualityState, rh);
-        }
-
-        /// <summary>
-        /// Checks the quality of the temperature of the current met tower. 
-        /// Returns true if quality is good. False otherwise
-        /// </summary>
-        /// <param name="temperatureTag">The OPC tag for temperature (either prim or sec)</param>
-        /// <returns>Returns True if good quality, False if bad</returns>
-        private Tuple<MetQualityEnum, double> temperatureRangeCheck(string temperatureTag, double tempValue)
-        {
-            double minValue = -20.0;
-            double maxValue = 60.0;
-            //Bad Quality
-            if (tempValue < minValue || tempValue > maxValue)
-            {
-                var newTemperature = ((tempValue <= minValue) ? minValue : maxValue);
-                log.DebugFormat("Temperature sensor of tag {0} out of range. Capping temperature at {1}", temperatureTag, newTemperature);
-                return new Tuple<MetQualityEnum, double>(MetQualityEnum.MET_BAD_QUALITY, newTemperature);
-            }
-            //Normal oepration
-            else { return new Tuple<MetQualityEnum, double>(MetQualityEnum.MET_GOOD_QUALITY, tempValue); }
-        }
-
-        /// <summary>
-        /// method to check to see if a temperature sensor is flatlined or not. Returns a MetQualityEnum
-        /// </summary>
-        /// <param name="met"></param>
-        /// <param name="currentTemp"></param>
-        /// <returns></returns>
-        private MetQualityEnum temperatureFlatlineCheck(MetTower met, double currentTemp, string temperatureTag)
-        {
-            double tolerance = 0.00001;
-
-            double lastSampledTemperature = met.getLastStoredSample(temperatureTag);
-
-            //If the current temperature is equal to the last stored sample, then increment the frozenTemperatureCnt
-            // Note that temperatures are doubles
-            if (Math.Abs(lastSampledTemperature - currentTemp) <= tolerance)
-            {
-                met.incrementFrozen(temperatureTag);
-            }
-            //Reset the frozenTemperatureCnt if it isn't equal
+            //If all the senosrs are good. 
             else
             {
-                met.resetFrozenIncrement(temperatureTag);
-            }
-
-            //Set the sample Temperature to the current temperature
-            met.setLastStoredSample(temperatureTag, currentTemp);
-
-            //If there are 50 or so samples (or whatever) that are equally the same, that implies the temperature from the sensor is flatlined. At this point, return a bad quality alert.
-            if (met.getFrozenIncrement(temperatureTag) >= dbi.getFlatlineCount())
-            {
-                log.InfoFormat("Flatline detected for {0}", temperatureTag);
-                return MetQualityEnum.MET_BAD_QUALITY;
-            }
-            return MetQualityEnum.MET_GOOD_QUALITY;
-        }
-
-        /// <summary>
-        /// Check the temperature quality of both the primary and secondary sensors
-        /// </summary>
-        /// <returns>Returns True if good quality, False if bad</returns>
-        public Tuple<MetQualityEnum, MetQualityEnum, double, double> tempQualityCheck(string metId)
-        {
-            MetTower met = getMetTower(metId);
-            double primTempValue = Convert.ToDouble(met.PrimTemperatureValue);
-            double secTempValue = Convert.ToDouble(met.SecTemperatureValue);
-
-            //call the ValueQuatliyCheck method to verify
-            var primTempRangeCheckTuple = temperatureRangeCheck(met.PrimTemperatureTag, primTempValue);
-            bool isPrimTempRangeQuality = Convert.ToBoolean(primTempRangeCheckTuple.Item1);
-            bool isPrimTempFlatline = Convert.ToBoolean(temperatureFlatlineCheck(met, primTempRangeCheckTuple.Item2, met.PrimTemperatureTag));
-
-            //Set to bad quality at first...then set to good quality once it reaches that case
-            var primTempQuality = MetQualityEnum.MET_BAD_QUALITY;
-            var secTempQuality = MetQualityEnum.MET_BAD_QUALITY;
-
-            //If either the temperature sensor is flatlined or if the range check quality is not good, then it is bad quality
-            //Other wise, it is good quality
-            if (!isPrimTempFlatline || !isPrimTempRangeQuality) { alarm(met, MetTowerEnum.PrimSensorQuality, MetQualityEnum.MET_BAD_QUALITY); }
-            //if only the range quality is bad
-            if (!isPrimTempRangeQuality) { alarm(met, MetTowerEnum.PrimSensorOutOfRange, MetQualityEnum.MET_BAD_QUALITY); }
-
-            //If temperatue is within range and if there are no flatlines occuring
-            if (isPrimTempRangeQuality && isPrimTempFlatline)
-            {
-                alarm(met, MetTowerEnum.PrimSensorOutOfRange, MetQualityEnum.MET_GOOD_QUALITY);
-                alarm(met, MetTowerEnum.PrimSensorQuality, MetQualityEnum.MET_GOOD_QUALITY);
-                primTempQuality = MetQualityEnum.MET_GOOD_QUALITY;
-
-            }
-
-            //For secondary temperature sensor
-            var secTempRangeCheckTuple = temperatureRangeCheck(met.SecTemperatureTag, secTempValue);
-            bool isSecTempRangeQuality = Convert.ToBoolean(secTempRangeCheckTuple.Item1);
-            bool isSecTempFlatline = Convert.ToBoolean(temperatureFlatlineCheck(met, secTempRangeCheckTuple.Item2, met.SecTemperatureTag));
-
-
-            if (!isSecTempFlatline || !isSecTempRangeQuality) { alarm(met, MetTowerEnum.SecSensorQuality, MetQualityEnum.MET_BAD_QUALITY); }
-            //if only the range quality is bad
-            if (!isSecTempRangeQuality) { alarm(met, MetTowerEnum.SecSensorOutOfRange, MetQualityEnum.MET_BAD_QUALITY); }
-
-            //If temperatue is within range and if there are no flatlines occuring
-            if (isSecTempRangeQuality && isSecTempFlatline)
-            {
-                alarm(met, MetTowerEnum.SecSensorOutOfRange, MetQualityEnum.MET_GOOD_QUALITY);
-                alarm(met, MetTowerEnum.SecSensorQuality, MetQualityEnum.MET_GOOD_QUALITY);
-                secTempQuality = MetQualityEnum.MET_GOOD_QUALITY;
-            }
-
-            return new Tuple<MetQualityEnum, MetQualityEnum, double, double>(primTempQuality, secTempQuality, primTempRangeCheckTuple.Item2, secTempRangeCheckTuple.Item2);
-        }
-
-        /// <summary>
-        /// Method to raise or clear alarm
-        /// </summary>
-        /// <param name="mt">Met Tower</param>
-        /// <param name="metTowerEnum">MetTower Enum</param>
-        /// <param name="quality">The quality Enum. </param>
-        private void alarm(MetTower mt, MetTowerEnum metTowerEnum, MetQualityEnum quality)
-        {
-            //Good Quality will return a false (in active alarm). Bad quality  will return a true (active alarm)
-            // If Good Quality (true), then clear alarm (set false)
-            // If Bad Quality (true), then raise the alarm (set true)
-            var logComment = Convert.ToBoolean(quality) ? "cleared" : "raised";
-            bool status = Convert.ToBoolean(quality) ? false : true;
-
-
-            switch (metTowerEnum)
-            {
-                case MetTowerEnum.HumidityOutOfRange:
-                    if (Convert.ToBoolean(mt.HumidityOutOfRng) != Convert.ToBoolean(status))
-                        log.DebugFormat("{0} Humidity sensor out of range alarm {1}. Humidity Value: {2}", mt.getMetTowerPrefix, logComment, mt.RelativeHumidityValue);
-                    mt.HumidityOutOfRng = Convert.ToBoolean(status);
-                    break;
-                case MetTowerEnum.HumidityQuality:
-                    if (Convert.ToBoolean(mt.HumidityBadQuality) != Convert.ToBoolean(status))
-                        log.DebugFormat("{0} Humidity sensor bad status alarm {1}. Humidity Value {2}", mt.getMetTowerPrefix, logComment, mt.RelativeHumidityValue);
-                    mt.HumidityBadQuality = Convert.ToBoolean(status);
-                    break;
-                case MetTowerEnum.PrimSensorQuality:
-                    if (Convert.ToBoolean(mt.TemperaturePrimBadQuality) != Convert.ToBoolean(status))
-                        log.DebugFormat("{0} Primary Temperature sensor quality status alarm {1}. Primary Temp: {2}", mt.getMetTowerPrefix, logComment, mt.PrimTemperatureValue);
-                    mt.TemperaturePrimBadQuality = Convert.ToBoolean(status);
-                    break;
-                case MetTowerEnum.PrimSensorOutOfRange:
-                    if (Convert.ToBoolean(mt.TemperaturePrimOutOfRange) != Convert.ToBoolean(status))
-                        log.DebugFormat("{0} Primary Temperature sensor out of range alarm {1}. Primary Temp: {2}. Alarm Status:{3}", mt.getMetTowerPrefix, logComment, mt.PrimTemperatureValue, status);
-                    mt.TemperaturePrimOutOfRange = Convert.ToBoolean(status);
-                    break;
-                case MetTowerEnum.SecSensorQuality:
-                    if (Convert.ToBoolean(mt.TemperatureSecBadQuality) != Convert.ToBoolean(status))
-                        log.DebugFormat("{0} Secondary Temperature sensor quality status alarm {1}. Sec Temp: {2}", mt.getMetTowerPrefix, logComment, mt.SecTemperatureValue);
-                    mt.TemperatureSecBadQuality = Convert.ToBoolean(status);
-                    break;
-                case MetTowerEnum.SecSensorOutOfRange:
-                    if (Convert.ToBoolean(mt.TemperatureSecOutOfRange) != Convert.ToBoolean(status))
-                        log.DebugFormat("{0} Secondary Temperature sensor out of range alarm {1}. Sec Temp: {2}", mt.getMetTowerPrefix, logComment, mt.SecTemperatureValue);
-                    mt.TemperatureSecOutOfRange = Convert.ToBoolean(status);
-                    break;
-                case MetTowerEnum.NoData:
-                    if (Convert.ToBoolean(mt.NoDataAlarmValue) != Convert.ToBoolean(status))
-                        log.DebugFormat("{0} No Data alarm {1}. NoData Alarm Value {2}", mt.getMetTowerPrefix, logComment, mt.NoDataAlarmValue);
-                    mt.NoDataAlarmValue = Convert.ToBoolean(status);
-                    break;
+                //To prevent overlogging, only log if the currentNoDataState was true before
+                if (currentNoDataState)
+                    log.DebugFormat("{0} No Data alarm {1}. NoData Alarm Value {2}", metId, "cleared", met.NoDataAlarmValue);
+                return true;
             }
         }
+
 
         /// <summary>
         /// Method used to set a met tower to a turbine
@@ -659,8 +410,6 @@ namespace Articuno
 
             //If the humidity quality is bad, then do not use it and only rely on temperature
             bool isHumidityBad = Convert.ToBoolean(met.getPrimaryHumiditySensor().isSensorBadQuality()) || Convert.ToBoolean(met.getPrimaryHumiditySensor().isSensorOutofRange());
-
-
             if (avgTemperature <= tempThreshold)
             {
                 try
@@ -720,6 +469,7 @@ namespace Articuno
                     metId, avgTemperature, tempThreshold, avgHumidity, deltaThreshold
                     );
             }
+
             return Convert.ToBoolean(met.IceIndicationValue);
         }
 

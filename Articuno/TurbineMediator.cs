@@ -186,9 +186,6 @@ namespace Articuno
                 turbine.AgcBlockingTag = sitePrefix+reader.Rows[0]["AGCBlocking"].ToString();
                 turbine.LowRotorSpeedFlagTag = sitePrefix+reader.Rows[0]["LowRotorSpeedFlag"].ToString();
                 turbine.CtrCountdownTag = sitePrefix+reader.Rows[0]["CTRCountdown"].ToString();
-                //turbine.LoadShutdownTag = reader.Rows[0]["Pause"].ToString();
-                //turbine.StartCommandTag = reader.Rows[0]["Start"].ToString();
-
                 //Add turbine to the turbine list
                 turbineList.Add(turbine);
             }
@@ -300,12 +297,12 @@ namespace Articuno
         }
 
         /*
-         * I'm going to implement this really lazily as I stopped caring about optimization.
-         * What this does is that given a tag, it should return a TurbineEnum to the main Articuno tag.
+         * I'm going to implement this really lazily as I can't think of a better way to do this (for the time being)
+         * What this does is that given a tag, it should return a TurbineEnum that represent the OPC tag back to the main Articuno class.
          */
 
         /// <summary>
-        /// This method takes a turbine id and a tag name and then returns a TurbineEnum object Only used by the main Articuno class and nothing else. Returns a NULL is a tag is not found
+        /// This method takes a turbine id and a tag name and then returns a TurbineEnum object Only used by the main Articuno class and nothing else. Returns a NULL if a tag is not found
         /// </summary>
         /// <param name="turbineId"></param>
         /// <param name="tag"></param>
