@@ -196,14 +196,6 @@ namespace ArticunoTest
             Assert.IsTrue(alarm,
                 String.Format("The NoDataAlarm Value is not true for {0}", metId1)
                 );
-            //Console.WriteLine("Met Tower Quality: {0}", mm.checkMetTowerQuality(metId));
-            //Console.WriteLine("Met Tower Temperature Quality: {0}", mm.tempQualityCheck(metId));
-            //Console.WriteLine("Met Tower Humidity Quality: {0}", mm.humidQualityCheck(metId));
-
-            //Console.WriteLine("{0}", Convert.ToBoolean(met.TemperaturePrimOutOfRange));
-            //Console.WriteLine("{0}", Convert.ToBoolean(met.HumidityOutOfRng));
-            //Console.WriteLine("{0}", Convert.ToBoolean(met.HumidityBadQuality));
-            //Console.WriteLine("{0}", Convert.ToBoolean(met.TemperaturePrimBadQuality));
         }
 
         [TestMethod]
