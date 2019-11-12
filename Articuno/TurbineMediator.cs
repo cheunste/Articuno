@@ -355,24 +355,45 @@ namespace Articuno
             bool nrsMode = turbine.isNrsActive();
 
             var windSpeedQueueCount = windSpeedQueue.Count;
-            var windSpeedAverage = 0.0;
+            var totalSampledWindSpeed = 0.0;
             var rotorSpeedQueueCount = rotorSpeedQueue.Count;
-            var rotorSpeedAverage = 0.0;
+            var totalSampledRotorSpeed = 0.0;
 
             //Loop through the queue until the queue is empty and then divide it by the queue count stored earlier
-            while (windSpeedQueue.Count != 0) { windSpeedAverage += windSpeedQueue.Dequeue(); }
-            while (rotorSpeedQueue.Count != 0) { rotorSpeedAverage += rotorSpeedQueue.Dequeue(); }
+            while (windSpeedQueue.Count != 0) { totalSampledWindSpeed += windSpeedQueue.Dequeue(); }
+            while (rotorSpeedQueue.Count != 0) { totalSampledRotorSpeed += rotorSpeedQueue.Dequeue(); }
 
-            var filterTuple = filterTable.search(windSpeedAverage / windSpeedQueueCount, nrsMode);
+
+            var windSpeedAverage = (totalSampledWindSpeed / windSpeedQueueCount);
+            var filterTuple = filterTable.search(windSpeedAverage, nrsMode);
 
             var referenceRotorSpeed = filterTuple.Item1;
             var referenceStdDev = filterTuple.Item2;
 
+
             var currentScalingFactor = Convert.ToDouble(turbine.readTurbineScalingFactorValue());
 
+            //Calculated Rotor Threshold is from the specification. It is the RS(ws)-[SF*RS_std(ws)]
+            var calculatedRotorThreshold = referenceRotorSpeed - (currentScalingFactor * referenceStdDev);
+            //Rotor speed average for all sampeld data in a  CTR period
+            var rotorSpeedAverage = (totalSampledRotorSpeed / rotorSpeedQueueCount);
+
+            //Log for filter references
+            log.DebugFormat("{0} calculated wind speed average: {1}\n using referenced rotor speed: {2}" +
+                "\n using referenced stdDev {3}",
+                turbineId,windSpeedAverage,referenceRotorSpeed,referenceStdDev);
+
+            log.DebugFormat("{0} rotor speed threshold: {1} rotor speed average:{2} ",
+                turbineId,calculatedRotorThreshold,rotorSpeedAverage);
+
             //Set under performance condition to be true. Else, clear it
-            if ((rotorSpeedAverage / rotorSpeedQueueCount) < referenceRotorSpeed - (currentScalingFactor * referenceStdDev)) { turbine.setTurbinePerformanceCondition(true); }
-            else { turbine.setTurbinePerformanceCondition(false); }
+            if (rotorSpeedAverage < calculatedRotorThreshold) {
+                log.DebugFormat("{0} rotor performance low condition: {1}",turbineId,true);
+                turbine.setTurbinePerformanceCondition(true);
+            }
+            else {
+                log.DebugFormat("{0} rotor performance low condition: {1}",turbineId,false);
+                turbine.setTurbinePerformanceCondition(false); }
 
             //For sanity check, make sure the windSPeedQueue is empty 
             turbine.emptyQueue();
