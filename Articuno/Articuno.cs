@@ -157,42 +157,14 @@ namespace Articuno
             //A speicifc client that will respond to System Tag input changes. 
             var systemInputClient = new EasyDAClient();
             systemInputClient.ItemChanged += SystemInputOnChange;
-            List<DAItemGroupArguments> systemInputTags = new List<DAItemGroupArguments>();
+
             DataTable reader = dbi.readCommand("SELECT * from SystemInputTags WHERE OpcTag !='' AND Description !='ActiveUCC' order by Description ASC");
-            for (int i = 0; i < reader.Rows.Count; i++)
-            {
-                tag = sitePrefix + reader.Rows[i]["OpcTag"].ToString();
-                //The following switch statement is ambiguious
-                //because the query always return the OPC tag column in a certain order, 
-                //the switch statement acts as a setter and set the tag from the database into the member variable of this class
-                //If this still doesn't make sense, try executing the above SELECT * query in SQLite
-                switch (i)
-                {
-                    case 0: tempThresholdTag = tag; break;
-                    case 1: enableArticunoTag = tag; break;
-                    case 2: articunoCtrTag = tag; break;
-                    case 3: deltaThresholdTag = tag; break;
-                    case 4: break;
-                    case 5: break;
-                    case 6: break;
-                }
-                systemInputTags.Add(new DAItemGroupArguments("", opcServerName, tag, 1000, null));
-            }
-            systemInputClient.SubscribeMultipleItems(systemInputTags.ToArray());
+            systemInputClient.SubscribeMultipleItems(setSystemInputTags().ToArray());
 
             //Set up the accesssors for system output tags
             //Note that there are no event listeners for the SystemOutputTags
-            reader = dbi.readCommand("SELECT * from SystemOutputTags order by Description ASC");
-            for (int i = 0; i < reader.Rows.Count; i++)
-            {
-                tag = sitePrefix + reader.Rows[i]["OpcTag"].ToString();
-                switch (i)
-                {
-                    case 0: heartBeatTag = tag; break;
-                    case 1: icePossibleAlarmTag = tag; break;
-                    case 2: numTurbinesPausedTag = tag; break;
-                }
-            }
+
+            setSystemOutputTags();
 
             //A  client that will respond to Turbine OPC tag Changes for operating state, partiicipation and NrsMode
             var assetStatusClient = new EasyDAClient();
@@ -237,6 +209,38 @@ namespace Articuno
 
             assetStatusClient.SubscribeMultipleItems(assetInputTags.ToArray());
         }
+
+        private static List<DAItemGroupArguments> setSystemInputTags()
+        {
+            List<DAItemGroupArguments> systemInputTags = new List<DAItemGroupArguments>();
+            DataTable reader = dbi.readCommand("SELECT * from SystemInputTags WHERE OpcTag !='' AND Description !='ActiveUCC' order by Description ASC");
+            tempThresholdTag = dbi.readCommand("SELECT OpcTag from SystemInputTags WHERE Description='AmbTempThreshold'").Rows[0]["OpcTag"].ToString();
+            enableArticunoTag = dbi.readCommand("SELECT OpcTag from SystemInputTags WHERE Description='ArticunoEnable'").Rows[0]["OpcTag"].ToString();
+            articunoCtrTag = dbi.readCommand("SELECT OpcTag from SystemInputTags WHERE Description='CTRPeriod'").Rows[0]["OpcTag"].ToString();
+            deltaThresholdTag = dbi.readCommand("SELECT OpcTag from SystemInputTags WHERE Description='DeltaTmpThreshold'").Rows[0]["OpcTag"].ToString();
+
+            systemInputTags.Add(new DAItemGroupArguments("", opcServerName, tempThresholdTag, 1000, null));
+            systemInputTags.Add(new DAItemGroupArguments("", opcServerName, enableArticunoTag, 1000, null));
+            systemInputTags.Add(new DAItemGroupArguments("", opcServerName, articunoCtrTag, 1000, null));
+            systemInputTags.Add(new DAItemGroupArguments("", opcServerName, deltaThresholdTag, 1000, null));
+            return systemInputTags;
+        }
+        private static void setSystemOutputTags()
+        {
+            string tag;
+            DataTable reader = dbi.readCommand("SELECT * from SystemOutputTags order by Description ASC");
+            for (int i = 0; i < reader.Rows.Count; i++)
+            {
+                tag = sitePrefix + reader.Rows[i]["OpcTag"].ToString();
+                switch (i)
+                {
+                    case 0: heartBeatTag = tag; break;
+                    case 1: icePossibleAlarmTag = tag; break;
+                    case 2: numTurbinesPausedTag = tag; break;
+                }
+            }
+        }
+
 
         //Function to update an heartbeat
         private static void updateHeartBeat(object sender, ElapsedEventArgs e)
