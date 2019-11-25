@@ -277,31 +277,7 @@ namespace Articuno
             //For every CTR minute, do the other calculation stuff. Better set up a  member variable here
             ctrCountdown--;
             if (ctrCountdown == 0)
-            {
-                log.InfoFormat("CTR countdown reached 0 in ArticunoMain");
-                //Calculate temperature averages from the all the temperature queues
-                for (int i = 1; i <= MetTowerMediator.getNumMetTower(); i++)
-                {
-                    //This is needed because apparently Met Tower 1 is unnumbered.
-                    string j = (i == 1) ? "" : Convert.ToString(i);
-
-                    double tempAvg = mm.calculateCtrAvgTemperature("Met" + j);
-                    double humidityAvg = mm.calculateCtrAvgHumidity("Met" + j);
-
-                    log.DebugFormat("CTR avg temp: {0}, avg Humidity: {1}", tempAvg, humidityAvg);
-
-                    //Send this temperature to the Met Mediator and determine if met tower is freezing or not
-                    bool metFrozen = mm.setFrozenCondition("Met" + j, tempAvg, humidityAvg);
-
-                    //Update the Dew Point calculation. This value will show up on the faceplate
-                    mm.updateDewPoint("Met" + j, tempAvg, humidityAvg);
-                    tm.checkMetTowerFrozen("Met" + j);
-
-                    OpcServer.writeOpcTag(opcServerName, icePossibleAlarmTag, mm.icingPossible());
-                }
-                //Set the CTR back to the original value
-                ctrCountdown = articunoCtrTime;
-            }
+                calculateMetTowerAverages();
 
             //Write the MetTower CTR to the tag
             OpcServer.writeOpcTag(opcServerName, dbi.getMetCountdownTag(), ctrCountdown);
@@ -312,6 +288,33 @@ namespace Articuno
             //Log the contents in the list for debugging purposes
             logCurrentList();
 
+        }
+
+        private static void calculateMetTowerAverages()
+        {
+            log.InfoFormat("CTR countdown reached 0 in ArticunoMain");
+            //Calculate temperature averages from the all the temperature queues
+            for (int i = 1; i <= MetTowerMediator.getNumMetTower(); i++)
+            {
+                //This is needed because apparently Met Tower 1 is unnumbered.
+                string j = (i == 1) ? "" : Convert.ToString(i);
+
+                double tempAvg = mm.calculateCtrAvgTemperature("Met" + j);
+                double humidityAvg = mm.calculateCtrAvgHumidity("Met" + j);
+
+                log.DebugFormat("CTR avg temp: {0}, avg Humidity: {1}", tempAvg, humidityAvg);
+
+                //Send this temperature to the Met Mediator and determine if met tower is freezing or not
+                bool metFrozen = mm.setFrozenCondition("Met" + j, tempAvg, humidityAvg);
+
+                //Update the Dew Point calculation. This value will show up on the faceplate
+                mm.updateDewPoint("Met" + j, tempAvg, humidityAvg);
+                tm.checkMetTowerFrozen("Met" + j);
+
+                OpcServer.writeOpcTag(opcServerName, icePossibleAlarmTag, mm.icingPossible());
+            }
+            //Set the CTR back to the original value
+            ctrCountdown = articunoCtrTime;
         }
 
         /// <summary>
