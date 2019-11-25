@@ -154,66 +154,21 @@ namespace Articuno
             sitePrefix = dbi.getSitePrefix();
             opcServerName = dbi.getOpcServer();
 
-            //A speicifc client that will respond to System Tag input changes. 
+            DataTable reader = dbi.readCommand("SELECT * from SystemInputTags WHERE OpcTag !='' AND Description !='ActiveUCC' order by Description ASC");
+
+            setSystemInputTags();
+            //Set up the accesssors for system output tags
+            //Note that there are no event listeners for the SystemOutputTags
+            setSystemOutputTags();
+            setAssetListener();
+        }
+
+        private static void setSystemInputTags()
+        {
             var systemInputClient = new EasyDAClient();
             systemInputClient.ItemChanged += SystemInputOnChange;
 
-            DataTable reader = dbi.readCommand("SELECT * from SystemInputTags WHERE OpcTag !='' AND Description !='ActiveUCC' order by Description ASC");
-            systemInputClient.SubscribeMultipleItems(setSystemInputTags().ToArray());
-
-            //Set up the accesssors for system output tags
-            //Note that there are no event listeners for the SystemOutputTags
-
-            setSystemOutputTags();
-
-            //A  client that will respond to Turbine OPC tag Changes for operating state, partiicipation and NrsMode
-            var assetStatusClient = new EasyDAClient();
-            assetStatusClient.ItemChanged += assetTagChangeHandler;
-            List<DAItemGroupArguments> assetInputTags = new List<DAItemGroupArguments>();
-            foreach (string prefix in tm.getTurbinePrefixList())
-            {
-                string cmd = String.Format("SELECT OperatingState, Participation,NrsMode,Start from TurbineInputTags where TurbineId='{0}'", prefix);
-                reader = dbi.readCommand(cmd);
-                for (int i = 0; i < reader.Rows.Count; i++)
-                {
-                    try
-                    {
-                        assetInputTags.Add(new DAItemGroupArguments("",
-                            opcServerName, sitePrefix + reader.Rows[i]["OperatingState"].ToString(), 100, null));
-                        assetInputTags.Add(new DAItemGroupArguments("",
-                            opcServerName, sitePrefix + reader.Rows[i]["Participation"].ToString(), 100, null));
-                        assetInputTags.Add(new DAItemGroupArguments("",
-                            opcServerName, sitePrefix + reader.Rows[i]["NrsMode"].ToString(), 100, null));
-                        //Important. The "Start cmd" event listener MUST be fast as PcVue changes it in 200 ms. 100 ms should be enough
-                        assetInputTags.Add(new DAItemGroupArguments("",
-                            opcServerName, sitePrefix + reader.Rows[i]["Start"].ToString(), 100, null));
-
-                    }
-                    catch (Exception e) { log.ErrorFormat("Error when attempting to add to assetInputTags list. {0}", e); }
-                }
-            }
-
-
-            //Same client will be used to respond to Met Tower OPC tag Changes (only the switching command though)
-            reader = dbi.readCommand("SELECT Switch from MetTowerInputTags");
-            for (int i = 0; i < reader.Rows.Count; i++)
-            {
-                var switchTag = reader.Rows[i]["Switch"].ToString();
-                try
-                {
-                    assetInputTags.Add(new DAItemGroupArguments("",
-                        opcServerName, sitePrefix + reader.Rows[i]["Switch"].ToString(), 1000, null));
-                }
-                catch (Exception e) { log.ErrorFormat("Error when attempting to add {0} to assetInputTags list. {1}", switchTag, e); }
-            }
-
-            assetStatusClient.SubscribeMultipleItems(assetInputTags.ToArray());
-        }
-
-        private static List<DAItemGroupArguments> setSystemInputTags()
-        {
             List<DAItemGroupArguments> systemInputTags = new List<DAItemGroupArguments>();
-            DataTable reader = dbi.readCommand("SELECT * from SystemInputTags WHERE OpcTag !='' AND Description !='ActiveUCC' order by Description ASC");
             tempThresholdTag = dbi.readCommand("SELECT OpcTag from SystemInputTags WHERE Description='AmbTempThreshold'").Rows[0]["OpcTag"].ToString();
             enableArticunoTag = dbi.readCommand("SELECT OpcTag from SystemInputTags WHERE Description='ArticunoEnable'").Rows[0]["OpcTag"].ToString();
             articunoCtrTag = dbi.readCommand("SELECT OpcTag from SystemInputTags WHERE Description='CTRPeriod'").Rows[0]["OpcTag"].ToString();
@@ -223,7 +178,7 @@ namespace Articuno
             systemInputTags.Add(new DAItemGroupArguments("", opcServerName, enableArticunoTag, 1000, null));
             systemInputTags.Add(new DAItemGroupArguments("", opcServerName, articunoCtrTag, 1000, null));
             systemInputTags.Add(new DAItemGroupArguments("", opcServerName, deltaThresholdTag, 1000, null));
-            return systemInputTags;
+            systemInputClient.SubscribeMultipleItems(systemInputTags.ToArray());
         }
         private static void setSystemOutputTags()
         {
@@ -239,6 +194,66 @@ namespace Articuno
                     case 2: numTurbinesPausedTag = tag; break;
                 }
             }
+        }
+
+        /// <summary>
+        /// Function to set up input tag listeners on both the met tower and turbines
+        /// </summary>
+        private static void setAssetListener()
+        {
+            DataTable reader;
+            //A  client that will respond to Turbine OPC tag Changes for operating state, partiicipation and NrsMode
+            var assetStatusClient = new EasyDAClient();
+            assetStatusClient.ItemChanged += assetTagChangeHandler;
+            assetStatusClient.SubscribeMultipleItems(setTurbineAssetTags().ToArray());
+            assetStatusClient.SubscribeMultipleItems(setMetTowerAssetTags().ToArray());
+        }
+
+        private static List<DAItemGroupArguments> setTurbineAssetTags()
+        {
+            DataTable reader;
+            List<DAItemGroupArguments> turbineInputTags = new List<DAItemGroupArguments>();
+            foreach (string prefix in tm.getTurbinePrefixList())
+            {
+                string cmd = String.Format("SELECT OperatingState, Participation,NrsMode,Start from TurbineInputTags where TurbineId='{0}'", prefix);
+                reader = dbi.readCommand(cmd);
+                for (int i = 0; i < reader.Rows.Count; i++)
+                {
+                    try
+                    {
+                        turbineInputTags.Add(new DAItemGroupArguments("",
+                            opcServerName, sitePrefix + reader.Rows[i]["OperatingState"].ToString(), 100, null));
+                        turbineInputTags.Add(new DAItemGroupArguments("",
+                            opcServerName, sitePrefix + reader.Rows[i]["Participation"].ToString(), 100, null));
+                        turbineInputTags.Add(new DAItemGroupArguments("",
+                            opcServerName, sitePrefix + reader.Rows[i]["NrsMode"].ToString(), 100, null));
+                        //Important. The "Start cmd" event listener MUST be fast as PcVue changes it in 200 ms. 100 ms should be enough
+                        turbineInputTags.Add(new DAItemGroupArguments("",
+                            opcServerName, sitePrefix + reader.Rows[i]["Start"].ToString(), 100, null));
+                    }
+                    catch (Exception e) { log.ErrorFormat("Error when attempting to add to assetInputTags list. {0}", e); }
+                }
+            }
+            return turbineInputTags;
+        }
+
+        private static List<DAItemGroupArguments> setMetTowerAssetTags()
+        {
+            DataTable reader = dbi.readCommand("SELECT Switch from MetTowerInputTags");
+            List<DAItemGroupArguments> metTowerInputTags = new List<DAItemGroupArguments>();
+            for (int i = 0; i < reader.Rows.Count; i++)
+            {
+                var switchTag = reader.Rows[i]["Switch"].ToString();
+                try
+                {
+                    metTowerInputTags.Add(new DAItemGroupArguments("",
+                        opcServerName, sitePrefix + reader.Rows[i]["Switch"].ToString(), 1000, null));
+                }
+                catch (Exception e) { log.ErrorFormat("Error when attempting to add {0} to assetInputTags list. {1}", switchTag, e); }
+            }
+
+            return metTowerInputTags;
+
         }
 
 
