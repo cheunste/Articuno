@@ -167,7 +167,7 @@ namespace ArticunoTest
             System.Threading.Thread.Sleep(500);
 
             //The following asserts are for feedback tags 
-            Turbine turbine = TurbineMediator.getTurbine(turbineId);
+            Turbine turbine = TurbineMediator.GetTurbinePrefixFromMediator(turbineId);
             Assert.AreEqual(state,TurbineMediator.Instance.isPausedByArticuno(turbineId));
             Assert.AreEqual(true, turbine.readParticipationValue(),"Turbine is not showing particiating state");
             Assert.IsTrue(Convert.ToBoolean(turbine.readLowRotorSpeedFlagValue()),"Low Rotor Speed flag not triggered");

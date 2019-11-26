@@ -275,7 +275,7 @@ namespace ArticunoTest
             tm.createTestTurbines();
             var turbine = tm.getTurbinePrefixList()[0];
 
-            Turbine turb = TurbineMediator.getTurbine(turbine);
+            Turbine turb = TurbineMediator.GetTurbinePrefixFromMediator(turbine);
             OpcServer.writeOpcTag(opcServerName, turb.TemperatureTag, 30); ;
 
             //write the fail values to the met tower

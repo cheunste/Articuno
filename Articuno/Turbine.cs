@@ -156,7 +156,7 @@ namespace Articuno
 
                 //Does Check the rest of the icing conditions
                 //Do NOT call the check Ice function if the UCC is not active
-                if (tm.isUCCActive())
+                if (tm.IsUCCActive())
                     CheckArticunoPausingConditions();
             }
         }
@@ -291,7 +291,7 @@ namespace Articuno
         {
             if (pause)
             {
-                if (!tm.isTurbinePaused(TurbinePrefix))
+                if (!tm.IsTurbinePausedByArticuno(TurbinePrefix))
                 {
                     //Block Turbine in AGC
                     blockTurbine(true);
@@ -299,7 +299,7 @@ namespace Articuno
                     writeLoadShutdownCmd();
                     log.DebugFormat("Writing alarm for {0}", GetTurbinePrefixValue());
                     SetPausedByArticunoAlarmValue(true);
-                    tm.updateMain(TurbineMediator.TurbineEnum.PausedByArticuno, TurbinePrefix);
+                    tm.InformArticunoMain(TurbineMediator.TurbineEnum.PausedByArticuno, TurbinePrefix);
                     log.InfoFormat("Turbine {0} is now paused", GetTurbinePrefixValue());
                 }
             }

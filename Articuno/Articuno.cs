@@ -525,7 +525,7 @@ namespace Articuno
                 {
                     TurbineReadyToBePausedByArticuno(turbineId);
                     tm.setOperatingStateCondition(turbineId, true);
-                    tm.resetCtr(turbineId);
+                    tm.ResetCtrValueForTurbine(turbineId);
                 }
                 else
                 {
