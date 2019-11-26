@@ -421,57 +421,54 @@ namespace Articuno
             //If it matches the met tower
             if (matchLookup.Value.ToUpper().Contains("MET"))
             {
-                Enum metEnum = mm.findMetTowerTag(matchLookup.Value, opcTag);
-                switch (metEnum)
-                {
-                    case MetTowerMediator.MetTowerEnum.Switched:
-                        string referencedMet = mm.isMetTowerSwitched(prefix);
-                        log.InfoFormat("{0} switched to {1}", prefix, referencedMet);
-                        break;
-                    default:
-                        log.DebugFormat("Event Changed detected for {0}. However, there is nothing to be done", opcTag);
-                        break;
-                }
-
+                MetTowerEventHandler(prefix, opcTag);
             }
             //Else, assume Turbine or system input. Not like there's anything else given the regex
             else
             {
-                //DO NOT FORGET THIS FUNCTION when adding anythign turbine enum related
-                Enum turbineEnum = tm.findTurbineTag(matchLookup.Value, opcTag);
-                switch (turbineEnum)
-                {
-                    //Case where the site changes the NRS Mode
-                    case TurbineMediator.TurbineEnum.NrsMode:
-                        checkNrs(prefix, value);
-                        break;
-                    //case where the turbine is started by either the site or the NCC
-                    case TurbineMediator.TurbineEnum.TurbineStarted:
-                        //If the turbine feedback tag is true, that means the turbine is either running (or in draft). Which means the NCC has started the turbine
-                        //You only want to listen to if this becomes true
-                        if (Convert.ToBoolean(value) == true)
-                        {
-                            tm.startTurbine(prefix);
-                            log.InfoFormat("Turbine {0} has started from NCC or site", prefix);
-                            //However, if turbine was already paused beforehand, then make some function calls to remove it from a list
-                            if (isPausedByArticuno(prefix))
-                            {
-                                turbineClearedOfIce(prefix);
-                                conditionsMet(prefix);
-                            }
-                        }
-                        break;
-                    //In the case where the turbine went into a different state. This includes pause by the dispatchers, site, curtailment, maintenance, anything non-Articuno 
-                    case TurbineMediator.TurbineEnum.OperatingState:
-                        checkOperatingState(prefix, value);
-                        break;
-                    case TurbineMediator.TurbineEnum.Participation:
-                        checkPariticipation(prefix, value);
-                        break;
-                    default:
-                        log.DebugFormat("Event CHanged detected for {0}. However, there is nothing to be doen", opcTag);
-                        break;
-                }
+                TurbineEventHandler(prefix, opcTag, value);
+            }
+        }
+
+        private static void MetTowerEventHandler(string prefix, string opcTag)
+        {
+            Enum metEnum = mm.findMetTowerTag(prefix, opcTag);
+            switch (metEnum)
+            {
+                case MetTowerMediator.MetTowerEnum.Switched:
+                    string referencedMet = mm.isMetTowerSwitched(prefix);
+                    log.InfoFormat("{0} switched to {1}", prefix, referencedMet);
+                    break;
+                default:
+                    log.DebugFormat("Event Changed detected for {0}. However, there is nothing to be done", opcTag);
+                    break;
+            }
+        }
+
+        private static void TurbineEventHandler(string prefix, string opcTag, object value)
+        {
+            //DO NOT FORGET THIS FUNCTION when adding anythign turbine enum related
+            Enum turbineEnum = tm.findTurbineTag(prefix, opcTag);
+            switch (turbineEnum)
+            {
+                //Case where the site changes the NRS Mode
+                case TurbineMediator.TurbineEnum.NrsMode:
+                    checkNrs(prefix, value);
+                    break;
+                //case where the turbine is started by either the site or the NCC
+                case TurbineMediator.TurbineEnum.TurbineStarted:
+                    startTurbine(prefix, value);
+                    break;
+                //In the case where the turbine went into a different state. This includes pause by the dispatchers, site, curtailment, maintenance, anything non-Articuno 
+                case TurbineMediator.TurbineEnum.OperatingState:
+                    checkOperatingState(prefix, value);
+                    break;
+                case TurbineMediator.TurbineEnum.Participation:
+                    checkPariticipation(prefix, value);
+                    break;
+                default:
+                    log.DebugFormat("Event CHanged detected for {0}. However, there is nothing to be doen", opcTag);
+                    break;
             }
         }
 
@@ -492,6 +489,25 @@ namespace Articuno
                 else
                     tm.setNrsActive(turbineId, false);
             }
+        }
+
+        private static void startTurbine(string turbineId, object value)
+        {
+            //If the value for the start OPC tag is true, then start the turbine. If it isn't, don't do anything
+            //If the turbine feedback tag is true, that means the turbine is either running (or in draft). Which means the NCC has started the turbine
+            //You only want to listen to if this becomes true
+
+            if (Convert.ToBoolean(value) == true)
+            {
+                log.InfoFormat("Turbine {0} has started from NCC or site", turbineId);
+                //However, if turbine was already paused beforehand, then make some function calls to remove it from a list
+                if (isPausedByArticuno(turbineId))
+                {
+                    turbineClearedOfIce(turbineId);
+                    conditionsMet(turbineId);
+                }
+            }
+
         }
         private static void checkOperatingState(string turbineId, object value)
         {
