@@ -13,10 +13,6 @@ using System.Threading;
 
 namespace Articuno
 {
-
-    //Delegates
-    delegate void IcingDelegates(string turbineId, bool state);
-
     /// <summary>
     /// The turbine Mediator is a singleton class that acts also acts as a mediator and it is not only responsible 
     /// for creating the numerous turbines at the site, but also acts as a middle man between the turbine class and the rest of hte program
@@ -282,7 +278,6 @@ namespace Articuno
         /// This function is used to inform all Turbines to check if their mapped met tower is frozen up
         /// </summary>
         /// <param name="metId">A met tower prefix</param>
-        //Note that met tower can be switched
         public void checkMetTowerFrozen(string metId)
         {
             foreach (string turbinePrefix in getTurbinePrefixList())
@@ -301,7 +296,7 @@ namespace Articuno
         /// <summary>
         /// Method to signal the Articuno Main method that the turbines have paused by the program or cleared by the site
         /// </summary>
-        public void InformArticunoMain(TurbineEnum status, string turbineId)
+        public void UpdateArticunoMain(TurbineEnum status, string turbineId)
         {
             if (status.Equals(TurbineEnum.PausedByArticuno))
                 Articuno.turbinePausedByArticuno(turbineId);
@@ -330,7 +325,6 @@ namespace Articuno
             return null;
         }
 
-        //TurbineEnum. This is used to interact with Articuno 
         public enum TurbineEnum
         {
             NrsMode,
@@ -353,6 +347,8 @@ namespace Articuno
             //For Turbine tags from the  TurbineInputTags Table
             string cmd = String.Format(TURBINE_INPUT_COLUMN_QUERY, turbinePrefix);
             DataTable reader = dbi.readCommand(cmd);
+            turbine.ScalingFactorValue = GetTurbineScalingFactor();
+            turbine.StartupTime = GetTurbineStartUpTime();
 
             SetTurbineNrsTag(turbine,reader);
             turbine.OperatingStateTag = sitePrefix + reader.Rows[0]["OperatingState"].ToString();
@@ -362,23 +358,16 @@ namespace Articuno
             turbine.ParticipationTag = sitePrefix + reader.Rows[0]["Participation"].ToString();
             turbine.LoadShutdownTag = sitePrefix + reader.Rows[0]["Pause"].ToString();
             turbine.StartCommandTag = sitePrefix + reader.Rows[0]["Start"].ToString();
-            //For scaling factor. This does not require a prefix as a systeminput value
-            turbine.ScalingFactorValue = GetScalingFactor();
-            //For Start up time. This does not require a prefix as a systeminput value
-            turbine.StartupTime = GetStartUpTime();
-
             //Do not include the site prefix for this column. 
-            string primMetTower = reader.Rows[0]["MetReference"].ToString();
-            turbine.MetTowerPrefix = primMetTower;
+            turbine.MetTowerPrefix = reader.Rows[0]["MetReference"].ToString();
 
             SetMetTowerRedundancyForTurbine(turbine, reader);
             InitializeTurbineOutputTags(turbine);
 
-            //Add turbine to the turbine list
             turbineList.Add(turbine);
         }
 
-        private string GetScalingFactor()
+        private string GetTurbineScalingFactor()
         {
             //Get the Scaling Factor from the system input tag table
             string cmd = String.Format(SCALING_FACTOR_QUERY);
@@ -386,9 +375,8 @@ namespace Articuno
             return reader.Rows[0]["DefaultValue"].ToString();
         }
 
-        private string GetStartUpTime()
+        private string GetTurbineStartUpTime()
         {
-            //Get the start up time from the system input tag table
             string cmd = String.Format(TURBINE_STARTUP_TIME);
             DataTable reader = dbi.readCommand(cmd);
             return reader.Rows[0]["DefaultValue"].ToString();
@@ -397,9 +385,7 @@ namespace Articuno
         private void SetTurbineNrsTag(Turbine turbine,DataTable reader)
         {
             //Note that NRS can be empty, so that's why there is a try/catch here. If it is empty, just set it to an empty string
-            //Or it can be an empty string in the database
             try { turbine.NrsStateTag = sitePrefix + reader.Rows[0]["NrsMode"].ToString(); }
-            ///Because the turbine doesn't use NRS, just set this to true
             catch (NullReferenceException)
             {
                 turbine.NrsStateTag = "";

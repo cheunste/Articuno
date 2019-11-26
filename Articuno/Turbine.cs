@@ -299,7 +299,7 @@ namespace Articuno
                     writeLoadShutdownCmd();
                     log.DebugFormat("Writing alarm for {0}", GetTurbinePrefixValue());
                     SetPausedByArticunoAlarmValue(true);
-                    tm.InformArticunoMain(TurbineMediator.TurbineEnum.PausedByArticuno, TurbinePrefix);
+                    tm.UpdateArticunoMain(TurbineMediator.TurbineEnum.PausedByArticuno, TurbinePrefix);
                     log.InfoFormat("Turbine {0} is now paused", GetTurbinePrefixValue());
                 }
             }
