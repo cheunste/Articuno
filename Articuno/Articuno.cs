@@ -77,7 +77,7 @@ namespace Articuno
             mm = MetTowerMediator.Instance;
             tm = TurbineMediator.Instance;
 
-            mm.createMetTower();
+            mm.CreateMetTowerObject();
             if (testMode)
                 tm.createTestTurbines();
             else
@@ -108,7 +108,7 @@ namespace Articuno
             uccActiveTag = dbi.getActiveUCCTag();
 
             //Call the create methods
-            mm.createMetTower();
+            mm.CreateMetTowerObject();
             tm.createTurbines();
 
             //tm.createTestTurbines();
@@ -306,14 +306,14 @@ namespace Articuno
         {
             //For every heartbeat interval, read the met tower measurements and the turbine temperature measurements
             //This is so more measurements can be gathered to get a more accurate average after every CTR period
-            for (int i = 1; i <= MetTowerMediator.getNumMetTower(); i++)
+            for (int i = 1; i <= MetTowerMediator.GetNumberOfMetTowers(); i++)
             {
                 //This is needed because apparently Met Tower 1 is unnumbered, and so the following strips the '1' essentually. 
                 string j = (i == 1) ? "" : Convert.ToString(i);
                 //Get all measurements from the met tower. Note that it will get turbine 
                 //temperature if the temperature coming from the met tower is bad qualtiy
 
-                double temperature = mm.readTemperature("Met" + j);
+                double temperature = mm.ReadTemperatureFromMetTower("Met" + j);
                 double humidity = mm.readHumidity("Met" + j);
 
                 mm.writeToQueue("Met" + j, temperature, humidity);
@@ -348,7 +348,7 @@ namespace Articuno
         {
             log.InfoFormat("CTR countdown reached 0 in ArticunoMain");
             //Calculate temperature averages from the all the temperature queues
-            for (int i = 1; i <= MetTowerMediator.getNumMetTower(); i++)
+            for (int i = 1; i <= MetTowerMediator.GetNumberOfMetTowers(); i++)
             {
                 //This is needed because apparently Met Tower 1 is unnumbered.
                 string j = (i == 1) ? "" : Convert.ToString(i);
@@ -359,13 +359,13 @@ namespace Articuno
                 log.DebugFormat("CTR avg temp: {0}, avg Humidity: {1}", tempAvg, humidityAvg);
 
                 //Send this temperature to the Met Mediator and determine if met tower is freezing or not
-                bool metFrozen = mm.setFrozenCondition("Met" + j, tempAvg, humidityAvg);
+                bool metFrozen = mm.IsMetTowerFrozen("Met" + j, tempAvg, humidityAvg);
 
                 //Update the Dew Point calculation. This value will show up on the faceplate
                 mm.updateDewPoint("Met" + j, tempAvg, humidityAvg);
                 tm.checkMetTowerFrozen("Met" + j);
 
-                OpcServer.writeOpcTag(opcServerName, icePossibleAlarmTag, mm.icingPossible());
+                OpcServer.writeOpcTag(opcServerName, icePossibleAlarmTag, mm.IsAnyMetTowerFrozenAtSite());
             }
             //Set the CTR back to the original value
             ctrCountdown = articunoCtrTime;
@@ -432,7 +432,7 @@ namespace Articuno
 
         private static void MetTowerEventHandler(string prefix, string opcTag)
         {
-            Enum metEnum = mm.findMetTowerTag(prefix, opcTag);
+            Enum metEnum = mm.FindMetTowerTag(prefix, opcTag);
             switch (metEnum)
             {
                 case MetTowerMediator.MetTowerEnum.Switched:
@@ -600,7 +600,7 @@ namespace Articuno
                     ctrValueChanged(value);
                 if (tag.Equals(tempThresholdTag))
                 {
-                    mm.writeTemperatureThreshold(value);
+                    mm.UpdateTemperatureThresholdForAllMetTowers(value);
                     log.DebugFormat("Articuno Temperature Threshold updated to: {0} deg C", value);
                 }
                 if (tag.Equals(deltaThresholdTag))

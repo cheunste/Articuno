@@ -26,7 +26,7 @@ namespace ArticunoTest
             tm = TurbineMediator.Instance;
             di = DatabaseInterface.Instance;
 
-            mm.createMetTower();
+            mm.CreateMetTowerObject();
             tm.createTestTurbines();
             setup = new Setup();
         }

@@ -172,7 +172,7 @@ namespace Articuno
                     {
                         //Do not include the site prefix for this column
                         string backupMetTower = reader.Rows[0]["RedundancyForMet"].ToString();
-                        MetTowerMediator.Instance.setTurbineBackup(backupMetTower, turbine);
+                        MetTowerMediator.Instance.SetTurbineBackupForMet(backupMetTower, turbine);
                     }
                 }
                 //no operation. Reaching here implies this met tower isn't set up for redundancy 
@@ -414,7 +414,7 @@ namespace Articuno
             {
                 string temp = getTurbine(turbinePrefix).MetTowerPrefix;
                 string metPrefix = MetTowerMediator.Instance.isMetTowerSwitched(temp);
-                bool isMetFrozen = MetTowerMediator.Instance.isMetFrozen(metPrefix);
+                bool isMetFrozen = MetTowerMediator.Instance.IsMetTowerFrozen(metPrefix);
 
                 if (metId.Equals(metPrefix))
                     setTemperatureCondition(turbinePrefix, isMetFrozen);

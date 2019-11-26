@@ -82,7 +82,7 @@ namespace ArticunoTest
             mm = MetTowerMediator.Instance;
             tm = TurbineMediator.Instance;
             //Create new met tower mediator
-            mm.createMetTower();
+            mm.CreateMetTowerObject();
             opcServer = new OpcServer(opcServerName);
             siteName = "SCRAB";
             //set default met tower Data
@@ -94,8 +94,8 @@ namespace ArticunoTest
         public void createNewMetTower()
         {
             //var derp = MetTowerMediatorSingleton.Instance.getAllMeasurements("Met");
-            MetTower met1 = mm.getMetTower("Met");
-            MetTower met2 = mm.getMetTower("Met2");
+            MetTower met1 = mm.GetMetTowerFromId("Met");
+            MetTower met2 = mm.GetMetTowerFromId("Met2");
             Assert.IsNotNull(met1);
             Assert.IsNotNull(met2);
         }
@@ -130,14 +130,14 @@ namespace ArticunoTest
 
         public void GetValueTest(string metId, double tempVal1, double tempVal2, double hmdVal)
         {
-            MetTower met = mm.getMetTower(metId);
+            MetTower met = mm.GetMetTowerFromId(metId);
             met.RelativeHumidityValue = hmdVal;
             met.PrimTemperatureValue = tempVal1;
             met.SecTemperatureValue = tempVal1;
 
-            var met1Temp1 = Convert.ToDouble(mm.getMetTower(metId).PrimTemperatureValue);
-            var met1Temp2 = Convert.ToDouble(mm.getMetTower(metId).SecTemperatureValue);
-            var met1Humd1 = Convert.ToDouble(mm.getMetTower(metId).RelativeHumidityValue);
+            var met1Temp1 = Convert.ToDouble(mm.GetMetTowerFromId(metId).PrimTemperatureValue);
+            var met1Temp2 = Convert.ToDouble(mm.GetMetTowerFromId(metId).SecTemperatureValue);
+            var met1Humd1 = Convert.ToDouble(mm.GetMetTowerFromId(metId).RelativeHumidityValue);
 
             Assert.AreEqual(met1Temp1, tempVal1, 0.001, "temperature on sensor 1 value not equal");
             Assert.AreEqual(met1Temp2, tempVal1, 0.001, "temperature on sensor 2 value not equal");
@@ -149,7 +149,7 @@ namespace ArticunoTest
         public void testThresholds()
         {
 
-            MetTower met = mm.getMetTower("Met");
+            MetTower met = mm.GetMetTowerFromId("Met");
             //Get the thresholds
             double tempThreshold = met.AmbTempThreshold;
             double deltaThreshold = met.DeltaTempThreshold;
@@ -176,8 +176,8 @@ namespace ArticunoTest
             //For this test, you need both met towers because you do not want to fall back on redundancy
             string metId1 = "Met";
             string metId2 = "Met2";
-            MetTower met = mm.getMetTower(metId1);
-            MetTower met2 = mm.getMetTower(metId2);
+            MetTower met = mm.GetMetTowerFromId(metId1);
+            MetTower met2 = mm.GetMetTowerFromId(metId2);
 
             met.RelativeHumidityValue = hmdVal1;
             met.PrimTemperatureValue = tempVal1;
@@ -214,8 +214,8 @@ namespace ArticunoTest
             //setValidMetData();
             double tempBeforeSwitch;
             double humdBeforeSwitch;
-            MetTower met1 = mm.getMetTower("Met");
-            MetTower met2 = mm.getMetTower("Met2");
+            MetTower met1 = mm.GetMetTowerFromId("Met");
+            MetTower met2 = mm.GetMetTowerFromId("Met2");
 
             Console.WriteLine("Testing {0}, with temperature {1}, {2}, humidty {3},{4}", metId, tempVal1, tempVal2, hmdVal1, hmdVal2);
             //Write Values to the tags
@@ -232,7 +232,7 @@ namespace ArticunoTest
             Thread.Sleep(500);
             Console.WriteLine("Met Tower 1 temperature before switch {0}, humidty before switch {1}", tempVal1, hmdVal1);
             Console.WriteLine("Met Tower 2 temperature before switch {0}, humidty before switch {1}", tempVal2, hmdVal2);
-            double tempAfterSwitch = Convert.ToDouble(mm.readTemperature(metId));
+            double tempAfterSwitch = Convert.ToDouble(mm.ReadTemperatureFromMetTower(metId));
             double humdAfterSwitch = Convert.ToDouble(mm.readHumidity(metId));
             Console.WriteLine("Met Tower {0} temperature after switch {1}, humidty after switch {2}", metId, tempAfterSwitch, humdAfterSwitch);
 
@@ -253,7 +253,7 @@ namespace ArticunoTest
             //Switch back the met tower to the original
             mm.switchMetTower(metId);
             Thread.Sleep(500);
-            tempAfterSwitch = Convert.ToDouble(mm.readTemperature(metId));
+            tempAfterSwitch = Convert.ToDouble(mm.ReadTemperatureFromMetTower(metId));
             humdAfterSwitch = Convert.ToDouble(mm.readHumidity(metId));
             Console.WriteLine("Met Tower {0} temperature after switch back {1}, humidty after switch back {2}", metId, tempAfterSwitch, humdAfterSwitch);
 
@@ -279,7 +279,7 @@ namespace ArticunoTest
             OpcServer.writeOpcTag(opcServerName, turb.TemperatureTag, 30); ;
 
             //write the fail values to the met tower
-            MetTower met = mm.getMetTower(metId);
+            MetTower met = mm.GetMetTowerFromId(metId);
             met.PrimTemperatureValue = tempSensor1Val;
             met.SecTemperatureValue = tempSensor2Val;
             Random rnd = new Random();
@@ -294,7 +294,7 @@ namespace ArticunoTest
             }
 
             //Get the temperatures from both the turbine and the met tower and assert they're equal.
-            double temperature = Convert.ToDouble(mm.readTemperature(metId));
+            double temperature = Convert.ToDouble(mm.ReadTemperatureFromMetTower(metId));
             double turbineTemp = Convert.ToDouble(tm.readTemperatureValue(turbine));
             Console.WriteLine("Temperature of {0}: {1}", metId, temperature);
             Console.WriteLine("Temperature from Turbine: {0}", turbineTemp);
@@ -321,9 +321,9 @@ namespace ArticunoTest
             //var humidTuple = mm.humidQualityCheck(metId);
             //var metTowerQuality = mm.checkMetTowerQuality(metId);
 
-            var primTempQuality = mm.getMetTower(metId).getPrimaryTemperatureSensor().isSensorBadQuality();
-            var secTempQuality = mm.getMetTower(metId).getSecondaryTemperatureSensor().isSensorBadQuality();
-            var humidQuality = mm.getMetTower(metId).getPrimaryHumiditySensor().isSensorBadQuality();
+            var primTempQuality = mm.GetMetTowerFromId(metId).getPrimaryTemperatureSensor().isSensorBadQuality();
+            var secTempQuality = mm.GetMetTowerFromId(metId).getSecondaryTemperatureSensor().isSensorBadQuality();
+            var humidQuality = mm.GetMetTowerFromId(metId).getPrimaryHumiditySensor().isSensorBadQuality();
             var metTowerQuality = mm.checkMetTowerQuality(metId);
 
             Thread.Sleep(500);
@@ -390,9 +390,9 @@ namespace ArticunoTest
             mm.writePrimTemperature(metId, temp1);
             mm.writeSecTemperature(metId, temp2);
 
-            MetTower met = mm.getMetTower(metId);
+            MetTower met = mm.GetMetTowerFromId(metId);
             Thread.Sleep(500);
-            var readTemperature = mm.readTemperature(metId);
+            var readTemperature = mm.ReadTemperatureFromMetTower(metId);
 
             //Assert.AreEqual(Convert.ToDouble(readTemperature), temp1, 0.001, "Temperature are not equal. Read Temperature: {0}, Set Temperature {1}",readTemperature,temp1);
             Console.WriteLine("Read Temperature: {0}, Set Temperature {1}", (object)readTemperature, temp1);
@@ -427,7 +427,7 @@ namespace ArticunoTest
 
             mm.writeHumidity(metId, humidity);
 
-            MetTower met = mm.getMetTower(metId);
+            MetTower met = mm.GetMetTowerFromId(metId);
             var readValue = mm.readHumidity(metId);
             Thread.Sleep(500);
             bool primQuaality = Convert.ToBoolean(met.HumidityBadQuality.ToString());
@@ -459,7 +459,7 @@ namespace ArticunoTest
             mm.writePrimTemperature(metId, temperature);
             mm.writeSecTemperature(metId, temperature);
 
-            var threshold = mm.getMetTower(metId).AmbTempThreshold;
+            var threshold = mm.GetMetTowerFromId(metId).AmbTempThreshold;
 
             //Get measurements about 50 tiems or so to see if it is flatline. 
             for (int i = 0; i <= 50; i++)
@@ -467,9 +467,9 @@ namespace ArticunoTest
 
             Console.WriteLine("Threshold: {0} Temp {1} Humid {2}", threshold, temperature, humidity);
 
-            MetTower met = mm.getMetTower(metId);
-            mm.setFrozenCondition(metId, temperature, humidity);
-            bool isFrozen = mm.isMetFrozen(metId);
+            MetTower met = mm.GetMetTowerFromId(metId);
+            mm.IsMetTowerFrozen(metId, temperature, humidity);
+            bool isFrozen = mm.IsMetTowerFrozen(metId);
 
 
             Assert.IsTrue(isFrozen, "Met Tower isn't declaring freezing even though humidity is bad.");
@@ -485,11 +485,11 @@ namespace ArticunoTest
         {
             //Set the threshold to something that'll (hopefully) trigger the test conditions. 
             //This is mainly because dew and delta aren't really known to the users...yet
-            MetTower met = mm.getMetTower(metId);
+            MetTower met = mm.GetMetTowerFromId(metId);
             mm.writeDeltaThreshold(1);
-            mm.writeTemperatureThreshold(0);
+            mm.UpdateTemperatureThresholdForAllMetTowers(0);
 
-            mm.setFrozenCondition(metId, temperature, humidity);
+            mm.IsMetTowerFrozen(metId, temperature, humidity);
             Console.WriteLine("Ice Indication Value: {0}", met.IceIndicationValue);
             Assert.AreEqual(expectedFrozenState, Convert.ToBoolean(met.IceIndicationValue));
         }
@@ -500,9 +500,9 @@ namespace ArticunoTest
         [DataRow("Met", 20, .15, false)]
         public void flatLineTest(string metId, double temperature, double humidity, bool Flatline)
         {
-            MetTower met = mm.getMetTower(metId);
+            MetTower met = mm.GetMetTowerFromId(metId);
             mm.writeDeltaThreshold(1);
-            mm.writeTemperatureThreshold(0);
+            mm.UpdateTemperatureThresholdForAllMetTowers(0);
 
             //Check Temperature
             met.PrimTemperatureValue = temperature;
@@ -516,7 +516,7 @@ namespace ArticunoTest
                 }
                 try
                 {
-                    var temp = mm.getMetTower(metId).PrimTemperatureValue;
+                    var temp = mm.GetMetTowerFromId(metId).PrimTemperatureValue;
                 }
                 //Reaching here is good as an exception will be thrown because Aritcuno will attempt to read from turbine data...which I havne't set up for in this test.
                 catch (NullReferenceException)
@@ -542,7 +542,7 @@ namespace ArticunoTest
                 }
                 try
                 {
-                    var temp = mm.getMetTower(metId).RelativeHumidityValue;
+                    var temp = mm.GetMetTowerFromId(metId).RelativeHumidityValue;
                 }
                 //Reaching here is good as an exception will be thrown because Aritcuno will attempt to read from turbine data...which I havne't set up for in this test.
                 catch (NullReferenceException)

@@ -19,7 +19,7 @@ namespace ArticunoTest
             am = new Articuno.Articuno(true);
 
             //Must create the MetTowersingleton first
-            MetTowerMediator.Instance.createMetTower();
+            MetTowerMediator.Instance.CreateMetTowerObject();
             List<string> newList = new List<string>();
             tm = TurbineMediator.Instance;
             tm.createTestTurbines();
