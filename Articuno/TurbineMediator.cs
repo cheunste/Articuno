@@ -360,7 +360,7 @@ namespace Articuno
             while (windSpeedQueue.Count != 0) { windSpeedAverage += windSpeedQueue.Dequeue(); }
             while (rotorSpeedQueue.Count != 0) { rotorSpeedAverage += rotorSpeedQueue.Dequeue(); }
 
-            var filterTuple = filterTable.search(windSpeedAverage / windSpeedQueueCount, nrsMode);
+            var filterTuple = filterTable.FindRotorSpeedAndStdDev(windSpeedAverage / windSpeedQueueCount, nrsMode);
 
             var referenceRotorSpeed = filterTuple.Item1;
             var referenceStdDev = filterTuple.Item2;

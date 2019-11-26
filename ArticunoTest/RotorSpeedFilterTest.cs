@@ -19,7 +19,7 @@ namespace ArticunoTest
         public void binarySearchTest(double windSpeed,bool nrsState, double expectedRS)
         {
             RotorSpeedFilter rft = new RotorSpeedFilter();
-            Tuple<double,double> resultTuple =  rft.search(windSpeed,nrsState);
+            Tuple<double,double> resultTuple =  rft.FindRotorSpeedAndStdDev(windSpeed,nrsState);
             Console.WriteLine("WindSpeed: {0} nrs: {1} RotorSpeed: {2} StdDev: {3} expectedRS {4}",windSpeed, nrsState, resultTuple.Item1, resultTuple.Item2, expectedRS);
 
             Assert.AreEqual(resultTuple.Item1, expectedRS, 0.01, "The Rotor speed are not relatively equal");

@@ -20,7 +20,7 @@ namespace Articuno
         private static readonly string RotorSpeed = "RotorSpeedNonNRS";
         private static readonly string StdDev = "StandardDeviationNonNRS";
         private static readonly string TableName = "RotorSpeedLookupTable";
-        private static readonly string cmd = String.Format("SELECT * FROM {0} ORDER BY {1} ASC", TableName,WindSpeed);
+        private static readonly string cmd = String.Format("SELECT * FROM {0} ORDER BY {1} ASC", TableName, WindSpeed);
 
         //private lists
         /*
@@ -32,29 +32,6 @@ namespace Articuno
         List<FilterElement> filterList;
         List<double> keyList;
 
-        /*
-         * This is a private class that's only used in the RotorSpeedFIlter class.
-         * It just stores 
-         * Mainly, creating a separate class seems...pointless
-         */
-        private class FilterElement
-        {
-
-            public FilterElement(double windSpeed, double nrsRotorSpeed, double nrsStdDev, double rotorSpeed, double stdDev)
-            {
-                WindSpeed = windSpeed;
-                NrsRotorSpeed = nrsRotorSpeed;
-                NrsStdDev = nrsStdDev;
-                RotorSpeed = rotorSpeed;
-                StdDev = stdDev;
-
-            }
-            public double WindSpeed { get; set; }
-            public double NrsRotorSpeed { get; set; }
-            public double NrsStdDev { get; set; }
-            public double RotorSpeed { get; set; }
-            public double StdDev { get; set; }
-        }
 
         /// Constructor. Doesn't take any arguments as it can just get its data from the database
         public RotorSpeedFilter()
@@ -84,7 +61,7 @@ namespace Articuno
         /// </summary>
         /// <param name="windSpeed"></param>
         /// <returns></returns>
-        public Tuple<double,double> search(double windSpeed, bool nrsMode)
+        public Tuple<double, double> FindRotorSpeedAndStdDev(double windSpeed, bool nrsMode)
         {
             var index = keyList.BinarySearch(windSpeed);
             if (index < 0)
@@ -94,10 +71,33 @@ namespace Articuno
             var result = filterList[index];
 
             if (nrsMode)
-                return new Tuple<double,double>(result.NrsRotorSpeed, result.NrsStdDev);
+                return new Tuple<double, double>(result.NrsRotorSpeed, result.NrsStdDev);
             else
-                return new Tuple<double, double>(result.RotorSpeed,result.StdDev);
+                return new Tuple<double, double>(result.RotorSpeed, result.StdDev);
         }
 
+        /*
+         * This is a private class that's only used in the RotorSpeedFIlter class.
+         * It just stores 
+         * Mainly, creating a separate class seems...pointless
+         */
+        private class FilterElement
+        {
+
+            public FilterElement(double windSpeed, double nrsRotorSpeed, double nrsStdDev, double rotorSpeed, double stdDev)
+            {
+                WindSpeed = windSpeed;
+                NrsRotorSpeed = nrsRotorSpeed;
+                NrsStdDev = nrsStdDev;
+                RotorSpeed = rotorSpeed;
+                StdDev = stdDev;
+
+            }
+            public double WindSpeed { get; set; }
+            public double NrsRotorSpeed { get; set; }
+            public double NrsStdDev { get; set; }
+            public double RotorSpeed { get; set; }
+            public double StdDev { get; set; }
+        }
     }
 }
