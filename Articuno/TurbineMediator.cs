@@ -215,7 +215,7 @@ namespace Articuno
         /// <returns></returns>
         public static Turbine getTurbine(string prefix)
         {
-            foreach (Turbine turbine in turbineList) { if (turbine.getTurbinePrefixValue().Equals(prefix)) { return turbine; } }
+            foreach (Turbine turbine in turbineList) { if (turbine.GetTurbinePrefixValue().Equals(prefix)) { return turbine; } }
             return null;
         }
 
@@ -281,10 +281,10 @@ namespace Articuno
         }
 
         //The following four functions are called by the main Articuno class to set an icing protocol condition given a turbine Id. Remember, the turbine should pause automatically independently of each other
-        public void setTemperatureCondition(string turbineId, bool state) { log.DebugFormat("Temperature condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setTemperatureCondition(state); }
-        public void setOperatingStateCondition(string turbineId, bool state) { log.DebugFormat("Operating status condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setOperatingStateCondition(state); }
+        public void setTemperatureCondition(string turbineId, bool state) { log.DebugFormat("Temperature condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).SetTemperatureCondition(state); }
+        public void setOperatingStateCondition(string turbineId, bool state) { log.DebugFormat("Operating status condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).SetOperatingStateCondition(state); }
         public void setNrsActive(string turbineId, bool state) { log.DebugFormat("NRS Condition for {0} {1}", turbineId, state ? "active" : "not active"); getTurbine(turbineId).setNrsMode(state); }
-        public void setTurbinePerformanceCondition(string turbineId, bool state) { log.DebugFormat("Turbine Performance condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).setTurbinePerformanceCondition(state); }
+        public void setTurbinePerformanceCondition(string turbineId, bool state) { log.DebugFormat("Turbine Performance condition for {0} {1}", turbineId, state ? "met" : "not met"); getTurbine(turbineId).SetTurbineUnderPerformanceCondition(state); }
 
         /// <summary>
         /// force a check Ice condition given a turbine Id. Should only be used in testing only
@@ -293,7 +293,7 @@ namespace Articuno
         public void checkIcingConditions(string turbineId)
         {
             Turbine turbine = getTurbine(turbineId);
-            turbine.checkIcingConditions();
+            turbine.CheckArticunoPausingConditions();
         }
 
         /*
@@ -368,8 +368,8 @@ namespace Articuno
             var currentScalingFactor = Convert.ToDouble(turbine.readTurbineScalingFactorValue());
 
             //Set under performance condition to be true. Else, clear it
-            if ((rotorSpeedAverage / rotorSpeedQueueCount) < referenceRotorSpeed - (currentScalingFactor * referenceStdDev)) { turbine.setTurbinePerformanceCondition(true); }
-            else { turbine.setTurbinePerformanceCondition(false); }
+            if ((rotorSpeedAverage / rotorSpeedQueueCount) < referenceRotorSpeed - (currentScalingFactor * referenceStdDev)) { turbine.SetTurbineUnderPerformanceCondition(true); }
+            else { turbine.SetTurbineUnderPerformanceCondition(false); }
 
             //For sanity check, make sure the windSPeedQueue is empty 
             turbine.emptyQueue();
