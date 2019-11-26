@@ -123,7 +123,7 @@ namespace Articuno
         public string getLowRotorSpeedFlag(string turbineId) { return GetTurbinePrefixFromMediator(turbineId).LowRotorSpeedFlagTag; }
         public string getCtrRemaining(string turbineId) { return GetTurbinePrefixFromMediator(turbineId).CtrCountdownTag; }
 
-        public int getTurbineCtrTime(string turbineId) { return Convert.ToInt32(GetTurbinePrefixFromMediator(turbineId).TurbineCtr); }
+        public int getTurbineCtrTime(string turbineId) { return Convert.ToInt32(GetTurbinePrefixFromMediator(turbineId).TurbineDefaultCtr); }
 
         //For reading OPC value using turbineId
         /// <summary>
@@ -169,7 +169,7 @@ namespace Articuno
         //The following four functions are called by the main Articuno class to set an icing protocol condition given a turbine Id. Remember, the turbine should pause automatically independently of each other
         public void setTemperatureCondition(string turbineId, bool state) { log.DebugFormat("Temperature condition for {0} {1}", turbineId, state ? "met" : "not met"); GetTurbinePrefixFromMediator(turbineId).SetTemperatureCondition(state); }
         public void setOperatingStateCondition(string turbineId, bool state) { log.DebugFormat("Operating status condition for {0} {1}", turbineId, state ? "met" : "not met"); GetTurbinePrefixFromMediator(turbineId).SetOperatingStateCondition(state); }
-        public void setNrsActive(string turbineId, bool state) { log.DebugFormat("NRS Condition for {0} {1}", turbineId, state ? "active" : "not active"); GetTurbinePrefixFromMediator(turbineId).setNrsMode(state); }
+        public void setNrsActive(string turbineId, bool state) { log.DebugFormat("NRS Condition for {0} {1}", turbineId, state ? "active" : "not active"); GetTurbinePrefixFromMediator(turbineId).SetTurbineNrsMode(state); }
         public void setTurbinePerformanceCondition(string turbineId, bool state) { log.DebugFormat("Turbine Performance condition for {0} {1}", turbineId, state ? "met" : "not met"); GetTurbinePrefixFromMediator(turbineId).SetTurbineUnderPerformanceCondition(state); }
 
         /// <summary>
@@ -282,7 +282,7 @@ namespace Articuno
         {
             foreach (string turbinePrefix in getTurbinePrefixList())
             {
-                string temp = GetTurbinePrefixFromMediator(turbinePrefix).MetTowerPrefix;
+                string temp = GetTurbinePrefixFromMediator(turbinePrefix).MainMetTowerReference;
                 string metPrefix = MetTowerMediator.Instance.isMetTowerSwitched(temp);
                 bool isMetFrozen = MetTowerMediator.Instance.IsMetTowerFrozen(metPrefix);
 
@@ -359,7 +359,7 @@ namespace Articuno
             turbine.LoadShutdownTag = sitePrefix + reader.Rows[0]["Pause"].ToString();
             turbine.StartCommandTag = sitePrefix + reader.Rows[0]["Start"].ToString();
             //Do not include the site prefix for this column. 
-            turbine.MetTowerPrefix = reader.Rows[0]["MetReference"].ToString();
+            turbine.MainMetTowerReference = reader.Rows[0]["MetReference"].ToString();
 
             SetMetTowerRedundancyForTurbine(turbine, reader);
             InitializeTurbineOutputTags(turbine);
@@ -389,7 +389,7 @@ namespace Articuno
             catch (NullReferenceException)
             {
                 turbine.NrsStateTag = "";
-                turbine.setNrsMode(false);
+                turbine.SetTurbineNrsMode(false);
             }
         }
         private void SetMetTowerRedundancyForTurbine(Turbine turbine,DataTable reader)
