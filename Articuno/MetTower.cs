@@ -23,12 +23,6 @@ namespace Articuno
     sealed internal class MetTower
     {
         //Member variables;
-        private double ambTempThreshold;
-        private double deltaTempThreshold;
-
-        private int frozenPrimTempCnt;
-        private int frozenSecTempCnt;
-        private int frozenHumidityCnt;
         private double lastPrimTemp;
         private double lastSecTemp;
 
@@ -73,9 +67,6 @@ namespace Articuno
 
             temperatureQueue = new Queue<double>();
             humidityQueue = new Queue<double>();
-            frozenHumidityCnt = 0;
-            frozenPrimTempCnt = 0;
-            frozenSecTempCnt = 0;
             lastPrimTemp = 0;
             lastSecTemp = 0;
 
@@ -195,8 +186,8 @@ namespace Articuno
         }
 
         //Threshold setters and getters
-        public double AmbTempThreshold { get { return ambTempThreshold; } set { ambTempThreshold = value; } }
-        public double DeltaTempThreshold { get { return deltaTempThreshold; } set { deltaTempThreshold = value; } }
+        public double AmbTempThreshold { get; set; }
+        public double DeltaTempThreshold { get; set; }
 
         //Humidity Accessors
         public string HumidityPrimValueTag { get; set; }

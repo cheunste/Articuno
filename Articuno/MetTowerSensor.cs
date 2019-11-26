@@ -25,7 +25,7 @@ namespace Articuno
         private string sensorBadQualtiyTag;
 
         //Database
-        static DatabaseInterface dbi=DatabaseInterface.Instance;
+        static DatabaseInterface dbi = DatabaseInterface.Instance;
 
         //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(MetTowerSensor));
@@ -48,25 +48,6 @@ namespace Articuno
             lastReadValue = 0.00;
         }
 
-        /// <summary>
-        /// Method to sample flatline. It checks the flatline of a value. If the value is stale, then it increments a frozenCount indicator
-        /// </summary>
-        /// <param name="value"></param>
-        private void checkStale(double value)
-        {
-            double tolerance = 0.00001;
-
-            double currentTemp = value;
-            //If the current temperature is equal to the last stored sample, then increment the frozenTemperatureCnt
-            // Note that temperatures are doubles
-            if (Math.Abs(lastReadValue - currentTemp) <= tolerance) { frozenCount++; }
-
-            //Reset the frozenTemperatureCnt if it isn't equal
-            else { frozenCount = 0; }
-
-            //Set the sample Temperature to the current temperature
-            lastReadValue = currentTemp;
-        }
 
         /// <summary>
         /// Method to read the value from the OPC server. It will also check for stale data and out of range values as well.
@@ -74,13 +55,13 @@ namespace Articuno
         /// </summary>
         /// <param name="isHumiditySensor">Optional Parameter</param>
         /// <returns></returns>
-        public double readValue(bool isHumiditySensor=false)
+        public double readValue(bool isHumiditySensor = false)
         {
             double value = Convert.ToDouble(OpcServer.readAnalogTag(opcServerName, sensorTag));
             if (isHumiditySensor)
                 value = value / 100.0;
-            checkStale(value);
-            badQualityCheck();
+            CheckStaleValue(value);
+            BadQualityCheck();
             return outOfRangeCheck(value);
         }
 
@@ -97,18 +78,18 @@ namespace Articuno
         /// Method to check if the sensor is stale. The MetTower class must handle the rest
         /// </summary>
         /// <returns></returns>
-        public bool badQualityCheck()
+        public bool BadQualityCheck()
         {
             //If there are 50 or so samples (or whatever) that are equally the same, that implies the temperature from the sensor is flatlined. At this point, return a bad quality alert.
             if (frozenCount >= dbi.getFlatlineCount())
             {
                 log.InfoFormat("Flatline detected for {0}", sensorTag);
-                alarm(sensorBadQualtiyTag, true);
+                SetAlarmStatus(sensorBadQualtiyTag, true);
                 return true;
             }
             else
             {
-                alarm(sensorBadQualtiyTag, false);
+                SetAlarmStatus(sensorBadQualtiyTag, false);
                 return false;
             }
         }
@@ -117,17 +98,17 @@ namespace Articuno
         {
             if (sensorValue >= maxValue)
             {
-                alarm(sensorOutofRangeTag, true);
+                SetAlarmStatus(sensorOutofRangeTag, true);
                 return maxValue;
             }
             else if (sensorValue <= minValue)
             {
-                alarm(sensorOutofRangeTag, true);
+                SetAlarmStatus(sensorOutofRangeTag, true);
                 return minValue;
             }
             else
             {
-                alarm(sensorOutofRangeTag, false);
+                SetAlarmStatus(sensorOutofRangeTag, false);
                 return sensorValue;
             }
         }
@@ -136,20 +117,41 @@ namespace Articuno
         /// Checks to see if the quality is bad. Used by the Met Tower Class
         /// </summary>
         /// <returns></returns>
-        public bool isSensorBadQuality() => Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName,sensorBadQualtiyTag));
+        public bool isSensorBadQuality() => Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, sensorBadQualtiyTag));
         /// <summary>
         /// Checks to see if the sensor has an out of Range error. Used by the MetTower Class
         /// </summary>
         /// <returns></returns>
-        public bool isSensorOutofRange() => Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName,sensorOutofRangeTag));
+        public bool isSensorOutofRange() => Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, sensorOutofRangeTag));
+
         /// <summary>
         /// An alarm class that is used to write the alarm status to the OPC server
         /// </summary>
         /// <param name="opcTag"></param>
         /// <param name="alarmValue"></param>
-        private void alarm(string opcTag, bool alarmValue)
+        private void SetAlarmStatus(string opcTag, bool alarmValue)
         {
             OpcServer.writeOpcTag(opcServerName, opcTag, alarmValue);
         }
+        /// <summary>
+        /// Method to sample flatline. It checks the flatline of a value. If the value is stale, then it increments a frozenCount indicator
+        /// </summary>
+        /// <param name="value"></param>
+        private void CheckStaleValue(double value)
+        {
+            double tolerance = 0.00001;
+
+            double currentTemp = value;
+            //If the current temperature is equal to the last stored sample, then increment the frozenTemperatureCnt
+            // Note that temperatures are doubles
+            if (Math.Abs(lastReadValue - currentTemp) <= tolerance) { frozenCount++; }
+
+            //Reset the frozenTemperatureCnt if it isn't equal
+            else { frozenCount = 0; }
+
+            //Set the sample Temperature to the current temperature
+            lastReadValue = currentTemp;
+        }
+
     }
 }

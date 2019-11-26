@@ -526,7 +526,7 @@ namespace ArticunoTest
             }
 
             if (Flatline)
-                Assert.IsTrue(met.getPrimaryTemperatureSensor().badQualityCheck(), "Frozen increment should be past 50, but it is {0}");
+                Assert.IsTrue(met.getPrimaryTemperatureSensor().BadQualityCheck(), "Frozen increment should be past 50, but it is {0}");
             else
                 Assert.AreEqual(Flatline, met.TemperaturePrimBadQuality);
 
@@ -552,7 +552,7 @@ namespace ArticunoTest
             }
 
             if (Flatline)
-                Assert.IsTrue(met.getPrimaryHumiditySensor().badQualityCheck(), "Frozen increment should be past 50, but it is {0}");
+                Assert.IsTrue(met.getPrimaryHumiditySensor().BadQualityCheck(), "Frozen increment should be past 50, but it is {0}");
             else
                 Assert.AreEqual(Flatline, met.HumidityBadQuality);
 
