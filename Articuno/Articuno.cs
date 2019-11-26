@@ -170,10 +170,10 @@ namespace Articuno
         public static void turbinePausedByArticuno(string turbineId)
         {
             log.DebugFormat("ArticunoMain has detected Turbine {0} has paused. ", turbineId);
-            moveToList(turbineId, turbinesWaitingForPause, turbinesPausedByArticuno);
+            MoveToList(turbineId, turbinesWaitingForPause, turbinesPausedByArticuno);
             OpcServer.writeOpcTag(opcServerName, numTurbinesPausedTag, turbinesPausedByArticuno.Count);
             //Log the Current status of the lists
-            logCurrentList();
+            LogCurrentTurbineStatusesInArticuno();
 
         }
 
@@ -183,18 +183,18 @@ namespace Articuno
         public static void turbineClearedOfIce(string turbineId)
         {
             log.DebugFormat("ArticunoMain has detected Turbine {0} has started running from the site.", turbineId);
-            moveToList(turbineId, turbinesPausedByArticuno, turbinesWaitingForPause);
+            MoveToList(turbineId, turbinesPausedByArticuno, turbinesWaitingForPause);
             //Update the num turb paused
             OpcServer.writeOpcTag(opcServerName, numTurbinesPausedTag, turbinesPausedByArticuno.Count);
             //Log the Current status of the lists
-            logCurrentList();
+            LogCurrentTurbineStatusesInArticuno();
         }
 
         //Check to see if a turbine is already pasued or not
         public static bool isAlreadyPaused(string turbineId)
         {
             log.DebugFormat("Turbine {0} is {1} ", turbineId, turbinesPausedByArticuno.Contains(turbineId));
-            logCurrentList();
+            LogCurrentTurbineStatusesInArticuno();
             return turbinesPausedByArticuno.Contains(turbineId);
             //Log the Current status of the lists
         }
@@ -340,7 +340,7 @@ namespace Articuno
             if (articunoEnable)
                 tm.decrementTurbineCtrTime();
             //Log the contents in the list for debugging purposes
-            logCurrentList();
+            LogCurrentTurbineStatusesInArticuno();
 
         }
 
@@ -453,18 +453,18 @@ namespace Articuno
             {
                 //Case where the site changes the NRS Mode
                 case TurbineMediator.TurbineEnum.NrsMode:
-                    checkNrs(prefix, value);
+                    CheckTurbineNrsStatus(prefix, value);
                     break;
                 //case where the turbine is started by either the site or the NCC
                 case TurbineMediator.TurbineEnum.TurbineStarted:
-                    startTurbine(prefix, value);
+                    StartTurbine(prefix, value);
                     break;
                 //In the case where the turbine went into a different state. This includes pause by the dispatchers, site, curtailment, maintenance, anything non-Articuno 
                 case TurbineMediator.TurbineEnum.OperatingState:
                     checkOperatingState(prefix, value);
                     break;
                 case TurbineMediator.TurbineEnum.Participation:
-                    checkPariticipation(prefix, value);
+                    CheckTurbineParticipationInArticuno(prefix, value);
                     break;
                 default:
                     log.DebugFormat("Event CHanged detected for {0}. However, there is nothing to be doen", opcTag);
@@ -478,7 +478,7 @@ namespace Articuno
         /// </summary>
         /// <param name="turbineId"></param>
         /// <param name="value"></param>
-        private static void checkNrs(string turbineId, object value)
+        private static void CheckTurbineNrsStatus(string turbineId, object value)
         {
             //Site might not be set up for NRS, so check to see if the tag is empty, if it is, just set the condition to false
             if (tm.getNrsStateTag(turbineId).Equals("")) { tm.setNrsActive(turbineId, false); }
@@ -491,7 +491,7 @@ namespace Articuno
             }
         }
 
-        private static void startTurbine(string turbineId, object value)
+        private static void StartTurbine(string turbineId, object value)
         {
             //If the value for the start OPC tag is true, then start the turbine. If it isn't, don't do anything
             //If the turbine feedback tag is true, that means the turbine is either running (or in draft). Which means the NCC has started the turbine
@@ -504,7 +504,7 @@ namespace Articuno
                 if (isPausedByArticuno(turbineId))
                 {
                     turbineClearedOfIce(turbineId);
-                    conditionsMet(turbineId);
+                    TurbineReadyToBePausedByArticuno(turbineId);
                 }
             }
 
@@ -523,13 +523,13 @@ namespace Articuno
                 //If the turbine is in either run or draft, then it meets condition. But make sure it also isn't in the list already
                 if ((state == RUN_STATE || state == DRAFT_STATE))
                 {
-                    conditionsMet(turbineId);
+                    TurbineReadyToBePausedByArticuno(turbineId);
                     tm.setOperatingStateCondition(turbineId, true);
                     tm.resetCtr(turbineId);
                 }
                 else
                 {
-                    conditionsNotMet(turbineId);
+                    TurbineWaitingForProperPausingCondition(turbineId);
                     tm.setOperatingStateCondition(turbineId, false);
                 }
             }
@@ -537,7 +537,7 @@ namespace Articuno
             else { }
         }
         //Method that is executed when user checks/unchecks a turbine from participating in Articuno
-        private static void checkPariticipation(string turbineId, object value)
+        private static void CheckTurbineParticipationInArticuno(string turbineId, object value)
         {
             bool participationStatus = Convert.ToBoolean(tm.readParticipationValue(turbineId));
             log.InfoFormat("Turbine {0} Participation in Articuno {1} OnChangeValue {2}", turbineId, participationStatus, value);
@@ -548,18 +548,18 @@ namespace Articuno
             {
                 if (!participationStatus)
                 {
-                    moveToList(turbineId, turbinesWaitingForPause, turbinesExcludedList);
-                    moveToList(turbineId, turbinesConditionNotMet, turbinesExcludedList);
+                    MoveToList(turbineId, turbinesWaitingForPause, turbinesExcludedList);
+                    MoveToList(turbineId, turbinesConditionNotMet, turbinesExcludedList);
                 }
                 //If the turbine is participating, then move it to the WaitingForPause list
                 else if (participationStatus)
                 {
-                    moveToList(turbineId, turbinesExcludedList, turbinesWaitingForPause);
+                    MoveToList(turbineId, turbinesExcludedList, turbinesWaitingForPause);
                 }
             }
         }
         //This is a method that is triggered upon any value changes for certain OPC Tags
-        static void MetTowerTurbineOpcTagValueChanged(object sender, EasyDAItemChangedEventArgs e)
+        private static void MetTowerTurbineOpcTagValueChanged(object sender, EasyDAItemChangedEventArgs e)
         {
             if (e.Succeeded)
             {
@@ -585,7 +585,7 @@ namespace Articuno
          * 
          */
 
-        static void SystemTagValueChange(object sender, EasyDAItemChangedEventArgs e)
+        private static void SystemTagValueChange(object sender, EasyDAItemChangedEventArgs e)
         {
             if (e.Succeeded)
             {
@@ -613,6 +613,10 @@ namespace Articuno
             else { log.ErrorFormat("Error occured in systemInputOnChangeHandler with {0}. Msg: {1}", e.Arguments.ItemDescriptor.ItemId, e.ErrorMessageBrief); }
         }
 
+        /// <summary>
+        /// function to handle a change in CTR value. If the CTR value is more than 60 or less than 1, cap it.
+        /// </summary>
+        /// <param name="value"></param>
         private static void ctrValueChanged(int value)
         {
             if (value <= MIN_CTR_TIME)
@@ -628,15 +632,15 @@ namespace Articuno
 
         private static bool isPausedByArticuno(string turbineId) { return turbinesPausedByArticuno.Contains(turbineId); }
         //method used to update member lists when a turbine isn't ready to be paused by articuno
-        private static void conditionsNotMet(string turbineId)
+        private static void TurbineWaitingForProperPausingCondition(string turbineId)
         {
-            moveToList(turbineId, turbinesWaitingForPause, turbinesConditionNotMet);
+            MoveToList(turbineId, turbinesWaitingForPause, turbinesConditionNotMet);
             //Log the Current status of the lists
-            logCurrentList();
+            LogCurrentTurbineStatusesInArticuno();
         }
 
         //Method used to update member lists  when a turbine is ready to be paused by ARticuno
-        private static void conditionsMet(string turbineId)
+        private static void TurbineReadyToBePausedByArticuno(string turbineId)
         {
             //If turbine is waiting to be paused and it isn't already paused by Articuno
             //If turbine is already paused by Articuno, don't do anything
@@ -644,16 +648,16 @@ namespace Articuno
             //If turbine wasn't waiting for pause before nor was it in the excluded list, put it into the pause list
             else if (!turbinesWaitingForPause.Contains(turbineId))
             {
-                moveToList(turbineId, turbinesConditionNotMet, turbinesWaitingForPause);
+                MoveToList(turbineId, turbinesConditionNotMet, turbinesWaitingForPause);
             }
             //Log the Current status of the lists
-            logCurrentList();
+            LogCurrentTurbineStatusesInArticuno();
         }
         //Logs the current turbines in each of the Articuno lists. Can be empty
         /// <summary>
         /// Logs the content of the current internal lists in articuno.
         /// </summary>
-        private static void logCurrentList()
+        private static void LogCurrentTurbineStatusesInArticuno()
         {
             turbinesWaitingForPause.Sort();
             turbinesPausedByArticuno.Sort();
@@ -671,7 +675,7 @@ namespace Articuno
         /// <param name="turbineId">Turbine ID (string) ex: T001</param>
         /// <param name="fromList">The list that turbine Id was in originally</param>
         /// <param name="newList">The list that the turbine Id will be moved to</param>
-        private static void moveToList(string turbineId, List<string> fromList, List<string> newList)
+        private static void MoveToList(string turbineId, List<string> fromList, List<string> newList)
         {
             fromList.RemoveAll(x => x.Equals(turbineId));
             //Only add the turbineId if the new list does not already contain it. This is to account for the turbineExcludedList which needs to be verified with two lists
