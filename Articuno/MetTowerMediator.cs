@@ -224,7 +224,7 @@ namespace Articuno
                 if (secTempSensor.isSensorBadQuality())
                 {
                     //At this point, use the turbine sensro
-                    temperature = Convert.ToDouble(met.getNearestTurbine().readTemperatureValue());
+                    temperature = Convert.ToDouble(met.getNearestTurbine().readTurbineTemperatureValue());
                 }
             }
 

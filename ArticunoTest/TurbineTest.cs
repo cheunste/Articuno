@@ -47,7 +47,7 @@ namespace ArticunoTest
             foreach (Turbine turb in TurbineMediator.Instance.getTurbineList())
             {
                 turb.writeOperatingState(testValue);
-                double readValue = Convert.ToDouble(TurbineMediator.Instance.readOperatingStateValue(turb.GetTurbinePrefixValue()));
+                double readValue = Convert.ToDouble(TurbineMediator.Instance.readTurbineOperatingStateValue(turb.GetTurbinePrefixValue()));
 
                 Assert.AreEqual(testValue, readValue, 0.001, "Written value does not equal test value");
             }
@@ -88,7 +88,7 @@ namespace ArticunoTest
 
             foreach (Turbine turbine in turbineList)
             {
-                double temp = turbine.writeLoadShutdownCmd();
+                double temp = turbine.writeTurbineLoadShutdownCommand();
                 //Console.WriteLine(turbine.writeLoadShutdownCmd());
                 Assert.AreEqual(temp, 1.00, 1.001);
                 Assert.AreEqual(Convert.ToBoolean(turbine.readAgcBlockValue()), false);
@@ -106,7 +106,7 @@ namespace ArticunoTest
             foreach (Turbine turbine in turbineList)
             {
                 turbine.SetPausedByArticunoAlarmValue(true);
-                Assert.AreEqual(Convert.ToBoolean(turbine.readAlarmValue()), true);
+                Assert.AreEqual(Convert.ToBoolean(turbine.readStoppedByArticunoAlarmValue()), true);
             }
 
         }
@@ -145,15 +145,15 @@ namespace ArticunoTest
             Articuno.Articuno am = new Articuno.Articuno(true);
 
             //Reset the CTR time and start the turbine. Set the CTR for one minute
-            tm.setCtrTime(turbineId, 1);
+            tm.setTurbineCtrTime(turbineId, 1);
 
             //Manually start the turbine. You must do this as Articuno is not designed to start turbines by design
             OpcServer.writeOpcTag("SV.OPCDAServer.1", "SCRAB.T001.WTUR.SetTurOp.ActSt.Str",1);
-            tm.startTurbine(turbineId);
+            tm.startTurbineFromTurbineMediator(turbineId);
 
             //Set the NRS condition to true, or else the turbine will never ice up.
-            if (state) tm.writeNrsStateTag(turbineId, 5);
-            else tm.writeNrsStateTag(turbineId, 1);
+            if (state) tm.writeToTurbineNrsStateTag(turbineId, 5);
+            else tm.writeToTurbineNrsStateTag(turbineId, 1);
 
 
             tm.setTemperatureCondition(turbineId, state);
@@ -168,9 +168,9 @@ namespace ArticunoTest
 
             //The following asserts are for feedback tags 
             Turbine turbine = TurbineMediator.GetTurbinePrefixFromMediator(turbineId);
-            Assert.AreEqual(state,TurbineMediator.Instance.isPausedByArticuno(turbineId));
-            Assert.AreEqual(true, turbine.readParticipationValue(),"Turbine is not showing particiating state");
-            Assert.IsTrue(Convert.ToBoolean(turbine.readLowRotorSpeedFlagValue()),"Low Rotor Speed flag not triggered");
+            Assert.AreEqual(state,TurbineMediator.Instance.isTurbinePausedByArticuno(turbineId));
+            Assert.AreEqual(true, turbine.readTurbineParticipationValue(),"Turbine is not showing particiating state");
+            Assert.IsTrue(Convert.ToBoolean(turbine.readTurbineLowRotorSpeedFlagValue()),"Low Rotor Speed flag not triggered");
             //Assert.AreEqual(1,Convert.ToBoolean(turbine.readAgcBlockValue()),"AGC for turbine isn't being blocked");
             Assert.AreEqual(0,Convert.ToInt32(turbine.readAgcBlockValue()));
         }
@@ -186,7 +186,7 @@ namespace ArticunoTest
                 //TurbineMediator.Instance.setCtrTime(prefix, value);
                 TurbineMediator.Instance.writeCtrTime(value);
             }
-            Assert.AreEqual(value, TurbineMediator.Instance.getCtrCountdown("T001"));
+            Assert.AreEqual(value, TurbineMediator.Instance.getTurbineCtrTimeRemaining("T001"));
 
 
         }

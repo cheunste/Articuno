@@ -295,7 +295,7 @@ namespace ArticunoTest
 
             //Get the temperatures from both the turbine and the met tower and assert they're equal.
             double temperature = Convert.ToDouble(mm.ReadTemperatureFromMetTower(metId));
-            double turbineTemp = Convert.ToDouble(tm.readTemperatureValue(turbine));
+            double turbineTemp = Convert.ToDouble(tm.readTurbineTemperatureValue(turbine));
             Console.WriteLine("Temperature of {0}: {1}", metId, temperature);
             Console.WriteLine("Temperature from Turbine: {0}", turbineTemp);
             //Make sure the temperature from both the met tower and its backup turbine are not the same.

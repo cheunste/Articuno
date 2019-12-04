@@ -451,9 +451,9 @@ namespace Articuno
         }
         private static void CheckTurbineOperatingState(string turbineId, object value)
         {
-            int turbineOperatinoalState = Convert.ToInt32(tm.readOperatingStateValue(turbineId));
+            int turbineOperatinoalState = Convert.ToInt32(tm.readTurbineOperatingStateValue(turbineId));
             log.InfoFormat("{0} Current Operating State: {1} onChangeValue: {2}", turbineId, turbineOperatinoalState, value);
-            bool participationStatus = Convert.ToBoolean(tm.readParticipationValue(turbineId));
+            bool participationStatus = Convert.ToBoolean(tm.readTurbineParticipationStatus(turbineId));
             //If already paused by Articuno, then there's nothing to do
             if (IsTurbinePausedByArticuno(turbineId)) { }
             //If not paused by Aritcuno, then you need to check the operating state of the turbine...but NOT for turbines that have arleady been excluded
@@ -478,7 +478,7 @@ namespace Articuno
         //Method that is executed when user checks/unchecks a turbine from participating in Articuno
         private static void CheckTurbineParticipationInArticuno(string turbineId, object value)
         {
-            bool participationStatus = Convert.ToBoolean(tm.readParticipationValue(turbineId));
+            bool participationStatus = Convert.ToBoolean(tm.readTurbineParticipationStatus(turbineId));
             log.InfoFormat("Turbine {0} Participation in Articuno {1} OnChangeValue {2}", turbineId, participationStatus, value);
             //do nothing if turbine is already in paused by Articuno
             if (IsTurbinePausedByArticuno(turbineId)) { }

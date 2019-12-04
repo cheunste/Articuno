@@ -93,13 +93,13 @@ namespace Articuno
         /// </summary>
         /// <param name="turbineId"></param>
         /// <returns></returns>
-        public bool isPausedByArticuno(String turbineId) { return Convert.ToBoolean(GetTurbinePrefixFromMediator(turbineId).readAlarmValue()); }
+        public bool isTurbinePausedByArticuno(String turbineId) { return Convert.ToBoolean(GetTurbinePrefixFromMediator(turbineId).readStoppedByArticunoAlarmValue()); }
 
         /// <summary>
         /// Command to start a turbine given a turbineId 
         /// </summary>
         /// <param name="turbineId">A turbine prefix</param>
-        public void startTurbine(string turbineId)
+        public void startTurbineFromTurbineMediator(string turbineId)
         {
             log.DebugFormat("Attempting to start turbine {0} from TurbineMeidator", turbineId);
             GetTurbinePrefixFromMediator(turbineId).startTurbine();
@@ -125,34 +125,33 @@ namespace Articuno
 
         public int getTurbineCtrTime(string turbineId) { return Convert.ToInt32(GetTurbinePrefixFromMediator(turbineId).TurbineDefaultCtr); }
 
-        //For reading OPC value using turbineId
         /// <summary>
         /// Deprecated in favor of design change. This is now in storeMinuteAverages
         /// </summary>
         /// <param name="turbineId"></param>
         /// <returns></returns>
-        public Object readWindSpeedValue(string turbineId) { return GetTurbinePrefixFromMediator(turbineId).readWindSpeedValue(); }
+        public Object readTurbineWindSpeedValue(string turbineId) { return GetTurbinePrefixFromMediator(turbineId).readTurbineWindSpeedValue(); }
         /// <summary>
         /// Deprecated in favor of design change. This is now in storeMinuteAverages
         /// </summary>
         /// <param name="turbineId"></param>
         /// <returns></returns>
-        public Object readRotorSpeedValue(string turbineId) { return GetTurbinePrefixFromMediator(turbineId).readRotorSpeedValue(); }
-        public Object readOperatingStateValue(string turbineId) { return GetTurbinePrefixFromMediator(turbineId).readOperatingStateValue(); }
-        public Object readTemperatureValue(string turbineId) { return GetTurbinePrefixFromMediator(turbineId).readTemperatureValue(); }
-        public Object readParticipationValue(string turbineId) { return GetTurbinePrefixFromMediator(turbineId).readParticipationValue(); }
+        public Object readTurbineRotorSpeedValue(string turbineId) { return GetTurbinePrefixFromMediator(turbineId).readTurbineRotorSpeedValue(); }
+        public Object readTurbineOperatingStateValue(string turbineId) { return GetTurbinePrefixFromMediator(turbineId).readTurbineOperatingStateValue(); }
+        public Object readTurbineTemperatureValue(string turbineId) { return GetTurbinePrefixFromMediator(turbineId).readTurbineTemperatureValue(); }
+        public Object readTurbineParticipationStatus(string turbineId) { return GetTurbinePrefixFromMediator(turbineId).readTurbineParticipationValue(); }
 
         //For writing (using turbineId). Note that the mediator really shouldn't be writing to all the availble turbine tags. If you need to test something, you need to create a turbine object 
-        public void writeNrsStateTag(string turbineId, object value) { GetTurbinePrefixFromMediator(turbineId).writeNoiseLevel(value); }
-        public void writeTurbineCtrTag(string turbineId, int value) { GetTurbinePrefixFromMediator(turbineId).writeTurbineCtrValue(value); }
-        public void writeLoadShutDownCmd(string turbineId) { GetTurbinePrefixFromMediator(turbineId).writeLoadShutdownCmd(); }
+        public void writeToTurbineNrsStateTag(string turbineId, object value) { GetTurbinePrefixFromMediator(turbineId).writeTurbineNoiseLevel(value); }
+        public void writeToTurbineCtrTag(string turbineId, int value) { GetTurbinePrefixFromMediator(turbineId).writeTurbineCtrValue(value); }
+        public void writeTurbineLoadShutDownCmd(string turbineId) { GetTurbinePrefixFromMediator(turbineId).writeTurbineLoadShutdownCommand(); }
 
         /// <summary>
         /// sets the CTR time for this turbine
         /// </summary>
         /// <param name="value"></param>
-        public void setCtrTime(string turbineId, int ctrValue) { GetTurbinePrefixFromMediator(turbineId).writeTurbineCtrValue(ctrValue); }
-        public int getCtrCountdown(string turbineId) { return Convert.ToInt32(GetTurbinePrefixFromMediator(turbineId).readCtrCurrentValue()); }
+        public void setTurbineCtrTime(string turbineId, int ctrValue) { GetTurbinePrefixFromMediator(turbineId).writeTurbineCtrValue(ctrValue); }
+        public int getTurbineCtrTimeRemaining(string turbineId) { return Convert.ToInt32(GetTurbinePrefixFromMediator(turbineId).readTurbineCtrTimeRemaining()); }
 
         /// <summary>
         /// Used for testing only. This creates a testing scenario that uses only T001 
@@ -220,7 +219,7 @@ namespace Articuno
             Queue<double> windSpeedQueue = turbine.getWindSpeedQueue();
             Queue<double> rotorSpeedQueue = turbine.getRotorSpeedQueue();
 
-            bool nrsMode = turbine.isNrsActive();
+            bool nrsMode = turbine.IsTurbineNrsInActiveMode();
 
             var windSpeedQueueCount = windSpeedQueue.Count;
             var windSpeedAverage = 0.0;
@@ -253,8 +252,8 @@ namespace Articuno
         public void storeMinuteAverages(string turbineId)
         {
             Turbine turbine = GetTurbinePrefixFromMediator(turbineId);
-            double windSpeedAvg = Convert.ToDouble(turbine.readWindSpeedValue());
-            double rotorSpeedAvg = Convert.ToDouble(turbine.readRotorSpeedValue());
+            double windSpeedAvg = Convert.ToDouble(turbine.readTurbineWindSpeedValue());
+            double rotorSpeedAvg = Convert.ToDouble(turbine.readTurbineRotorSpeedValue());
             turbine.addWindSpeedToQueue(windSpeedAvg);
             turbine.addRotorSpeedToQueue(rotorSpeedAvg);
         }
@@ -265,12 +264,12 @@ namespace Articuno
         /// <param name="articunoCtrTime"></param>
         public void writeCtrTime(int articunoCtrTime)
         {
-            foreach (string turbinePrefix in getTurbinePrefixList()) { writeTurbineCtrTag(turbinePrefix, articunoCtrTime); }
+            foreach (string turbinePrefix in getTurbinePrefixList()) { writeToTurbineCtrTag(turbinePrefix, articunoCtrTime); }
         }
 
         public void decrementTurbineCtrTime()
         {
-            foreach (string turbinePrefix in getTurbinePrefixList()) { GetTurbinePrefixFromMediator(turbinePrefix).decrementCtrTime(); }
+            foreach (string turbinePrefix in getTurbinePrefixList()) { GetTurbinePrefixFromMediator(turbinePrefix).decrementTurbineCtrTime(); }
         }
 
 
@@ -306,7 +305,7 @@ namespace Articuno
 
         public void ResetCtrValueForTurbine(string turbineId)
         {
-            GetTurbinePrefixFromMediator(turbineId).resetCtrTime();
+            GetTurbinePrefixFromMediator(turbineId).resetTurbineCtrTime();
             GetTurbinePrefixFromMediator(turbineId).emptyQueue();
         }
 
