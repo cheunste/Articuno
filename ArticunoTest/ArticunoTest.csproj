@@ -80,6 +80,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RotorSpeedFilterTest.cs" />
     <Compile Include="Setup.cs" />
+    <Compile Include="SystemConfigurationTest.cs" />
     <Compile Include="TurbineTest.cs" />
   </ItemGroup>
   <ItemGroup>
