@@ -39,7 +39,7 @@ namespace Articuno
             filterList = new List<FilterElement>();
             keyList = new List<double>();
 
-            DataTable reader = DatabaseInterface.Instance.readCommand(cmd);
+            DataTable reader = DatabaseInterface.Instance.readQuery(cmd);
             int rotorSpeedRows = reader.Rows.Count;
             for (int i = 0; i < rotorSpeedRows; i++)
             {

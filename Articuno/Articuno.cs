@@ -100,13 +100,13 @@ namespace Articuno
             tm = TurbineMediator.Instance;
 
             //Get the OPC Server name
-            opcServerName = dbi.getOpcServer();
+            opcServerName = dbi.getOpcServerName();
 
             //Get the Site Prefix
-            sitePrefix = dbi.getSitePrefix();
+            sitePrefix = dbi.getSitePrefixValue();
 
             //Get the tag to see if UCC is active
-            uccActiveTag = dbi.getActiveUCCTag();
+            uccActiveTag = dbi.getActiveUccOpcTag();
 
             //Call the create methods
             mm.CreateMetTowerObject();
@@ -139,8 +139,8 @@ namespace Articuno
         }
         public static void setup()
         {
-            sitePrefix = dbi.getSitePrefix();
-            opcServerName = dbi.getOpcServer();
+            sitePrefix = dbi.getSitePrefixValue();
+            opcServerName = dbi.getOpcServerName();
 
             setSystemInputTags();
             //Set up the accesssors for system output tags
@@ -187,10 +187,10 @@ namespace Articuno
             systemInputClient.ItemChanged += SystemTagValueChange;
 
             List<DAItemGroupArguments> systemInputTags = new List<DAItemGroupArguments>();
-            tempThresholdTag = dbi.readCommand("SELECT OpcTag from SystemInputTags WHERE Description='AmbTempThreshold'").Rows[0]["OpcTag"].ToString();
-            enableArticunoTag = dbi.readCommand("SELECT OpcTag from SystemInputTags WHERE Description='ArticunoEnable'").Rows[0]["OpcTag"].ToString();
-            articunoCtrTag = dbi.readCommand("SELECT OpcTag from SystemInputTags WHERE Description='CTRPeriod'").Rows[0]["OpcTag"].ToString();
-            deltaThresholdTag = dbi.readCommand("SELECT OpcTag from SystemInputTags WHERE Description='DeltaTmpThreshold'").Rows[0]["OpcTag"].ToString();
+            tempThresholdTag = dbi.readQuery("SELECT OpcTag from SystemInputTags WHERE Description='AmbTempThreshold'").Rows[0]["OpcTag"].ToString();
+            enableArticunoTag = dbi.readQuery("SELECT OpcTag from SystemInputTags WHERE Description='ArticunoEnable'").Rows[0]["OpcTag"].ToString();
+            articunoCtrTag = dbi.readQuery("SELECT OpcTag from SystemInputTags WHERE Description='CTRPeriod'").Rows[0]["OpcTag"].ToString();
+            deltaThresholdTag = dbi.readQuery("SELECT OpcTag from SystemInputTags WHERE Description='DeltaTmpThreshold'").Rows[0]["OpcTag"].ToString();
 
             systemInputTags.Add(new DAItemGroupArguments("", opcServerName, tempThresholdTag, NORMAL_UPDATE_RATE, null));
             systemInputTags.Add(new DAItemGroupArguments("", opcServerName, enableArticunoTag, NORMAL_UPDATE_RATE, null));
@@ -201,7 +201,7 @@ namespace Articuno
         private static void setSystemOutputTags()
         {
             string tag;
-            DataTable reader = dbi.readCommand("SELECT * from SystemOutputTags order by Description ASC");
+            DataTable reader = dbi.readQuery("SELECT * from SystemOutputTags order by Description ASC");
             for (int i = 0; i < reader.Rows.Count; i++)
             {
                 tag = sitePrefix + reader.Rows[i]["OpcTag"].ToString();
@@ -233,7 +233,7 @@ namespace Articuno
             foreach (string prefix in tm.getTurbinePrefixList())
             {
                 string cmd = String.Format("SELECT OperatingState, Participation,NrsMode,Start from TurbineInputTags where TurbineId='{0}'", prefix);
-                reader = dbi.readCommand(cmd);
+                reader = dbi.readQuery(cmd);
                 for (int i = 0; i < reader.Rows.Count; i++)
                 {
                     try
@@ -255,7 +255,7 @@ namespace Articuno
 
         private static List<DAItemGroupArguments> getMetTagsForListening()
         {
-            DataTable reader = dbi.readCommand("SELECT Switch from MetTowerInputTags");
+            DataTable reader = dbi.readQuery("SELECT Switch from MetTowerInputTags");
             List<DAItemGroupArguments> metTowerInputTags = new List<DAItemGroupArguments>();
             for (int i = 0; i < reader.Rows.Count; i++)
             {
@@ -312,7 +312,7 @@ namespace Articuno
                 calculateMetTowerAverages();
 
             //Write the MetTower CTR to the tag
-            OpcServer.writeOpcTag(opcServerName, dbi.getMetCountdownTag(), ctrCountdown);
+            OpcServer.writeOpcTag(opcServerName, dbi.getMetTowerCtrCountdownTag(), ctrCountdown);
 
             if (articunoEnable)
                 tm.decrementTurbineCtrTime();

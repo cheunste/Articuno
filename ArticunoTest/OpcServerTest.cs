@@ -23,9 +23,10 @@ namespace ArticunoTest
 
 
         [TestMethod]
-        //Test to see if tags will read from the server 
-        public void readTagTest()
+        //Test to see if tags will read from the server.
+        public void readValueFromOpcTagTest()
         {
+            Assert.Fail("Need to read Opc Tag from Database. You currently have dummy tags");
             string opcStringTestTag = "Folder1.StringItem";
             string opcBoolTestTag = "Folder1.BooleanItem";
             string opcIntTestTag = "Folder1.IntegerItem";
@@ -39,14 +40,26 @@ namespace ArticunoTest
             result = opcServer.readTagValue(opcIntTestTag);
             Assert.IsNotNull(result);
 
+            int flatLineSamples = DatabaseInterface.Instance.getSampleCountForStaleDataTag();
         }
+
 
         [TestMethod]
         //Tests to see if the values will write to the Opc Server
-        public void setTagTest()
+        public void writeValueToOpcTagTest()
         {
 
-            //Opc Tags These 
+            Assert.Fail("Need to write Opc Tag from Database. You currently have dummy tags");
+            string opcStringTestTag = "Folder1.StringItem";
+            string opcBoolTestTag = "Folder1.BooleanItem";
+            string opcIntTestTag = "Folder1.IntegerItem";
+
+            string result = opcServer.readTagValue(opcStringTestTag);
+            Assert.IsNotNull(opcStringTestTag);
+
+            result = opcServer.readTagValue(opcBoolTestTag);
+            Assert.IsNotNull(result);
+
             string opcStringTestTag = "Folder1.StringItem";
             string opcBoolTestTag = "Folder1.BooleanItem";
             string opcIntTestTag = "Folder1.IntegerItem";
@@ -106,12 +119,12 @@ namespace ArticunoTest
         public void tagNotFound()
         {
             string tagName = prefix + ".TagNotFound";
-            var temp = opcServer.readTagValue(tagName);
-            //Assert.IsNull(temp);
-
-            //tagName = prefix + ".TagNotFound";
+            var tagThatDoesntExist = opcServer.readTagValue(tagName);
             opcServer.writeTagValue(tagName, 0);
+            Assert.IsNull(tagThatDoesntExist);
         }
+
+
 
     }
 }

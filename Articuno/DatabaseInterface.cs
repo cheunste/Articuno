@@ -31,7 +31,7 @@ namespace Articuno
             internal static readonly DatabaseInterface instance = new DatabaseInterface();
         }
 
-        public DataTable readCommand(string command)
+        public DataTable readQuery(string query)
         {
             List<List<object>> content = new List<List<object>>();
             List<object> sublist = new List<object>();
@@ -39,7 +39,7 @@ namespace Articuno
             using (SQLiteConnection connection = new SQLiteConnection(ConnectionString))
             {
                 connection.Open();
-                using (SQLiteCommand cmd = new SQLiteCommand(command, connection))
+                using (SQLiteCommand cmd = new SQLiteCommand(query, connection))
                 {
                     using (SQLiteDataReader reader = cmd.ExecuteReader())
                     {
@@ -54,14 +54,14 @@ namespace Articuno
         /// <summary>
         /// Used for update queries. Doesn't check to see if artiunoDBConnection is null or no
         /// </summary>
-        /// <param name="command"></param>
+        /// <param name="query"></param>
         /// <returns></returns>
-        public int updateCommand(string command)
+        public int updateDatabaseWithQuery(string query)
         {
             using (SQLiteConnection connection = new SQLiteConnection(ConnectionString))
             {
                 connection.Open();
-                using (SQLiteCommand cmd = new SQLiteCommand(command, connection))
+                using (SQLiteCommand cmd = new SQLiteCommand(query, connection))
                 {
                     //return cmd.ExecuteNonQuery();
                     cmd.ExecuteNonQuery();
@@ -74,33 +74,33 @@ namespace Articuno
         /// Gets the name of the OPC Server
         /// </summary>
         /// <returns></returns>
-        public string getOpcServer()
+        public string getOpcServerName()
         {
-            DataTable result = readCommand(String.Format("SELECT DefaultValue from {0} WHERE Description ='OpcServerName' ", SYSTEM_INPUT_TABLE));
+            DataTable result = readQuery(String.Format("SELECT DefaultValue from {0} WHERE Description ='OpcServerName' ", SYSTEM_INPUT_TABLE));
             return Convert.ToString(result.Rows[0]["DefaultValue"]);
         }
 
-        public string getSitePrefix()
+        public string getSitePrefixValue()
         {
-            DataTable result = readCommand(String.Format("SELECT DefaultValue from {0} WHERE Description ='SitePrefix' ", SYSTEM_INPUT_TABLE));
+            DataTable result = readQuery(String.Format("SELECT DefaultValue from {0} WHERE Description ='SitePrefix' ", SYSTEM_INPUT_TABLE));
             return Convert.ToString(result.Rows[0]["DefaultValue"]) + ".";
         }
 
-        public string getActiveUCCTag()
+        public string getActiveUccOpcTag()
         {
-            DataTable result = readCommand(String.Format("SELECT OpcTag from {0} WHERE Description ='ActiveUCC' ", SYSTEM_INPUT_TABLE));
+            DataTable result = readQuery(String.Format("SELECT OpcTag from {0} WHERE Description ='ActiveUCC' ", SYSTEM_INPUT_TABLE));
             return Convert.ToString(result.Rows[0]["OpcTag"]);
         }
 
-        public int getFlatlineCount()
+        public int getSampleCountForStaleDataTag()
         {
-            DataTable result = readCommand(String.Format("SELECT DefaultValue from {0} WHERE Description ='FlatlineSamples' ", SYSTEM_INPUT_TABLE));
+            DataTable result = readQuery(String.Format("SELECT DefaultValue from {0} WHERE Description ='FlatlineSamples' ", SYSTEM_INPUT_TABLE));
             return Convert.ToInt32(result.Rows[0]["DefaultValue"]);
         }
 
-        public string getMetCountdownTag()
+        public string getMetTowerCtrCountdownTag()
         {
-            DataTable result = readCommand(String.Format("SELECT OpcTag from {0} WHERE Description ='MetTowerCtrCountdown' ", SYSTEM_OUTPUT_TABLE));
+            DataTable result = readQuery(String.Format("SELECT OpcTag from {0} WHERE Description ='MetTowerCtrCountdown' ", SYSTEM_OUTPUT_TABLE));
             return Convert.ToString(result.Rows[0]["OpcTag"]);
 
         }

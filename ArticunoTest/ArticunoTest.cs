@@ -107,7 +107,7 @@ namespace ArticunoTest
             articuno = new Articuno.Articuno(true);
             OpcServer server = new OpcServer("SV.OPCDAServer.1");
             List<String> systemInputTags = new List<String>();
-            DataTable reader = di.readCommand("SELECT * from SystemInputTags WHERE Description!='SitePrefix' AND Description!='OpcServerName' order by Description ASC");
+            DataTable reader = di.readQuery("SELECT * from SystemInputTags WHERE Description!='SitePrefix' AND Description!='OpcServerName' order by Description ASC");
 
             string tag;
             string tempThresholdTag;
@@ -140,7 +140,7 @@ namespace ArticunoTest
             string turbineId = "T001";
 
             Thread.Sleep(500);
-            DataTable reader = di.readCommand("Select OpcTag from SystemInputTags WHERE Description='CTRPeriod'");
+            DataTable reader = di.readQuery("Select OpcTag from SystemInputTags WHERE Description='CTRPeriod'");
             string ctrTimeTag = reader.Rows[0]["OpcTag"].ToString();
 
             OpcServer server = new OpcServer("SV.OPCDAServer.1");

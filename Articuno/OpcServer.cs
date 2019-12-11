@@ -157,7 +157,7 @@ namespace Articuno
 
         public static bool isActiveUCC()
         {
-            return Convert.ToBoolean(readOpcTag(DatabaseInterface.Instance.getOpcServer(), DatabaseInterface.Instance.getActiveUCCTag()));
+            return Convert.ToBoolean(readOpcTag(DatabaseInterface.Instance.getOpcServerName(), DatabaseInterface.Instance.getActiveUccOpcTag()));
         }
 
     }

@@ -45,8 +45,8 @@ namespace Articuno
             metPrefixList = new List<string>();
             metTowerList = new List<MetTower>();
             dbi = DatabaseInterface.Instance;
-            opcServerName = DatabaseInterface.Instance.getOpcServer();
-            sitePrefix = DatabaseInterface.Instance.getSitePrefix();
+            opcServerName = DatabaseInterface.Instance.getOpcServerName();
+            sitePrefix = DatabaseInterface.Instance.getSitePrefixValue();
         }
         public static MetTowerMediator Instance { get { return Nested.instance; } }
 
@@ -69,7 +69,7 @@ namespace Articuno
 
             foreach (string metPrefix in metPrefixList) { InitializeMetTower(metPrefix); }
             //Get the tag to see if UCC is active
-            uccActiveTag = dbi.getActiveUCCTag();
+            uccActiveTag = dbi.getActiveUccOpcTag();
         }
         /// <summary>
         /// Returns the number of met towers in a project
@@ -79,7 +79,7 @@ namespace Articuno
         {
             if (numMetTower == 0)
             {
-                DataTable reader = dbi.readCommand(SELECT_QUERY);
+                DataTable reader = dbi.readQuery(SELECT_QUERY);
                 numMetTower = Convert.ToInt16(reader.Rows[0]["num"]);
             }
             return numMetTower;
@@ -170,7 +170,7 @@ namespace Articuno
 
         public void createPrefixList()
         {
-            DataTable reader = DatabaseInterface.Instance.readCommand(MET_NUM);
+            DataTable reader = DatabaseInterface.Instance.readQuery(MET_NUM);
             foreach (DataRow item in reader.Rows) { metPrefixList.Add(item["MetId"].ToString()); }
         }
 
@@ -469,7 +469,7 @@ namespace Articuno
 
             //For Met Tower tags from the MetTowerInputTags table
             string cmd = String.Format(MET_INPUT_TABLE_TAGS, metPrefix);
-            DataTable reader = dbi.readCommand(cmd);
+            DataTable reader = dbi.readQuery(cmd);
 
             //Set the tags from the MeTowerInputTags table to the accessors
             met.PrimTemperatureTag = sitePrefix + reader.Rows[0]["PrimTempValueTag"].ToString();
@@ -481,7 +481,7 @@ namespace Articuno
 
             //For Met Tower tags from the MetTowerInputTags table
             cmd = String.Format(MET_OUTPUT_TABLE_TAGS, metPrefix);
-            reader = dbi.readCommand(cmd);
+            reader = dbi.readQuery(cmd);
 
             //Set the tags from the MeTowerInputTags table to the accessors
             met.TemperaturePrimBadQualityTag = sitePrefix + reader.Rows[0]["TempPrimBadQualityTag"].ToString();

@@ -80,7 +80,7 @@ namespace Articuno
 
         public void createPrefixList()
         {
-            DataTable reader = DatabaseInterface.Instance.readCommand(TURBINE_FIND_TURBINEID);
+            DataTable reader = DatabaseInterface.Instance.readQuery(TURBINE_FIND_TURBINEID);
             foreach (DataRow item in reader.Rows) { turbinePrefixList.Add(item["TurbineId"].ToString()); }
         }
 
@@ -160,8 +160,8 @@ namespace Articuno
         {
             turbinePrefixList.Clear();
             turbinePrefixList.Add("T001");
-            this.opcServerName = DatabaseInterface.Instance.getOpcServer();
-            this.sitePrefix = DatabaseInterface.Instance.getSitePrefix();
+            this.opcServerName = DatabaseInterface.Instance.getOpcServerName();
+            this.sitePrefix = DatabaseInterface.Instance.getSitePrefixValue();
             createTurbines();
         }
 
@@ -345,7 +345,7 @@ namespace Articuno
             Turbine turbine = new Turbine(turbinePrefix, opcServerName);
             //For Turbine tags from the  TurbineInputTags Table
             string cmd = String.Format(TURBINE_INPUT_COLUMN_QUERY, turbinePrefix);
-            DataTable reader = dbi.readCommand(cmd);
+            DataTable reader = dbi.readQuery(cmd);
             turbine.ScalingFactorValue = GetTurbineScalingFactor();
             turbine.StartupTime = GetTurbineStartUpTime();
 
@@ -370,14 +370,14 @@ namespace Articuno
         {
             //Get the Scaling Factor from the system input tag table
             string cmd = String.Format(SCALING_FACTOR_QUERY);
-            DataTable reader = dbi.readCommand(cmd);
+            DataTable reader = dbi.readQuery(cmd);
             return reader.Rows[0]["DefaultValue"].ToString();
         }
 
         private string GetTurbineStartUpTime()
         {
             string cmd = String.Format(TURBINE_STARTUP_TIME);
-            DataTable reader = dbi.readCommand(cmd);
+            DataTable reader = dbi.readQuery(cmd);
             return reader.Rows[0]["DefaultValue"].ToString();
         }
 
@@ -411,7 +411,7 @@ namespace Articuno
         {
             //For Turbine tags from the TurbineOutputTags Table There might be duplicates
             string cmd = String.Format(TURBINE_OUTPUT_COLUMN_QUERY, turbine.GetTurbinePrefixValue());
-            DataTable reader = dbi.readCommand(cmd);
+            DataTable reader = dbi.readQuery(cmd);
             turbine.StoppedAlarmTag = sitePrefix + reader.Rows[0]["Alarm"].ToString();
             turbine.AgcBlockingTag = sitePrefix + reader.Rows[0]["AGCBlocking"].ToString();
             turbine.LowRotorSpeedFlagTag = sitePrefix + reader.Rows[0]["LowRotorSpeedFlag"].ToString();
@@ -427,9 +427,9 @@ namespace Articuno
             tempList = new List<string>();
             tempObjectList = new List<Object>();
             //UCC Active Tag
-            uccActiveTag = DatabaseInterface.Instance.getActiveUCCTag();
-            this.opcServerName = DatabaseInterface.Instance.getOpcServer();
-            this.sitePrefix = DatabaseInterface.Instance.getSitePrefix();
+            uccActiveTag = DatabaseInterface.Instance.getActiveUccOpcTag();
+            this.opcServerName = DatabaseInterface.Instance.getOpcServerName();
+            this.sitePrefix = DatabaseInterface.Instance.getSitePrefixValue();
 
             //For RotorSpeed Filter Table. There should only be one instance of this. 
             filterTable = new RotorSpeedFilter();

@@ -200,9 +200,6 @@ namespace ArticunoTest
 
         [TestMethod]
         //Test to see what happens when the met tower is switched from the default.
-        //IMPORTANT: This unit test for some reason fials occasionally if all the tests are executed at once
-        //but never fails if it is executed by itself. I want to say this has something to do with concurrency as it was reading
-        //values that were set up by a different unit test. 
         [DataTestMethod]
         [DataRow("Met", 21.0, 31.0, 17.0, 57.0)]
         [DataRow("Met2", 21.0, 41.0, 57.0, 97.0)]
@@ -259,16 +256,11 @@ namespace ArticunoTest
 
             Assert.AreEqual(tempAfterSwitch, tempBeforeSwitch, 0.001, "Temperature is not equal after switching back");
             Assert.AreEqual(humdAfterSwitch, humdBeforeSwitch, 0.001, "Humidity is not equal after switching back");
-
-            //Call the default good values. God knows what happened in the rpevious tests
-            //setValidMetData();
-
         }
 
         [TestMethod]
         [DataTestMethod]
         [DataRow("Met", -50.0, -50.0)]
-        //Needs imporvement. The database is getting locked. FIgure this out after a DB refactor
         public void useTurbineTempTest(string metId, double tempSensor1Val, double tempSensor2Val)
         {
             //Create a test turbine
@@ -316,11 +308,6 @@ namespace ArticunoTest
             mm.writeHumidity(metId, hmdVal);
             Thread.Sleep(500);
 
-            //var primTempQuality = tempTuple.Item1;
-            //var secTempQuality = tempTuple.Item2;
-            //var humidTuple = mm.humidQualityCheck(metId);
-            //var metTowerQuality = mm.checkMetTowerQuality(metId);
-
             var primTempQuality = mm.GetMetTowerFromId(metId).getPrimaryTemperatureSensor().isSensorBadQuality();
             var secTempQuality = mm.GetMetTowerFromId(metId).getSecondaryTemperatureSensor().isSensorBadQuality();
             var humidQuality = mm.GetMetTowerFromId(metId).getPrimaryHumiditySensor().isSensorBadQuality();
@@ -334,8 +321,8 @@ namespace ArticunoTest
 
         public void cleanup()
         {
-            //resetTagsToZero();
-            //setValidMetData();
+            resetTagsToZero();
+            setValidMetData();
         }
 
         //method to set all the input met tags to zero
@@ -461,7 +448,7 @@ namespace ArticunoTest
 
             var threshold = mm.GetMetTowerFromId(metId).AmbTempThreshold;
 
-            //Get measurements about 50 tiems or so to see if it is flatline. 
+            //Get measurements about 50 tiems or so to see if it is flatline. 50 is the default in the config db file
             for (int i = 0; i <= 50; i++)
                 mm.getAllMeasurements(metId);
 
@@ -483,8 +470,6 @@ namespace ArticunoTest
         [DataRow("Met", -20, .99, true)]
         public void freezingTest(string metId, double temperature, double humidity, bool expectedFrozenState)
         {
-            //Set the threshold to something that'll (hopefully) trigger the test conditions. 
-            //This is mainly because dew and delta aren't really known to the users...yet
             MetTower met = mm.GetMetTowerFromId(metId);
             mm.writeDeltaThreshold(1);
             mm.UpdateTemperatureThresholdForAllMetTowers(0);
@@ -498,7 +483,7 @@ namespace ArticunoTest
         [DataTestMethod]
         [DataRow("Met", 20, .15, true)]
         [DataRow("Met", 20, .15, false)]
-        public void flatLineTest(string metId, double temperature, double humidity, bool Flatline)
+        public void flatLineDetectionTest(string metId, double temperature, double humidity, bool Flatline)
         {
             MetTower met = mm.GetMetTowerFromId(metId);
             mm.writeDeltaThreshold(1);

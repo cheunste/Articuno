@@ -81,7 +81,7 @@ namespace Articuno
         public bool BadQualityCheck()
         {
             //If there are 50 or so samples (or whatever) that are equally the same, that implies the temperature from the sensor is flatlined. At this point, return a bad quality alert.
-            if (frozenCount >= dbi.getFlatlineCount())
+            if (frozenCount >= dbi.getSampleCountForStaleDataTag())
             {
                 log.InfoFormat("Flatline detected for {0}", sensorTag);
                 SetAlarmStatus(sensorBadQualtiyTag, true);
