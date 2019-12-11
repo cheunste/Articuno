@@ -122,12 +122,12 @@ namespace Articuno
             //Get the Scaling Factor from the system input tag
             string cmd = String.Format(SCALING_FACTOR_QUERY);
             DataTable reader = dbi.readCommand(cmd);
-            reader =dbi.readCommand(cmd);
+            reader = dbi.readCommand(cmd);
             string scalingFactor = reader.Rows[0]["DefaultValue"].ToString();
             //Turbine startup time
             cmd = String.Format(TURBINE_STARTUP_TIME);
-            reader =dbi.readCommand(cmd);
-            string startupTime= reader.Rows[0]["DefaultValue"].ToString();
+            reader = dbi.readCommand(cmd);
+            string startupTime = reader.Rows[0]["DefaultValue"].ToString();
 
             foreach (string turbinePrefix in turbinePrefixList)
             {
@@ -140,20 +140,21 @@ namespace Articuno
 
                 //Note that NRS can be empty, so that's why there is a try/catch here. If it is empty, just set it to an empty string
                 //Or it can be an empty string in the database
-                try { turbine.NrsStateTag = sitePrefix+reader.Rows[0]["NrsMode"].ToString(); }
-                catch (NullReferenceException e) {
+                try { turbine.NrsStateTag = sitePrefix + reader.Rows[0]["NrsMode"].ToString(); }
+                catch (NullReferenceException e)
+                {
                     turbine.NrsStateTag = "";
                     ///Because the turbine doesn't use NRS, just set this to true
                     turbine.setNrsMode(false);
                 }
 
-                turbine.OperatingStateTag = sitePrefix+reader.Rows[0]["OperatingState"].ToString();
-                turbine.RotorSpeedTag = sitePrefix+reader.Rows[0]["RotorSpeed"].ToString();
-                turbine.TemperatureTag = sitePrefix+reader.Rows[0]["Temperature"].ToString();
-                turbine.WindSpeedTag = sitePrefix+reader.Rows[0]["WindSpeed"].ToString();
-                turbine.ParticipationTag = sitePrefix+reader.Rows[0]["Participation"].ToString();
-                turbine.LoadShutdownTag = sitePrefix+reader.Rows[0]["Pause"].ToString();
-                turbine.StartCommandTag = sitePrefix+reader.Rows[0]["Start"].ToString();
+                turbine.OperatingStateTag = sitePrefix + reader.Rows[0]["OperatingState"].ToString();
+                turbine.RotorSpeedTag = sitePrefix + reader.Rows[0]["RotorSpeed"].ToString();
+                turbine.TemperatureTag = sitePrefix + reader.Rows[0]["Temperature"].ToString();
+                turbine.WindSpeedTag = sitePrefix + reader.Rows[0]["WindSpeed"].ToString();
+                turbine.ParticipationTag = sitePrefix + reader.Rows[0]["Participation"].ToString();
+                turbine.LoadShutdownTag = sitePrefix + reader.Rows[0]["Pause"].ToString();
+                turbine.StartCommandTag = sitePrefix + reader.Rows[0]["Start"].ToString();
                 //For scaling factor. This does not require a prefix as a systeminput value
                 turbine.ScalingFactorValue = scalingFactor;
                 //For Start up time. This does not require a prefix as a systeminput value
@@ -182,10 +183,10 @@ namespace Articuno
                 cmd = String.Format(TURBINE_OUTPUT_COLUMN_QUERY, turbinePrefix);
                 reader = dbi.readCommand(cmd);
 
-                turbine.StoppedAlarmTag = sitePrefix+reader.Rows[0]["Alarm"].ToString();
-                turbine.AgcBlockingTag = sitePrefix+reader.Rows[0]["AGCBlocking"].ToString();
-                turbine.LowRotorSpeedFlagTag = sitePrefix+reader.Rows[0]["LowRotorSpeedFlag"].ToString();
-                turbine.CtrCountdownTag = sitePrefix+reader.Rows[0]["CTRCountdown"].ToString();
+                turbine.StoppedAlarmTag = sitePrefix + reader.Rows[0]["Alarm"].ToString();
+                turbine.AgcBlockingTag = sitePrefix + reader.Rows[0]["AGCBlocking"].ToString();
+                turbine.LowRotorSpeedFlagTag = sitePrefix + reader.Rows[0]["LowRotorSpeedFlag"].ToString();
+                turbine.CtrCountdownTag = sitePrefix + reader.Rows[0]["CTRCountdown"].ToString();
                 //turbine.LoadShutdownTag = reader.Rows[0]["Pause"].ToString();
                 //turbine.StartCommandTag = reader.Rows[0]["Start"].ToString();
 
@@ -200,7 +201,7 @@ namespace Articuno
         /// <param name="turbineId"></param>
         /// <returns></returns>
         public bool isPausedByArticuno(String turbineId) { return Convert.ToBoolean(getTurbine(turbineId).readAlarmValue()); }
-       
+
         /// <summary>
         /// Command to start a turbine given a turbineId 
         /// </summary>
@@ -381,19 +382,22 @@ namespace Articuno
             //Log for filter references
             log.DebugFormat("{0} calculated wind speed average: {1}\n using referenced rotor speed: {2}" +
                 "\n using referenced stdDev {3}",
-                turbineId,windSpeedAverage,referenceRotorSpeed,referenceStdDev);
+                turbineId, windSpeedAverage, referenceRotorSpeed, referenceStdDev);
 
             log.DebugFormat("{0} rotor speed threshold: {1} rotor speed average:{2} ",
-                turbineId,calculatedRotorThreshold,rotorSpeedAverage);
+                turbineId, calculatedRotorThreshold, rotorSpeedAverage);
 
             //Set under performance condition to be true. Else, clear it
-            if (rotorSpeedAverage < calculatedRotorThreshold) {
-                log.DebugFormat("{0} rotor performance low condition: {1}",turbineId,true);
+            if (rotorSpeedAverage < calculatedRotorThreshold)
+            {
+                log.DebugFormat("{0} rotor performance low condition: {1}", turbineId, true);
                 turbine.setTurbinePerformanceCondition(true);
             }
-            else {
-                log.DebugFormat("{0} rotor performance low condition: {1}",turbineId,false);
-                turbine.setTurbinePerformanceCondition(false); }
+            else
+            {
+                log.DebugFormat("{0} rotor performance low condition: {1}", turbineId, false);
+                turbine.setTurbinePerformanceCondition(false);
+            }
 
             //For sanity check, make sure the windSPeedQueue is empty 
             turbine.emptyQueue();
