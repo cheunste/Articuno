@@ -349,7 +349,7 @@ namespace Articuno
             turbine.ScalingFactorValue = GetTurbineScalingFactor();
             turbine.StartupTime = GetTurbineStartUpTime();
 
-            SetTurbineNrsTag(turbine,reader);
+            SetTurbineNrsTag(turbine, reader);
             turbine.OperatingStateTag = sitePrefix + reader.Rows[0]["OperatingState"].ToString();
             turbine.RotorSpeedTag = sitePrefix + reader.Rows[0]["RotorSpeed"].ToString();
             turbine.TemperatureTag = sitePrefix + reader.Rows[0]["Temperature"].ToString();
@@ -381,17 +381,28 @@ namespace Articuno
             return reader.Rows[0]["DefaultValue"].ToString();
         }
 
-        private void SetTurbineNrsTag(Turbine turbine,DataTable reader)
+        private void SetTurbineNrsTag(Turbine turbine, DataTable reader)
         {
-            //Note that NRS can be empty, so that's why there is a try/catch here. If it is empty, just set it to an empty string
-            try { turbine.NrsStateTag = sitePrefix + reader.Rows[0]["NrsMode"].ToString(); }
+            //Note that NRS can be empty, so that's why there is a try/catch here. If it is empty or null, just set it to an empty string
+            string noiseLevelTag = "";
+            try
+            {
+                noiseLevelTag = sitePrefix + reader.Rows[0]["NrsMode"].ToString();
+                if (noiseLevelTag.Equals(""))
+                {
+                    turbine.NrsStateTag = "";
+                    turbine.SetTurbineNrsMode(false);
+                }
+                else
+                    turbine.NrsStateTag = noiseLevelTag;
+            }
             catch (NullReferenceException)
             {
                 turbine.NrsStateTag = "";
                 turbine.SetTurbineNrsMode(false);
             }
         }
-        private void SetMetTowerRedundancyForTurbine(Turbine turbine,DataTable reader)
+        private void SetMetTowerRedundancyForTurbine(Turbine turbine, DataTable reader)
         {
             //If the RedundancyForMet field is not empty, that means the turbine's  temperature sensor is used as a backup in case a met tower fails. 
             //No operation if field doesn't exist
