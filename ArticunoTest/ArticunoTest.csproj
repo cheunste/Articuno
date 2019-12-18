@@ -75,6 +75,7 @@
   <ItemGroup>
     <Compile Include="ArticunoTest.cs" />
     <Compile Include="MetTowerFunctionalityTest.cs" />
+    <Compile Include="MetTowerOpcTagVerificationTest.cs" />
     <Compile Include="OpcServerTest.cs" />
     <Compile Include="DatabaseInterfaceTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
