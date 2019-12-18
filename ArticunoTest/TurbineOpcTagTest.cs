@@ -30,13 +30,8 @@ namespace ArticunoTest
         public void ParticipationOpcTagExistance()
         {
             DataTable table = dbi.readQuery("Select Participation from TurbineInputTags");
-            foreach (DataRow row in table.Rows)
-            {
-                string tag = string.Format("{0}{1}", prefix, row["Participation"].ToString());
-                try { string value = opcServer.readTagValue(tag); }
-                catch (Exception) { Assert.Fail("tag {0} cannot be found", tag); }
-            }
-
+            string columnFilter = "Participation";
+            checkTag(table, columnFilter);
         }
 
         [TestMethod]
@@ -58,102 +53,74 @@ namespace ArticunoTest
         public void RotorSpeedOpcTagExistance()
         {
             DataTable table = dbi.readQuery("Select RotorSpeed from TurbineInputTags");
-            foreach (DataRow row in table.Rows)
-            {
-                string tag = string.Format("{0}{1}", prefix, row["RotorSpeed"].ToString());
-                try { string value = opcServer.readTagValue(tag); }
-                catch (Exception) { Assert.Fail("tag {0} cannot be found", tag); }
-            }
+            string columnFilter = "RotorSpeed";
+            checkTag(table, columnFilter);
         }
         [TestMethod]
         public void TurbineTemperatureOpcTagExistance()
         {
             DataTable table = dbi.readQuery("Select Temperature from TurbineInputTags");
-            foreach (DataRow row in table.Rows)
-            {
-                string tag = string.Format("{0}{1}", prefix, row["Temperature"].ToString());
-                try { string value = opcServer.readTagValue(tag); }
-                catch (Exception) { Assert.Fail("tag {0} cannot be found", tag); }
-            }
+            string columnFilter = "Temperature";
+            checkTag(table, columnFilter);
         }
         [TestMethod]
         public void PauseOpcTagExistance()
         {
             DataTable table = dbi.readQuery("Select Pause from TurbineInputTags");
-            foreach (DataRow row in table.Rows)
-            {
-                string tag = string.Format("{0}{1}", prefix, row["Pause"].ToString());
-                try { string value = opcServer.readTagValue(tag); }
-                catch (Exception) { Assert.Fail("tag {0} cannot be found", tag); }
-            }
+            string columnFilter = "Pause";
+            checkTag(table, columnFilter);
         }
         [TestMethod]
         public void StartOpcTagExistance()
         {
             DataTable table = dbi.readQuery("Select Start from TurbineInputTags");
-            foreach (DataRow row in table.Rows)
-            {
-                string tag = string.Format("{0}{1}", prefix, row["Start"].ToString());
-                try { string value = opcServer.readTagValue(tag); }
-                catch (Exception) { Assert.Fail("tag {0} cannot be found", tag); }
-            }
+            string columnFilter = "Start";
+            checkTag(table, columnFilter);
         }
         [TestMethod]
         public void WindSpeedOpcTagExistance()
         {
             DataTable table = dbi.readQuery("Select WindSpeed from TurbineInputTags");
-            foreach (DataRow row in table.Rows)
-            {
-                string tag = string.Format("{0}{1}", prefix, row["WindSpeed"].ToString());
-                try { string value = opcServer.readTagValue(tag); }
-                catch (Exception) { Assert.Fail("tag {0} cannot be found", tag); }
-            }
+            string columnFilter = "WindSpeed";
+            checkTag(table, columnFilter);
         }
 
         [TestMethod]
         public void AlarmOpcTagExistance()
         {
             DataTable table = dbi.readQuery("Select Alarm from TurbineOutputTags");
-            foreach (DataRow row in table.Rows)
-            {
-                string tag = string.Format("{0}{1}", prefix, row["Alarm"].ToString());
-                try { string value = opcServer.readTagValue(tag); }
-                catch (Exception) { Assert.Fail("tag {0} cannot be found", tag); }
-            }
+            string columnFilter = "Alarm";
+            checkTag(table, columnFilter);
         }
         [TestMethod]
         public void AgcBlockingOpcTagExistance()
         {
             DataTable table = dbi.readQuery("Select AGCBlocking from TurbineOutputTags");
-            foreach (DataRow row in table.Rows)
-            {
-                string tag = string.Format("{0}{1}", prefix, row["AGCBlocking"].ToString());
-                try { string value = opcServer.readTagValue(tag); }
-                catch (Exception) { Assert.Fail("tag {0} cannot be found", tag); }
-            }
+            string columnFilter = "AGCBlocking";
+            checkTag(table, columnFilter);
         }
         [TestMethod]
         public void LowRotorSpeedFlagOpcTagExistance()
         {
             DataTable table = dbi.readQuery("Select LowRotorSpeedFlag from TurbineOutputTags");
-            foreach (DataRow row in table.Rows)
-            {
-                string tag = string.Format("{0}{1}", prefix, row["LowRotorSpeedFlag"].ToString());
-                try { string value = opcServer.readTagValue(tag); }
-                catch (Exception) { Assert.Fail("tag {0} cannot be found", tag); }
-            }
+            string columnFilter = "LowRotorSpeedFlag";
+            checkTag(table, columnFilter);
         }
         [TestMethod]
         public void TurbineCtrCountdownOpcTagExistance()
         {
             DataTable table = dbi.readQuery("Select CTRCountdown from TurbineOutputTags");
+            string columnFilter = "CTRCountdown";
+            checkTag(table, columnFilter);
+        }
+        private void checkTag(DataTable table, string columnFilter)
+        {
             foreach (DataRow row in table.Rows)
             {
-                string tag = string.Format("{0}{1}", prefix, row["CTRCountdown"].ToString());
+                string tag = string.Format("{0}{1}", prefix, row[columnFilter].ToString());
                 try { string value = opcServer.readTagValue(tag); }
                 catch (Exception) { Assert.Fail("tag {0} cannot be found", tag); }
             }
         }
-
     }
 }
