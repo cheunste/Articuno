@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Articuno;
 using System.Data;
+using System.Text.RegularExpressions;
 
 namespace ArticunoTest
 {
@@ -142,6 +143,38 @@ namespace ArticunoTest
             string columnFilter = "CtrHumidity";
             DataTable table = dbi.readQuery(string.Format("Select {0} from MetTowerOutputTags", columnFilter));
             checkTag(table, columnFilter);
+        }
+
+        [TestMethod]
+        public void MetIdValidationTest()
+        {
+            string columnFilter = "MetId";
+            DataTable table = dbi.readQuery(string.Format("Select {0} from MetTowerOutputTags", columnFilter));
+            foreach (DataRow row in table.Rows)
+            {
+                string metPrefix = string.Format("{0}", row[columnFilter].ToString());
+
+                string pattern = @"\b\w{3}(\d{1})*\b";
+                Regex lookup = new Regex(pattern, RegexOptions.Singleline);
+
+                if (!lookup.IsMatch(metPrefix))
+                    Assert.Fail("Format for {0} looks suspect", metPrefix);
+                if (metPrefix.Equals(""))
+                    Assert.Fail("the MetId field is empty for {0}", metPrefix);
+            }
+            table = dbi.readQuery(string.Format("Select {0} from MetTowerInputTags", columnFilter));
+            foreach (DataRow row in table.Rows)
+            {
+                string metPrefix = string.Format("{0}", row[columnFilter].ToString());
+
+                string pattern = @"\b\w{3}(\d{1})*\b";
+                Regex lookup = new Regex(pattern, RegexOptions.Singleline);
+
+                if (!lookup.IsMatch(metPrefix))
+                    Assert.Fail("Format for {0} looks suspect", metPrefix);
+                if (metPrefix.Equals(""))
+                    Assert.Fail("the MetId field is empty for {0}", metPrefix);
+            }
         }
 
         private void checkTag(DataTable table, string columnFilter)
