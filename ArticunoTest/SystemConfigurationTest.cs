@@ -11,28 +11,75 @@ namespace ArticunoTest
     public class SystemConfigurationTest
     {
         [TestMethod]
-        public void getTemperatreThresholdOpcTag() { }
-
-        [TestMethod]
-        public void getArticunoEnableOpcTag() { }
-
-        [TestMethod]
-        public void getCtrPeriodOpcTag() { }
-        [TestMethod]
-        public void getScalingFactorOpcTag() { }
-        [TestMethod]
-        public void getOpcServerNameTag() { }
-        [TestMethod]
-        public void getHeartbeatIntervalValue() {  }
-        [TestMethod]
-        public void getTurbineStartupTimeValue() { }
-        [TestMethod]
-        public void getFlatlineSamplesValue() { }
-        [TestMethod]
-        public void getMetTowerCtrCountDownTag()
+        public void getTemperatreThresholdOpcTagTest()
         {
-            Assert.Fail("Met Count Samples not implemented Test ");
+            Assert.Fail("Test Not implemented yet");
+        }
 
+        [TestMethod]
+        public void getArticunoEnableOpcTagTest()
+        {
+            Assert.Fail("Test Not implemented yet");
+        }
+
+        [TestMethod]
+        public void getCtrPeriodOpcTagTest()
+        {
+            Assert.Fail("Test Not implemented yet");
+        }
+        [TestMethod]
+        public void getScalingFactorOpcTagTest()
+        {
+            Assert.Fail("Test Not implemented yet");
+        }
+        [TestMethod]
+        public void getOpcServerNameTagTest()
+        {
+            Assert.Fail("Test Not implemented yet");
+        }
+        [TestMethod]
+        public void getHeartbeatIntervalValueTest()
+        {
+            Assert.Fail("Test Not implemented yet");
+        }
+        [TestMethod]
+        public void getTurbineStartupTimeValueTest()
+        {
+            Assert.Fail("Test Not implemented yet");
+        }
+        [TestMethod]
+        public void getFlatlineSamplesValueTest()
+        {
+            Assert.Fail("Test Not implemented yet");
+        }
+        [TestMethod]
+        public void getMetTowerCtrCountDownTagTest()
+        {
+            Assert.Fail("Test Not implemented yet");
+
+        }
+
+        [TestMethod]
+        public void verifyTurbineOpcTagsCanBeReadTest()
+        {
+            Assert.Fail("Test Not implemented yet");
+        }
+
+        [TestMethod]
+        public void verifyMetTowerOpcTagsCanBeReadTest()
+        {
+            Assert.Fail("Test Not implemented yet");
+        }
+
+        [TestMethod]
+        public void nullTurbineNrsModeTagTests()
+        {
+            Assert.Fail("Test Not implemented yet");
+        }
+        [TestMethod]
+        public void emptyTurbineNrsModeTagTests()
+        {
+            Assert.Fail("Test Not implemented yet");
         }
 
     }

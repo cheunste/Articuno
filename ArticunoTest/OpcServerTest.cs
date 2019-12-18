@@ -60,16 +60,11 @@ namespace ArticunoTest
             result = opcServer.readTagValue(opcBoolTestTag);
             Assert.IsNotNull(result);
 
-            string opcStringTestTag = "Folder1.StringItem";
-            string opcBoolTestTag = "Folder1.BooleanItem";
-            string opcIntTestTag = "Folder1.IntegerItem";
-
             string stringTestValue = "Fuck this shit";
             int intTestValue = 1234512345;
             bool boolTestValue = false;
 
             opcServer.writeTagValue(opcStringTestTag, stringTestValue);
-            string result = opcServer.readTagValue(opcStringTestTag);
             Assert.AreEqual(result, stringTestValue);
 
             opcServer.writeTagValue(opcBoolTestTag, boolTestValue);
