@@ -14,6 +14,7 @@ namespace ArticunoTest
     {
         TurbineMediator tm;
         Articuno.Articuno am;
+        DatabaseInterface dbi;
         public TurbineTest()
         {
             am = new Articuno.Articuno(true);
@@ -148,7 +149,7 @@ namespace ArticunoTest
             tm.setTurbineCtrTime(turbineId, 1);
 
             //Manually start the turbine. You must do this as Articuno is not designed to start turbines by design
-            OpcServer.writeOpcTag("SV.OPCDAServer.1", "SCRAB.T001.WTUR.SetTurOp.ActSt.Str",1);
+            OpcServer.writeOpcTag(dbi.getOpcServerName(), dbi.getSitePrefixValue()+".T001.WTUR.SetTurOp.ActSt.Str",1);
             tm.startTurbineFromTurbineMediator(turbineId);
 
             //Set the NRS condition to true, or else the turbine will never ice up.

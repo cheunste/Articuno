@@ -92,7 +92,7 @@ namespace Articuno
             return Convert.ToString(result.Rows[0]["OpcTag"]);
         }
 
-        public int getSampleCountForStaleDataTag()
+        public int getSampleCountForStaleData()
         {
             DataTable result = readQuery(String.Format("SELECT DefaultValue from {0} WHERE Description ='FlatlineSamples' ", SYSTEM_INPUT_TABLE));
             return Convert.ToInt32(result.Rows[0]["DefaultValue"]);
@@ -104,5 +104,20 @@ namespace Articuno
             return Convert.ToString(result.Rows[0]["OpcTag"]);
 
         }
+        public int getHeartbeatIntervalValue() { return Convert.ToInt32(readQuery("SELECT DefaultValue from SystemInputTags WHERE Description='HeartbeatInterval'").Rows[0]["DefaultValue"]); }
+
+        public string getTemperatureThresholdTag() { return readQuery("SELECT OpcTag from SystemInputTags WHERE Description='AmbTempThreshold'").Rows[0]["OpcTag"].ToString(); }
+
+        public string getArticunoEnableTag() { return readQuery("SELECT OpcTag from SystemInputTags WHERE Description='ArticunoEnable'").Rows[0]["OpcTag"].ToString(); }
+
+        public string getArticunoCtrTag() { return readQuery("SELECT OpcTag from SystemInputTags WHERE Description='CTRPeriod'").Rows[0]["OpcTag"].ToString();}
+        public string GetDeltaThresholdTag() { return readQuery("SELECT OpcTag from SystemInputTags WHERE Description='DeltaTmpThreshold'").Rows[0]["OpcTag"].ToString();}
+
+        public string GetTurbineScalingFactor() { return readQuery("SELECT * from SystemInputTags where Description='ScalingFactor';").Rows[0]["DefaultValue"].ToString(); }
+        public int GetTurbineStartupTime() { return Convert.ToInt32(readQuery("SELECT * from SystemInputTags where Description='TurbineStartupTime';").Rows[0]["DefaultValue"]); }
+
+        //MetTower
+        public string GetMetTowerCtrTag() { return readQuery("SELECT * from SystemInputTags where Description='MetTowerCtrCountdown';").Rows[0]["OpcTag"].ToString(); }
+
     }
 }

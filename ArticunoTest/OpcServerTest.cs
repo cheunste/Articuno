@@ -14,11 +14,12 @@ namespace ArticunoTest
     {
         OpcServer opcServer;
         public string prefix;
+        DatabaseInterface dbi;
 
         public OpcServerTest()
         {
-            opcServer = new OpcServer("SV.OPCDAServer.1");
-            prefix = "SCRAB";
+            opcServer = new OpcServer(dbi.getOpcServerName());
+            prefix = dbi.getOpcServerName();
         }
 
 
@@ -40,7 +41,7 @@ namespace ArticunoTest
             result = opcServer.readTagValue(opcIntTestTag);
             Assert.IsNotNull(result);
 
-            int flatLineSamples = DatabaseInterface.Instance.getSampleCountForStaleDataTag();
+            int flatLineSamples = DatabaseInterface.Instance.getSampleCountForStaleData();
         }
 
 
