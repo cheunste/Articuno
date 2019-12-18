@@ -10,12 +10,12 @@ namespace ArticunoTest
     /// Summary description for TurbineTest
     /// </summary>
     [TestClass]
-    public class TurbineTest
+    public class TurbineFunctionalityTest
     {
         TurbineMediator tm;
         Articuno.Articuno am;
         DatabaseInterface dbi;
-        public TurbineTest()
+        public TurbineFunctionalityTest()
         {
             am = new Articuno.Articuno(true);
 

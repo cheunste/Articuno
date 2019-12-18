@@ -12,7 +12,7 @@ namespace ArticunoTest
     /// Summary description for MetTowerUnitTest
     /// </summary>
     [TestClass]
-    public class MetTowerUnitTest
+    public class MetTowerFunctionalityTest
     {
         OpcServer opcServer;
         MetTowerMediator mm;
@@ -70,7 +70,7 @@ namespace ArticunoTest
         DatabaseInterface dbi;
 
         //Create a Met Tower Class
-        public MetTowerUnitTest()
+        public MetTowerFunctionalityTest()
         {
         }
 

@@ -74,14 +74,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ArticunoTest.cs" />
-    <Compile Include="MetTowerUnitTest.cs" />
+    <Compile Include="MetTowerFunctionalityTest.cs" />
     <Compile Include="OpcServerTest.cs" />
     <Compile Include="DatabaseInterfaceTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RotorSpeedFilterTest.cs" />
     <Compile Include="Setup.cs" />
     <Compile Include="SystemConfigurationTest.cs" />
-    <Compile Include="TurbineTest.cs" />
+    <Compile Include="TurbineFunctionalityTest.cs" />
+    <Compile Include="TurbineOpcTagTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

@@ -105,29 +105,5 @@ namespace ArticunoTest
             Assert.IsNotNull(tag);
             Assert.AreNotEqual("", tag);
         }
-
-        [TestMethod]
-        public void verifyTurbineOpcTagsCanBeReadTest()
-        {
-            Assert.Fail("Test Not implemented yet");
-        }
-
-        [TestMethod]
-        public void verifyMetTowerOpcTagsCanBeReadTest()
-        {
-            Assert.Fail("Test Not implemented yet");
-        }
-
-        [TestMethod]
-        public void nullTurbineNrsModeTagTests()
-        {
-            Assert.Fail("Test Not implemented yet");
-        }
-        [TestMethod]
-        public void emptyTurbineNrsModeTagTests()
-        {
-            Assert.Fail("Test Not implemented yet");
-        }
-
     }
 }
