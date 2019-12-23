@@ -116,6 +116,10 @@ namespace Articuno
         public string GetTurbineScalingFactor() { return readQuery("SELECT * from SystemInputTags where Description='ScalingFactor';").Rows[0]["DefaultValue"].ToString(); }
         public int GetTurbineStartupTime() { return Convert.ToInt32(readQuery("SELECT * from SystemInputTags where Description='TurbineStartupTime';").Rows[0]["DefaultValue"]); }
 
+
+        public string GetArticunoIcePossibleOpcTag() {  return readQuery("SELECT OpcTag from SystemOutputTags WHERE Description='IcePossible';").Rows[0]["OpcTag"].ToString(); }
+        public string GetArticunoNumbersOfTurbinesPausedTag() {  return readQuery("SELECT OpcTag from SystemOutputTags WHERE Description='NumTurbIced';").Rows[0]["OpcTag"].ToString(); }
+        public string GetArticunoHeartbeatTag() {  return readQuery("SELECT OpcTag from SystemOutputTags WHERE Description='Heartbeat';").Rows[0]["OpcTag"].ToString(); }
         //MetTower
         public string GetMetTowerCtrTag() { return readQuery("SELECT * from SystemInputTags where Description='MetTowerCtrCountdown';").Rows[0]["OpcTag"].ToString(); }
 

@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 namespace ArticunoTest
 {
     [TestClass]
-    public class TurbineOpcTagTest
+    public class TurbineOpcTagVerificationTest
     {
 
         DatabaseInterface dbi;

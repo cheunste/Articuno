@@ -83,7 +83,7 @@
     <Compile Include="Setup.cs" />
     <Compile Include="SystemConfigurationTest.cs" />
     <Compile Include="TurbineFunctionalityTest.cs" />
-    <Compile Include="TurbineOpcTagTest.cs" />
+    <Compile Include="TurbineOpcTagVerificationTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

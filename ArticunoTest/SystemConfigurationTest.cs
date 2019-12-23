@@ -26,9 +26,7 @@ namespace ArticunoTest
         public void getActiveUccOpcTagTest()
         {
             string tag = dbi.getActiveUccOpcTag();
-            Assert.IsNotNull(tag); Assert.AreNotEqual(tag, "");
-            try { opcServer.readTagValue(tag); }
-            catch (Exception e) { Assert.Fail("Tag {0} does not exist", tag); }
+            readTag(tag);
         }
 
 
@@ -36,27 +34,21 @@ namespace ArticunoTest
         public void getTemperatreThresholdOpcTagTest()
         {
             string tag = dbi.getTemperatureThresholdTag();
-            Assert.IsNotNull(tag); Assert.AreNotEqual(tag, "");
-            try { opcServer.readTagValue(tag); }
-            catch (Exception e) { Assert.Fail("Tag {0} does not exist", tag); }
+            readTag(tag);
         }
 
         [TestMethod]
         public void getArticunoEnableOpcTagTest()
         {
             string tag = dbi.getArticunoEnableTag();
-            Assert.IsNotNull(tag); Assert.AreNotEqual(tag, "");
-            try { opcServer.readTagValue(tag); }
-            catch (Exception e) { Assert.Fail("Tag {0} does not exist", tag); }
+            readTag(tag);
         }
 
         [TestMethod]
         public void getArticunoCtrPeriodOpcTagTest()
         {
             string tag = dbi.getArticunoCtrTag();
-            Assert.IsNotNull(tag); Assert.AreNotEqual(tag, "");
-            try { opcServer.readTagValue(tag); }
-            catch (Exception e) { Assert.Fail("Tag {0} does not exist", tag); }
+            readTag(tag);
 
         }
         [TestMethod]
@@ -102,8 +94,37 @@ namespace ArticunoTest
         {
             Assert.Fail("Test Not implemented yet");
             string tag = dbi.getMetTowerCtrCountdownTag();
+            readTag(tag);
+        }
+
+        [TestMethod]
+        public void getArticunoHeartbeatOpcTag()
+        {
+            string tag = dbi.GetArticunoHeartbeatTag();
+            readTag(tag);
+
+        }
+        [TestMethod]
+        public void getArticunoIcePossibleOpcTag()
+        {
+
+            string tag = dbi.GetArticunoIcePossibleOpcTag();
+            readTag(tag);
+        }
+        [TestMethod]
+        public void getArticunoNumberOfTurbinesPausedByIce()
+        {
+
+            string tag = dbi.GetArticunoNumbersOfTurbinesPausedTag();
+            readTag(tag);
+        }
+
+        private void readTag(string tag)
+        {
             Assert.IsNotNull(tag);
-            Assert.AreNotEqual("", tag);
+            Assert.AreNotEqual(tag, "");
+            try { opcServer.readTagValue(tag); }
+            catch (Exception e) { Assert.Fail("Tag {0} does not exist", tag); }
         }
     }
 }
