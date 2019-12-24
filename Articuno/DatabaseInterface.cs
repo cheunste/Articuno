@@ -123,5 +123,7 @@ namespace Articuno
         //MetTower
         public string GetMetTowerCtrTag() { return readQuery("SELECT * from SystemInputTags where Description='MetTowerCtrCountdown';").Rows[0]["OpcTag"].ToString(); }
 
+        public string GetBackupTurbine(string metId) { return readQuery(String.Format("SELECT BackupTurbine from MetTowerInputTags where MetId='{0}';",metId)).Rows[0]["BackupTurbine"].ToString(); }
+
     }
 }
