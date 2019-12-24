@@ -28,15 +28,15 @@ namespace ArticunoTest
         }
 
         [TestMethod]
-        public void ParticipationOpcTagExistance()
+        public void ParticipationOpcTagCheck()
         {
             DataTable table = dbi.readQuery("Select Participation from TurbineInputTags");
             string columnFilter = "Participation";
-            checkTag(table, columnFilter);
+            checkOpcTag(table, columnFilter);
         }
 
         [TestMethod]
-        public void NrsOpcTagExistance()
+        public void NrsOpcTagCheck()
         {
             Assert.Fail("Haven't finished writing test");
             DataTable table = dbi.readQuery("Select NrsMode from TurbineInputTags");
@@ -51,68 +51,68 @@ namespace ArticunoTest
             }
         }
         [TestMethod]
-        public void RotorSpeedOpcTagExistance()
+        public void RotorSpeedOpcTagCheck()
         {
             DataTable table = dbi.readQuery("Select RotorSpeed from TurbineInputTags");
             string columnFilter = "RotorSpeed";
-            checkTag(table, columnFilter);
+            checkOpcTag(table, columnFilter);
         }
         [TestMethod]
-        public void TurbineTemperatureOpcTagExistance()
+        public void TurbineTemperatureOpcTagCheck()
         {
             DataTable table = dbi.readQuery("Select Temperature from TurbineInputTags");
             string columnFilter = "Temperature";
-            checkTag(table, columnFilter);
+            checkOpcTag(table, columnFilter);
         }
         [TestMethod]
-        public void PauseOpcTagExistance()
+        public void PauseOpcTagCheck()
         {
             DataTable table = dbi.readQuery("Select Pause from TurbineInputTags");
             string columnFilter = "Pause";
-            checkTag(table, columnFilter);
+            checkOpcTag(table, columnFilter);
         }
         [TestMethod]
-        public void StartOpcTagExistance()
+        public void StartOpcTagCheck()
         {
             DataTable table = dbi.readQuery("Select Start from TurbineInputTags");
             string columnFilter = "Start";
-            checkTag(table, columnFilter);
+            checkOpcTag(table, columnFilter);
         }
         [TestMethod]
-        public void WindSpeedOpcTagExistance()
+        public void WindSpeedOpcTagCheck()
         {
             DataTable table = dbi.readQuery("Select WindSpeed from TurbineInputTags");
             string columnFilter = "WindSpeed";
-            checkTag(table, columnFilter);
+            checkOpcTag(table, columnFilter);
         }
 
         [TestMethod]
-        public void AlarmOpcTagExistance()
+        public void AlarmOpcTagCheck()
         {
             DataTable table = dbi.readQuery("Select Alarm from TurbineOutputTags");
             string columnFilter = "Alarm";
-            checkTag(table, columnFilter);
+            checkOpcTag(table, columnFilter);
         }
         [TestMethod]
-        public void AgcBlockingOpcTagExistance()
+        public void AgcBlockingOpcTagCheck()
         {
             DataTable table = dbi.readQuery("Select AGCBlocking from TurbineOutputTags");
             string columnFilter = "AGCBlocking";
-            checkTag(table, columnFilter);
+            checkOpcTag(table, columnFilter);
         }
         [TestMethod]
-        public void LowRotorSpeedFlagOpcTagExistance()
+        public void LowRotorSpeedFlagOpcTagCheck()
         {
             DataTable table = dbi.readQuery("Select LowRotorSpeedFlag from TurbineOutputTags");
             string columnFilter = "LowRotorSpeedFlag";
-            checkTag(table, columnFilter);
+            checkOpcTag(table, columnFilter);
         }
         [TestMethod]
-        public void TurbineCtrCountdownOpcTagExistance()
+        public void TurbineCtrCountdownOpcTagCheck()
         {
             DataTable table = dbi.readQuery("Select CTRCountdown from TurbineOutputTags");
             string columnFilter = "CTRCountdown";
-            checkTag(table, columnFilter);
+            checkOpcTag(table, columnFilter);
         }
         [TestMethod]
         public void TurbineIdValidationTest()
@@ -146,7 +146,7 @@ namespace ArticunoTest
             }
         }
 
-        private void checkTag(DataTable table, string columnFilter)
+        private void checkOpcTag(DataTable table, string columnFilter)
         {
             foreach (DataRow row in table.Rows)
             {
