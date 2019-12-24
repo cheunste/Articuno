@@ -68,10 +68,10 @@ namespace Articuno
         public Object readTurbineTemperatureValue() { return OpcServer.readAnalogTag(OpcServerName, TemperatureTag); }
 
         public Object readTurbineScalingFactorValue() { return ScalingFactorValue; }
-        public Object readTurbineParticipationValue() { return OpcServer.readAnalogTag(OpcServerName, ParticipationTag); }
+        public Boolean isTurbineParticipating() { return Convert.ToBoolean(OpcServer.readBooleanTag(OpcServerName, ParticipationTag)); }
         public Object readStoppedByArticunoAlarmValue() { return OpcServer.readAnalogTag(OpcServerName, StoppedAlarmTag); }
         public Object readTurbineCtrTimeRemaining() { return OpcServer.readAnalogTag(OpcServerName, CtrCountdownTag); }
-        public Object readTurbineLowRotorSpeedFlagValue() { return OpcServer.readAnalogTag(OpcServerName, LowRotorSpeedFlagTag); }
+        public Boolean readTurbineLowRotorSpeedFlagValue() { return Convert.ToBoolean(OpcServer.readBooleanTag(OpcServerName, LowRotorSpeedFlagTag)); }
         public Object readAgcBlockValue() { return OpcServer.readBooleanTag(OpcServerName, AgcBlockingTag); }
 
         //public Accessors (Getters and Setters)  to set the member variables to the  OPC tag
@@ -170,6 +170,10 @@ namespace Articuno
         }
         public void SetTurbineUnderPerformanceCondition(bool state)
         {
+            //Do not set the turbine underperformance flag if turbine isn't participating in Articuno
+            //as this will trigger an unwanted alarm by multiple parties
+            if (!isTurbineParticipating())
+                state = false;
             turbinePerformanceConditionMet = state;
             OpcServer.writeOpcTag(OpcServerName, this.LowRotorSpeedFlagTag, state);
         }
@@ -179,10 +183,10 @@ namespace Articuno
         public void CheckArticunoPausingConditions()
         {
 
-            bool frozenCondition = Convert.ToBoolean(readTurbineParticipationValue()) && temperatureConditionMet && operatingStateConditionMet && turbinePerformanceConditionMet;
+            bool frozenCondition = isTurbineParticipating() && temperatureConditionMet && operatingStateConditionMet && turbinePerformanceConditionMet;
             log.DebugFormat("Checking ice condition for {5}.  Paused by Articuno: {0}\nTurbine Participation?: {1} " +
                 "Icy Temp Condition?: {2}, OperatingState: {3}, Low TurbinePerf Condition?: {4}", frozenCondition,
-                Convert.ToBoolean(readTurbineParticipationValue()), temperatureConditionMet, operatingStateConditionMet, turbinePerformanceConditionMet, GetTurbinePrefixValue());
+                isTurbineParticipating(), temperatureConditionMet, operatingStateConditionMet, turbinePerformanceConditionMet, GetTurbinePrefixValue());
 
             if (frozenCondition)
             {
