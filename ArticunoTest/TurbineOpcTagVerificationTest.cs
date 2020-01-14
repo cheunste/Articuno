@@ -31,18 +31,16 @@ namespace ArticunoTest
         public void ParticipationOpcTagCheck()
         {
             DataTable table = dbi.readQuery("Select Participation from TurbineInputTags");
-            string columnFilter = "Participation";
-            checkOpcTag(table, columnFilter);
+            checkOpcTag(table);
         }
 
         [TestMethod]
         public void NrsOpcTagCheck()
         {
-            Assert.Fail("Haven't finished writing test");
             DataTable table = dbi.readQuery("Select NrsMode from TurbineInputTags");
             foreach (DataRow row in table.Rows)
             {
-                string tag = string.Format("{0}{1}", prefix, row["NrsMode"].ToString());
+                string tag = string.Format("{0}{1}", prefix, row[0].ToString());
                 try
                 {
                     string value = opcServer.readTagValue(tag);
@@ -54,65 +52,56 @@ namespace ArticunoTest
         public void RotorSpeedOpcTagCheck()
         {
             DataTable table = dbi.readQuery("Select RotorSpeed from TurbineInputTags");
-            string columnFilter = "RotorSpeed";
-            checkOpcTag(table, columnFilter);
+            checkOpcTag(table);
         }
         [TestMethod]
         public void TurbineTemperatureOpcTagCheck()
         {
             DataTable table = dbi.readQuery("Select Temperature from TurbineInputTags");
-            string columnFilter = "Temperature";
-            checkOpcTag(table, columnFilter);
+            checkOpcTag(table);
         }
         [TestMethod]
         public void PauseOpcTagCheck()
         {
             DataTable table = dbi.readQuery("Select Pause from TurbineInputTags");
-            string columnFilter = "Pause";
-            checkOpcTag(table, columnFilter);
+            checkOpcTag(table);
         }
         [TestMethod]
         public void StartOpcTagCheck()
         {
             DataTable table = dbi.readQuery("Select Start from TurbineInputTags");
-            string columnFilter = "Start";
-            checkOpcTag(table, columnFilter);
+            checkOpcTag(table);
         }
         [TestMethod]
         public void WindSpeedOpcTagCheck()
         {
             DataTable table = dbi.readQuery("Select WindSpeed from TurbineInputTags");
-            string columnFilter = "WindSpeed";
-            checkOpcTag(table, columnFilter);
+            checkOpcTag(table);
         }
 
         [TestMethod]
         public void AlarmOpcTagCheck()
         {
             DataTable table = dbi.readQuery("Select Alarm from TurbineOutputTags");
-            string columnFilter = "Alarm";
-            checkOpcTag(table, columnFilter);
+            checkOpcTag(table);
         }
         [TestMethod]
         public void AgcBlockingOpcTagCheck()
         {
             DataTable table = dbi.readQuery("Select AGCBlocking from TurbineOutputTags");
-            string columnFilter = "AGCBlocking";
-            checkOpcTag(table, columnFilter);
+            checkOpcTag(table);
         }
         [TestMethod]
         public void LowRotorSpeedFlagOpcTagCheck()
         {
             DataTable table = dbi.readQuery("Select LowRotorSpeedFlag from TurbineOutputTags");
-            string columnFilter = "LowRotorSpeedFlag";
-            checkOpcTag(table, columnFilter);
+            checkOpcTag(table);
         }
         [TestMethod]
         public void TurbineCtrCountdownOpcTagCheck()
         {
             DataTable table = dbi.readQuery("Select CTRCountdown from TurbineOutputTags");
-            string columnFilter = "CTRCountdown";
-            checkOpcTag(table, columnFilter);
+            checkOpcTag(table);
         }
         [TestMethod]
         public void TurbineIdValidationTest()
@@ -146,11 +135,11 @@ namespace ArticunoTest
             }
         }
 
-        private void checkOpcTag(DataTable table, string columnFilter)
+        private void checkOpcTag(DataTable table)
         {
             foreach (DataRow row in table.Rows)
             {
-                string tag = string.Format("{0}{1}", prefix, row[columnFilter].ToString());
+                string tag = string.Format("{0}{1}", prefix, row[0].ToString());
                 try { string value = opcServer.readTagValue(tag); }
                 catch (Exception) { Assert.Fail("tag {0} cannot be found", tag); }
             }
