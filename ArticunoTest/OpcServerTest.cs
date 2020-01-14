@@ -14,27 +14,27 @@ namespace ArticunoTest
     {
         OpcServer opcServer;
         public string prefix;
+        private string siteName;
         DatabaseInterface dbi;
 
         public OpcServerTest()
         {
             dbi = DatabaseInterface.Instance;
+            siteName = dbi.readQuery("SELECT DefaultValue from SystemInputTags where Description='SitePrefix'").Rows[0][0].ToString()+".";
             opcServer = new OpcServer(dbi.getOpcServerName());
             prefix = dbi.getOpcServerName();
         }
 
 
         [TestMethod]
-        //Test to see if tags will read from the server.
         public void readValueFromOpcTagTest()
         {
-            Assert.Fail("Need to read Opc Tag from Database. You currently have dummy tags");
-            string opcStringTestTag = "Folder1.StringItem";
-            string opcBoolTestTag = "Folder1.BooleanItem";
-            string opcIntTestTag = "Folder1.IntegerItem";
+            string opcStringTestTag = siteName+dbi.getActiveUccOpcTag();
+            string opcBoolTestTag = siteName+dbi.getParticiaptionTag("T001");
+            string opcIntTestTag =siteName+dbi.getTurbineRotorSpeedTag("T001");
 
             string result = opcServer.readTagValue(opcStringTestTag);
-            Assert.IsNotNull(opcStringTestTag);
+            Assert.IsNotNull(result);
 
             result = opcServer.readTagValue(opcBoolTestTag);
             Assert.IsNotNull(result);
@@ -50,33 +50,16 @@ namespace ArticunoTest
         //Tests to see if the values will write to the Opc Server
         public void writeValueToOpcTagTest()
         {
+            string opcBoolTestTag =siteName + dbi.GetTowerBadPrimaryTempSensorTag("Met");
 
-            Assert.Fail("Need to write Opc Tag from Database. You currently have dummy tags");
-            string opcStringTestTag = "Folder1.StringItem";
-            string opcBoolTestTag = "Folder1.BooleanItem";
-            string opcIntTestTag = "Folder1.IntegerItem";
-
-            string result = opcServer.readTagValue(opcStringTestTag);
-            Assert.IsNotNull(opcStringTestTag);
-
-            result = opcServer.readTagValue(opcBoolTestTag);
+            string result = opcServer.readTagValue(opcBoolTestTag);
             Assert.IsNotNull(result);
 
-            string stringTestValue = "Fuck this shit";
-            int intTestValue = 1234512345;
-            bool boolTestValue = false;
-
-            opcServer.writeTagValue(opcStringTestTag, stringTestValue);
-            Assert.AreEqual(result, stringTestValue);
+            bool boolTestValue = true;
 
             opcServer.writeTagValue(opcBoolTestTag, boolTestValue);
             result = opcServer.readTagValue(opcBoolTestTag);
             Assert.AreEqual(result.ToString(), boolTestValue.ToString());
-
-            opcServer.writeTagValue(opcIntTestTag, intTestValue);
-            result = opcServer.readTagValue(opcIntTestTag);
-            Assert.AreEqual(result, intTestValue.ToString());
-
         }
 
         [TestMethod]

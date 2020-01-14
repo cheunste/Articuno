@@ -51,6 +51,8 @@ namespace Articuno
             return dt;
         }
 
+
+
         /// <summary>
         /// Used for update queries. Doesn't check to see if artiunoDBConnection is null or no
         /// </summary>
@@ -110,20 +112,40 @@ namespace Articuno
 
         public string getArticunoEnableTag() { return readQuery("SELECT OpcTag from SystemInputTags WHERE Description='ArticunoEnable'").Rows[0]["OpcTag"].ToString(); }
 
-        public string getArticunoCtrTag() { return readQuery("SELECT OpcTag from SystemInputTags WHERE Description='CTRPeriod'").Rows[0]["OpcTag"].ToString();}
-        public string GetDeltaThresholdTag() { return readQuery("SELECT OpcTag from SystemInputTags WHERE Description='DeltaTmpThreshold'").Rows[0]["OpcTag"].ToString();}
+        public string getArticunoCtrTag() { return readQuery("SELECT OpcTag from SystemInputTags WHERE Description='CTRPeriod'").Rows[0]["OpcTag"].ToString(); }
+        public string GetDeltaThresholdTag() { return readQuery("SELECT OpcTag from SystemInputTags WHERE Description='DeltaTmpThreshold'").Rows[0]["OpcTag"].ToString(); }
 
         public string GetTurbineScalingFactor() { return readQuery("SELECT * from SystemInputTags where Description='ScalingFactor';").Rows[0]["DefaultValue"].ToString(); }
         public int GetTurbineStartupTime() { return Convert.ToInt32(readQuery("SELECT * from SystemInputTags where Description='TurbineStartupTime';").Rows[0]["DefaultValue"]); }
 
 
-        public string GetArticunoIcePossibleOpcTag() {  return readQuery("SELECT OpcTag from SystemOutputTags WHERE Description='IcePossible';").Rows[0]["OpcTag"].ToString(); }
-        public string GetArticunoNumbersOfTurbinesPausedTag() {  return readQuery("SELECT OpcTag from SystemOutputTags WHERE Description='NumTurbIced';").Rows[0]["OpcTag"].ToString(); }
-        public string GetArticunoHeartbeatTag() {  return readQuery("SELECT OpcTag from SystemOutputTags WHERE Description='Heartbeat';").Rows[0]["OpcTag"].ToString(); }
+        public string GetArticunoIcePossibleOpcTag() { return readQuery("SELECT OpcTag from SystemOutputTags WHERE Description='IcePossible';").Rows[0]["OpcTag"].ToString(); }
+        public string GetArticunoNumbersOfTurbinesPausedTag() { return readQuery("SELECT OpcTag from SystemOutputTags WHERE Description='NumTurbIced';").Rows[0]["OpcTag"].ToString(); }
+        public string GetArticunoHeartbeatTag() { return readQuery("SELECT OpcTag from SystemOutputTags WHERE Description='Heartbeat';").Rows[0]["OpcTag"].ToString(); }
+
         //MetTower
         public string GetMetTowerCtrTag() { return readQuery("SELECT * from SystemInputTags where Description='MetTowerCtrCountdown';").Rows[0]["OpcTag"].ToString(); }
 
-        public string GetBackupTurbine(string metId) { return readQuery(String.Format("SELECT BackupTurbine from MetTowerInputTags where MetId='{0}';",metId)).Rows[0]["BackupTurbine"].ToString(); }
+        public string GetBackupTurbine(string metId) { return readQuery(String.Format("SELECT BackupTurbine from MetTowerInputTags where MetId='{0}';", metId)).Rows[0]["BackupTurbine"].ToString(); }
+        public string GetTowerBadPrimaryTempSensorTag(string metId)
+        {
+            return readQuery(String.Format("SELECT TempPrimBadQualityTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0]["TempPrimBadQualityTag"].ToString();
+        }
 
+        //Turbine
+        public DataTable GetAllTurbineId() { return readQuery("SELECT TurbineId FROM TurbineInputTags;"); }
+        private readonly string TURBINE_INPUT_COLUMN_QUERY = "SELECT * from TurbineInputTags WHERE TurbineId='{0}'";
+        public DataTable GetTurbineInputColumn(string turbinePrefix) { return readQuery(String.Format("SELECT * from TurbineInputTags WHERE TurbineId='{0}'", turbinePrefix)); }
+        private readonly string TURBINE_OUTPUT_COLUMN_QUERY = "SELECT * from TurbineOutputTags WHERE TurbineId='{0}'";
+        private readonly string SCALING_FACTOR_QUERY = "SELECT * from SystemInputTags where Description='ScalingFactor';";
+        private readonly string TURBINE_STARTUP_TIME = "SELECT * from SystemInputTags where Description='TurbineStartupTime';";
+        public string getParticiaptionTag(string turbinePrefix)
+        {
+            return readQuery(String.Format("SELECT Participation from TurbineInputTags where TurbineId='{0}'", turbinePrefix)).Rows[0].ToString();
+        }
+        public string getTurbineRotorSpeedTag(string turbinePrefix)
+        {
+            return readQuery(String.Format("SELECT RotorSpeed from TurbineInputTags where TurbineId='{0}'", turbinePrefix)).Rows[0].ToString();
+        }
     }
 }

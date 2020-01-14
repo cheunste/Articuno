@@ -276,7 +276,6 @@ namespace Articuno
             }
         }
 
-        //Function to block/remove turbine in AGC until startup. This is needed to prevent AGC from staring a turbine
         /// <summary>
         /// function to block the turbine from AGC.
         /// </summary>

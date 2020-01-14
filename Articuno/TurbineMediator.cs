@@ -33,34 +33,22 @@ namespace Articuno
      */
     sealed internal class TurbineMediator
     {
-        //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(TurbineMediator));
 
-        //List of turbine related lists
         private static List<Turbine> turbineList;
         private List<string> turbinePrefixList;
 
-        //These are temp lists that are used for read and get functions in the class 
-        private List<Object> tempObjectList;
-
-        //This is just an unused List that is used temporary. Used so that I don't have to instantiate an object everytime I need a list
-        private List<string> tempList;
-
-        //Instance of OpcServer. Might not be needed
         private string opcServerName;
         private string sitePrefix;
 
-        //Rotor Speed
         private RotorSpeedFilter filterTable;
 
-        //SQL statement constants
         private readonly string TURBINE_FIND_TURBINEID = "SELECT TurbineId FROM TurbineInputTags;";
         private readonly string TURBINE_INPUT_COLUMN_QUERY = "SELECT * from TurbineInputTags WHERE TurbineId='{0}'";
         private readonly string TURBINE_OUTPUT_COLUMN_QUERY = "SELECT * from TurbineOutputTags WHERE TurbineId='{0}'";
         private readonly string SCALING_FACTOR_QUERY = "SELECT * from SystemInputTags where Description='ScalingFactor';";
         private readonly string TURBINE_STARTUP_TIME = "SELECT * from SystemInputTags where Description='TurbineStartupTime';";
 
-        //Other member variables
         private static string uccActiveTag;
         private DatabaseInterface dbi;
 
@@ -84,8 +72,6 @@ namespace Articuno
             foreach (DataRow item in reader.Rows) { turbinePrefixList.Add(item["TurbineId"].ToString()); }
         }
 
-
-        //Lines for singleton usage
         public static TurbineMediator Instance { get { return Nested.instance; } }
 
         /// <summary>
@@ -181,11 +167,6 @@ namespace Articuno
             turbine.CheckArticunoPausingConditions();
         }
 
-        /*
-         * I'm going to implement this really lazily as I can't think of a better way to do this (for the time being)
-         * What this does is that given a tag, it should return a TurbineEnum that represent the OPC tag back to the main Articuno class.
-         */
-
         /// <summary>
         /// This method takes a turbine id and a tag name and then returns a TurbineEnum object Only used by the main Articuno class and nothing else. Returns a NULL if a tag is not found
         /// </summary>
@@ -202,17 +183,14 @@ namespace Articuno
             else if (tag.ToUpper().Equals(tempTurbine.WindSpeedTag.ToUpper())) { return TurbineEnum.WindSpeed; }
             else if (tag.ToUpper().Equals(tempTurbine.ParticipationTag.ToUpper())) { return TurbineEnum.Participation; }
             else if (tag.ToUpper().Equals(tempTurbine.StartCommandTag.ToUpper())) { return TurbineEnum.TurbineStarted; }
-            //If it reaches here, I have no freaking clue what's going on, but whatever is calling it needs to handle it 
             else return null;
         }
 
-        //FUnction to determine whether or not a turbine is underperforming due to ice
         /// <summary>
         /// Calculates the average CTR wind speed and then searches the filter table using CTR average. Paues the turbine if conditions were met. 
         /// Doesn't pause otherwise
         /// </summary>
         /// <param name="turbineId">turbine prefix in string</param>
-        //Note all vars are doubles here
         public void RotorSpeedCheck(string turbineId)
         {
             Turbine turbine = GetTurbinePrefixFromMediator(turbineId);
@@ -241,7 +219,6 @@ namespace Articuno
             if ((rotorSpeedAverage / rotorSpeedQueueCount) < referenceRotorSpeed - (currentScalingFactor * referenceStdDev)) { turbine.SetTurbineUnderPerformanceCondition(true); }
             else { turbine.SetTurbineUnderPerformanceCondition(false); }
 
-            //For sanity check, make sure the windSPeedQueue is empty 
             turbine.emptyQueue();
         }
 
@@ -435,14 +412,11 @@ namespace Articuno
         {
             turbinePrefixList = new List<string>();
             turbineList = new List<Turbine>();
-            tempList = new List<string>();
-            tempObjectList = new List<Object>();
-            //UCC Active Tag
+
             uccActiveTag = DatabaseInterface.Instance.getActiveUccOpcTag();
             this.opcServerName = DatabaseInterface.Instance.getOpcServerName();
             this.sitePrefix = DatabaseInterface.Instance.getSitePrefixValue();
 
-            //For RotorSpeed Filter Table. There should only be one instance of this. 
             filterTable = new RotorSpeedFilter();
         }
 
