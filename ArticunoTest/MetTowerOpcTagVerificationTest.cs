@@ -59,11 +59,22 @@ namespace ArticunoTest
         [TestMethod]
         public void MetTowerTurbineBackupOpcTagTest()
         {
-
-            Assert.Fail("Function not implemented");
-            string columnFilter = "MappedTurbine";
+            string columnFilter = "BackupTurbine";
             DataTable table = dbi.readQuery(string.Format("Select {0} from MetTowerInputTags", columnFilter));
-            verifyOpcTagOnServer(table, columnFilter);
+            foreach (DataRow row in table.Rows)
+            {
+                var turbine = row[0].ToString();
+                try
+                {
+                    DataTable turbineTable = dbi.readQuery(String.Format("Select TurbineId from TurbineInputTags where TurbineId='{0}'", turbine));
+                    turbineTable.Rows[0].ToString();
+                    Assert.IsTrue(turbineTable.Rows.Count > 0);
+                }
+                catch (Exception e)
+                {
+                    Assert.Fail("Turbine {0} can't be found in the TurbineInputTagsTable", turbine);
+                }
+            }
         }
         [TestMethod]
         public void TempPrimBadOpcTagTest()
@@ -175,7 +186,7 @@ namespace ArticunoTest
             DataTable table = dbi.readQuery(string.Format("Select {0} from MetTowerOutputTags", columnFilter));
             foreach (DataRow row in table.Rows)
             {
-                string metPrefix = string.Format("{0}", row[columnFilter].ToString());
+                string metPrefix = string.Format("{0}", row[0].ToString());
                 string metTowerIdPattern = @"\b\w{3}(\d{1})*\b";
                 Regex lookup = new Regex(metTowerIdPattern, RegexOptions.Singleline);
 
