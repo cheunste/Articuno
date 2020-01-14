@@ -96,6 +96,7 @@ namespace ArticunoTest
 
             //Manually start the turbine. You must do this as Articuno is not designed to start turbines by design
             OpcServer.writeOpcTag(dbi.getOpcServerName(), dbi.getSitePrefixValue() + ".T001.WTUR.SetTurOp.ActSt.Str", 1);
+
             turbineMediator.startTurbineFromTurbineMediator(turbineId);
 
             //Set the NRS condition to true, or else the turbine will never ice up.

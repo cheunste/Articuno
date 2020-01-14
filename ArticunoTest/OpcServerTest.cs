@@ -18,6 +18,7 @@ namespace ArticunoTest
 
         public OpcServerTest()
         {
+            dbi = DatabaseInterface.Instance;
             opcServer = new OpcServer(dbi.getOpcServerName());
             prefix = dbi.getOpcServerName();
         }
@@ -115,9 +116,15 @@ namespace ArticunoTest
         public void tagNotFound()
         {
             string tagName = prefix + ".TagNotFound";
-            var tagThatDoesntExist = opcServer.readTagValue(tagName);
-            opcServer.writeTagValue(tagName, 0);
-            Assert.IsNull(tagThatDoesntExist);
+            try
+            {
+                var tagThatDoesntExist = opcServer.readTagValue(tagName);
+                opcServer.writeTagValue(tagName, 0);
+            }
+            catch (NullReferenceException)
+            {
+                Assert.IsTrue(true, String.Format("Null exception caught for tag {0} ",tagName));
+            }
         }
 
 

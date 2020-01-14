@@ -211,7 +211,7 @@ namespace ArticunoTest
         private bool turbineExistInConfig(string turbineId)
         {
             string turbineIdFromTurbineInputTable = dbi.readQuery(String.Format("SELECT TurbineId from TurbineInputTags where TurbineId='{0}'", turbineId)).Rows[0]["TurbineId"].ToString();
-            string turbineIdFromTurbineOutputTable = dbi.readQuery(String.Format("SELECT TurbineId from TurbineOuputTags where TurbineId='{0}'", turbineId)).Rows[0]["TurbineId"].ToString();
+            string turbineIdFromTurbineOutputTable = dbi.readQuery(String.Format("SELECT TurbineId from TurbineOutputTags where TurbineId='{0}'", turbineId)).Rows[0]["TurbineId"].ToString();
             if (turbineIdFromTurbineInputTable.Equals("") || turbineIdFromTurbineOutputTable.Equals(""))
                 return false;
             else
