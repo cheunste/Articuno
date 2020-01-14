@@ -50,7 +50,7 @@ namespace ArticunoTest
         //Tests to see if the values will write to the Opc Server
         public void writeValueToOpcTagTest()
         {
-            string opcBoolTestTag =siteName + dbi.GetTowerBadPrimaryTempSensorTag("Met");
+            string opcBoolTestTag =siteName + dbi.GetMetBadPrimaryTempSensorAlarmTag("Met");
 
             string result = opcServer.readTagValue(opcBoolTestTag);
             Assert.IsNotNull(result);

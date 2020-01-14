@@ -43,13 +43,15 @@ namespace Articuno
                 {
                     using (SQLiteDataReader reader = cmd.ExecuteReader())
                     {
-                        //You do things here
                         dt.Load(reader);
                     }
                 }
             }
             return dt;
         }
+
+
+
 
 
 
@@ -71,6 +73,8 @@ namespace Articuno
             }
             return 0;
         }
+
+
 
         /// <summary>
         /// Gets the name of the OPC Server
@@ -106,31 +110,68 @@ namespace Articuno
             return Convert.ToString(result.Rows[0]["OpcTag"]);
 
         }
-        public int getHeartbeatIntervalValue() { return Convert.ToInt32(readQuery("SELECT DefaultValue from SystemInputTags WHERE Description='HeartbeatInterval'").Rows[0]["DefaultValue"]); }
+        public int getHeartbeatIntervalValue() { return Convert.ToInt32(readQuery("SELECT DefaultValue from SystemInputTags WHERE Description='HeartbeatInterval'").Rows[0][0]); }
 
-        public string getTemperatureThresholdTag() { return readQuery("SELECT OpcTag from SystemInputTags WHERE Description='AmbTempThreshold'").Rows[0]["OpcTag"].ToString(); }
+        public string getTemperatureThresholdTag() { return readQuery("SELECT OpcTag from SystemInputTags WHERE Description='AmbTempThreshold'").Rows[0][0].ToString(); }
 
-        public string getArticunoEnableTag() { return readQuery("SELECT OpcTag from SystemInputTags WHERE Description='ArticunoEnable'").Rows[0]["OpcTag"].ToString(); }
+        public string getArticunoEnableTag() { return readQuery("SELECT OpcTag from SystemInputTags WHERE Description='ArticunoEnable'").Rows[0][0].ToString(); }
 
-        public string getArticunoCtrTag() { return readQuery("SELECT OpcTag from SystemInputTags WHERE Description='CTRPeriod'").Rows[0]["OpcTag"].ToString(); }
-        public string GetDeltaThresholdTag() { return readQuery("SELECT OpcTag from SystemInputTags WHERE Description='DeltaTmpThreshold'").Rows[0]["OpcTag"].ToString(); }
+        public string getArticunoCtrTag() { return readQuery("SELECT OpcTag from SystemInputTags WHERE Description='CTRPeriod'").Rows[0][0].ToString(); }
+        public string GetDeltaThresholdTag() { return readQuery("SELECT OpcTag from SystemInputTags WHERE Description='DeltaTmpThreshold'").Rows[0][0].ToString(); }
 
-        public string GetTurbineScalingFactor() { return readQuery("SELECT * from SystemInputTags where Description='ScalingFactor';").Rows[0]["DefaultValue"].ToString(); }
-        public int GetTurbineStartupTime() { return Convert.ToInt32(readQuery("SELECT * from SystemInputTags where Description='TurbineStartupTime';").Rows[0]["DefaultValue"]); }
+        public string GetTurbineScalingFactor() { return readQuery("SELECT * from SystemInputTags where Description='ScalingFactor';").Rows[0][0].ToString(); }
+        public int GetTurbineStartupTime() { return Convert.ToInt32(readQuery("SELECT * from SystemInputTags where Description='TurbineStartupTime';").Rows[0][0]); }
 
 
-        public string GetArticunoIcePossibleOpcTag() { return readQuery("SELECT OpcTag from SystemOutputTags WHERE Description='IcePossible';").Rows[0]["OpcTag"].ToString(); }
-        public string GetArticunoNumbersOfTurbinesPausedTag() { return readQuery("SELECT OpcTag from SystemOutputTags WHERE Description='NumTurbIced';").Rows[0]["OpcTag"].ToString(); }
-        public string GetArticunoHeartbeatTag() { return readQuery("SELECT OpcTag from SystemOutputTags WHERE Description='Heartbeat';").Rows[0]["OpcTag"].ToString(); }
+        public string GetArticunoIcePossibleOpcTag() { return readQuery("SELECT OpcTag from SystemOutputTags WHERE Description='IcePossible';").Rows[0][0].ToString(); }
+        public string GetArticunoNumbersOfTurbinesPausedTag() { return readQuery("SELECT OpcTag from SystemOutputTags WHERE Description='NumTurbIced';").Rows[0][0].ToString(); }
+        public string GetArticunoHeartbeatTag() { return readQuery("SELECT OpcTag from SystemOutputTags WHERE Description='Heartbeat';").Rows[0][0].ToString(); }
 
         //MetTower
-        public string GetMetTowerCtrTag() { return readQuery("SELECT * from SystemInputTags where Description='MetTowerCtrCountdown';").Rows[0]["OpcTag"].ToString(); }
+        public string GetMetTowerCtrTag() { return readQuery("SELECT * from SystemInputTags where Description='MetTowerCtrCountdown';").Rows[0][0].ToString(); }
 
-        public string GetBackupTurbine(string metId) { return readQuery(String.Format("SELECT BackupTurbine from MetTowerInputTags where MetId='{0}';", metId)).Rows[0]["BackupTurbine"].ToString(); }
-        public string GetTowerBadPrimaryTempSensorTag(string metId)
-        {
-            return readQuery(String.Format("SELECT TempPrimBadQualityTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0]["TempPrimBadQualityTag"].ToString();
+        public string GetPrimTempValueTag(string metId) { return readQuery(String.Format("SELECT PrimTempValueTag from MetTowerInputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
+        public string GetSecTempValueTag(string metId) { return readQuery(String.Format("SELECT SecTempValueTag from MetTowerInputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
+        public string GetPrimHumidityTag(string metId) { return readQuery(String.Format("SELECT PrimHumidityValueTag from MetTowerInputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
+        public string GetSwitchCommandTag(string metId) { return readQuery(String.Format("SELECT Switch from MetTowerInputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
+        public string GetMetHumidityOutOfRangeAlarmTag(string metId) {
+            return readQuery(String.Format("SELECT HumidityOutOfRangeTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString();
         }
+
+        public string GetMetNoDataAlarmTag(string metId)
+        {
+            return readQuery(String.Format("SELECT NoDataAlarmTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString();
+        }
+
+        public string GetMetIceIndicationAlarmTag(string metId)
+        {
+            return readQuery(String.Format("SELECT IceIndicationTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString();
+        }
+
+        public string GetMetHumidityBadQualityAlarmTag(string metId)
+        {
+            return readQuery(String.Format("SELECT HumidityBadQuality from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString();
+        }
+
+        public string GetMetBadSecondaryTempSensorAlarmTag(string metId)
+        {
+            return readQuery(String.Format("SELECT TempSecBadQualityTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString();
+        }
+        public string GetMetBadPrimaryTempSensorAlarmTag(string metId)
+        {
+            return readQuery(String.Format("SELECT TempPrimBadQualityTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString();
+        }
+        public string GetMetPrimaryTempOutOfRangeAlarmTag(string metId)
+        {
+            return readQuery(String.Format("SELECT TempPrimOutOfRangeTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString();
+        }
+
+        public string GetMetSecondaryTempOutOfRangeAlarmTag(string metId)
+        {
+            return readQuery(String.Format("SELECT TempSecOutOfRangeTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString();
+        }
+
+        public string GetBackupTurbine(string metId) { return readQuery(String.Format("SELECT BackupTurbine from MetTowerInputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
 
         //Turbine
         public DataTable GetAllTurbineId() { return readQuery("SELECT TurbineId FROM TurbineInputTags;"); }
@@ -147,5 +188,6 @@ namespace Articuno
         {
             return readQuery(String.Format("SELECT RotorSpeed from TurbineInputTags where TurbineId='{0}'", turbinePrefix)).Rows[0].ToString();
         }
+
     }
 }

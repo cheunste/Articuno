@@ -17,61 +17,61 @@ namespace ArticunoTest
         OpcServer opcServer;
         MetTowerMediator mm;
         TurbineMediator tm;
-        //Test contants
+        DatabaseInterface dbi;
+
         public double DEFAULT_AMB_TEMP_THRESHOLD = 0.00;
         public double DEFAULT_DELTA_THRESHOLD = 1.00;
 
-        //These are tags for met tower1
-        string[] met1Tags ={
-            "Met.AmbTmp1",
-            "Met.AmbTmp2",
-            "Articuno.Met.TempAlm",
-            "Articuno.Met.TmpHiDispAlm",
-            "Met.RH1",
-            "Met.RH2",
-            "Articuno.Met.IcePossible",
-            "Articuno.Met.RHS1OutRngAlm",
-            "Articuno.Met.RHAlm",
-            "Articuno.Met.TowerAlm"};
+        List<String> met1Tags;
+        List<String> met2Tags;
+        List<String> ArticunoMetAlarmTags;
 
-        string[] met2Tags = {
-            "Met2.AmbTmp1",
-            "Met2.AmbTmp2",
-            "Articuno.Met2.TempAlm",
-            "Articuno.Met2.TmpHiDispAlm",
-            "Met2.RH1",
-            "Met2.RH2",
-            "Articuno.Met2.IcePossible",
-            "Articuno.Met2.RHS1OutRngAlm",
-            "Articuno.Met2.RHAlm",
-            "Articuno.Met2.TowerAlm"};
-
-        string[] ArticunoMetTags = {
-            "Articuno.Met.IcePossible",
-            "Articuno.Met.RHAlm",
-            "Articuno.Met.RHS1OutRngAlm",
-            "Articuno.Met.TempAlm",
-            "Articuno.Met.TmpHiDispAlm",
-            "Articuno.Met.TowerAlm",
-            "Articuno.Met2.IcePossible",
-            "Articuno.Met.TmpS1OutOfRangeAlm",
-            "Articuno.Met.TmpS2OutOfRangeAlm",
-            "Articuno.Met2.RHAlm",
-            "Articuno.Met2.RHS1OutRngAlm",
-            "Articuno.Met2.TempAlm",
-            "Articuno.Met2.TmpHiDispAlm",
-            "Articuno.Met2.TowerAlm",
-            "Articuno.Met2.TmpS1OutOfRangeAlm",
-            "Articuno.Met2.TmpS2OutOfRangeAlm"
-        };
         string siteName;
         string opcServerName = "SV.OPCDAServer.1";
 
-        DatabaseInterface dbi;
 
-        //Create a Met Tower Class
         public MetTowerFunctionalityTest()
         {
+            met1Tags = new List<String>();
+            met2Tags = new List<String>();
+            ArticunoMetAlarmTags = new List<String>();
+            dbi = DatabaseInterface.Instance;
+
+            met1Tags.AddRange(new string[] {
+                dbi.GetPrimTempValueTag("Met"),
+                dbi.GetSecTempValueTag("Met"),
+                dbi.GetPrimHumidityTag("Met"),
+                dbi.GetSwitchCommandTag("Met"),
+                dbi.GetBackupTurbine("Met") }
+            );
+
+            met2Tags.AddRange(new string[] {
+                dbi.GetPrimTempValueTag("Met2"),
+                dbi.GetSecTempValueTag("Met2"),
+                dbi.GetPrimHumidityTag("Met2"),
+                dbi.GetSwitchCommandTag("Met2"),
+                dbi.GetBackupTurbine("Met2")
+            });
+
+            ArticunoMetAlarmTags.AddRange(new string[]
+            {
+                dbi.GetMetBadPrimaryTempSensorAlarmTag("Met"),
+                dbi.GetMetBadSecondaryTempSensorAlarmTag("Met"),
+                dbi.GetMetPrimaryTempOutOfRangeAlarmTag("Met"),
+                dbi.GetMetSecondaryTempOutOfRangeAlarmTag("Met"),
+                dbi.GetMetHumidityOutOfRangeAlarmTag("Met"),
+                dbi.GetMetIceIndicationAlarmTag("Met"),
+                dbi.GetMetNoDataAlarmTag("Met"),
+
+                dbi.GetMetBadPrimaryTempSensorAlarmTag("Met2"),
+                dbi.GetMetBadSecondaryTempSensorAlarmTag("Met2"),
+                dbi.GetMetPrimaryTempOutOfRangeAlarmTag("Met2"),
+                dbi.GetMetSecondaryTempOutOfRangeAlarmTag("Met2"),
+                dbi.GetMetHumidityOutOfRangeAlarmTag("Met2"),
+                dbi.GetMetIceIndicationAlarmTag("Met2"),
+                dbi.GetMetNoDataAlarmTag("Met2"),
+
+            });
         }
 
         [TestInitialize]
@@ -84,7 +84,7 @@ namespace ArticunoTest
             //Create new met tower mediator
             mm.CreateMetTowerObject();
             opcServer = new OpcServer(opcServerName);
-            siteName = "SCRAB";
+            siteName = dbi.getSitePrefixValue();
             //set default met tower Data
             cleanup();
 
@@ -330,16 +330,16 @@ namespace ArticunoTest
         {
             foreach (string tag in met1Tags)
             {
-                writeValue(String.Format("{0}.{1}", siteName, tag), 0);
+                writeValue(String.Format("{0}{1}", siteName, tag), 0);
             }
 
             foreach (string tag in met2Tags)
             {
-                writeValue(String.Format("{0}.{1}", siteName, tag), 0);
+                writeValue(String.Format("{0}{1}", siteName, tag), 0);
             }
-            foreach (string tag in ArticunoMetTags)
+            foreach (string tag in ArticunoMetAlarmTags)
             {
-                writeValue(String.Format("{0}.{1}", siteName, tag), 0);
+                writeValue(String.Format("{0}{1}", siteName, tag), 0);
             }
 
         }
@@ -348,15 +348,15 @@ namespace ArticunoTest
         private void setValidMetData()
         {
             //Met
-            writeValue(String.Format("{0}.Met.AmbTmp1", siteName), 50.33);
-            writeValue(String.Format("{0}.Met.AmbTmp2", siteName), 52.00);
-            writeValue(String.Format("{0}.Met.RH1", siteName), 30.22);
-            writeValue(String.Format("{0}.Met.RH2", siteName), 25.22);
+            writeValue(String.Format("{0}Met.AmbTmp1", siteName), 50.33);
+            writeValue(String.Format("{0}Met.AmbTmp2", siteName), 52.00);
+            writeValue(String.Format("{0}Met.RH1", siteName), 30.22);
+            writeValue(String.Format("{0}Met.RH2", siteName), 25.22);
             //Met2
-            writeValue(String.Format("{0}.Met2.AmbTmp1", siteName), 40.00);
-            writeValue(String.Format("{0}.Met2.AmbTmp2", siteName), 35.00);
-            writeValue(String.Format("{0}.Met2.RH1", siteName), 50.11);
-            writeValue(String.Format("{0}.Met2.RH2", siteName), 45.11);
+            writeValue(String.Format("{0}Met2.AmbTmp1", siteName), 40.00);
+            writeValue(String.Format("{0}Met2.AmbTmp2", siteName), 35.00);
+            writeValue(String.Format("{0}Met2.RH1", siteName), 50.11);
+            writeValue(String.Format("{0}Met2.RH2", siteName), 45.11);
         }
 
         //Method used in this class to write values 
