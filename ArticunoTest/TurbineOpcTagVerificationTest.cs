@@ -140,6 +140,7 @@ namespace ArticunoTest
             foreach (DataRow row in table.Rows)
             {
                 string tag = string.Format("{0}{1}", prefix, row[0].ToString());
+                Console.WriteLine(tag);
                 try { string value = opcServer.readTagValue(tag); }
                 catch (Exception) { Assert.Fail("tag {0} cannot be found", tag); }
             }

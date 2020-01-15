@@ -14,10 +14,8 @@ namespace Articuno
 {
     sealed internal class MetTowerMediator
     {
-        //the number of met towers. Probably shouldn't be static
         public static int numMetTower;
 
-        //private members
         private string MET_INPUT_TABLE_TAGS =
             "SELECT * FROM MetTowerInputTags WHERE MetId='{0}'";
         private string MET_OUTPUT_TABLE_TAGS =
@@ -34,11 +32,9 @@ namespace Articuno
         private static List<MetTower> metTowerList = new List<MetTower>();
         private static List<String> metPrefixList = new List<String>();
 
-        //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(MetTowerMediator));
+        private static DatabaseInterface dbi;
 
-        //Database
-        static DatabaseInterface dbi;
         private MetTowerMediator()
         {
 
@@ -150,7 +146,7 @@ namespace Articuno
                 }
             }
 
-            //No ice condition (essentually)
+            //No ice condition
             else
             {
                 met.IceIndicationValue = false;
@@ -163,7 +159,6 @@ namespace Articuno
                     metId, avgTemperature, tempThreshold, avgHumidity, deltaThreshold
                     );
             }
-
             return Convert.ToBoolean(met.IceIndicationValue);
         }
 
@@ -215,19 +210,16 @@ namespace Articuno
             var primTempSensor = met.getPrimaryTemperatureSensor();
             var secTempSensor = met.getSecondaryTemperatureSensor();
 
-            //Get the primary sensor temperature. If its quality is bad, then get turbine temeprature
+            //Get the primary sensor temperature. If its quality is bad, then use the sencondary sensor. If secondary is bad, then use the turbine sensor
             temperature = primTempSensor.readValue();
             if (primTempSensor.isSensorBadQuality())
             {
-                //Read secondary sensor. If its quality is bad, then get turbine temperature
                 temperature = secTempSensor.readValue();
                 if (secTempSensor.isSensorBadQuality())
                 {
-                    //At this point, use the turbine sensro
                     temperature = Convert.ToDouble(met.getNearestTurbine().readTurbineTemperatureValue());
                 }
             }
-
             return temperature;
         }
 
@@ -306,7 +298,6 @@ namespace Articuno
             //Only write the dew point temperature if and only if the UCC is active
             if (OpcServer.isActiveUCC(opcServerName, uccActiveTag))
                 GetMetTowerFromId(metId).CtrDewValue = dew;
-
         }
 
 
@@ -360,9 +351,7 @@ namespace Articuno
         /// </summary>
         /// <param name="metId"></param>
         /// <returns></returns>
-        // The met tower quality is determined if all sensors are bad quality. So if both the temperatrure quality and the humidty quality is bad, then there will be no data for the met tower
-        //Note that unlike the sensor quality, noData does NOT imply quality, so if there really is no data, then it will be True, False otherwise
-        public bool checkMetTowerQuality(string metId)
+        public bool checkMetTowerSensorQuality(string metId)
         {
             MetTower met = GetMetTowerFromId(metId);
             bool currentNoDataState = Convert.ToBoolean(met.NoDataAlarmValue);
