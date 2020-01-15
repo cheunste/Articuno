@@ -183,20 +183,15 @@ namespace ArticunoTest
             met.PrimTemperatureValue = tempVal1;
             met.SecTemperatureValue = tempVal1;
 
-            for (int i = 0; i <= 100; i++)
-            {
-                var humid = met.RelativeHumidityValue;
-                var temp1 = met.PrimTemperatureValue;
-                var temp2 = met.SecTemperatureValue;
-            }
-            met.isAllSensorGood();
+            createStaleData(met);
 
-            bool alarm = Convert.ToBoolean(met.NoDataAlarmValue);
+            bool alarm = met.isAllSensorGood();
 
-            Assert.IsTrue(alarm,
-                String.Format("The NoDataAlarm Value is not true for {0}", metId1)
+            Assert.IsTrue(Convert.ToBoolean(met.NoDataAlarmValue),
+                String.Format("The NoDataAlarm Value is not raised for {0} after stale data", metId1)
                 );
         }
+
 
         [TestMethod]
         //Test to see what happens when the met tower is switched from the default.
@@ -311,7 +306,7 @@ namespace ArticunoTest
             var primTempQuality = mm.GetMetTowerFromId(metId).getPrimaryTemperatureSensor().isSensorBadQuality();
             var secTempQuality = mm.GetMetTowerFromId(metId).getSecondaryTemperatureSensor().isSensorBadQuality();
             var humidQuality = mm.GetMetTowerFromId(metId).getPrimaryHumiditySensor().isSensorBadQuality();
-            var metTowerQuality = mm.checkMetTowerQuality(metId);
+            var metTowerQuality = mm.checkMetTowerSensorQuality(metId);
 
             Thread.Sleep(500);
             Assert.AreEqual(expectedTempQual, primTempQuality, "Primary Temperature alarm is {0}, Expected: {1}", primTempQuality, expectedTempQual);
@@ -542,5 +537,16 @@ namespace ArticunoTest
                 Assert.AreEqual(Flatline, met.HumidityBadQuality);
 
         }
+        private void createStaleData(MetTower met)
+        {
+            for (int i = 0; i <= 100; i++)
+            {
+                var humid = met.RelativeHumidityValue;
+                var temp1 = met.PrimTemperatureValue;
+                var temp2 = met.SecTemperatureValue;
+            }
+
+        }
+
     }
 }
