@@ -154,7 +154,7 @@ namespace Articuno
         //The following four functions are called by the main Articuno class to set an icing protocol condition given a turbine Id. Remember, the turbine should pause automatically independently of each other
         public void setTemperatureCondition(string turbineId, bool state) { log.DebugFormat("Temperature condition for {0} {1}", turbineId, state ? "met" : "not met"); GetTurbinePrefixFromMediator(turbineId).SetTemperatureCondition(state); }
         public void setOperatingStateCondition(string turbineId, bool state) { log.DebugFormat("Operating status condition for {0} {1}", turbineId, state ? "met" : "not met"); GetTurbinePrefixFromMediator(turbineId).SetOperatingStateCondition(state); }
-        public void setNrsActive(string turbineId, bool state) { log.DebugFormat("NRS Condition for {0} {1}", turbineId, state ? "active" : "not active"); GetTurbinePrefixFromMediator(turbineId).SetTurbineNrsMode(state); }
+        public void setNrsActive(string turbineId, bool state) { log.DebugFormat("NRS Condition for {0} {1}", turbineId, state ? "active" : "not active"); GetTurbinePrefixFromMediator(turbineId).TurbineNrsModeChanged(state); }
         public void setTurbinePerformanceCondition(string turbineId, bool state) { log.DebugFormat("Turbine Performance condition for {0} {1}", turbineId, state ? "met" : "not met"); GetTurbinePrefixFromMediator(turbineId).SetTurbineUnderPerformanceCondition(state); }
 
         /// <summary>
@@ -368,7 +368,7 @@ namespace Articuno
                 if (noiseLevelTag.Equals(""))
                 {
                     turbine.NrsStateTag = "";
-                    turbine.SetTurbineNrsMode(false);
+                    turbine.TurbineNrsModeChanged(false);
                 }
                 else
                     turbine.NrsStateTag = noiseLevelTag;
@@ -376,8 +376,14 @@ namespace Articuno
             catch (NullReferenceException)
             {
                 turbine.NrsStateTag = "";
-                turbine.SetTurbineNrsMode(false);
+                turbine.TurbineNrsModeChanged(false);
             }
+        }
+
+        private bool DoesTurbineNrsTagExist(string nrsTag,DataTable reader)
+        {
+            string noiseLevelTag = sitePrefix + reader.Rows[0]["NrsMode"].ToString();
+            return noiseLevelTag.Equals("") ? false : true;
         }
         private void SetMetTowerRedundancyForTurbine(Turbine turbine, DataTable reader)
         {

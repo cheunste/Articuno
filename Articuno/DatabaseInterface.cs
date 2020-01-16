@@ -188,6 +188,11 @@ namespace Articuno
         {
             return readQuery(String.Format("SELECT RotorSpeed from TurbineInputTags where TurbineId='{0}'", turbinePrefix)).Rows[0][0].ToString();
         }
+        internal string getTurbineStartCommandTag(string turbinePrefix)
+        {
+            return readQuery(String.Format("SELECT Start from TurbineInputTags where TurbineId='{0}'", turbinePrefix)).Rows[0][0].ToString();
+        }
+
 
     }
 }

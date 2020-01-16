@@ -159,11 +159,9 @@ namespace Articuno
         public void SetOperatingStateCondition(bool state) { this.operatingStateConditionMet = state; }
 
         /// <summary>
-        /// Method to set NRS mode from the turbine. false means NRS not active. true means NRS is active. 
-        /// Changing the NRS condition also resets the CTR and clears all stored queues
+        /// Method called after a NRS mode has been changed by the site. Changing the NRS condition also resets the CTR and clears all stored queues
         /// </summary>
-        /// <param name="state">A boolean</param>
-        public void SetTurbineNrsMode(bool state)
+        public void TurbineNrsModeChanged(bool state)
         {
             resetTurbineCtrTime();
             emptyQueue();
@@ -229,7 +227,6 @@ namespace Articuno
             resetTurbineCtrTime(startupTime);
         }
 
-        //Function to restart the Ctr Time. 
         public void resetTurbineCtrTime(int startupTime = 0)
         {
             double currentCtr = Convert.ToInt32(readTurbineCtrTimeRemaining());
