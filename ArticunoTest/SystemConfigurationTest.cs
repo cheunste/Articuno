@@ -25,7 +25,7 @@ namespace ArticunoTest
         [TestMethod]
         public void getActiveUccOpcTagTest()
         {
-            string tag = dbi.getActiveUccOpcTag();
+            string tag = prefix+dbi.getActiveUccOpcTag();
             readTag(tag);
         }
 
@@ -33,28 +33,28 @@ namespace ArticunoTest
         [TestMethod]
         public void getTemperatreThresholdOpcTagTest()
         {
-            string tag = dbi.getTemperatureThresholdTag();
+            string tag = prefix+dbi.getTemperatureThresholdTag();
             readTag(tag);
         }
 
         [TestMethod]
         public void getArticunoEnableOpcTagTest()
         {
-            string tag = dbi.getArticunoEnableTag();
+            string tag = prefix+dbi.getArticunoEnableTag();
             readTag(tag);
         }
 
         [TestMethod]
         public void getArticunoCtrPeriodOpcTagTest()
         {
-            string tag = dbi.getArticunoCtrTag();
+            string tag = prefix+dbi.getArticunoCtrTag();
             readTag(tag);
 
         }
         [TestMethod]
         public void getScalingFactorOpcTagTest()
         {
-            string value = dbi.GetTurbineScalingFactor();
+            string value = prefix+dbi.GetTurbineScalingFactor();
             Assert.IsNotNull(value);
             Assert.AreNotEqual(value, "");
         }
@@ -92,15 +92,14 @@ namespace ArticunoTest
         [TestMethod]
         public void getMetTowerCtrCountDownTagTest()
         {
-            Assert.Fail("Test Not implemented yet");
-            string tag = dbi.getMetTowerCtrCountdownTag();
+            string tag =prefix+ dbi.getMetTowerCtrCountdownTag();
             readTag(tag);
         }
 
         [TestMethod]
         public void getArticunoHeartbeatOpcTag()
         {
-            string tag = dbi.GetArticunoHeartbeatTag();
+            string tag = prefix+dbi.GetArticunoHeartbeatTag();
             readTag(tag);
 
         }
@@ -108,14 +107,14 @@ namespace ArticunoTest
         public void getArticunoIcePossibleOpcTag()
         {
 
-            string tag = dbi.GetArticunoIcePossibleOpcTag();
+            string tag = prefix+dbi.GetArticunoIcePossibleOpcTag();
             readTag(tag);
         }
         [TestMethod]
         public void getArticunoNumberOfTurbinesPausedByIce()
         {
 
-            string tag = dbi.GetArticunoNumbersOfTurbinesPausedTag();
+            string tag = prefix+dbi.GetArticunoNumbersOfTurbinesPausedTag();
             readTag(tag);
         }
 

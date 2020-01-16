@@ -40,12 +40,19 @@ namespace ArticunoTest
             DataTable table = dbi.readQuery("Select NrsMode from TurbineInputTags");
             foreach (DataRow row in table.Rows)
             {
-                string tag = string.Format("{0}{1}", prefix, row[0].ToString());
-                try
+                if (row[0].ToString().Equals(""))
                 {
-                    string value = opcServer.readTagValue(tag);
+                    Assert.IsTrue(true, "No item in the NRSMode column, which can be intention");
                 }
-                catch (Exception) { Assert.Fail("tag {0} cannot be found", tag); }
+                else
+                {
+                    string tag = string.Format("{0}{1}", prefix, row[0].ToString());
+                    try
+                    {
+                        string value = opcServer.readTagValue(tag);
+                    }
+                    catch (Exception) { Assert.Fail("tag {0} cannot be found", tag); }
+                }
             }
         }
         [TestMethod]

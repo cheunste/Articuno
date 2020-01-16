@@ -107,7 +107,7 @@ namespace Articuno
         public string getMetTowerCtrCountdownTag()
         {
             DataTable result = readQuery(String.Format("SELECT OpcTag from {0} WHERE Description ='MetTowerCtrCountdown' ", SYSTEM_OUTPUT_TABLE));
-            return Convert.ToString(result.Rows[0]["OpcTag"]);
+            return Convert.ToString(result.Rows[0][0]);
 
         }
         public int getHeartbeatIntervalValue() { return Convert.ToInt32(readQuery("SELECT DefaultValue from SystemInputTags WHERE Description='HeartbeatInterval'").Rows[0][0]); }
@@ -120,7 +120,7 @@ namespace Articuno
         public string GetDeltaThresholdTag() { return readQuery("SELECT OpcTag from SystemInputTags WHERE Description='DeltaTmpThreshold'").Rows[0][0].ToString(); }
 
         public string GetTurbineScalingFactor() { return readQuery("SELECT * from SystemInputTags where Description='ScalingFactor';").Rows[0][0].ToString(); }
-        public int GetTurbineStartupTime() { return Convert.ToInt32(readQuery("SELECT * from SystemInputTags where Description='TurbineStartupTime';").Rows[0][0]); }
+        public int GetTurbineStartupTime() { return Convert.ToInt32(readQuery("SELECT DefaultValue from SystemInputTags where Description='TurbineStartupTime';").Rows[0][0]); }
 
 
         public string GetArticunoIcePossibleOpcTag() { return readQuery("SELECT OpcTag from SystemOutputTags WHERE Description='IcePossible';").Rows[0][0].ToString(); }
@@ -182,11 +182,11 @@ namespace Articuno
         private readonly string TURBINE_STARTUP_TIME = "SELECT * from SystemInputTags where Description='TurbineStartupTime';";
         public string getParticiaptionTag(string turbinePrefix)
         {
-            return readQuery(String.Format("SELECT Participation from TurbineInputTags where TurbineId='{0}'", turbinePrefix)).Rows[0].ToString();
+            return readQuery(String.Format("SELECT Participation from TurbineInputTags where TurbineId='{0}'", turbinePrefix)).Rows[0][0].ToString();
         }
         public string getTurbineRotorSpeedTag(string turbinePrefix)
         {
-            return readQuery(String.Format("SELECT RotorSpeed from TurbineInputTags where TurbineId='{0}'", turbinePrefix)).Rows[0].ToString();
+            return readQuery(String.Format("SELECT RotorSpeed from TurbineInputTags where TurbineId='{0}'", turbinePrefix)).Rows[0][0].ToString();
         }
 
     }
