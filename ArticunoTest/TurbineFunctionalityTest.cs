@@ -95,11 +95,12 @@ namespace ArticunoTest
             turbineMediator.setTurbineCtrTime(turbineId, 1);
 
             //Manually start the turbine. You must do this as Articuno is not designed to start turbines by design
-            OpcServer.writeOpcTag(dbi.getOpcServerName(), dbi.getSitePrefixValue() + ".T001.WTUR.SetTurOp.ActSt.Str", 1);
+            OpcServer.writeOpcTag(dbi.getOpcServerName(), dbi.getSitePrefixValue() + dbi.getTurbineStartCommandTag(turbineId), 1);
 
             turbineMediator.startTurbineFromTurbineMediator(turbineId);
 
             //Set the NRS condition to true, or else the turbine will never ice up.
+            turbineMediator.getNrsStateTag(turbineId);
             if (state) turbineMediator.writeToTurbineNrsStateTag(turbineId, 5);
             else turbineMediator.writeToTurbineNrsStateTag(turbineId, 1);
 
@@ -112,7 +113,7 @@ namespace ArticunoTest
             //If all five are true, then this turbine should be paused due to Ice
             //Force the mediator to check icing conditions. I don't want to wait.
             turbineMediator.checkIcingConditions(turbineId);
-            System.Threading.Thread.Sleep(500);
+            System.Threading.Thread.Sleep(5000);
 
             //The following asserts are for feedback tags 
             Turbine turbine = TurbineMediator.GetTurbinePrefixFromMediator(turbineId);
@@ -177,7 +178,7 @@ namespace ArticunoTest
                 OpcServer.writeOpcTag(opcServerName, turbine.ParticipationTag, true);
                 turbine.SetTemperatureCondition(false);
                 turbine.SetOperatingStateCondition(false);
-                turbine.SetTurbineNrsMode(false);
+                turbine.TurbineNrsModeChanged(false);
                 turbine.SetTurbineUnderPerformanceCondition(false);
             }
 

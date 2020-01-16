@@ -25,7 +25,7 @@ namespace ArticunoTest
         [TestMethod]
         public void getActiveUccOpcTagTest()
         {
-            string tag = prefix+dbi.getActiveUccOpcTag();
+            string tag = dbi.getActiveUccOpcTag();
             readTag(tag);
         }
 
