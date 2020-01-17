@@ -351,26 +351,23 @@ namespace Articuno
         /// </summary>
         /// <param name="metId"></param>
         /// <returns></returns>
-        public bool checkMetTowerSensorQuality(string metId)
+        public bool isAllMetTowerSensorBadQuality(string metId)
         {
             MetTower met = GetMetTowerFromId(metId);
             bool currentNoDataState = Convert.ToBoolean(met.NoDataAlarmValue);
             //Checks to see if the snesor is good or not. Note that the call to isAllSensorGood will raise/clear the 'no data' alarm. This function logs it
 
-            //If all the sensors are bad
             if (!met.isAllSensorGood())
             {
-                //Log it
                 log.DebugFormat("{0} No Data alarm {1}. NoData Alarm Value {2}", metId, "raised", met.NoDataAlarmValue);
-                return false;
+                return true;
             }
-            //If all the senosrs are good. 
             else
             {
                 //To prevent overlogging, only log if the currentNoDataState was true before
                 if (currentNoDataState)
                     log.DebugFormat("{0} No Data alarm {1}. NoData Alarm Value {2}", metId, "cleared", met.NoDataAlarmValue);
-                return true;
+                return false;
             }
         }
 

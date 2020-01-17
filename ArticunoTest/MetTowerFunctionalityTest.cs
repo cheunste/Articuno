@@ -258,7 +258,8 @@ namespace ArticunoTest
         [DataRow("Met", -50.0, -50.0)]
         public void useTurbineTempTest(string metId, double tempSensor1Val, double tempSensor2Val)
         {
-            //Create a test turbine
+
+            Assert.Fail("Need to revist due to inclusion of BackupTurbine column in the database ");
             tm.createTestTurbines();
             var turbine = tm.getTurbinePrefixList()[0];
 
@@ -272,46 +273,45 @@ namespace ArticunoTest
             Random rnd = new Random();
 
             //Get measurements about 50 tiems or so to see if it is flatline. 
-            for (int i = 0; i <= 50; i++)
-            {
-
-                met.PrimTemperatureValue = rnd.Next((int)tempSensor1Val - 5, (int)tempSensor1Val);
-                met.SecTemperatureValue = rnd.Next((int)tempSensor1Val - 5, (int)tempSensor1Val);
-                mm.getAllMeasurements(metId);
-            }
-
-            //Get the temperatures from both the turbine and the met tower and assert they're equal.
+            createStaleData(met);
+            
             double temperature = Convert.ToDouble(mm.ReadTemperatureFromMetTower(metId));
             double turbineTemp = Convert.ToDouble(tm.readTurbineTemperatureValue(turbine));
             Console.WriteLine("Temperature of {0}: {1}", metId, temperature);
             Console.WriteLine("Temperature from Turbine: {0}", turbineTemp);
-            //Make sure the temperature from both the met tower and its backup turbine are not the same.
+            //verify  temperature from both the met tower and its backup turbine are not the same.
             Assert.AreNotEqual(temperature, turbineTemp, 0.001, "The Temperatures are equal. Turbine: {0}, Met Temp {1}", turbineTemp, temperature);
         }
 
         [TestMethod]
         [DataTestMethod]
-        [DataRow("Met", -50.0, -50.0, 110.0, MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY, MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY, MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY)]
-        [DataRow("Met", 10.0, 10.0, 60.0, MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY, MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY, MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY)]
-        [DataRow("Met", 10.0, -50.0, 60.0, MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY, MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY, MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY)]
-        public void noDataTest(string metId, double tempVal1, double tempVal2, double hmdVal, Object expectedTempQual, Object expectedHumiQual, Object nodata)
+        [DataRow("Met", -50.0, -50.0, 110.0,true)]
+        [DataRow("Met", 10.0, 10.0, 60.0, false)]
+        [DataRow("Met", 10.0, -50.0, 60.0, true)]
+
+        public void noDataTest(string metId, double tempVal1, double tempVal2, double hmdVal, bool expectedState)
         {
-            //Test needs to be redone after refactoring
-            Assert.Fail();
             mm.writePrimTemperature(metId, tempVal1);
             mm.writeSecTemperature(metId, tempVal2);
             mm.writeHumidity(metId, hmdVal);
             Thread.Sleep(500);
 
+            if (expectedState)
+                createStaleData(mm.GetMetTowerFromId(metId);
+                
+            var humidQuality = mm.GetMetTowerFromId(metId).getPrimaryHumiditySensor().isSensorBadQuality();
             var primTempQuality = mm.GetMetTowerFromId(metId).getPrimaryTemperatureSensor().isSensorBadQuality();
             var secTempQuality = mm.GetMetTowerFromId(metId).getSecondaryTemperatureSensor().isSensorBadQuality();
-            var humidQuality = mm.GetMetTowerFromId(metId).getPrimaryHumiditySensor().isSensorBadQuality();
-            var metTowerQuality = mm.checkMetTowerSensorQuality(metId);
+
+            var humidOutOfRange = mm.GetMetTowerFromId(metId).getPrimaryHumiditySensor().isSensorOutofRange();
+            var primTempOutOfRange = mm.GetMetTowerFromId(metId).getPrimaryTemperatureSensor().isSensorOutofRange();
+            var secTempOutOfRange = mm.GetMetTowerFromId(metId).getSecondaryTemperatureSensor().isSensorOutofRange();
+
+            var metTowerQuality = mm.isAllMetTowerSensorBadQuality(metId);
 
             Thread.Sleep(500);
-            Assert.AreEqual(expectedTempQual, primTempQuality, "Primary Temperature alarm is {0}, Expected: {1}", primTempQuality, expectedTempQual);
-            Assert.AreEqual(expectedHumiQual, humidQuality, "Primary Humidity alarm is {0}, Expected: {1}", humidQuality, expectedHumiQual);
-            Assert.AreEqual(metTowerQuality, nodata, "No data alarm status not equal. Seeing {0}. Expected {1}, ", metTowerQuality, nodata);
+
+            Assert.AreEqual(metTowerQuality,expectedState);
         }
 
         public void cleanup()
@@ -342,12 +342,10 @@ namespace ArticunoTest
         //Sets the met tower data to normal parameters. Needs to be hard coded so I can see a value difference between the two mets
         private void setValidMetData()
         {
-            //Met
             writeValue(String.Format("{0}Met.AmbTmp1", siteName), 50.33);
             writeValue(String.Format("{0}Met.AmbTmp2", siteName), 52.00);
             writeValue(String.Format("{0}Met.RH1", siteName), 30.22);
             writeValue(String.Format("{0}Met.RH2", siteName), 25.22);
-            //Met2
             writeValue(String.Format("{0}Met2.AmbTmp1", siteName), 40.00);
             writeValue(String.Format("{0}Met2.AmbTmp2", siteName), 35.00);
             writeValue(String.Format("{0}Met2.RH1", siteName), 50.11);
@@ -408,30 +406,25 @@ namespace ArticunoTest
             var turbine = tm.getTurbinePrefixList()[0];
 
             mm.writeHumidity(metId, humidity);
-
             MetTower met = mm.GetMetTowerFromId(metId);
+
+            opcServer.writeTagValue(met.HumidityPrimValueTag, humidity);
             var readValue = mm.readHumidity(metId);
             Thread.Sleep(500);
-            bool primQuaality = Convert.ToBoolean(met.HumidityBadQuality.ToString());
             bool primOutOfRange = Convert.ToBoolean(met.HumidityOutOfRng.ToString());
 
-            Console.WriteLine("Humidity {0}, Bad Quality: {1}, OutOfRange {2}",
-                readValue, primQuaality, primOutOfRange);
+            Console.WriteLine("Humidity {0}, OutOfRange {1}",
+                readValue, primOutOfRange);
 
-            var inputStatus = !Convert.ToBoolean(failureExpected);
             Thread.Sleep(500);
-            //Assert.AreEqual(inputStatus, primOutOfRange, "Input Status: {0}, prim Humidity Out of Range: {1}, Read Value: {2}", inputStatus, primOutOfRange, readValue);
-            //Assert.AreEqual(inputStatus, primQuaality, "Input Status: {0},prim Humidity Quality{1}, Read Value: {2}", inputStatus, primQuaality, readValue);
-
-            Assert.AreEqual(primOutOfRange, inputStatus, "MetTowerMediator's inputStatus and primOutOfRange should be equal");
+            Assert.AreEqual(primOutOfRange, !Convert.ToBoolean(failureExpected), "MetTowerMediator's inputStatus and primOutOfRange should be equal");
         }
 
-        //Test to see if given a bad humidity, Articuno will use temperature only
         [TestMethod]
         [DataTestMethod]
         [DataRow("Met", -1, 0)]
         [DataRow("Met", 101, -3)]
-        public void UseTemperatureOnlyTest(string metId, double humidity, double temperature)
+        public void BadHumitiyUseTemperatureOnlyTest(string metId, double humidity, double temperature)
         {
 
             tm.createTestTurbines();
@@ -463,7 +456,7 @@ namespace ArticunoTest
         [DataRow("Met", 90, .15, false)]
         [DataRow("Met", 00, .99, true)]
         [DataRow("Met", -20, .99, true)]
-        public void freezingTest(string metId, double temperature, double humidity, bool expectedFrozenState)
+        public void FrozenMetTowerTest(string metId, double temperature, double humidity, bool expectedFrozenState)
         {
             MetTower met = mm.GetMetTowerFromId(metId);
             mm.writeDeltaThreshold(1);
@@ -478,13 +471,12 @@ namespace ArticunoTest
         [DataTestMethod]
         [DataRow("Met", 20, .15, true)]
         [DataRow("Met", 20, .15, false)]
-        public void flatLineDetectionTest(string metId, double temperature, double humidity, bool Flatline)
+        public void StaleDataDetectionTest(string metId, double temperature, double humidity, bool Flatline)
         {
             MetTower met = mm.GetMetTowerFromId(metId);
             mm.writeDeltaThreshold(1);
             mm.UpdateTemperatureThresholdForAllMetTowers(0);
 
-            //Check Temperature
             met.PrimTemperatureValue = temperature;
 
             for (int i = 0; i <= 50; i++)
