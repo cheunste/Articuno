@@ -64,7 +64,6 @@ namespace Articuno
             createPrefixList();
 
             foreach (string metPrefix in metPrefixList) { InitializeMetTower(metPrefix); }
-            //Get the tag to see if UCC is active
             uccActiveTag = dbi.getActiveUccOpcTag();
         }
         /// <summary>

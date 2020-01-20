@@ -67,8 +67,10 @@ namespace Articuno
                 if (isActiveUCC())
                 {
                     client.WriteItemValue(serverName, tag, value);
+                    return true;
                 }
-                return true;
+                else
+                    return false;
             }
             catch (Exception e)
             {
