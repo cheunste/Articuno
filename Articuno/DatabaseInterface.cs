@@ -180,7 +180,17 @@ namespace Articuno
         private readonly string TURBINE_OUTPUT_COLUMN_QUERY = "SELECT * from TurbineOutputTags WHERE TurbineId='{0}'";
         private readonly string SCALING_FACTOR_QUERY = "SELECT * from SystemInputTags where Description='ScalingFactor';";
         private readonly string TURBINE_STARTUP_TIME = "SELECT * from SystemInputTags where Description='TurbineStartupTime';";
-        public string getParticiaptionTag(string turbinePrefix)
+
+        public string getTurbineOperatingStateTag(string turbinePrefix)
+        {
+            return readQuery(String.Format("SELECT OperatingState from TurbineInputTags where TurbineId='{0}'", turbinePrefix)).Rows[0][0].ToString();
+        }
+        public string getTurbineNrsModeTag(string turbinePrefix)
+        {
+
+            return readQuery(String.Format("SELECT NrsMode from TurbineInputTags where TurbineId='{0}'", turbinePrefix)).Rows[0][0].ToString();
+        }
+        public string getTurbineParticiaptionTag(string turbinePrefix)
         {
             return readQuery(String.Format("SELECT Participation from TurbineInputTags where TurbineId='{0}'", turbinePrefix)).Rows[0][0].ToString();
         }
