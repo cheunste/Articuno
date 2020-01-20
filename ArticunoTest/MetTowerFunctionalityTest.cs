@@ -297,7 +297,7 @@ namespace ArticunoTest
             Thread.Sleep(500);
 
             if (expectedState)
-                createStaleData(mm.GetMetTowerFromId(metId);
+                createStaleData(mm.GetMetTowerFromId(metId));
                 
             var humidQuality = mm.GetMetTowerFromId(metId).getPrimaryHumiditySensor().isSensorBadQuality();
             var primTempQuality = mm.GetMetTowerFromId(metId).getPrimaryTemperatureSensor().isSensorBadQuality();

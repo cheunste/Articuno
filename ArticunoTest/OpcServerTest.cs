@@ -29,8 +29,8 @@ namespace ArticunoTest
         [TestMethod]
         public void readValueFromOpcTagTest()
         {
-            string opcStringTestTag = siteName+dbi.getActiveUccOpcTag();
-            string opcBoolTestTag = siteName+dbi.getParticiaptionTag("T001");
+            string opcStringTestTag = dbi.getActiveUccOpcTag();
+            string opcBoolTestTag = siteName+dbi.getTurbineParticiaptionTag("T001");
             string opcIntTestTag =siteName+dbi.getTurbineRotorSpeedTag("T001");
 
             string result = opcServer.readTagValue(opcStringTestTag);
@@ -49,8 +49,7 @@ namespace ArticunoTest
         [TestMethod]
         public void writeValueToOpcTagTest()
         {
-            string opcBoolTestTag = siteName + dbi.getActiveUccOpcTag();
-
+            string opcBoolTestTag = siteName+dbi.getArticunoEnableTag();
             string result = opcServer.readTagValue(opcBoolTestTag);
             Assert.IsNotNull(result);
 
@@ -63,7 +62,7 @@ namespace ArticunoTest
             boolTestValue = false;
             opcServer.writeTagValue(opcBoolTestTag, boolTestValue);
             result = opcServer.readTagValue(opcBoolTestTag);
-            Assert.IsTrue(Convert.ToBoolean(result));
+            Assert.AreEqual(Convert.ToBoolean(result),boolTestValue);
 
             opcServer.writeTagValue(opcBoolTestTag, true);
         }
