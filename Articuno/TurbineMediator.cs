@@ -62,7 +62,7 @@ namespace Articuno
 
         public void createPrefixList()
         {
-            DataTable reader = dbi.getTurbineId();
+            DataTable reader = dbi.GetAllTurbineId();
             foreach (DataRow item in reader.Rows) { turbinePrefixList.Add(item["TurbineId"].ToString()); }
         }
 
@@ -183,7 +183,7 @@ namespace Articuno
 
         public  bool isNrsTagEmpty(string turbineId)
         {
-            string nrsTag= dbi.getTurbineNrsModeTag(turbineId);
+            string nrsTag= dbi.GetTurbineNrsModeTag(turbineId);
             if (nrsTag == null || nrsTag.Equals(""))
                 return true;
             else
@@ -330,15 +330,15 @@ namespace Articuno
             turbine.StartupTime = dbi.GetTurbineStartupTime();
 
             SetTurbineNrsTag(turbine);
-            turbine.OperatingStateTag = sitePrefix + dbi.getTurbineOperatingStateTag(turbinePrefix);
-            turbine.RotorSpeedTag = sitePrefix + dbi.getTurbineRotorSpeedTag(turbinePrefix);
-            turbine.TemperatureTag = sitePrefix + dbi.getTurbineTemperatureTag(turbinePrefix);
-            turbine.WindSpeedTag = sitePrefix + dbi.getTurbineWindSpeedTag(turbinePrefix);
-            turbine.ParticipationTag = sitePrefix + dbi.getTurbineParticiaptionTag(turbinePrefix);
-            turbine.LoadShutdownTag = sitePrefix + dbi.getTurbinePauseCommandTag(turbinePrefix);
-            turbine.StartCommandTag = sitePrefix + dbi.getTurbineStartCommandTag(turbinePrefix);
+            turbine.OperatingStateTag = sitePrefix + dbi.GetTurbineOperatingStateTag(turbinePrefix);
+            turbine.RotorSpeedTag = sitePrefix + dbi.GetTurbineRotorSpeedTag(turbinePrefix);
+            turbine.TemperatureTag = sitePrefix + dbi.GetTurbineTemperatureTag(turbinePrefix);
+            turbine.WindSpeedTag = sitePrefix + dbi.GetTurbineWindSpeedTag(turbinePrefix);
+            turbine.ParticipationTag = sitePrefix + dbi.GetTurbineParticiaptionTag(turbinePrefix);
+            turbine.LoadShutdownTag = sitePrefix + dbi.GetTurbinePauseCommandTag(turbinePrefix);
+            turbine.StartCommandTag = sitePrefix + dbi.GetTurbineStartCommandTag(turbinePrefix);
             //Do not include the site prefix for this column. 
-            turbine.MainMetTowerReference = dbi.getMetTowerReference(turbinePrefix);
+            turbine.MainMetTowerReference = dbi.GetMetTowerReference(turbinePrefix);
 
             InitializeTurbineOutputTags(turbine);
 
@@ -350,7 +350,7 @@ namespace Articuno
             string noiseLevelTag = "";
             try
             {
-                noiseLevelTag = sitePrefix + dbi.getTurbineNrsModeTag(turbine.GetTurbinePrefixValue());
+                noiseLevelTag = sitePrefix + dbi.GetTurbineNrsModeTag(turbine.GetTurbinePrefixValue());
                 if (noiseLevelTag.Equals(""))
                 {
                     turbine.NrsStateTag = "";
@@ -375,10 +375,10 @@ namespace Articuno
         private void InitializeTurbineOutputTags(Turbine turbine)
         {
             var turbinePrefix = turbine.GetTurbinePrefixValue();
-            turbine.StoppedAlarmTag = sitePrefix + dbi.getTurbineStoppedAlarmTag(turbinePrefix);
-            turbine.AgcBlockingTag = sitePrefix + dbi.getTurbineAgcBlockingTag(turbinePrefix);
-            turbine.LowRotorSpeedFlagTag = sitePrefix + dbi.getTurbineLowRotorSpeedFlagTag(turbinePrefix);
-            turbine.CtrCountdownTag = sitePrefix + dbi.getTurbineCtrCountdownTag(turbinePrefix);
+            turbine.StoppedAlarmTag = sitePrefix + dbi.GetTurbineStoppedAlarmTag(turbinePrefix);
+            turbine.AgcBlockingTag = sitePrefix + dbi.GetTurbineAgcBlockingTag(turbinePrefix);
+            turbine.LowRotorSpeedFlagTag = sitePrefix + dbi.GetTurbineLowRotorSpeedFlagTag(turbinePrefix);
+            turbine.CtrCountdownTag = sitePrefix + dbi.GetTurbineCtrCountdownTag(turbinePrefix);
         }
         /// <summary>
         /// constructor for the TurbineMediator class. 

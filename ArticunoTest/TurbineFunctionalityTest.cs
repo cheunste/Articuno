@@ -95,7 +95,7 @@ namespace ArticunoTest
             turbineMediator.setTurbineCtrTime(turbineId, 1);
 
             //Manually start the turbine. You must do this as Articuno is not designed to start turbines by design
-            OpcServer.writeOpcTag(dbi.getOpcServerName(), dbi.getSitePrefixValue() + dbi.getTurbineStartCommandTag(turbineId), 1);
+            OpcServer.writeOpcTag(dbi.getOpcServerName(), dbi.getSitePrefixValue() + dbi.GetTurbineStartCommandTag(turbineId), 1);
 
             turbineMediator.startTurbineFromTurbineMediator(turbineId);
 

@@ -30,8 +30,8 @@ namespace ArticunoTest
         public void readValueFromOpcTagTest()
         {
             string opcStringTestTag = dbi.getActiveUccOpcTag();
-            string opcBoolTestTag = siteName+dbi.getTurbineParticiaptionTag("T001");
-            string opcIntTestTag =siteName+dbi.getTurbineRotorSpeedTag("T001");
+            string opcBoolTestTag = siteName+dbi.GetTurbineParticiaptionTag("T001");
+            string opcIntTestTag =siteName+dbi.GetTurbineRotorSpeedTag("T001");
 
             string result = opcServer.readTagValue(opcStringTestTag);
             Assert.IsNotNull(result);

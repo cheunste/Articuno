@@ -111,8 +111,8 @@ namespace Articuno
         public string getArticunoCtrTag() { return readQuery("SELECT OpcTag from SystemInputTags WHERE Description='CTRPeriod'").Rows[0][0].ToString(); }
         public string GetDeltaThresholdTag() { return readQuery("SELECT OpcTag from SystemInputTags WHERE Description='DeltaTmpThreshold'").Rows[0][0].ToString(); }
 
-        public string GetTurbineScalingFactorValue() { return readQueryFromSystemInput("ScalingFactor","DefaultValue"); }
-        public string GetTurbineStartupTime() { return readQueryFromSystemInput("TurbineStartupTime","DefaultValue"); }
+        public string GetTurbineScalingFactorValue() { return ReadQueryFromSystemInput("ScalingFactor", "DefaultValue"); }
+        public string GetTurbineStartupTime() { return ReadQueryFromSystemInput("TurbineStartupTime", "DefaultValue"); }
 
 
         public string GetArticunoIcePossibleOpcTag() { return readQuery("SELECT OpcTag from SystemOutputTags WHERE Description='IcePossible';").Rows[0][0].ToString(); }
@@ -121,60 +121,66 @@ namespace Articuno
 
         //MetTower
         public string GetMetTowerCtrTag() { return readQuery("SELECT * from SystemInputTags where Description='MetTowerCtrCountdown';").Rows[0][0].ToString(); }
+        public int GetNumberOfMetTowers() { return Convert.ToInt16(readQuery("SELECT Count(*) as num FROM MetTowerInputTags;").Rows[0][0]); }
+        public DataTable GetMetId() { return readQuery("SELECT MetId FROM MetTowerInputTags"); }
+        public string GetMetTowerPrimTempValueTag(string metId) { return ReadQueryFromMetTowerInputTagsTable("PrimTempValueTag", metId); }
+        public string GetMetTowerSecTempValueTag(string metId) { return ReadQueryFromMetTowerInputTagsTable("SecTempValueTag", metId); }
+        public string GetMetTowerPrimHumidityTag(string metId) { return ReadQueryFromMetTowerInputTagsTable("PrimHumidityValueTag", metId); }
+        public string GetMetTowerSwitchCommandTag(string metId) { return ReadQueryFromMetTowerInputTagsTable("Switch", metId); }
+        public string GetMetHumidityOutOfRangeAlarmTag(string metId) { return ReadQueryFromMetTowerOutputTagsTable("HumidityOutOfRangeTag", metId); }
+        public string GetMetNoDataAlarmTag(string metId) { return ReadQueryFromMetTowerOutputTagsTable("NoDataAlarmTag", metId); }
+        public string GetMetIceIndicationAlarmTag(string metId) { return ReadQueryFromMetTowerOutputTagsTable("IceIndicationTag", metId); }
+        public string GetMetHumidityBadQualityAlarmTag(string metId) { return ReadQueryFromMetTowerOutputTagsTable("HumidityBadQualityTag", metId); }
+        public string GetMetBadSecondaryTempSensorAlarmTag(string metId) { return ReadQueryFromMetTowerOutputTagsTable("TempSecBadQualityTag", metId); }
+        public string GetMetBadPrimaryTempSensorAlarmTag(string metId) { return ReadQueryFromMetTowerOutputTagsTable("TempPrimBadQualityTag", metId); }
+        public string GetMetPrimaryTempOutOfRangeAlarmTag(string metId) { return ReadQueryFromMetTowerOutputTagsTable("TempPrimOutOfRangeTag", metId); }
+        public string GetMetSecondaryTempOutOfRangeAlarmTag(string metId) { return ReadQueryFromMetTowerOutputTagsTable("TempSecOutOfRangeTag", metId); }
+        public string GetMetCtrTemperatureTag(string metId) { return ReadQueryFromMetTowerOutputTagsTable("CtrTemperature", metId); }
+        public string GetMetCtrDewTag(string metId) { return ReadQueryFromMetTowerOutputTagsTable("CtrDew", metId); }
+        public string GetMetCtrHumidityTag(string metId) { return ReadQueryFromMetTowerOutputTagsTable("CtrHumidity", metId); }
 
-        public string GetPrimTempValueTag(string metId) { return readQuery(String.Format("SELECT PrimTempValueTag from MetTowerInputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
-        public string GetSecTempValueTag(string metId) { return readQuery(String.Format("SELECT SecTempValueTag from MetTowerInputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
-        public string GetPrimHumidityTag(string metId) { return readQuery(String.Format("SELECT PrimHumidityValueTag from MetTowerInputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
-        public string GetSwitchCommandTag(string metId) { return readQuery(String.Format("SELECT Switch from MetTowerInputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
-        public string GetMetHumidityOutOfRangeAlarmTag(string metId) { return readQuery(String.Format("SELECT HumidityOutOfRangeTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
+        public string GetBackupTurbineForMet(string metId) { return ReadQueryFromMetTowerInputTagsTable("BackupTurbine", metId); }
 
-        public string GetMetNoDataAlarmTag(string metId) { return readQuery(String.Format("SELECT NoDataAlarmTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
-
-        public string GetMetIceIndicationAlarmTag(string metId) { return readQuery(String.Format("SELECT IceIndicationTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
-
-        public string GetMetHumidityBadQualityAlarmTag(string metId) { return readQuery(String.Format("SELECT HumidityBadQuality from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
-
-        public string GetMetBadSecondaryTempSensorAlarmTag(string metId) { return readQuery(String.Format("SELECT TempSecBadQualityTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
-        public string GetMetBadPrimaryTempSensorAlarmTag(string metId) { return readQuery(String.Format("SELECT TempPrimBadQualityTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
-        public string GetMetPrimaryTempOutOfRangeAlarmTag(string metId) { return readQuery(String.Format("SELECT TempPrimOutOfRangeTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
-
-        public string GetMetSecondaryTempOutOfRangeAlarmTag(string metId) { return readQuery(String.Format("SELECT TempSecOutOfRangeTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
-
-        public string GetBackupTurbineForMet(string metId) { return readQuery(String.Format("SELECT BackupTurbine from MetTowerInputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
         //Turbine
         public DataTable GetAllTurbineId() { return readQuery("SELECT TurbineId FROM TurbineInputTags;"); }
-        private readonly string TURBINE_INPUT_COLUMN_QUERY = "SELECT * from TurbineInputTags WHERE TurbineId='{0}'";
         public DataTable GetTurbineInputColumn(string turbinePrefix) { return readQuery(String.Format("SELECT * from TurbineInputTags WHERE TurbineId='{0}'", turbinePrefix)); }
-        private readonly string TURBINE_OUTPUT_COLUMN_QUERY = "SELECT * from TurbineOutputTags WHERE TurbineId='{0}'";
+        public string GetTurbineOperatingStateTag(string turbinePrefix) { return ReadQueryFromTurbineInputTagsTable("OperatingState", turbinePrefix); }
+        public string GetTurbineNrsModeTag(string turbinePrefix) { return ReadQueryFromTurbineInputTagsTable("NrsMode", turbinePrefix); }
+        public string GetTurbineParticiaptionTag(string turbinePrefix) { return ReadQueryFromTurbineInputTagsTable("Participation", turbinePrefix); }
+        public string GetTurbineRotorSpeedTag(string turbinePrefix) { return ReadQueryFromTurbineInputTagsTable("RotorSpeed", turbinePrefix); }
+        public string GetTurbineStartCommandTag(string turbinePrefix) { return ReadQueryFromTurbineInputTagsTable("Start", turbinePrefix); }
+        public string GetTurbinePauseCommandTag(string turbinePrefix) { return ReadQueryFromTurbineInputTagsTable("Pause", turbinePrefix); }
+        public string GetTurbineTemperatureTag(string turbinePrefix) { return ReadQueryFromTurbineInputTagsTable("Temperature", turbinePrefix); }
+        public string GetTurbineWindSpeedTag(string turbinePrefix) { return ReadQueryFromTurbineInputTagsTable("WindSpeed", turbinePrefix); }
+        public string GetMetTowerReference(string turbinePrefix) { return ReadQueryFromTurbineInputTagsTable("MetReference", turbinePrefix); }
+        public string GetTurbineStoppedAlarmTag(string turbinePrefix) { return ReadQueryFromTurbineOutputTagsTable("Alarm", turbinePrefix); }
+        public string GetTurbineAgcBlockingTag(string turbinePrefix) { return ReadQueryFromTurbineOutputTagsTable("AGCBlocking", turbinePrefix); }
+        public string GetTurbineLowRotorSpeedFlagTag(string turbinePrefix) { return ReadQueryFromTurbineOutputTagsTable("LowRotorSpeedFlag", turbinePrefix); }
+        public string GetTurbineCtrCountdownTag(string turbinePrefix) { return ReadQueryFromTurbineOutputTagsTable("CTRCountdown", turbinePrefix); }
 
-        public string getTurbineOperatingStateTag(string turbinePrefix) { return readQueryFromTurbineInputTagsTable("OperatingState", turbinePrefix); }
-        public string getTurbineNrsModeTag(string turbinePrefix) { return readQueryFromTurbineInputTagsTable("NrsMode", turbinePrefix); }
-        public string getTurbineParticiaptionTag(string turbinePrefix) { return readQueryFromTurbineInputTagsTable("Participation", turbinePrefix); }
-        public string getTurbineRotorSpeedTag(string turbinePrefix) { return readQueryFromTurbineInputTagsTable("RotorSpeed", turbinePrefix); }
-        public string getTurbineStartCommandTag(string turbinePrefix) { return readQueryFromTurbineInputTagsTable("Start", turbinePrefix); }
-        public string getTurbinePauseCommandTag(string turbinePrefix) { return readQueryFromTurbineInputTagsTable("Pause", turbinePrefix); }
-        public string getTurbineTemperatureTag(string turbinePrefix) { return readQueryFromTurbineInputTagsTable("Temperature", turbinePrefix); }
-        public string getTurbineWindSpeedTag(string turbinePrefix) { return readQueryFromTurbineInputTagsTable("WindSpeed", turbinePrefix); }
-        public string getMetTowerReference(string turbinePrefix) { return readQueryFromTurbineInputTagsTable("MetReference", turbinePrefix); }
-        public string getTurbineStoppedAlarmTag(string turbinePrefix) { return readQueryFromTurbineOutputTagsTable("Alarm", turbinePrefix); }
-        public string getTurbineAgcBlockingTag(string turbinePrefix) { return readQueryFromTurbineOutputTagsTable("AGCBlocking", turbinePrefix); }
-        public string getTurbineLowRotorSpeedFlagTag(string turbinePrefix) { return readQueryFromTurbineOutputTagsTable("LowRotorSpeedFlag", turbinePrefix); }
-        public string getTurbineCtrCountdownTag(string turbinePrefix) { return readQueryFromTurbineOutputTagsTable("CTRCountdown", turbinePrefix); }
-        
-        public DataTable getTurbineId() { return readQuery( "SELECT TurbineId FROM TurbineInputTags;"); }
 
-        private string readQueryFromTurbineInputTagsTable(string command, string turbinePrefix)
+        private string ReadQueryFromMetTowerInputTagsTable(string command, string metId)
+        {
+            return readQuery(String.Format("SELECT {0} from MetTowerInputTags where MetId='{1}';", command, metId)).Rows[0][0].ToString();
+        }
+
+        private string ReadQueryFromMetTowerOutputTagsTable(string command, string metId)
+        {
+            return readQuery(String.Format("SELECT {0} from MetTowerOutputTags where MetId='{1}';", command, metId)).Rows[0][0].ToString();
+        }
+
+        private string ReadQueryFromTurbineInputTagsTable(string command, string turbinePrefix)
         {
             return readQuery(String.Format("SELECT {0} from TurbineInputTags where TurbineId='{1}'", command, turbinePrefix)).Rows[0][0].ToString();
         }
-        private string readQueryFromTurbineOutputTagsTable(string command, string turbinePrefix)
+        private string ReadQueryFromTurbineOutputTagsTable(string command, string turbinePrefix)
         {
             return readQuery(String.Format("SELECT {0} from TurbineOutputTags where TurbineId='{1}'", command, turbinePrefix)).Rows[0][0].ToString();
         }
 
-        private string readQueryFromSystemInput(string description,string field)
+        private string ReadQueryFromSystemInput(string description, string field)
         {
-            return readQuery(String.Format("SELECT {0} from SystemInputTags where Description='{1}';", field,description)).Rows[0][0].ToString();
+            return readQuery(String.Format("SELECT {0} from SystemInputTags where Description='{1}';", field, description)).Rows[0][0].ToString();
         }
     }
 }

@@ -15,17 +15,6 @@ namespace Articuno
     sealed internal class MetTowerMediator
     {
         public static int numMetTower;
-
-        private string MET_INPUT_TABLE_TAGS =
-            "SELECT * FROM MetTowerInputTags WHERE MetId='{0}'";
-        private string MET_OUTPUT_TABLE_TAGS =
-            "SELECT * FROM MetTowerOutputTags WHERE MetId='{0}'";
-
-        private string MET_NUM =
-            "SELECT MetId FROM MetTowerInputTags";
-
-        private static string SELECT_QUERY = "SELECT Count(*) as num FROM MetTowerInputTags";
-
         private string opcServerName;
         private string sitePrefix;
         private string uccActiveTag;
@@ -37,7 +26,6 @@ namespace Articuno
 
         private MetTowerMediator()
         {
-
             metPrefixList = new List<string>();
             metTowerList = new List<MetTower>();
             dbi = DatabaseInterface.Instance;
@@ -48,7 +36,6 @@ namespace Articuno
 
         private class Nested
         {
-            //Explicit static constructor to tell C# compiler not to mark type as beforefiled init
             static Nested() { }
             internal static readonly MetTowerMediator instance = new MetTowerMediator();
         }
@@ -74,14 +61,11 @@ namespace Articuno
         {
             if (numMetTower == 0)
             {
-                DataTable reader = dbi.readQuery(SELECT_QUERY);
-                numMetTower = Convert.ToInt16(reader.Rows[0]["num"]);
+                numMetTower = dbi.GetNumberOfMetTowers();
             }
             return numMetTower;
         }
 
-        //Function that is called by the main Articuno class to determine if the temperature average calculated
-        // by ARticuno is considered freezing or not
         /// <summary>
         /// Method to check a met tower to see if it meets the freezing condition and set its condition. Returns true if iti s frozen, false otherwise
         /// </summary>
@@ -132,7 +116,6 @@ namespace Articuno
                         e, metId, avgTemperature, tempThreshold);
                 }
             }
-
             //No ice condition
             else
             {
@@ -146,10 +129,9 @@ namespace Articuno
                     );
             }
         }
-
         public void createPrefixList()
         {
-            DataTable reader = DatabaseInterface.Instance.readQuery(MET_NUM);
+            DataTable reader = dbi.GetMetId();
             foreach (DataRow item in reader.Rows) { metPrefixList.Add(item["MetId"].ToString()); }
         }
 
@@ -362,10 +344,7 @@ namespace Articuno
         public bool IsAnyMetTowerFrozenAtSite()
         {
             bool icingPossible = false;
-            foreach (string metPrefix in metPrefixList)
-            {
-                icingPossible |= Convert.ToBoolean(GetMetTowerFromId(metPrefix).IceIndicationValue);
-            }
+            foreach (string metPrefix in metPrefixList) { icingPossible |= Convert.ToBoolean(GetMetTowerFromId(metPrefix).IceIndicationValue); }
             return icingPossible;
         }
 
@@ -383,49 +362,34 @@ namespace Articuno
         /// <returns>A Met Tower Object if exist. Null otherwise. createMetTower() must be called before using this fucntion</returns>
         public MetTower GetMetTowerFromId(string metTowerId)
         {
-            for (int i = 0; i < metTowerList.Count; i++)
-            {
-                if (metTowerList.ElementAt(i).getMetTowerPrefix.Equals(metTowerId)) { return metTowerList.ElementAt(i); }
-            }
+            for (int i = 0; i < metTowerList.Count; i++) { if (metTowerList.ElementAt(i).getMetTowerPrefix.Equals(metTowerId)) { return metTowerList.ElementAt(i); } }
             return null;
         }
 
-        private void InitializeMetTower(string metPrefix)
+        private void InitializeMetTower(string metId)
         {
-            MetTower met = new MetTower(metPrefix, opcServerName);
+            MetTower met = new MetTower(metId, opcServerName);
+            met.PrimTemperatureTag = sitePrefix + dbi.GetMetTowerPrimTempValueTag(metId);
+            met.SecTemperatureTag = sitePrefix + dbi.GetMetTowerSecTempValueTag(metId);
+            met.RelativeHumidityTag = sitePrefix + dbi.GetMetTowerPrimHumidityTag(metId);
+            met.HumidityPrimValueTag = sitePrefix + dbi.GetMetTowerPrimHumidityTag(metId);
+            met.MetSwitchTag = sitePrefix + dbi.GetMetTowerSwitchCommandTag(metId);
 
-            string cmd = String.Format(MET_INPUT_TABLE_TAGS, metPrefix);
-            DataTable reader = dbi.readQuery(cmd);
-
-            met.PrimTemperatureTag = sitePrefix + reader.Rows[0]["PrimTempValueTag"].ToString();
-            met.SecTemperatureTag = sitePrefix + reader.Rows[0]["SecTempValueTag"].ToString();
-            met.RelativeHumidityTag = sitePrefix + reader.Rows[0]["PrimHumidityValueTag"].ToString();
-            met.HumidityPrimValueTag = sitePrefix + reader.Rows[0]["PrimHumidityValueTag"].ToString();
-            met.HumiditySecValueTag = sitePrefix + reader.Rows[0]["SecHumidityValueTag"].ToString();
-            met.MetSwitchTag = sitePrefix + reader.Rows[0]["Switch"].ToString();
-
-            cmd = String.Format(MET_OUTPUT_TABLE_TAGS, metPrefix);
-            reader = dbi.readQuery(cmd);
-
-            met.TemperaturePrimBadQualityTag = sitePrefix + reader.Rows[0]["TempPrimBadQualityTag"].ToString();
-            met.TemperaturePrimOutOfRangeTag = sitePrefix + reader.Rows[0]["TempPrimOutOfRangeTag"].ToString();
-            met.TemperatureSecOutOfRangeTag = sitePrefix + reader.Rows[0]["TempSecOutOfRangeTag"].ToString();
-            met.TemperatureSecBadQualityTag = sitePrefix + reader.Rows[0]["TempSecBadQualityTag"].ToString();
-            met.HumidtyOutOfRangeTag = sitePrefix + reader.Rows[0]["HumidityOutOfRangeTag"].ToString();
-            met.HumidityBadQualityTag = sitePrefix + reader.Rows[0]["HumidityBadQualityTag"].ToString();
-            met.IceIndicationTag = sitePrefix + reader.Rows[0]["IceIndicationTag"].ToString();
-            met.NoDataAlarmTag = sitePrefix + reader.Rows[0]["NoDataAlarmTag"].ToString();
-            met.CtrTemperatureTag = sitePrefix + reader.Rows[0]["CtrTemperature"].ToString();
-            met.CtrDewTag = sitePrefix + reader.Rows[0]["CtrDew"].ToString();
-            met.CtrHumidityTag = sitePrefix + reader.Rows[0]["CtrHumidity"].ToString();
-
-            met.SetBackupTurbineForMetTower(TurbineMediator.GetTurbinePrefixFromMediator(dbi.GetBackupTurbineForMet(metPrefix)));
+            met.TemperaturePrimBadQualityTag = sitePrefix + dbi.GetMetBadPrimaryTempSensorAlarmTag(metId);
+            met.TemperaturePrimOutOfRangeTag = sitePrefix + dbi.GetMetPrimaryTempOutOfRangeAlarmTag(metId);
+            met.TemperatureSecOutOfRangeTag = sitePrefix + dbi.GetMetSecondaryTempOutOfRangeAlarmTag(metId);
+            met.TemperatureSecBadQualityTag = sitePrefix + dbi.GetMetBadSecondaryTempSensorAlarmTag(metId);
+            met.HumidtyOutOfRangeTag = sitePrefix + dbi.GetMetHumidityOutOfRangeAlarmTag(metId);
+            met.HumidityBadQualityTag = sitePrefix + dbi.GetMetHumidityBadQualityAlarmTag(metId);
+            met.IceIndicationTag = sitePrefix + dbi.GetMetIceIndicationAlarmTag(metId);
+            met.NoDataAlarmTag = sitePrefix + dbi.GetMetNoDataAlarmTag(metId);
+            met.CtrTemperatureTag = sitePrefix + dbi.GetMetCtrTemperatureTag(metId);
+            met.CtrDewTag = sitePrefix + dbi.GetMetCtrDewTag(metId);
+            met.CtrHumidityTag = sitePrefix + dbi.GetMetCtrHumidityTag(metId);
+            met.SetBackupTurbineForMetTower(TurbineMediator.GetTurbinePrefixFromMediator(dbi.GetBackupTurbineForMet(metId)));
 
             met.createSensors();
             metTowerList.Add(met);
         }
-
-        private void SetBackupTurbine(string turbineId) { }
-
     }
 }

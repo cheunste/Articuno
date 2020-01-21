@@ -38,18 +38,18 @@ namespace ArticunoTest
             dbi = DatabaseInterface.Instance;
 
             met1Tags.AddRange(new string[] {
-                dbi.GetPrimTempValueTag("Met"),
-                dbi.GetSecTempValueTag("Met"),
-                dbi.GetPrimHumidityTag("Met"),
-                dbi.GetSwitchCommandTag("Met"),
+                dbi.GetMetTowerPrimTempValueTag("Met"),
+                dbi.GetMetTowerSecTempValueTag("Met"),
+                dbi.GetMetTowerPrimHumidityTag("Met"),
+                dbi.GetMetTowerSwitchCommandTag("Met"),
                 dbi.GetBackupTurbineForMet("Met") }
             );
 
             met2Tags.AddRange(new string[] {
-                dbi.GetPrimTempValueTag("Met2"),
-                dbi.GetSecTempValueTag("Met2"),
-                dbi.GetPrimHumidityTag("Met2"),
-                dbi.GetSwitchCommandTag("Met2"),
+                dbi.GetMetTowerPrimTempValueTag("Met2"),
+                dbi.GetMetTowerSecTempValueTag("Met2"),
+                dbi.GetMetTowerPrimHumidityTag("Met2"),
+                dbi.GetMetTowerSwitchCommandTag("Met2"),
                 dbi.GetBackupTurbineForMet("Met2")
             });
 
