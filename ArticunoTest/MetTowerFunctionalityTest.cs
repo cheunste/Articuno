@@ -200,7 +200,7 @@ namespace ArticunoTest
         [DataRow("Met2", 21.0, 41.0, 57.0, 97.0)]
         public void swtichMetTowers(string metId, double tempVal1, double tempVal2, double hmdVal1, double hmdVal2)
         {
-            tm.createTestTurbines();
+            tm.createTurbines();
             var turbine = tm.getTurbinePrefixList()[0];
 
             //setValidMetData();
@@ -272,7 +272,7 @@ namespace ArticunoTest
 
             //Get measurements about 50 tiems or so to see if it is flatline. 
             createStaleData(met);
-            
+
             double temperature = Convert.ToDouble(mm.ReadTemperatureFromMetTower(metId));
             double turbineTemp = Convert.ToDouble(tm.readTurbineTemperatureValue(turbine));
             Console.WriteLine("Temperature of {0}: {1}", metId, temperature);
@@ -283,7 +283,7 @@ namespace ArticunoTest
 
         [TestMethod]
         [DataTestMethod]
-        [DataRow("Met", -50.0, -50.0, 110.0,true)]
+        [DataRow("Met", -50.0, -50.0, 110.0, true)]
         [DataRow("Met", 10.0, 10.0, 60.0, false)]
         [DataRow("Met", 10.0, -50.0, 60.0, true)]
 
@@ -296,7 +296,7 @@ namespace ArticunoTest
 
             if (expectedState)
                 createStaleData(mm.GetMetTowerFromId(metId));
-                
+
             var humidQuality = mm.GetMetTowerFromId(metId).getPrimaryHumiditySensor().isSensorBadQuality();
             var primTempQuality = mm.GetMetTowerFromId(metId).getPrimaryTemperatureSensor().isSensorBadQuality();
             var secTempQuality = mm.GetMetTowerFromId(metId).getSecondaryTemperatureSensor().isSensorBadQuality();
@@ -309,7 +309,7 @@ namespace ArticunoTest
 
             Thread.Sleep(500);
 
-            Assert.AreEqual(metTowerQuality,expectedState);
+            Assert.AreEqual(metTowerQuality, expectedState);
         }
 
         public void cleanup()
@@ -362,7 +362,7 @@ namespace ArticunoTest
         [DataRow("Met", 61, 61, MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY)]
         public void tempOutOfRangeTest(string metId, double temp1, double temp2, Object failureExpected)
         {
-            tm.createTestTurbines();
+            tm.createTurbines();
             var turbine = tm.getTurbinePrefixList()[0];
 
             mm.writePrimTemperature(metId, temp1);
@@ -400,7 +400,7 @@ namespace ArticunoTest
         [DataRow("Met", 101, 101, MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY)]
         public void humidityOutOfRangeTest(string metId, double humidity, double temp2, Object failureExpected)
         {
-            tm.createTestTurbines();
+            tm.createTurbines();
             var turbine = tm.getTurbinePrefixList()[0];
 
             mm.writeHumidity(metId, humidity);
@@ -425,7 +425,7 @@ namespace ArticunoTest
         public void BadHumitiyUseTemperatureOnlyTest(string metId, double humidity, double temperature)
         {
 
-            tm.createTestTurbines();
+            tm.createTurbines();
             var turbine = tm.getTurbinePrefixList()[0];
 
             mm.writeHumidity(metId, humidity);

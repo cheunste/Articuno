@@ -75,10 +75,7 @@ namespace Articuno
             tm = TurbineMediator.Instance;
 
             mm.CreateMetTowerObject();
-            if (testMode)
-                tm.createTestTurbines();
-            else
-                tm.createTurbines();
+            tm.createTurbines();
             turbinesExcludedList = new List<string>();
             turbinesPausedByArticuno = new List<string>();
             turbinesWaitingForPause = new List<string>();

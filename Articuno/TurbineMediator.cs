@@ -134,18 +134,6 @@ namespace Articuno
         public void setTurbineCtrTime(string turbineId, int ctrValue) { GetTurbinePrefixFromMediator(turbineId).writeTurbineCtrValue(ctrValue); }
         public int getTurbineCtrTimeRemaining(string turbineId) { return Convert.ToInt32(GetTurbinePrefixFromMediator(turbineId).readTurbineCtrTimeRemaining()); }
 
-        /// <summary>
-        /// Used for testing only. This creates a testing scenario that uses only T001 
-        /// </summary>
-        public void createTestTurbines()
-        {
-            turbinePrefixList.Clear();
-            turbinePrefixList.Add("T001");
-            this.opcServerName = DatabaseInterface.Instance.getOpcServerName();
-            this.sitePrefix = DatabaseInterface.Instance.getSitePrefixValue();
-            createTurbines();
-        }
-
         //The following four functions are called by the main Articuno class to set an icing protocol condition given a turbine Id. Remember, the turbine should pause automatically independently of each other
         public void setTemperatureCondition(string turbineId, bool state) { log.DebugFormat("Temperature condition for {0} {1}", turbineId, state ? "met" : "not met"); GetTurbinePrefixFromMediator(turbineId).SetTemperatureCondition(state); }
         public void setOperatingStateCondition(string turbineId, bool state) { log.DebugFormat("Operating status condition for {0} {1}", turbineId, state ? "met" : "not met"); GetTurbinePrefixFromMediator(turbineId).SetOperatingStateCondition(state); }
@@ -346,7 +334,7 @@ namespace Articuno
         }
         private void SetTurbineNrsTag(Turbine turbine)
         {
-            //Note that NRS can be empty, so that's why there is a try/catch here. If it is empty or null, just set it to an empty string
+            //The NRS in the config DB can be empty or null, so that's why there is a try/catch here. If it is empty or null, just set it to an empty string
             string noiseLevelTag = "";
             try
             {
@@ -364,12 +352,6 @@ namespace Articuno
                 turbine.NrsStateTag = "";
                 turbine.TurbineNrsModeChanged(false);
             }
-        }
-
-        private bool DoesTurbineNrsTagExist(string nrsTag,DataTable reader)
-        {
-            string noiseLevelTag = sitePrefix + reader.Rows[0]["NrsMode"].ToString();
-            return noiseLevelTag.Equals("") ? false : true;
         }
      
         private void InitializeTurbineOutputTags(Turbine turbine)

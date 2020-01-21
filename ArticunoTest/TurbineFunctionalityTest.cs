@@ -20,11 +20,9 @@ namespace ArticunoTest
         public TurbineFunctionalityTest()
         {
             am = new Articuno.Articuno(true);
-            //Must create the MetTowersingleton first
             MetTowerMediator.Instance.CreateMetTowerObject();
-            List<string> newList = new List<string>();
             turbineMediator = TurbineMediator.Instance;
-            turbineMediator.createTestTurbines();
+            turbineMediator.createTurbines();
             dbi = DatabaseInterface.Instance;
             opcServerName = dbi.getOpcServerName();
         }
@@ -79,7 +77,7 @@ namespace ArticunoTest
             foreach (string prefix in prefixList)
             {
                 if (!turbineListFromDatabase.Contains(prefix))
-                    Assert.Fail("The config file does not contain turbine id: {0}. Where this {0} come from?",prefix);
+                    Assert.Fail("The config file does not contain turbine id: {0}. Where this {0} come from?", prefix);
             }
         }
 
@@ -89,7 +87,7 @@ namespace ArticunoTest
         [DataRow("T001", true)]
         public void AlgorithmTest(string turbineId, bool state)
         {
-            Articuno.Articuno am = new Articuno.Articuno(true);
+            //Articuno.Articuno am = new Articuno.Articuno(true);
 
             //Reset the CTR time and start the turbine. Set the CTR for one minute
             turbineMediator.setTurbineCtrTime(turbineId, 1);
@@ -103,7 +101,6 @@ namespace ArticunoTest
             turbineMediator.getNrsStateTag(turbineId);
             if (state) turbineMediator.writeToTurbineNrsStateTag(turbineId, 5);
             else turbineMediator.writeToTurbineNrsStateTag(turbineId, 1);
-
 
             turbineMediator.setTemperatureCondition(turbineId, state);
             turbineMediator.setOperatingStateCondition(turbineId, state);
@@ -124,9 +121,9 @@ namespace ArticunoTest
         }
 
         [TestMethod]
-        //There is no tag for internal CTR. Instead you'll be tracking this by writing a value to a member variable and decrementing it/
         [DataTestMethod]
         [DataRow(5)]
+        //There is no tag for internal CTR. Instead you'll be tracking this by writing a value to a member variable and decrementing it/
         public void setCtrPeriod(int value)
         {
             foreach (string prefix in turbineMediator.getTurbinePrefixList())
@@ -162,9 +159,9 @@ namespace ArticunoTest
 
             DataTable table = dbi.readQuery("SELECT turbineId from TurbineInputTags Order By TurbineId asc");
             List<String> turbineIdList = new List<String>();
-            foreach(DataRow row in table.Rows)
+            foreach (DataRow row in table.Rows)
             {
-                turbineIdList.Add( row["TurbineId"].ToString() );
+                turbineIdList.Add(row["TurbineId"].ToString());
             }
             return turbineIdList;
         }
@@ -181,7 +178,6 @@ namespace ArticunoTest
                 turbine.TurbineNrsModeChanged(false);
                 turbine.SetTurbineUnderPerformanceCondition(false);
             }
-
         }
     }
 }

@@ -27,31 +27,9 @@ namespace ArticunoTest
             di = DatabaseInterface.Instance;
 
             mm.CreateMetTowerObject();
-            tm.createTestTurbines();
+            tm.createTurbines();
             sitePrefix = di.getSitePrefixValue();
         }
-
-        #region Additional test attributes
-        //
-        // You can use the following additional attributes as you write your tests:
-        //
-        // Use ClassInitialize to run code before running the first test in the class
-        // [ClassInitialize()]
-        // public static void MyClassInitialize(TestContext testContext) { }
-        //
-        // Use ClassCleanup to run code after all tests in a class have run
-        // [ClassCleanup()]
-        // public static void MyClassCleanup() { }
-        //
-        // Use TestInitialize to run code before running each test 
-        // [TestInitialize()]
-        // public void MyTestInitialize() { }
-        //
-        // Use TestCleanup to run code after each test has run
-        // [TestCleanup()]
-        // public void MyTestCleanup() { }
-        //
-        #endregion
 
         [TestMethod]
         [DataTestMethod]
@@ -60,22 +38,12 @@ namespace ArticunoTest
         {
             int time = 1;
 
-            var ctrTag = sitePrefix + di.getArticunoCtrTag();
-            var temperatureTag = sitePrefix + di.getTemperatureThresholdTag();
-            var enableTag = sitePrefix + di.getArticunoEnableTag();
-            var uccActive = di.getActiveUccOpcTag();
-            var deltaTag = sitePrefix + di.GetDeltaThresholdTag();
-
-            OpcServer.writeOpcTag(opcServerName, ctrTag, time);
-            OpcServer.writeOpcTag(opcServerName, temperatureTag, 5);
-            OpcServer.writeOpcTag(opcServerName, enableTag, true);
-            mm.writeDeltaThreshold(1);
-
+            setNormalCondition();
             mm.writePrimTemperature(metId, temp1);
             mm.writeSecTemperature(metId, temp2);
             mm.writeHumidity(metId, humidity);
 
-            mm.CalculateFrozenMetTowerCondition(metId,temp1,humidity);
+            mm.CalculateFrozenMetTowerCondition(metId, temp1, humidity);
             Assert.AreEqual(mm.IsMetTowerFrozen(metId), true);
         }
 
@@ -87,24 +55,44 @@ namespace ArticunoTest
         {
 
             articuno = new Articuno.Articuno(true);
+            tm.createTurbines();
+            mm.CreateMetTowerObject();
+            setNormalCondition();
+            tm.startTurbineFromTurbineMediator(turbineId);
 
-            Assert.Fail(" Do this later once you get the delegates figured out");
             tm.setTemperatureCondition(turbineId, state);
             tm.setOperatingStateCondition(turbineId, state);
             tm.setNrsActive(turbineId, state);
             tm.setTurbinePerformanceCondition(turbineId, state);
+
+            tm.checkIcingConditions(turbineId);
+
+            foreach(Turbine turbine in tm.getTurbineList())
+            {
+                if (turbine.GetTurbinePrefixValue().Equals(turbineId))
+                {
+                    var blockedValue = turbine.readAgcBlockValue();
+                    Console.WriteLine("Turbine {0} blockec value {1}",turbineId,blockedValue);
+                    if (state) 
+                        Assert.AreEqual(Convert.ToBoolean(blockedValue), Convert.ToBoolean(0.00),"Block statuses do not match");
+                    else
+                        Assert.AreEqual(Convert.ToBoolean(blockedValue), Convert.ToBoolean(1.00),"UnBlock statuses do not match");
+                    var shutdownValue = OpcServer.readBooleanTag(opcServerName, turbine.LoadShutdownTag);
+                    Console.WriteLine("Turbine {0} shtudown value {1}",turbineId,shutdownValue);
+                    Assert.AreEqual(Convert.ToBoolean(shutdownValue), state,"Turbine isn't paused by Articuno");
+                }
+            }
+
         }
 
         [TestMethod]
         public void SetAndClearTest()
         {
-
             articuno = new Articuno.Articuno(true);
             string turbineId = "T001";
             bool state = true;
             IcedConditions(turbineId, true);
             IcedConditions(turbineId, false);
-
         }
 
         [TestMethod]
@@ -133,7 +121,6 @@ namespace ArticunoTest
                     case 3: deltaThresholdTag = tag; break;
                     case 4: dewThresholdTag = tag; break;
                 }
-
             }
         }
 
@@ -142,29 +129,32 @@ namespace ArticunoTest
         public void CTRChangeTest(int ctrTime)
         {
             articuno = new Articuno.Articuno(true);
-            string turbineId = "T001";
             OpcServer server = new OpcServer("SV.OPCDAServer.1");
 
             string ctrTimeTag = sitePrefix + di.getArticunoCtrTag();
+            //This mocks the ctrTime tag being written in the OPC server
             server.writeTagValue(ctrTimeTag, 3);
-            Thread.Sleep(10000);
+            Thread.Sleep(3000);
             server.writeTagValue(ctrTimeTag, ctrTime);
+            Thread.Sleep(3000);
 
-            string readCtrTime = server.readTagValue(ctrTimeTag).ToString();
-            Assert.IsTrue(ctrTime.ToString().Equals(readCtrTime), "The written and read time read from the CtrTag is not equal");
-            string turbineCtrTime = tm.getTurbineCtrTimeRemaining(turbineId).ToString();
-            Console.WriteLine("ctrTimeTag: {0}\nturbineCtrTime tag: {1}", ctrTimeTag, turbineCtrTime);
+            //Assert all turbines CTR have now been updated for all turbine
+            foreach (string turbineId in tm.getTurbinePrefixList())
+            {
+                string readCtrTime = server.readTagValue(ctrTimeTag).ToString();
+                Assert.IsTrue(ctrTime.ToString().Equals(readCtrTime), "The written and read time read from the CtrTag is not equal");
+                string turbineCtrTime = tm.getTurbineCtrTimeRemaining(turbineId).ToString();
 
-            Console.WriteLine("ctrTime Input: {0} readCtrTime: {1}", ctrTime.ToString(), readCtrTime);
-            Assert.IsTrue(ctrTime.ToString().Equals(readCtrTime), "The written and read time are not equal");
+                Console.WriteLine("ctrTime Input: {0} turbineCtrTime: {1}", ctrTime.ToString(), turbineCtrTime);
+                Assert.AreEqual(ctrTime.ToString(), turbineCtrTime, "The written and turbine read time are not equal");
 
-            Console.WriteLine("ctrTime Input: {0} turbineCtrTime: {1}", ctrTime.ToString(), turbineCtrTime);
-            Assert.IsTrue(ctrTime.ToString().Equals(turbineCtrTime), "The written and turbine read time are not equal");
+            }
         }
 
         [TestMethod]
         public void SiteClearTest()
         {
+            Assert.Fail("Test needs revist");
             OpcServer server = new OpcServer("SV.OPCDAServer.1");
             string turbineId = "T001";
             articuno = new Articuno.Articuno(true);
@@ -172,8 +162,6 @@ namespace ArticunoTest
 
             //Set Command to false and turbine state to PAUSE (75)
             string shutdownTag = tm.getLoadShutdownTag(turbineId);
-            //server.writeTagValue(shutdownTag,0);
-
             string operatingStateTag = tm.getOperatingStateTag(turbineId);
             server.writeTagValue(operatingStateTag, 75);
 
@@ -181,14 +169,18 @@ namespace ArticunoTest
 
             //Site start it back up
             server.writeTagValue(operatingStateTag, 100);
+        }
 
-
-
+        [TestMethod]
+        [DataTestMethod]
+        public void MetTowerCtrCountdownTest()
+        {
+            Assert.Fail("Test not implemented");
         }
 
         private void clearAlarm()
         {
-
+            Assert.Fail("Test needs revist");
         }
 
         private void IcedConditions(string turbineId, bool state)
@@ -198,6 +190,22 @@ namespace ArticunoTest
             tm.setNrsActive(turbineId, state);
             tm.setTurbinePerformanceCondition(turbineId, state);
 
+
+        }
+
+        private void setNormalCondition()
+        {
+            var time = 1;
+            var ctrTag = sitePrefix + di.getArticunoCtrTag();
+            var temperatureTag = sitePrefix + di.getTemperatureThresholdTag();
+            var enableTag = sitePrefix + di.getArticunoEnableTag();
+            var uccActive = di.getActiveUccOpcTag();
+
+            OpcServer.writeOpcTag(opcServerName, ctrTag, time);
+            OpcServer.writeOpcTag(opcServerName, temperatureTag, 5);
+            OpcServer.writeOpcTag(opcServerName, enableTag, true);
+            OpcServer.writeOpcTag(opcServerName, uccActive, true);
+            mm.writeDeltaThreshold(1);
         }
     }
 }
