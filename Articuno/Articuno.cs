@@ -337,8 +337,7 @@ namespace Articuno
 
                 log.DebugFormat("CTR avg temp: {0}, avg Humidity: {1}", tempAvg, humidityAvg);
 
-                //Send this temperature to the Met Mediator and determine if met tower is freezing or not
-                bool metFrozen = mm.IsMetTowerFrozen("Met" + j, tempAvg, humidityAvg);
+                mm.CalculateFrozenMetTowerCondition("Met" + j, tempAvg, humidityAvg);
 
 
                 //Update the Dew Point calculation. This value will show up on the faceplate

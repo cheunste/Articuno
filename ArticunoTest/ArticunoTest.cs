@@ -76,7 +76,7 @@ namespace ArticunoTest
             mm.writeHumidity(metId, humidity);
 
             Articuno.Articuno.Main(null, null);
-            bool isMetTowerFrozen = Convert.ToBoolean(mm.IsMetTowerFrozen(metId,temp1,humidity));
+            mm.CalculateFrozenMetTowerCondition(metId,temp1,humidity);
             Assert.AreEqual(isMetTowerFrozen, true);
         }
 

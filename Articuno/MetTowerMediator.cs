@@ -85,7 +85,7 @@ namespace Articuno
         /// <summary>
         /// Method to check a met tower to see if it meets the freezing condition and set its condition. Returns true if iti s frozen, false otherwise
         /// </summary>
-        public bool IsMetTowerFrozen(string metId, double avgTemperature, double avgHumidity)
+        public void CalculateFrozenMetTowerCondition(string metId, double avgTemperature, double avgHumidity)
         {
 
             MetTower met = GetMetTowerFromId(metId);
@@ -158,7 +158,6 @@ namespace Articuno
                     metId, avgTemperature, tempThreshold, avgHumidity, deltaThreshold
                     );
             }
-            return Convert.ToBoolean(met.IceIndicationValue);
         }
 
 

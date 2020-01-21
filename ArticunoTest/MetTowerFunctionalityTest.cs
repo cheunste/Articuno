@@ -443,7 +443,7 @@ namespace ArticunoTest
             Console.WriteLine("Threshold: {0} Temp {1} Humid {2}", threshold, temperature, humidity);
 
             MetTower met = mm.GetMetTowerFromId(metId);
-            mm.IsMetTowerFrozen(metId, temperature, humidity);
+            mm.CalculateFrozenMetTowerCondition(metId, temperature, humidity);
             bool isFrozen = mm.IsMetTowerFrozen(metId);
 
 
@@ -462,7 +462,7 @@ namespace ArticunoTest
             mm.writeDeltaThreshold(1);
             mm.UpdateTemperatureThresholdForAllMetTowers(0);
 
-            mm.IsMetTowerFrozen(metId, temperature, humidity);
+            mm.CalculateFrozenMetTowerCondition(metId, temperature, humidity);
             Console.WriteLine("Ice Indication Value: {0}", met.IceIndicationValue);
             Assert.AreEqual(expectedFrozenState, Convert.ToBoolean(met.IceIndicationValue));
         }
