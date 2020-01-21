@@ -111,8 +111,8 @@ namespace Articuno
         public string getArticunoCtrTag() { return readQuery("SELECT OpcTag from SystemInputTags WHERE Description='CTRPeriod'").Rows[0][0].ToString(); }
         public string GetDeltaThresholdTag() { return readQuery("SELECT OpcTag from SystemInputTags WHERE Description='DeltaTmpThreshold'").Rows[0][0].ToString(); }
 
-        public string GetTurbineScalingFactor() { return readQuery("SELECT * from SystemInputTags where Description='ScalingFactor';").Rows[0][0].ToString(); }
-        public int GetTurbineStartupTime() { return Convert.ToInt32(readQuery("SELECT DefaultValue from SystemInputTags where Description='TurbineStartupTime';").Rows[0][0]); }
+        public string GetTurbineScalingFactorValue() { return readQueryFromSystemInput("ScalingFactor","DefaultValue"); }
+        public string GetTurbineStartupTime() { return readQueryFromSystemInput("TurbineStartupTime","DefaultValue"); }
 
 
         public string GetArticunoIcePossibleOpcTag() { return readQuery("SELECT OpcTag from SystemOutputTags WHERE Description='IcePossible';").Rows[0][0].ToString(); }
@@ -146,30 +146,35 @@ namespace Articuno
         private readonly string TURBINE_INPUT_COLUMN_QUERY = "SELECT * from TurbineInputTags WHERE TurbineId='{0}'";
         public DataTable GetTurbineInputColumn(string turbinePrefix) { return readQuery(String.Format("SELECT * from TurbineInputTags WHERE TurbineId='{0}'", turbinePrefix)); }
         private readonly string TURBINE_OUTPUT_COLUMN_QUERY = "SELECT * from TurbineOutputTags WHERE TurbineId='{0}'";
-        private readonly string SCALING_FACTOR_QUERY = "SELECT * from SystemInputTags where Description='ScalingFactor';";
-        private readonly string TURBINE_STARTUP_TIME = "SELECT * from SystemInputTags where Description='TurbineStartupTime';";
 
-        public string getTurbineOperatingStateTag(string turbinePrefix)
+        public string getTurbineOperatingStateTag(string turbinePrefix) { return readQueryFromTurbineInputTagsTable("OperatingState", turbinePrefix); }
+        public string getTurbineNrsModeTag(string turbinePrefix) { return readQueryFromTurbineInputTagsTable("NrsMode", turbinePrefix); }
+        public string getTurbineParticiaptionTag(string turbinePrefix) { return readQueryFromTurbineInputTagsTable("Participation", turbinePrefix); }
+        public string getTurbineRotorSpeedTag(string turbinePrefix) { return readQueryFromTurbineInputTagsTable("RotorSpeed", turbinePrefix); }
+        public string getTurbineStartCommandTag(string turbinePrefix) { return readQueryFromTurbineInputTagsTable("Start", turbinePrefix); }
+        public string getTurbinePauseCommandTag(string turbinePrefix) { return readQueryFromTurbineInputTagsTable("Pause", turbinePrefix); }
+        public string getTurbineTemperatureTag(string turbinePrefix) { return readQueryFromTurbineInputTagsTable("Temperature", turbinePrefix); }
+        public string getTurbineWindSpeedTag(string turbinePrefix) { return readQueryFromTurbineInputTagsTable("WindSpeed", turbinePrefix); }
+        public string getMetTowerReference(string turbinePrefix) { return readQueryFromTurbineInputTagsTable("MetReference", turbinePrefix); }
+        public string getTurbineStoppedAlarmTag(string turbinePrefix) { return readQueryFromTurbineOutputTagsTable("Alarm", turbinePrefix); }
+        public string getTurbineAgcBlockingTag(string turbinePrefix) { return readQueryFromTurbineOutputTagsTable("AGCBlocking", turbinePrefix); }
+        public string getTurbineLowRotorSpeedFlagTag(string turbinePrefix) { return readQueryFromTurbineOutputTagsTable("LowRotorSpeedFlag", turbinePrefix); }
+        public string getTurbineCtrCountdownTag(string turbinePrefix) { return readQueryFromTurbineOutputTagsTable("CTRCountdown", turbinePrefix); }
+        
+        public DataTable getTurbineId() { return readQuery( "SELECT TurbineId FROM TurbineInputTags;"); }
+
+        private string readQueryFromTurbineInputTagsTable(string command, string turbinePrefix)
         {
-            return readQuery(String.Format("SELECT OperatingState from TurbineInputTags where TurbineId='{0}'", turbinePrefix)).Rows[0][0].ToString();
+            return readQuery(String.Format("SELECT {0} from TurbineInputTags where TurbineId='{1}'", command, turbinePrefix)).Rows[0][0].ToString();
         }
-        public string getTurbineNrsModeTag(string turbinePrefix)
+        private string readQueryFromTurbineOutputTagsTable(string command, string turbinePrefix)
         {
-            return readQuery(String.Format("SELECT NrsMode from TurbineInputTags where TurbineId='{0}'", turbinePrefix)).Rows[0][0].ToString();
-        }
-        public string getTurbineParticiaptionTag(string turbinePrefix)
-        {
-            return readQuery(String.Format("SELECT Participation from TurbineInputTags where TurbineId='{0}'", turbinePrefix)).Rows[0][0].ToString();
-        }
-        public string getTurbineRotorSpeedTag(string turbinePrefix)
-        {
-            return readQuery(String.Format("SELECT RotorSpeed from TurbineInputTags where TurbineId='{0}'", turbinePrefix)).Rows[0][0].ToString();
-        }
-        internal string getTurbineStartCommandTag(string turbinePrefix)
-        {
-            return readQuery(String.Format("SELECT Start from TurbineInputTags where TurbineId='{0}'", turbinePrefix)).Rows[0][0].ToString();
+            return readQuery(String.Format("SELECT {0} from TurbineOutputTags where TurbineId='{1}'", command, turbinePrefix)).Rows[0][0].ToString();
         }
 
-
+        private string readQueryFromSystemInput(string description,string field)
+        {
+            return readQuery(String.Format("SELECT {0} from SystemInputTags where Description='{1}';", field,description)).Rows[0][0].ToString();
+        }
     }
 }

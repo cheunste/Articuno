@@ -43,12 +43,6 @@ namespace Articuno
 
         private RotorSpeedFilter filterTable;
 
-        private readonly string TURBINE_FIND_TURBINEID = "SELECT TurbineId FROM TurbineInputTags;";
-        private readonly string TURBINE_INPUT_COLUMN_QUERY = "SELECT * from TurbineInputTags WHERE TurbineId='{0}'";
-        private readonly string TURBINE_OUTPUT_COLUMN_QUERY = "SELECT * from TurbineOutputTags WHERE TurbineId='{0}'";
-        private readonly string SCALING_FACTOR_QUERY = "SELECT * from SystemInputTags where Description='ScalingFactor';";
-        private readonly string TURBINE_STARTUP_TIME = "SELECT * from SystemInputTags where Description='TurbineStartupTime';";
-
         private static string uccActiveTag;
         private DatabaseInterface dbi;
 
@@ -68,7 +62,7 @@ namespace Articuno
 
         public void createPrefixList()
         {
-            DataTable reader = DatabaseInterface.Instance.readQuery(TURBINE_FIND_TURBINEID);
+            DataTable reader = dbi.getTurbineId();
             foreach (DataRow item in reader.Rows) { turbinePrefixList.Add(item["TurbineId"].ToString()); }
         }
 
@@ -331,49 +325,32 @@ namespace Articuno
         {
             Turbine turbine = new Turbine(turbinePrefix, opcServerName);
             //For Turbine tags from the  TurbineInputTags Table
-            string cmd = String.Format(TURBINE_INPUT_COLUMN_QUERY, turbinePrefix);
-            DataTable reader = dbi.readQuery(cmd);
-            turbine.ScalingFactorValue = GetTurbineScalingFactor();
-            turbine.StartupTime = GetTurbineStartUpTime();
 
-            SetTurbineNrsTag(turbine, reader);
-            turbine.OperatingStateTag = sitePrefix + reader.Rows[0]["OperatingState"].ToString();
-            turbine.RotorSpeedTag = sitePrefix + reader.Rows[0]["RotorSpeed"].ToString();
-            turbine.TemperatureTag = sitePrefix + reader.Rows[0]["Temperature"].ToString();
-            turbine.WindSpeedTag = sitePrefix + reader.Rows[0]["WindSpeed"].ToString();
-            turbine.ParticipationTag = sitePrefix + reader.Rows[0]["Participation"].ToString();
-            turbine.LoadShutdownTag = sitePrefix + reader.Rows[0]["Pause"].ToString();
-            turbine.StartCommandTag = sitePrefix + reader.Rows[0]["Start"].ToString();
+            turbine.ScalingFactorValue = dbi.GetTurbineScalingFactorValue();
+            turbine.StartupTime = dbi.GetTurbineStartupTime();
+
+            SetTurbineNrsTag(turbine);
+            turbine.OperatingStateTag = sitePrefix + dbi.getTurbineOperatingStateTag(turbinePrefix);
+            turbine.RotorSpeedTag = sitePrefix + dbi.getTurbineRotorSpeedTag(turbinePrefix);
+            turbine.TemperatureTag = sitePrefix + dbi.getTurbineTemperatureTag(turbinePrefix);
+            turbine.WindSpeedTag = sitePrefix + dbi.getTurbineWindSpeedTag(turbinePrefix);
+            turbine.ParticipationTag = sitePrefix + dbi.getTurbineParticiaptionTag(turbinePrefix);
+            turbine.LoadShutdownTag = sitePrefix + dbi.getTurbinePauseCommandTag(turbinePrefix);
+            turbine.StartCommandTag = sitePrefix + dbi.getTurbineStartCommandTag(turbinePrefix);
             //Do not include the site prefix for this column. 
-            turbine.MainMetTowerReference = reader.Rows[0]["MetReference"].ToString();
+            turbine.MainMetTowerReference = dbi.getMetTowerReference(turbinePrefix);
 
             InitializeTurbineOutputTags(turbine);
 
             turbineList.Add(turbine);
         }
-
-        private string GetTurbineScalingFactor()
-        {
-            //Get the Scaling Factor from the system input tag table
-            string cmd = String.Format(SCALING_FACTOR_QUERY);
-            DataTable reader = dbi.readQuery(cmd);
-            return reader.Rows[0]["DefaultValue"].ToString();
-        }
-
-        private string GetTurbineStartUpTime()
-        {
-            string cmd = String.Format(TURBINE_STARTUP_TIME);
-            DataTable reader = dbi.readQuery(cmd);
-            return reader.Rows[0]["DefaultValue"].ToString();
-        }
-
-        private void SetTurbineNrsTag(Turbine turbine, DataTable reader)
+        private void SetTurbineNrsTag(Turbine turbine)
         {
             //Note that NRS can be empty, so that's why there is a try/catch here. If it is empty or null, just set it to an empty string
             string noiseLevelTag = "";
             try
             {
-                noiseLevelTag = sitePrefix + reader.Rows[0]["NrsMode"].ToString();
+                noiseLevelTag = sitePrefix + dbi.getTurbineNrsModeTag(turbine.GetTurbinePrefixValue());
                 if (noiseLevelTag.Equals(""))
                 {
                     turbine.NrsStateTag = "";
@@ -397,13 +374,11 @@ namespace Articuno
      
         private void InitializeTurbineOutputTags(Turbine turbine)
         {
-            //For Turbine tags from the TurbineOutputTags Table There might be duplicates
-            string cmd = String.Format(TURBINE_OUTPUT_COLUMN_QUERY, turbine.GetTurbinePrefixValue());
-            DataTable reader = dbi.readQuery(cmd);
-            turbine.StoppedAlarmTag = sitePrefix + reader.Rows[0]["Alarm"].ToString();
-            turbine.AgcBlockingTag = sitePrefix + reader.Rows[0]["AGCBlocking"].ToString();
-            turbine.LowRotorSpeedFlagTag = sitePrefix + reader.Rows[0]["LowRotorSpeedFlag"].ToString();
-            turbine.CtrCountdownTag = sitePrefix + reader.Rows[0]["CTRCountdown"].ToString();
+            var turbinePrefix = turbine.GetTurbinePrefixValue();
+            turbine.StoppedAlarmTag = sitePrefix + dbi.getTurbineStoppedAlarmTag(turbinePrefix);
+            turbine.AgcBlockingTag = sitePrefix + dbi.getTurbineAgcBlockingTag(turbinePrefix);
+            turbine.LowRotorSpeedFlagTag = sitePrefix + dbi.getTurbineLowRotorSpeedFlagTag(turbinePrefix);
+            turbine.CtrCountdownTag = sitePrefix + dbi.getTurbineCtrCountdownTag(turbinePrefix);
         }
         /// <summary>
         /// constructor for the TurbineMediator class. 

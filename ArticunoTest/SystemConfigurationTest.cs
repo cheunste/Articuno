@@ -54,7 +54,7 @@ namespace ArticunoTest
         [TestMethod]
         public void getScalingFactorOpcTagTest()
         {
-            string value = prefix+dbi.GetTurbineScalingFactor();
+            string value = prefix+dbi.GetTurbineScalingFactorValue();
             Assert.IsNotNull(value);
             Assert.AreNotEqual(value, "");
         }
@@ -77,7 +77,7 @@ namespace ArticunoTest
         [TestMethod]
         public void getTurbineStartupTimeValueTest()
         {
-            int value = dbi.GetTurbineStartupTime();
+            int value = Convert.ToInt32(dbi.GetTurbineStartupTime());
             Assert.IsNotNull(value);
             Assert.AreNotEqual(value, "");
             Assert.IsTrue(value > 0);
