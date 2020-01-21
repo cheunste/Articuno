@@ -189,6 +189,7 @@ namespace Articuno
         public double AmbTempThreshold { get; set; }
         public double DeltaTempThreshold { get; set; }
 
+
         //Humidity Accessors
         public string HumidityPrimValueTag { get; set; }
 

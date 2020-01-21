@@ -319,7 +319,14 @@ namespace Articuno
         /// Writes the delta threshold for all the met tower
         /// </summary>
         /// <param name="value">A double vlaue that represents the delta threshold<</param>
-        public void writeDeltaThreshold(double value) { foreach (MetTower tower in metTowerList) { tower.DeltaTempThreshold = value; } }
+        public void writeDeltaThreshold(double value)
+        {
+            foreach (MetTower tower in metTowerList)
+            {
+                tower.DeltaTempThreshold = value;
+                OpcServer.writeOpcTag(opcServerName, sitePrefix + dbi.GetDeltaThresholdTag(), value);
+            }
+        }
         public double readDeltaThreshold(string metTowerId) { return GetMetTowerFromId(metTowerId).DeltaTempThreshold; }
         public void writePrimTemperature(string metId, double value) { GetMetTowerFromId(metId).PrimTemperatureValue = value; }
         public void writeSecTemperature(string metId, double value) { GetMetTowerFromId(metId).SecTemperatureValue = value; }

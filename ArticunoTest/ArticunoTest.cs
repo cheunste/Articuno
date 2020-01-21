@@ -18,8 +18,8 @@ namespace ArticunoTest
         MetTowerMediator mm;
         TurbineMediator tm;
         DatabaseInterface di;
-        Setup setup;
         string opcServerName = "SV.OPCDAServer.1";
+        string sitePrefix;
         public ArticunoTest()
         {
             mm = MetTowerMediator.Instance;
@@ -28,7 +28,7 @@ namespace ArticunoTest
 
             mm.CreateMetTowerObject();
             tm.createTestTurbines();
-            setup = new Setup();
+            sitePrefix = di.getSitePrefixValue();
         }
 
         #region Additional test attributes
@@ -55,22 +55,29 @@ namespace ArticunoTest
 
         [TestMethod]
         [DataTestMethod]
-        [DataRow("Met", -15, -15, 90.0)]
+        [DataRow("Met", -15, -15, .97)]
         public void IcedTowerTest(string metId, double temp1, double temp2, double humidity)
         {
-            int time = 3;
-            OpcServer.writeOpcTag(opcServerName, setup.CtrTime, time);
-            setup.DefaultCase();
-            string siteName = setup.sitePrefix;
-            OpcServer.writeOpcTag(opcServerName, setup.TmpThreshold, 5);
+            int time = 1;
+
+            var ctrTag = sitePrefix + di.getArticunoCtrTag();
+            var temperatureTag = sitePrefix + di.getTemperatureThresholdTag();
+            var enableTag = sitePrefix + di.getArticunoEnableTag();
+            var uccActive = di.getActiveUccOpcTag();
+            var deltaTag = sitePrefix + di.GetDeltaThresholdTag();
+
+            OpcServer.writeOpcTag(opcServerName, ctrTag, time);
+            OpcServer.writeOpcTag(opcServerName, temperatureTag, 5);
+            OpcServer.writeOpcTag(opcServerName, enableTag, true);
+            mm.writeDeltaThreshold(1);
+
             mm.writePrimTemperature(metId, temp1);
             mm.writeSecTemperature(metId, temp2);
             mm.writeHumidity(metId, humidity);
 
-
             Articuno.Articuno.Main(null, null);
-            Thread.Sleep(time * 60 * 1000);
-            Assert.AreEqual(OpcServer.readBooleanTag(opcServerName, siteName + "Articuno."+metId+".IcePossible"), true); 
+            bool isMetTowerFrozen = Convert.ToBoolean(mm.IsMetTowerFrozen(metId,temp1,humidity));
+            Assert.AreEqual(isMetTowerFrozen, true);
         }
 
         [TestMethod]
@@ -82,7 +89,7 @@ namespace ArticunoTest
 
             articuno = new Articuno.Articuno(true);
 
-            //Note complete. Do this later once you get the delegates figured out
+            Assert.Fail(" Do this later once you get the delegates figured out");
             tm.setTemperatureCondition(turbineId, state);
             tm.setOperatingStateCondition(turbineId, state);
             tm.setNrsActive(turbineId, state);
@@ -98,7 +105,7 @@ namespace ArticunoTest
             bool state = true;
             IcedConditions(turbineId, true);
             IcedConditions(turbineId, false);
-       
+
         }
 
         [TestMethod]
@@ -133,25 +140,20 @@ namespace ArticunoTest
 
         [TestMethod]
         [DataRow(5)]
-        [DataRow(1)]
         public void CTRChangeTest(int ctrTime)
         {
             articuno = new Articuno.Articuno(true);
             string turbineId = "T001";
-
-            Thread.Sleep(500);
-            DataTable reader = di.readQuery("Select OpcTag from SystemInputTags WHERE Description='CTRPeriod'");
-            string ctrTimeTag = reader.Rows[0]["OpcTag"].ToString();
-
             OpcServer server = new OpcServer("SV.OPCDAServer.1");
 
+            string ctrTimeTag = sitePrefix + di.getArticunoCtrTag();
+            server.writeTagValue(ctrTimeTag, 3);
+            Thread.Sleep(10000);
             server.writeTagValue(ctrTimeTag, ctrTime);
 
-            Thread.Sleep(500);
-
             string readCtrTime = server.readTagValue(ctrTimeTag).ToString();
-            string turbineCtrTime = tm.getTurbineCtrTime(turbineId).ToString();
-
+            Assert.IsTrue(ctrTime.ToString().Equals(readCtrTime), "The written and read time read from the CtrTag is not equal");
+            string turbineCtrTime = tm.getTurbineCtrTimeRemaining(turbineId).ToString();
             Console.WriteLine("ctrTimeTag: {0}\nturbineCtrTime tag: {1}", ctrTimeTag, turbineCtrTime);
 
             Console.WriteLine("ctrTime Input: {0} readCtrTime: {1}", ctrTime.ToString(), readCtrTime);

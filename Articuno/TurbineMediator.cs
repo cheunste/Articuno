@@ -105,6 +105,7 @@ namespace Articuno
         public string getNrsStateTag(string turbineId) { return GetTurbinePrefixFromMediator(turbineId).NrsStateTag; }
         public string getTemperatureTag(string turbineId) { return GetTurbinePrefixFromMediator(turbineId).TemperatureTag; }
         public string getLoadShutdownTag(string turbineId) { return GetTurbinePrefixFromMediator(turbineId).LoadShutdownTag; }
+        public string getStartCommandTag (string turbineId) { return GetTurbinePrefixFromMediator(turbineId).StartCommandTag; }
         public string getParticipationState(string turbineId) { return GetTurbinePrefixFromMediator(turbineId).ParticipationTag; }
         public string getLowRotorSpeedFlag(string turbineId) { return GetTurbinePrefixFromMediator(turbineId).LowRotorSpeedFlagTag; }
         public string getCtrRemaining(string turbineId) { return GetTurbinePrefixFromMediator(turbineId).CtrCountdownTag; }
@@ -184,6 +185,15 @@ namespace Articuno
             else if (tag.ToUpper().Equals(tempTurbine.ParticipationTag.ToUpper())) { return TurbineEnum.Participation; }
             else if (tag.ToUpper().Equals(tempTurbine.StartCommandTag.ToUpper())) { return TurbineEnum.TurbineStarted; }
             else return null;
+        }
+
+        public  bool isNrsTagEmpty(string turbineId)
+        {
+            string nrsTag= dbi.getTurbineNrsModeTag(turbineId);
+            if (nrsTag == null || nrsTag.Equals(""))
+                return true;
+            else
+                return false;
         }
 
         /// <summary>

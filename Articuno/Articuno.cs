@@ -181,10 +181,10 @@ namespace Articuno
             systemInputClient.ItemChanged += SystemTagValueChange;
 
             List<DAItemGroupArguments> systemInputTags = new List<DAItemGroupArguments>();
-            tempThresholdTag = dbi.readQuery("SELECT OpcTag from SystemInputTags WHERE Description='AmbTempThreshold'").Rows[0]["OpcTag"].ToString();
-            enableArticunoTag = dbi.readQuery("SELECT OpcTag from SystemInputTags WHERE Description='ArticunoEnable'").Rows[0]["OpcTag"].ToString();
-            articunoCtrTag = dbi.readQuery("SELECT OpcTag from SystemInputTags WHERE Description='CTRPeriod'").Rows[0]["OpcTag"].ToString();
-            deltaThresholdTag = dbi.readQuery("SELECT OpcTag from SystemInputTags WHERE Description='DeltaTmpThreshold'").Rows[0]["OpcTag"].ToString();
+            tempThresholdTag = sitePrefix+dbi.getTemperatureThresholdTag();
+            enableArticunoTag = sitePrefix+dbi.getArticunoEnableTag();
+            articunoCtrTag = sitePrefix+dbi.getArticunoCtrTag();
+            deltaThresholdTag = sitePrefix+dbi.GetDeltaThresholdTag();
 
             systemInputTags.Add(new DAItemGroupArguments("", opcServerName, tempThresholdTag, NORMAL_UPDATE_RATE, null));
             systemInputTags.Add(new DAItemGroupArguments("", opcServerName, enableArticunoTag, NORMAL_UPDATE_RATE, null));
@@ -226,24 +226,21 @@ namespace Articuno
             List<DAItemGroupArguments> turbineInputTags = new List<DAItemGroupArguments>();
             foreach (string turbinePrefix in tm.getTurbinePrefixList())
             {
-                string cmd = String.Format("SELECT OperatingState, Participation,NrsMode,Start from TurbineInputTags where TurbineId='{0}'", turbinePrefix);
-                reader = dbi.readQuery(cmd);
-                for (int i = 0; i < reader.Rows.Count; i++)
+                try
                 {
-                    try
-                    {
-                        turbineInputTags.Add(new DAItemGroupArguments("",
-                            opcServerName, sitePrefix + tm.getOperatingStateTag(turbinePrefix) , FAST_UPDATE_RATE, null));
-                        turbineInputTags.Add(new DAItemGroupArguments("",
-                            opcServerName, sitePrefix + tm.getParticipationState(turbinePrefix), FAST_UPDATE_RATE, null));
-                        turbineInputTags.Add(new DAItemGroupArguments("",
-                            opcServerName, sitePrefix + tm.getNrsStateTag(turbinePrefix), FAST_UPDATE_RATE, null));
-                        turbineInputTags.Add(new DAItemGroupArguments("",
-                            opcServerName, sitePrefix + reader.Rows[i]["Start"].ToString(), FAST_UPDATE_RATE, null));
+                    turbineInputTags.Add(new DAItemGroupArguments("",
+                        opcServerName, tm.getOperatingStateTag(turbinePrefix), FAST_UPDATE_RATE, null));
+                    turbineInputTags.Add(new DAItemGroupArguments("",
+                        opcServerName, tm.getParticipationState(turbinePrefix), FAST_UPDATE_RATE, null));
+                    turbineInputTags.Add(new DAItemGroupArguments("",
+                        opcServerName, tm.getStartCommandTag(turbinePrefix), FAST_UPDATE_RATE, null));
 
-                    }
-                    catch (Exception e) { log.ErrorFormat("Error when attempting to add to assetInputTags list. {0}", e); }
+                    //Only add the Nrs Tag to listener if the config database is configured for it
+                    if (!tm.isNrsTagEmpty(turbinePrefix))
+                        turbineInputTags.Add(new DAItemGroupArguments("",
+                            opcServerName, tm.getNrsStateTag(turbinePrefix), FAST_UPDATE_RATE, null));
                 }
+                catch (Exception e) { log.ErrorFormat("Error when attempting to add to assetInputTags list. {0}", e); }
             }
             return turbineInputTags;
         }
@@ -266,17 +263,23 @@ namespace Articuno
 
         private static void updateHeartBeat(object sender, ElapsedEventArgs e)
         {
-            if (isUccActive()){
-                OpcServer.writeOpcTag(opcServerName, heartBeatTag, !ReadHeartBeatTagValue() );
+            if (isUccActive())
+            {
+                OpcServer.writeOpcTag(opcServerName, heartBeatTag, !ReadHeartBeatTagValue());
             }
-            if (articunoEnable)
+            if (isArticunoEnabled())
                 gatherTemperatureAndHumiditySamples();
         }
 
         private static bool isUccActive()
         {
             return Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, uccActiveTag));
-        } 
+        }
+
+        private static bool isArticunoEnabled()
+        {
+            return Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, enableArticunoTag));
+        }
 
         private static Boolean ReadHeartBeatTagValue()
         {
@@ -310,13 +313,13 @@ namespace Articuno
         {
             //For every CTR minute, do the other calculation stuff. Better set up a  member variable here
             ctrCountdown--;
-            if (ctrCountdown == 0)
+            if (ctrCountdown <= 0)
                 calculateMetTowerAverages();
 
             //Write the MetTower CTR to the tag
-            OpcServer.writeOpcTag(opcServerName, dbi.getMetTowerCtrCountdownTag(), ctrCountdown);
+            OpcServer.writeOpcTag(opcServerName, sitePrefix+dbi.getMetTowerCtrCountdownTag(), ctrCountdown);
 
-            if (articunoEnable)
+            if (isArticunoEnabled())
                 tm.decrementTurbineCtrTime();
             LogCurrentTurbineStatusesInArticuno();
         }
@@ -336,6 +339,7 @@ namespace Articuno
 
                 //Send this temperature to the Met Mediator and determine if met tower is freezing or not
                 bool metFrozen = mm.IsMetTowerFrozen("Met" + j, tempAvg, humidityAvg);
+
 
                 //Update the Dew Point calculation. This value will show up on the faceplate
                 mm.updateDewPoint("Met" + j, tempAvg, humidityAvg);
@@ -516,19 +520,21 @@ namespace Articuno
             {
                 string systemInputOpcTag = e.Arguments.ItemDescriptor.ItemId.ToString();
                 int value = Convert.ToInt16(e.Vtq.Value);
-                if (systemInputOpcTag.Equals(enableArticunoTag))
+            if (systemInputOpcTag.Equals(sitePrefix+enableArticunoTag))
                 {
                     articunoEnable = (value == ENABLE) ? true : false;
                     log.DebugFormat("Articuno is : {0}", articunoEnable ? "Enabled" : "Disabled");
                 }
-                if (systemInputOpcTag.Equals(articunoCtrTag))
+                if (systemInputOpcTag.Equals(sitePrefix + articunoCtrTag))
+                {
                     ctrValueChanged(value);
-                if (systemInputOpcTag.Equals(tempThresholdTag))
+                }
+                if (systemInputOpcTag.Equals(sitePrefix+tempThresholdTag))
                 {
                     mm.UpdateTemperatureThresholdForAllMetTowers(value);
                     log.DebugFormat("Articuno Temperature Threshold updated to: {0} deg C", value);
                 }
-                if (systemInputOpcTag.Equals(deltaThresholdTag))
+                if (systemInputOpcTag.Equals(sitePrefix+deltaThresholdTag))
                 {
                     mm.writeDeltaThreshold(value);
                     log.DebugFormat("Articuno Temperature Delta updated to: {0} deg C", value);

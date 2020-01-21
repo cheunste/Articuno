@@ -50,11 +50,6 @@ namespace Articuno
             return dt;
         }
 
-
-
-
-
-
         /// <summary>
         /// Used for update queries. Doesn't check to see if artiunoDBConnection is null or no
         /// </summary>
@@ -187,7 +182,6 @@ namespace Articuno
         }
         public string getTurbineNrsModeTag(string turbinePrefix)
         {
-
             return readQuery(String.Format("SELECT NrsMode from TurbineInputTags where TurbineId='{0}'", turbinePrefix)).Rows[0][0].ToString();
         }
         public string getTurbineParticiaptionTag(string turbinePrefix)
