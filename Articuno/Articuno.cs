@@ -519,21 +519,21 @@ namespace Articuno
             {
                 string systemInputOpcTag = e.Arguments.ItemDescriptor.ItemId.ToString();
                 int value = Convert.ToInt16(e.Vtq.Value);
-            if (systemInputOpcTag.Equals(sitePrefix+enableArticunoTag))
+            if (systemInputOpcTag.Equals(enableArticunoTag))
                 {
                     articunoEnable = (value == ENABLE) ? true : false;
                     log.DebugFormat("Articuno is : {0}", articunoEnable ? "Enabled" : "Disabled");
                 }
-                if (systemInputOpcTag.Equals(sitePrefix + articunoCtrTag))
+                if (systemInputOpcTag.Equals( articunoCtrTag))
                 {
                     ctrValueChanged(value);
                 }
-                if (systemInputOpcTag.Equals(sitePrefix+tempThresholdTag))
+                if (systemInputOpcTag.Equals(tempThresholdTag))
                 {
                     mm.UpdateTemperatureThresholdForAllMetTowers(value);
                     log.DebugFormat("Articuno Temperature Threshold updated to: {0} deg C", value);
                 }
-                if (systemInputOpcTag.Equals(sitePrefix+deltaThresholdTag))
+                if (systemInputOpcTag.Equals(deltaThresholdTag))
                 {
                     mm.writeDeltaThreshold(value);
                     log.DebugFormat("Articuno Temperature Delta updated to: {0} deg C", value);

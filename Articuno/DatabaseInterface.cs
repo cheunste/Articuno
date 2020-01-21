@@ -62,14 +62,11 @@ namespace Articuno
                 connection.Open();
                 using (SQLiteCommand cmd = new SQLiteCommand(query, connection))
                 {
-                    //return cmd.ExecuteNonQuery();
                     cmd.ExecuteNonQuery();
                 }
             }
             return 0;
         }
-
-
 
         /// <summary>
         /// Gets the name of the OPC Server
@@ -129,42 +126,19 @@ namespace Articuno
         public string GetSecTempValueTag(string metId) { return readQuery(String.Format("SELECT SecTempValueTag from MetTowerInputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
         public string GetPrimHumidityTag(string metId) { return readQuery(String.Format("SELECT PrimHumidityValueTag from MetTowerInputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
         public string GetSwitchCommandTag(string metId) { return readQuery(String.Format("SELECT Switch from MetTowerInputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
-        public string GetMetHumidityOutOfRangeAlarmTag(string metId) {
-            return readQuery(String.Format("SELECT HumidityOutOfRangeTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString();
-        }
+        public string GetMetHumidityOutOfRangeAlarmTag(string metId) { return readQuery(String.Format("SELECT HumidityOutOfRangeTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
 
-        public string GetMetNoDataAlarmTag(string metId)
-        {
-            return readQuery(String.Format("SELECT NoDataAlarmTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString();
-        }
+        public string GetMetNoDataAlarmTag(string metId) { return readQuery(String.Format("SELECT NoDataAlarmTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
 
-        public string GetMetIceIndicationAlarmTag(string metId)
-        {
-            return readQuery(String.Format("SELECT IceIndicationTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString();
-        }
+        public string GetMetIceIndicationAlarmTag(string metId) { return readQuery(String.Format("SELECT IceIndicationTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
 
-        public string GetMetHumidityBadQualityAlarmTag(string metId)
-        {
-            return readQuery(String.Format("SELECT HumidityBadQuality from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString();
-        }
+        public string GetMetHumidityBadQualityAlarmTag(string metId) { return readQuery(String.Format("SELECT HumidityBadQuality from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
 
-        public string GetMetBadSecondaryTempSensorAlarmTag(string metId)
-        {
-            return readQuery(String.Format("SELECT TempSecBadQualityTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString();
-        }
-        public string GetMetBadPrimaryTempSensorAlarmTag(string metId)
-        {
-            return readQuery(String.Format("SELECT TempPrimBadQualityTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString();
-        }
-        public string GetMetPrimaryTempOutOfRangeAlarmTag(string metId)
-        {
-            return readQuery(String.Format("SELECT TempPrimOutOfRangeTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString();
-        }
+        public string GetMetBadSecondaryTempSensorAlarmTag(string metId) { return readQuery(String.Format("SELECT TempSecBadQualityTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
+        public string GetMetBadPrimaryTempSensorAlarmTag(string metId) { return readQuery(String.Format("SELECT TempPrimBadQualityTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
+        public string GetMetPrimaryTempOutOfRangeAlarmTag(string metId) { return readQuery(String.Format("SELECT TempPrimOutOfRangeTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
 
-        public string GetMetSecondaryTempOutOfRangeAlarmTag(string metId)
-        {
-            return readQuery(String.Format("SELECT TempSecOutOfRangeTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString();
-        }
+        public string GetMetSecondaryTempOutOfRangeAlarmTag(string metId) { return readQuery(String.Format("SELECT TempSecOutOfRangeTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
 
         public string GetBackupTurbine(string metId) { return readQuery(String.Format("SELECT BackupTurbine from MetTowerInputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
 

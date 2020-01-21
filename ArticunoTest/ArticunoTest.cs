@@ -56,7 +56,7 @@ namespace ArticunoTest
         [TestMethod]
         [DataTestMethod]
         [DataRow("Met", -15, -15, .97)]
-        public void IcedTowerTest(string metId, double temp1, double temp2, double humidity)
+        public void CalculateFrozenMetTowerConditionTest(string metId, double temp1, double temp2, double humidity)
         {
             int time = 1;
 
@@ -75,9 +75,8 @@ namespace ArticunoTest
             mm.writeSecTemperature(metId, temp2);
             mm.writeHumidity(metId, humidity);
 
-            Articuno.Articuno.Main(null, null);
             mm.CalculateFrozenMetTowerCondition(metId,temp1,humidity);
-            Assert.AreEqual(isMetTowerFrozen, true);
+            Assert.AreEqual(mm.IsMetTowerFrozen(metId), true);
         }
 
         [TestMethod]

@@ -270,7 +270,6 @@ namespace ArticunoTest
             MetTower met = mm.GetMetTowerFromId(metId);
             met.PrimTemperatureValue = tempSensor1Val;
             met.SecTemperatureValue = tempSensor2Val;
-            Random rnd = new Random();
 
             //Get measurements about 50 tiems or so to see if it is flatline. 
             createStaleData(met);

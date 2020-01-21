@@ -87,20 +87,17 @@ namespace Articuno
         /// </summary>
         public void CalculateFrozenMetTowerCondition(string metId, double avgTemperature, double avgHumidity)
         {
-
             MetTower met = GetMetTowerFromId(metId);
 
             double tempThreshold = ReadTemperatureThresholdForMetTower(metId);
             double deltaThreshold = readDeltaThreshold(metId);
-
             double dewPoint = CalculateDewPointTemperature(avgHumidity, avgTemperature);
             double delta = CalculateDewTempAmbientTempDelta(avgTemperature, dewPoint);
 
-            //If the humidity quality is bad, then do not use it and only rely on temperature
             bool isHumidityBad = Convert.ToBoolean(met.getPrimaryHumiditySensor().isSensorBadQuality()) || Convert.ToBoolean(met.getPrimaryHumiditySensor().isSensorOutofRange());
+
             if (avgTemperature <= tempThreshold)
             {
-
                 try
                 {
                     //If Humidity is bad, then only relie on temperature
@@ -112,18 +109,14 @@ namespace Articuno
                             "{0} Average Temperature {1}, \n" +
                             "{0} Temperature threshold {2} \n",
                             metId, avgTemperature, tempThreshold);
-
                     }
                     //Freezing Conditions met with good humidity(regular case)
                     else if (delta <= deltaThreshold)
                     {
                         met.IceIndicationValue = true;
                         log.InfoFormat("No Ice detected for met {0}.\n" +
-                            "{0} Average Temperature {1}, \n" +
-                            "{0} Temperature threshold {2} \n" +
-                            "{0} Average Humidity {3}, \n" +
-                            "{0} Delta threshold {4} \n"
-                            ,
+                            "{0} Average Temperature {1}, \n" + "{0} Temperature threshold {2} \n" +
+                            "{0} Average Humidity {3}, \n" + "{0} Delta threshold {4} \n",
                             metId, avgTemperature, tempThreshold, avgHumidity, deltaThreshold
                             );
                     }
@@ -133,15 +126,10 @@ namespace Articuno
                 catch (Exception e)
                 {
                     //in case you can't write to OPC Server
-                    log.ErrorFormat("Error when writing to the " +
-                        "Ice indication.\n" +
-                        "Error: {0}. \n" +
-                        "Met: {1}, \n" +
-                        "avgTemp: {2}, \n" +
-                        "tempThreshold {3}\n",
+                    log.ErrorFormat("Error when writing to the Ice indication tag.\n" +
+                        "Error: {0}. \n" + "Met: {1}, \n" +
+                        "avgTemp: {2}, \n" + "tempThreshold {3}\n",
                         e, metId, avgTemperature, tempThreshold);
-                    log.ErrorFormat("Error:\n{0}", e);
-
                 }
             }
 
@@ -153,21 +141,17 @@ namespace Articuno
                     "{0} Average Temperature {1}, \n" +
                     "{0} Temperature threshold {2} \n" +
                     "{0} Average Humidity {3}, \n" +
-                    "{0} Delta threshold {4} \n"
-                    ,
+                    "{0} Delta threshold {4} \n",
                     metId, avgTemperature, tempThreshold, avgHumidity, deltaThreshold
                     );
             }
         }
-
 
         public void createPrefixList()
         {
             DataTable reader = DatabaseInterface.Instance.readQuery(MET_NUM);
             foreach (DataRow item in reader.Rows) { metPrefixList.Add(item["MetId"].ToString()); }
         }
-
-
 
         /// <summary>
         /// Returns a tuple containing an ambient Temperature, a relative humidity, calculated dew point and a temperature delta given a met tower id
@@ -181,23 +165,6 @@ namespace Articuno
             double dew = CalculateDewPointTemperature(Convert.ToDouble(humidity), temperature);
             double delta = CalculateDewTempAmbientTempDelta(temperature, dew);
             log.DebugFormat("{0}, temp: {1}, rh: {2}, dew:{3}, delta: {4}", metId, temperature, humidity, dew, delta);
-        }
-
-        ///EXPERIMENTAL. Not tested
-        /// <summary>
-        /// Calculates Dew Poing and Delta based on the average temperature and average humidty
-        /// </summary>
-        /// <param name="metId"></param>
-        public void calculate(string metId)
-        {
-            MetTower met = GetMetTowerFromId(metId);
-
-            double temperature = Convert.ToDouble(met.CtrTemperatureValue);
-            double humidity = Convert.ToDouble(met.CtrHumidityValue);
-            double dew = CalculateDewPointTemperature(Convert.ToDouble(humidity), temperature);
-            double delta = CalculateDewTempAmbientTempDelta(temperature, dew);
-            log.DebugFormat("{0}, temp: {1}, rh: {2}, dew:{3}, delta: {4}", metId, temperature, humidity, dew, delta);
-
         }
 
         public double ReadTemperatureFromMetTower(String metId)
@@ -214,9 +181,7 @@ namespace Articuno
             {
                 temperature = secTempSensor.readValue();
                 if (secTempSensor.isSensorBadQuality())
-                {
                     temperature = Convert.ToDouble(met.getNearestTurbine().readTurbineTemperatureValue());
-                }
             }
             return temperature;
         }
@@ -264,12 +229,9 @@ namespace Articuno
             while (tempQueue.Count != 0) { temperatureCtrAverage += tempQueue.Dequeue(); }
 
             double average = temperatureCtrAverage / count;
-            //Only write if and only if the UCC is active
             if (OpcServer.isActiveUCC(opcServerName, uccActiveTag))
                 met.CtrTemperatureValue = average;
-
             return average;
-
         }
 
         internal double calculateCtrAvgHumidity(string metId)
@@ -281,9 +243,7 @@ namespace Articuno
             while (humidityQueue.Count != 0) { humidityCtrAverage += humidityQueue.Dequeue(); }
 
             double average = humidityCtrAverage / count;
-            //You need to multiple the CtrHumidityValue by 100 because it is currently in decimal form. 
-            //This needs to be displayed in percentage form
-            //Also, this should only write if and only if the UCC is active
+            //You need to multiple the CtrHumidityValue by 100 because it is currently in decimal form and needs to be displayed in percentage form
             if (OpcServer.isActiveUCC(opcServerName, uccActiveTag))
                 met.CtrHumidityValue = average * 100.0;
             return average;
@@ -297,7 +257,6 @@ namespace Articuno
             if (OpcServer.isActiveUCC(opcServerName, uccActiveTag))
                 GetMetTowerFromId(metId).CtrDewValue = dew;
         }
-
 
         /// <summary>
         /// Write Temperature Threshold for all the met tower
@@ -318,14 +277,7 @@ namespace Articuno
         /// Writes the delta threshold for all the met tower
         /// </summary>
         /// <param name="value">A double vlaue that represents the delta threshold<</param>
-        public void writeDeltaThreshold(double value)
-        {
-            foreach (MetTower tower in metTowerList)
-            {
-                tower.DeltaTempThreshold = value;
-                OpcServer.writeOpcTag(opcServerName, sitePrefix + dbi.GetDeltaThresholdTag(), value);
-            }
-        }
+        public void writeDeltaThreshold(double value) { foreach (MetTower tower in metTowerList) { tower.DeltaTempThreshold = value; } }
         public double readDeltaThreshold(string metTowerId) { return GetMetTowerFromId(metTowerId).DeltaTempThreshold; }
         public void writePrimTemperature(string metId, double value) { GetMetTowerFromId(metId).PrimTemperatureValue = value; }
         public void writeSecTemperature(string metId, double value) { GetMetTowerFromId(metId).SecTemperatureValue = value; }
@@ -336,7 +288,7 @@ namespace Articuno
         }
 
         /// <summary>
-        /// Calculates the Dew Point Temperature given the ambient temperature and the the relative humidity
+        /// Calculates the Dew Point Temperature given the ambient temperature and the the relative humidity. Humidity MUST BE IN DECIMAL FORM
         /// </summary>
         /// <param name="ambTemp">The ambient temperature value (Celcius) from the met tower in double format</param>
         /// <param name="rh">The relative humidity in double format</param>
@@ -360,8 +312,6 @@ namespace Articuno
         {
             MetTower met = GetMetTowerFromId(metId);
             bool currentNoDataState = Convert.ToBoolean(met.NoDataAlarmValue);
-            //Checks to see if the snesor is good or not. Note that the call to isAllSensorGood will raise/clear the 'no data' alarm. This function logs it
-
             if (!met.isAllSensorGood())
             {
                 log.DebugFormat("{0} No Data alarm {1}. NoData Alarm Value {2}", metId, "raised", met.NoDataAlarmValue);
@@ -375,7 +325,6 @@ namespace Articuno
                 return false;
             }
         }
-
 
         /// <summary>
         /// Method used to set a met tower to a turbine
@@ -458,11 +407,9 @@ namespace Articuno
         {
             MetTower met = new MetTower(metPrefix, opcServerName);
 
-            //For Met Tower tags from the MetTowerInputTags table
             string cmd = String.Format(MET_INPUT_TABLE_TAGS, metPrefix);
             DataTable reader = dbi.readQuery(cmd);
 
-            //Set the tags from the MeTowerInputTags table to the accessors
             met.PrimTemperatureTag = sitePrefix + reader.Rows[0]["PrimTempValueTag"].ToString();
             met.SecTemperatureTag = sitePrefix + reader.Rows[0]["SecTempValueTag"].ToString();
             met.RelativeHumidityTag = sitePrefix + reader.Rows[0]["PrimHumidityValueTag"].ToString();
@@ -470,11 +417,9 @@ namespace Articuno
             met.HumiditySecValueTag = sitePrefix + reader.Rows[0]["SecHumidityValueTag"].ToString();
             met.MetSwitchTag = sitePrefix + reader.Rows[0]["Switch"].ToString();
 
-            //For Met Tower tags from the MetTowerInputTags table
             cmd = String.Format(MET_OUTPUT_TABLE_TAGS, metPrefix);
             reader = dbi.readQuery(cmd);
 
-            //Set the tags from the MeTowerInputTags table to the accessors
             met.TemperaturePrimBadQualityTag = sitePrefix + reader.Rows[0]["TempPrimBadQualityTag"].ToString();
             met.TemperaturePrimOutOfRangeTag = sitePrefix + reader.Rows[0]["TempPrimOutOfRangeTag"].ToString();
             met.TemperatureSecOutOfRangeTag = sitePrefix + reader.Rows[0]["TempSecOutOfRangeTag"].ToString();
@@ -487,7 +432,6 @@ namespace Articuno
             met.CtrDewTag = sitePrefix + reader.Rows[0]["CtrDew"].ToString();
             met.CtrHumidityTag = sitePrefix + reader.Rows[0]["CtrHumidity"].ToString();
 
-            //Create the sensors for the met tower. Must be declared after every variable has been set
             met.createSensors();
             metTowerList.Add(met);
         }
