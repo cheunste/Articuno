@@ -42,7 +42,7 @@ namespace ArticunoTest
                 dbi.GetSecTempValueTag("Met"),
                 dbi.GetPrimHumidityTag("Met"),
                 dbi.GetSwitchCommandTag("Met"),
-                dbi.GetBackupTurbine("Met") }
+                dbi.GetBackupTurbineForMet("Met") }
             );
 
             met2Tags.AddRange(new string[] {
@@ -50,7 +50,7 @@ namespace ArticunoTest
                 dbi.GetSecTempValueTag("Met2"),
                 dbi.GetPrimHumidityTag("Met2"),
                 dbi.GetSwitchCommandTag("Met2"),
-                dbi.GetBackupTurbine("Met2")
+                dbi.GetBackupTurbineForMet("Met2")
             });
 
             ArticunoMetAlarmTags.AddRange(new string[]
@@ -255,21 +255,20 @@ namespace ArticunoTest
 
         [TestMethod]
         [DataTestMethod]
-        [DataRow("Met", -50.0, -50.0)]
-        public void useTurbineTempTest(string metId, double tempSensor1Val, double tempSensor2Val)
+        [DataRow("Met", -50.0)]
+        public void useTurbineTempTest(string metId, double badTemperatureValue)
         {
-
-            Assert.Fail("Need to revist due to inclusion of BackupTurbine column in the database ");
-            tm.createTestTurbines();
-            var turbine = tm.getTurbinePrefixList()[0];
+            tm.createTurbines();
+            string turbine = dbi.GetBackupTurbineForMet(metId);
 
             Turbine turb = TurbineMediator.GetTurbinePrefixFromMediator(turbine);
             OpcServer.writeOpcTag(opcServerName, turb.TemperatureTag, 30); ;
 
             //write the fail values to the met tower
+            mm.CreateMetTowerObject();
             MetTower met = mm.GetMetTowerFromId(metId);
-            met.PrimTemperatureValue = tempSensor1Val;
-            met.SecTemperatureValue = tempSensor2Val;
+            met.PrimTemperatureValue = badTemperatureValue;
+            met.SecTemperatureValue = badTemperatureValue;
 
             //Get measurements about 50 tiems or so to see if it is flatline. 
             createStaleData(met);
@@ -279,7 +278,7 @@ namespace ArticunoTest
             Console.WriteLine("Temperature of {0}: {1}", metId, temperature);
             Console.WriteLine("Temperature from Turbine: {0}", turbineTemp);
             //verify  temperature from both the met tower and its backup turbine are not the same.
-            Assert.AreNotEqual(temperature, turbineTemp, 0.001, "The Temperatures are equal. Turbine: {0}, Met Temp {1}", turbineTemp, temperature);
+            Assert.AreNotEqual(badTemperatureValue, turbineTemp, 0.001, "The Temperatures are equal. Turbine: {0}, Met Temp {1}", turbineTemp, badTemperatureValue);
         }
 
         [TestMethod]

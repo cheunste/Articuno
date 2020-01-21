@@ -347,7 +347,6 @@ namespace Articuno
             //Do not include the site prefix for this column. 
             turbine.MainMetTowerReference = reader.Rows[0]["MetReference"].ToString();
 
-            SetMetTowerRedundancyForTurbine(turbine, reader);
             InitializeTurbineOutputTags(turbine);
 
             turbineList.Add(turbine);
@@ -395,22 +394,7 @@ namespace Articuno
             string noiseLevelTag = sitePrefix + reader.Rows[0]["NrsMode"].ToString();
             return noiseLevelTag.Equals("") ? false : true;
         }
-        private void SetMetTowerRedundancyForTurbine(Turbine turbine, DataTable reader)
-        {
-            //If the RedundancyForMet field is not empty, that means the turbine's  temperature sensor is used as a backup in case a met tower fails. 
-            //No operation if field doesn't exist
-            try
-            {
-                if (reader.Rows[0]["RedundancyForMet"].ToString() != null)
-                {
-                    //Do not include the site prefix for this column
-                    string backupMetTower = reader.Rows[0]["RedundancyForMet"].ToString();
-                    MetTowerMediator.Instance.SetTurbineBackupForMet(backupMetTower, turbine);
-                }
-            }
-            catch (Exception) { }
-        }
-
+     
         private void InitializeTurbineOutputTags(Turbine turbine)
         {
             //For Turbine tags from the TurbineOutputTags Table There might be duplicates

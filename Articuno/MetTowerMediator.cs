@@ -181,7 +181,7 @@ namespace Articuno
             {
                 temperature = secTempSensor.readValue();
                 if (secTempSensor.isSensorBadQuality())
-                    temperature = Convert.ToDouble(met.getNearestTurbine().readTurbineTemperatureValue());
+                    temperature = Convert.ToDouble(met.GetBackupTurbineForMetTower().readTurbineTemperatureValue());
             }
             return temperature;
         }
@@ -326,19 +326,6 @@ namespace Articuno
             }
         }
 
-        /// <summary>
-        /// Method used to set a met tower to a turbine
-        /// </summary>
-        /// <param name="metId">The met id. Met or Met2</param>
-        /// <param name="turbine">The turbine id (ie T001)</param>
-        public void SetTurbineBackupForMet(string metId, Turbine turbine)
-        {
-            for (int i = 0; i <= metTowerList.Count; i++)
-            {
-                if (metTowerList.ElementAt(i).getMetTowerPrefix.Equals(metId)) { metTowerList.ElementAt(i).setNearestTurbine(turbine); }
-            }
-        }
-
         public enum MetTowerEnum
         {
             HumidityQuality,
@@ -432,8 +419,13 @@ namespace Articuno
             met.CtrDewTag = sitePrefix + reader.Rows[0]["CtrDew"].ToString();
             met.CtrHumidityTag = sitePrefix + reader.Rows[0]["CtrHumidity"].ToString();
 
+            met.SetBackupTurbineForMetTower(TurbineMediator.GetTurbinePrefixFromMediator(dbi.GetBackupTurbineForMet(metPrefix)));
+
             met.createSensors();
             metTowerList.Add(met);
         }
+
+        private void SetBackupTurbine(string turbineId) { }
+
     }
 }

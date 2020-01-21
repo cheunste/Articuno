@@ -292,13 +292,10 @@ namespace Articuno
         }
         public double SampleHumidity { get; set; }
 
-
-        //Met Id methods
         public string getMetTowerPrefix { set { } get { return this.metTowerPrefix; } }
 
-        //turbien methods for measurement reduedancy
-        public void setNearestTurbine(Turbine turbine) { nearestTurbine = turbine; }
-        public Turbine getNearestTurbine() { return nearestTurbine; }
+        public void SetBackupTurbineForMetTower(Turbine turbine) { nearestTurbine = turbine; }
+        public Turbine GetBackupTurbineForMetTower() { return nearestTurbine; }
 
         public void writeToQueue(double temperature, double humidity)
         {

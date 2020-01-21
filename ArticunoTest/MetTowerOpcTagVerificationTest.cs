@@ -161,7 +161,7 @@ namespace ArticunoTest
         [DataRow("Met2")]
         public void VerifiyBackupTurbinesField(string metId)
         {
-            string backupTurbine = dbi.GetBackupTurbine(metId);
+            string backupTurbine = dbi.GetBackupTurbineForMet(metId);
             Console.WriteLine(backupTurbine);
             Assert.IsNotNull(backupTurbine);
             Assert.AreNotEqual(backupTurbine, "");

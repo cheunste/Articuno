@@ -140,8 +140,7 @@ namespace Articuno
 
         public string GetMetSecondaryTempOutOfRangeAlarmTag(string metId) { return readQuery(String.Format("SELECT TempSecOutOfRangeTag from MetTowerOutputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
 
-        public string GetBackupTurbine(string metId) { return readQuery(String.Format("SELECT BackupTurbine from MetTowerInputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
-
+        public string GetBackupTurbineForMet(string metId) { return readQuery(String.Format("SELECT BackupTurbine from MetTowerInputTags where MetId='{0}';", metId)).Rows[0][0].ToString(); }
         //Turbine
         public DataTable GetAllTurbineId() { return readQuery("SELECT TurbineId FROM TurbineInputTags;"); }
         private readonly string TURBINE_INPUT_COLUMN_QUERY = "SELECT * from TurbineInputTags WHERE TurbineId='{0}'";
