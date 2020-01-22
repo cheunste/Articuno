@@ -63,7 +63,6 @@ namespace Articuno
         {
             try
             {
-                //Only write to OPC Server if the UCC is active
                 if (isActiveUCC())
                 {
                     client.WriteItemValue(serverName, tag, value);
@@ -133,12 +132,8 @@ namespace Articuno
         {
             try
             {
-                //Only write to OPC Server if the UCC is active
                 if (isActiveUCC())
-                {
                     opcServer.WriteItemValue(serverName, tag, value);
-                }
-
             }
             catch (Exception e)
             {
@@ -151,11 +146,6 @@ namespace Articuno
         {
             DAVtq vtq = opcServer.ReadItem("", serverName, tag);
             return vtq.Quality.IsGood ? true : false;
-        }
-
-        public static bool isActiveUCC(string serverName, string tag)
-        {
-            return Convert.ToBoolean(readOpcTag(serverName, tag));
         }
 
         public static bool isActiveUCC()

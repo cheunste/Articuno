@@ -176,11 +176,19 @@ namespace ArticunoTest
         public void MetTowerCtrCountdownTest()
         {
             Assert.Fail("Test not implemented");
+            setNormalCondition();
+            setTime(3);
+
+            //Wait one minute
+            Thread.Sleep(60*1000);
+
+            var MetTowerCtrCountdownTag = OpcServer.readAnalogTag(opcServerName,sitePrefix + "");
+
         }
 
         private void clearAlarm()
         {
-            Assert.Fail("Test needs revist");
+            Assert.Fail("Test not implemented");
         }
 
         private void IcedConditions(string turbineId, bool state)
@@ -206,6 +214,12 @@ namespace ArticunoTest
             OpcServer.writeOpcTag(opcServerName, enableTag, true);
             OpcServer.writeOpcTag(opcServerName, uccActive, true);
             mm.writeDeltaThreshold(1);
+        }
+
+        private void setTime(int time)
+        {
+            var ctrTag = sitePrefix + di.getArticunoCtrTag();
+            OpcServer.writeOpcTag(opcServerName, ctrTag, time);
         }
     }
 }

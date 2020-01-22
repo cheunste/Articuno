@@ -1,6 +1,7 @@
 ﻿using log4net;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity.Core.Mapping;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,29 +13,22 @@ namespace Articuno
     /// </summary>
     public class MetTowerSensor
     {
-
         //Member variables
         private int frozenCount;
         private double lastReadValue;
         private double maxValue;
         private double minValue;
+        private int staleDataCount;
 
         //OPC Tag values
         private string sensorTag;
         private string sensorOutofRangeTag;
         private string sensorBadQualtiyTag;
 
-        //Database
-        static DatabaseInterface dbi = DatabaseInterface.Instance;
-
-        //Log
         private static readonly ILog log = LogManager.GetLogger(typeof(MetTowerSensor));
-
-        //opcServer
         private string opcServerName;
 
-        //Constructor
-        public MetTowerSensor(string serverName, string valueTag, string outOfRangeTag, string badQualityTag, double minValue, double maxValue)
+        public MetTowerSensor(string serverName, string valueTag, string outOfRangeTag, string badQualityTag, double minValue, double maxValue,int staleDataCount)
         {
 
             sensorTag = valueTag;
@@ -43,6 +37,7 @@ namespace Articuno
             sensorBadQualtiyTag = badQualityTag;
             this.maxValue = maxValue;
             this.minValue = minValue;
+            this.staleDataCount = staleDataCount;
 
             frozenCount = 0;
             lastReadValue = 0.00;
@@ -81,7 +76,7 @@ namespace Articuno
         public bool BadQualityCheck()
         {
             //If there are 50 or so samples (or whatever) that are equally the same, that implies the temperature from the sensor is flatlined. At this point, return a bad quality alert.
-            if (frozenCount >= dbi.getSampleCountForStaleData())
+            if (frozenCount >= this.staleDataCount)
             {
                 log.InfoFormat("Flatline detected for {0}", sensorTag);
                 SetAlarmStatus(sensorBadQualtiyTag, true);

@@ -17,7 +17,6 @@ namespace Articuno
         public static int numMetTower;
         private string opcServerName;
         private string sitePrefix;
-        private string uccActiveTag;
         private static List<MetTower> metTowerList = new List<MetTower>();
         private static List<String> metPrefixList = new List<String>();
 
@@ -51,7 +50,6 @@ namespace Articuno
             createPrefixList();
 
             foreach (string metPrefix in metPrefixList) { InitializeMetTower(metPrefix); }
-            uccActiveTag = dbi.getActiveUccOpcTag();
         }
         /// <summary>
         /// Returns the number of met towers in a project
@@ -211,7 +209,7 @@ namespace Articuno
             while (tempQueue.Count != 0) { temperatureCtrAverage += tempQueue.Dequeue(); }
 
             double average = temperatureCtrAverage / count;
-            if (OpcServer.isActiveUCC(opcServerName, uccActiveTag))
+            if(Articuno.isUccActive())
                 met.CtrTemperatureValue = average;
             return average;
         }
@@ -226,7 +224,7 @@ namespace Articuno
 
             double average = humidityCtrAverage / count;
             //You need to multiple the CtrHumidityValue by 100 because it is currently in decimal form and needs to be displayed in percentage form
-            if (OpcServer.isActiveUCC(opcServerName, uccActiveTag))
+            if(Articuno.isUccActive())
                 met.CtrHumidityValue = average * 100.0;
             return average;
         }
@@ -235,8 +233,7 @@ namespace Articuno
         {
             double dew = CalculateDewPointTemperature(ctrHumidity, ctrTemperature);
             log.DebugFormat("CTR Dew: {0}", dew);
-            //Only write the dew point temperature if and only if the UCC is active
-            if (OpcServer.isActiveUCC(opcServerName, uccActiveTag))
+            if(Articuno.isUccActive())
                 GetMetTowerFromId(metId).CtrDewValue = dew;
         }
 
@@ -329,7 +326,6 @@ namespace Articuno
             MET_BAD_QUALITY = 0
         }
 
-
         /// <summary>
         /// Checks to see if a met tower is frozen given the prefix of the met
         /// </summary>
@@ -374,6 +370,9 @@ namespace Articuno
             met.RelativeHumidityTag = sitePrefix + dbi.GetMetTowerPrimHumidityTag(metId);
             met.HumidityPrimValueTag = sitePrefix + dbi.GetMetTowerPrimHumidityTag(metId);
             met.MetSwitchTag = sitePrefix + dbi.GetMetTowerSwitchCommandTag(metId);
+            
+            //Do not put a site prefix on teh following. It is from the system input tags table
+            met.StaleDataSamples = Convert.ToInt16(dbi.getSampleCountForStaleData());
 
             met.TemperaturePrimBadQualityTag = sitePrefix + dbi.GetMetBadPrimaryTempSensorAlarmTag(metId);
             met.TemperaturePrimOutOfRangeTag = sitePrefix + dbi.GetMetPrimaryTempOutOfRangeAlarmTag(metId);

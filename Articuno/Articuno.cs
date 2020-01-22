@@ -156,6 +156,8 @@ namespace Articuno
             LogCurrentTurbineStatusesInArticuno();
             return turbinesPausedByArticuno.Contains(turbineId);
         }
+
+        public static bool isUccActive() { return OpcServer.isActiveUCC(); }
         private static void SetHeartBeatTimer(TimeSpan heartBeatTimeSpan)
         {
             System.Timers.Timer heartBeatTimer = new System.Timers.Timer(heartBeatTimeSpan.TotalMilliseconds);
@@ -219,7 +221,6 @@ namespace Articuno
 
         private static List<DAItemGroupArguments> getTurbineTagsForListening()
         {
-            DataTable reader;
             List<DAItemGroupArguments> turbineInputTags = new List<DAItemGroupArguments>();
             foreach (string turbinePrefix in tm.getTurbinePrefixList())
             {
@@ -268,10 +269,6 @@ namespace Articuno
                 gatherTemperatureAndHumiditySamples();
         }
 
-        private static bool isUccActive()
-        {
-            return Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, uccActiveTag));
-        }
 
         private static bool isArticunoEnabled()
         {
@@ -335,7 +332,6 @@ namespace Articuno
                 log.DebugFormat("CTR avg temp: {0}, avg Humidity: {1}", tempAvg, humidityAvg);
 
                 mm.CalculateFrozenMetTowerCondition("Met" + j, tempAvg, humidityAvg);
-
 
                 //Update the Dew Point calculation. This value will show up on the faceplate
                 mm.updateDewPoint("Met" + j, tempAvg, humidityAvg);

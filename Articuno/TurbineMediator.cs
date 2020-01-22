@@ -280,7 +280,7 @@ namespace Articuno
 
         public bool IsTurbinePausedByArticuno(string turbinePrefix) { return Articuno.isAlreadyPaused(turbinePrefix); }
 
-        public bool IsUCCActive() { return Convert.ToBoolean(OpcServer.isActiveUCC(opcServerName, uccActiveTag)); }
+        public bool isUccActive() { return Articuno.isUccActive(); }
 
         /// <summary>
         /// Method to get a turbine object given a turbine prefix (ie T001)
@@ -339,7 +339,7 @@ namespace Articuno
             try
             {
                 noiseLevelTag = sitePrefix + dbi.GetTurbineNrsModeTag(turbine.GetTurbinePrefixValue());
-                if (noiseLevelTag.Equals(""))
+                if (noiseLevelTag.Equals(sitePrefix+""))
                 {
                     turbine.NrsStateTag = "";
                     turbine.TurbineNrsModeChanged(false);

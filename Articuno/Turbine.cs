@@ -141,7 +141,7 @@ namespace Articuno
                 log.InfoFormat("CTR period for Turbine {0} reached Zero.", GetTurbinePrefixValue());
                 resetTurbineCtrTime();
                 tm.RotorSpeedCheck(GetTurbinePrefixValue());
-                if (tm.IsUCCActive())
+                if (tm.isUccActive())
                     CheckArticunoPausingConditions();
             }
         }
