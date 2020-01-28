@@ -40,10 +40,13 @@ namespace Articuno
 
         private string opcServerName;
         private string sitePrefix;
+        private double MAX_ROTOR_SPEED = 20.00;
+        private double MIN_ROTOR_SPEED = 0.00;
+        private double MAX_WIND_SPEED = 40.00;
+        private double MIN_WIND_SPEED = 0.00;
 
         private RotorSpeedFilter filterTable;
 
-        private static string uccActiveTag;
         private DatabaseInterface dbi;
 
         /// <summary>
@@ -99,7 +102,7 @@ namespace Articuno
         public string getNrsStateTag(string turbineId) { return GetTurbinePrefixFromMediator(turbineId).NrsStateTag; }
         public string getTemperatureTag(string turbineId) { return GetTurbinePrefixFromMediator(turbineId).TemperatureTag; }
         public string getLoadShutdownTag(string turbineId) { return GetTurbinePrefixFromMediator(turbineId).LoadShutdownTag; }
-        public string getStartCommandTag (string turbineId) { return GetTurbinePrefixFromMediator(turbineId).StartCommandTag; }
+        public string getStartCommandTag(string turbineId) { return GetTurbinePrefixFromMediator(turbineId).StartCommandTag; }
         public string getParticipationState(string turbineId) { return GetTurbinePrefixFromMediator(turbineId).ParticipationTag; }
         public string getLowRotorSpeedFlag(string turbineId) { return GetTurbinePrefixFromMediator(turbineId).LowRotorSpeedFlagTag; }
         public string getCtrRemaining(string turbineId) { return GetTurbinePrefixFromMediator(turbineId).CtrCountdownTag; }
@@ -169,9 +172,9 @@ namespace Articuno
             else return null;
         }
 
-        public  bool isNrsTagEmpty(string turbineId)
+        public bool isNrsTagEmpty(string turbineId)
         {
-            string nrsTag= dbi.GetTurbineNrsModeTag(turbineId);
+            string nrsTag = dbi.GetTurbineNrsModeTag(turbineId);
             if (nrsTag == null || nrsTag.Equals(""))
                 return true;
             else
@@ -221,11 +224,13 @@ namespace Articuno
         public void storeMinuteAverages(string turbineId)
         {
             Turbine turbine = GetTurbinePrefixFromMediator(turbineId);
-            double windSpeedAvg = Convert.ToDouble(turbine.readTurbineWindSpeedValue());
-            double rotorSpeedAvg = Convert.ToDouble(turbine.readTurbineRotorSpeedValue());
+            double windSpeedAvg = WindSpeedAverageCheck(Convert.ToDouble(turbine.readTurbineWindSpeedValue()));
+            double rotorSpeedAvg = RotorSpeedQualityCheck(Convert.ToDouble(turbine.readTurbineRotorSpeedValue()));
+
             turbine.addWindSpeedToQueue(windSpeedAvg);
             turbine.addRotorSpeedToQueue(rotorSpeedAvg);
         }
+
 
         /// <summary>
         /// Write CTR Time for all the turbines. 
@@ -305,6 +310,20 @@ namespace Articuno
             TurbineStarted,
             ClearBySite
         }
+        private double RotorSpeedQualityCheck(double rotorSpeedValue)
+        {
+            if (rotorSpeedValue <= MIN_ROTOR_SPEED) { return MIN_ROTOR_SPEED; }
+            else if (rotorSpeedValue >= MAX_ROTOR_SPEED) { return MAX_ROTOR_SPEED; }
+            else { return rotorSpeedValue; }
+        }
+
+        private double WindSpeedAverageCheck(double windSpeedValue)
+        {
+            if (windSpeedValue <= MIN_WIND_SPEED) { return MIN_WIND_SPEED; }
+            else if (windSpeedValue >= MAX_WIND_SPEED) { return MAX_WIND_SPEED; }
+            else { return windSpeedValue; }
+        }
+
         /// <summary>
         /// Creates a turbine instance, and iniitializes all tags from the database
         /// </summary>
@@ -339,7 +358,7 @@ namespace Articuno
             try
             {
                 noiseLevelTag = sitePrefix + dbi.GetTurbineNrsModeTag(turbine.GetTurbinePrefixValue());
-                if (noiseLevelTag.Equals(sitePrefix+""))
+                if (noiseLevelTag.Equals(sitePrefix + ""))
                 {
                     turbine.NrsStateTag = "";
                     turbine.TurbineNrsModeChanged(false);
@@ -353,7 +372,7 @@ namespace Articuno
                 turbine.TurbineNrsModeChanged(false);
             }
         }
-     
+
         private void InitializeTurbineOutputTags(Turbine turbine)
         {
             var turbinePrefix = turbine.GetTurbinePrefixValue();
@@ -370,7 +389,6 @@ namespace Articuno
             turbinePrefixList = new List<string>();
             turbineList = new List<Turbine>();
 
-            uccActiveTag = DatabaseInterface.Instance.getActiveUccOpcTag();
             this.opcServerName = DatabaseInterface.Instance.getOpcServerName();
             this.sitePrefix = DatabaseInterface.Instance.getSitePrefixValue();
 

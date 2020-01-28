@@ -120,7 +120,6 @@ namespace Articuno
         public string GetArticunoHeartbeatTag() { return readQuery("SELECT OpcTag from SystemOutputTags WHERE Description='Heartbeat';").Rows[0][0].ToString(); }
 
         //MetTower
-        public string GetMetTowerCtrTag() { return readQuery("SELECT * from SystemInputTags where Description='MetTowerCtrCountdown';").Rows[0][0].ToString(); }
         public int GetNumberOfMetTowers() { return Convert.ToInt16(readQuery("SELECT Count(*) as num FROM MetTowerInputTags;").Rows[0][0]); }
         public DataTable GetMetId() { return readQuery("SELECT MetId FROM MetTowerInputTags"); }
         public string GetMetTowerPrimTempValueTag(string metId) { return ReadQueryFromMetTowerInputTagsTable("PrimTempValueTag", metId); }

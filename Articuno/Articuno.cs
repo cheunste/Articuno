@@ -40,7 +40,6 @@ namespace Articuno
         private static int ctrCountdown;
         private static bool articunoEnable;
         private static string sitePrefix;
-        private static string uccActiveTag;
 
         private static string tempThresholdTag;
         private static string enableArticunoTag;
@@ -86,14 +85,12 @@ namespace Articuno
 
         public static void Main(object sender, FileSystemEventArgs e)
         {
-            DataTable reader;
             dbi = DatabaseInterface.Instance;
             mm = MetTowerMediator.Instance;
             tm = TurbineMediator.Instance;
 
             opcServerName = dbi.getOpcServerName();
             sitePrefix = dbi.getSitePrefixValue();
-            uccActiveTag = dbi.getActiveUccOpcTag();
 
             mm.CreateMetTowerObject();
             tm.createTurbines();
@@ -115,7 +112,6 @@ namespace Articuno
             SetOneMinuteTimer(periodTimeSpan);
             SetHeartBeatTimer(heartBeatTimeSpan);
         }
-
 
         public static void SetUpOpcSystemTags()
         {
@@ -180,10 +176,10 @@ namespace Articuno
             systemInputClient.ItemChanged += SystemTagValueChange;
 
             List<DAItemGroupArguments> systemInputTags = new List<DAItemGroupArguments>();
-            tempThresholdTag = sitePrefix+dbi.getTemperatureThresholdTag();
-            enableArticunoTag = sitePrefix+dbi.getArticunoEnableTag();
-            articunoCtrTag = sitePrefix+dbi.getArticunoCtrTag();
-            deltaThresholdTag = sitePrefix+dbi.GetDeltaThresholdTag();
+            tempThresholdTag = sitePrefix + dbi.getTemperatureThresholdTag();
+            enableArticunoTag = sitePrefix + dbi.getArticunoEnableTag();
+            articunoCtrTag = sitePrefix + dbi.getArticunoCtrTag();
+            deltaThresholdTag = sitePrefix + dbi.GetDeltaThresholdTag();
 
             systemInputTags.Add(new DAItemGroupArguments("", opcServerName, tempThresholdTag, NORMAL_UPDATE_RATE, null));
             systemInputTags.Add(new DAItemGroupArguments("", opcServerName, enableArticunoTag, NORMAL_UPDATE_RATE, null));
@@ -193,18 +189,9 @@ namespace Articuno
         }
         private static void setSystemOutputTags()
         {
-            string tag;
-            DataTable reader = dbi.readQuery("SELECT * from SystemOutputTags order by Description ASC");
-            for (int i = 0; i < reader.Rows.Count; i++)
-            {
-                tag = sitePrefix + reader.Rows[i]["OpcTag"].ToString();
-                switch (i)
-                {
-                    case 0: heartBeatTag = tag; break;
-                    case 1: icePossibleAlarmTag = tag; break;
-                    case 2: numTurbinesPausedTag = tag; break;
-                }
-            }
+            heartBeatTag = dbi.GetArticunoHeartbeatTag();
+            icePossibleAlarmTag = dbi.GetArticunoIcePossibleOpcTag();
+            numTurbinesPausedTag = dbi.GetArticunoNumbersOfTurbinesPausedTag();
         }
 
         /// <summary>
@@ -269,16 +256,9 @@ namespace Articuno
                 gatherTemperatureAndHumiditySamples();
         }
 
+        private static bool isArticunoEnabled() { return Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, enableArticunoTag)); }
 
-        private static bool isArticunoEnabled()
-        {
-            return Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, enableArticunoTag));
-        }
-
-        private static Boolean ReadHeartBeatTagValue()
-        {
-            return Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, heartBeatTag));
-        }
+        private static bool ReadHeartBeatTagValue() { return Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, heartBeatTag)); }
         private static void gatherTemperatureAndHumiditySamples()
         {
             //For every heartbeat interval, read the met tower measurements and the turbine temperature measurements
@@ -311,7 +291,7 @@ namespace Articuno
                 calculateMetTowerAverages();
 
             //Write the MetTower CTR to the tag
-            OpcServer.writeOpcTag(opcServerName, sitePrefix+dbi.getMetTowerCtrCountdownTag(), ctrCountdown);
+            OpcServer.writeOpcTag(opcServerName, sitePrefix + dbi.getMetTowerCtrCountdownTag(), ctrCountdown);
 
             if (isArticunoEnabled())
                 tm.decrementTurbineCtrTime();
@@ -512,12 +492,12 @@ namespace Articuno
             {
                 string systemInputOpcTag = e.Arguments.ItemDescriptor.ItemId.ToString();
                 int value = Convert.ToInt16(e.Vtq.Value);
-            if (systemInputOpcTag.Equals(enableArticunoTag))
+                if (systemInputOpcTag.Equals(enableArticunoTag))
                 {
                     articunoEnable = (value == ENABLE) ? true : false;
                     log.DebugFormat("Articuno is : {0}", articunoEnable ? "Enabled" : "Disabled");
                 }
-                if (systemInputOpcTag.Equals( articunoCtrTag))
+                if (systemInputOpcTag.Equals(articunoCtrTag))
                 {
                     ctrValueChanged(value);
                 }

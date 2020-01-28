@@ -4,6 +4,10 @@ using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Articuno;
 using System.Data;
+using System.Data.SQLite;
+using System.Threading;
+using NUnit.Framework;
+using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 
 namespace ArticunoTest
 {
@@ -14,13 +18,16 @@ namespace ArticunoTest
     public class TurbineFunctionalityTest
     {
         TurbineMediator turbineMediator;
+        MetTowerMediator metTowerMediator;
         Articuno.Articuno am;
         DatabaseInterface dbi;
         string opcServerName;
+
         public TurbineFunctionalityTest()
         {
             am = new Articuno.Articuno(true);
-            MetTowerMediator.Instance.CreateMetTowerObject();
+            metTowerMediator = MetTowerMediator.Instance;
+            metTowerMediator.CreateMetTowerObject();
             turbineMediator = TurbineMediator.Instance;
             turbineMediator.createTurbines();
             dbi = DatabaseInterface.Instance;
@@ -148,6 +155,53 @@ namespace ArticunoTest
             }
         }
 
+        [TestMethod]
+        [DataTestMethod]
+        [DataRow(0.00, 0.00)]
+        [DataRow(0.0101, 0.010)]
+        [DataRow(-0.10, 0.00)]
+        [DataRow(20.00, 20.00)]
+        [DataRow(20.50, 20.00)]
+        [DataRow(21.00, 20.00)]
+        [DataRow(15.00, 15.00)]
+        public void lowRotorSpeedQualityCheck(double rotorSpeed, double expectedRotorSpeed)
+        {
+            double windSpeed = 3.00;
+            turbineMediator.createTurbines();
+            foreach (Turbine turbine in turbineMediator.getTurbineList())
+            {
+                if (turbine.GetTurbinePrefixValue().Equals("T001"))
+                {
+                    OpcServer.writeOpcTag(opcServerName, turbine.RotorSpeedTag, rotorSpeed);
+                    OpcServer.writeOpcTag(opcServerName, turbine.WindSpeedTag, windSpeed);
+                    Thread.Sleep(300);
+                    turbineMediator.storeMinuteAverages(turbine.GetTurbinePrefixValue());
+
+                    try
+                    {
+                        double storedRotorSpeed = turbine.getRotorSpeedQueue().Peek();
+                        Assert.AreEqual(storedRotorSpeed, expectedRotorSpeed, 3);
+                    }
+                    catch (Exception e)
+                    {
+                        Assert.Fail("Getting an unexpected error: " + e);
+                        throw e;
+                    }
+
+                }
+            }
+        }
+        //public void storeMinuteAverages(string turbineId)
+        //{
+        //    Turbine turbine = GetTurbinePrefixFromMediator(turbineId);
+        //    double windSpeedAvg = WindSpeedAverageCheck(Convert.ToDouble(turbine.readTurbineWindSpeedValue()));
+        //    double rotorSpeedAvg = RotorSpeedQualityCheck(Convert.ToDouble(turbine.readTurbineRotorSpeedValue()));
+
+        //    turbine.addWindSpeedToQueue(windSpeedAvg);
+        //    turbine.addRotorSpeedToQueue(rotorSpeedAvg);
+        //}
+
+
         private bool generateRandomBoolean()
         {
             Random rand = new Random();
@@ -166,6 +220,17 @@ namespace ArticunoTest
             return turbineIdList;
         }
 
+        [SetUp]
+        private void setup()
+        {
+            am = new Articuno.Articuno(true);
+            metTowerMediator = MetTowerMediator.Instance;
+            metTowerMediator.CreateMetTowerObject();
+            turbineMediator = TurbineMediator.Instance;
+            turbineMediator.createTurbines();
+            dbi = DatabaseInterface.Instance;
+            opcServerName = dbi.getOpcServerName();
+        }
         [TestCleanup]
         public void cleanup()
         {
