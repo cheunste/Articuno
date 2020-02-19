@@ -209,10 +209,26 @@ namespace Articuno
             var referenceStdDev = filterTuple.Item2;
 
             var currentScalingFactor = Convert.ToDouble(turbine.readTurbineScalingFactorValue());
+            var calculatedRotorThreshold = referenceRotorSpeed - (currentScalingFactor * referenceStdDev);
+            log.DebugFormat("{0} calculated wind speed average: {1}\n using referenced rotor speed: {2}" +
+                            "\n using referenced stdDev {3}",
+                turbineId, windSpeedAverage, referenceRotorSpeed, referenceStdDev);
+
+            log.DebugFormat("{0} rotor speed threshold: {1} rotor speed average:{2} ",
+                turbineId, calculatedRotorThreshold, rotorSpeedAverage);
 
             //Set under performance condition to be true. Else, clear it
-            if ((rotorSpeedAverage / rotorSpeedQueueCount) < referenceRotorSpeed - (currentScalingFactor * referenceStdDev)) { turbine.SetTurbineUnderPerformanceCondition(true); }
-            else { turbine.SetTurbineUnderPerformanceCondition(false); }
+            if ((rotorSpeedAverage / rotorSpeedQueueCount) < calculatedRotorThreshold)
+
+            {
+                log.DebugFormat("{0} rotor performance low condition: {1}", turbineId, true);
+                turbine.SetTurbineUnderPerformanceCondition(true);
+            }
+            else
+            {
+                log.DebugFormat("{0} rotor performance low condition: {1}", turbineId, false);
+                turbine.SetTurbineUnderPerformanceCondition(false);
+            }
 
             turbine.emptyQueue();
         }
