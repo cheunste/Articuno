@@ -9,22 +9,22 @@ using System.Threading;
 using NUnit.Framework;
 using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 
-namespace ArticunoTest
-{
+namespace ArticunoTest {
     /// <summary>
     /// Summary description for TurbineTest
     /// </summary>
     [TestClass]
-    public class TurbineFunctionalityTest
-    {
+    public class TurbineFunctionalityTest {
         TurbineMediator turbineMediator;
+        TurbineMediator tm = TurbineMediator.Instance;
         MetTowerMediator metTowerMediator;
         Articuno.Articuno am;
         DatabaseInterface dbi;
         string opcServerName;
+        Turbine testTurbine;
 
-        public TurbineFunctionalityTest()
-        {
+        [TestInitialize]
+        public void initialize() {
             am = new Articuno.Articuno(true);
             metTowerMediator = MetTowerMediator.Instance;
             metTowerMediator.CreateMetTowerObject();
@@ -32,6 +32,7 @@ namespace ArticunoTest
             turbineMediator.createTurbines();
             dbi = DatabaseInterface.Instance;
             opcServerName = dbi.getOpcServerName();
+            testTurbine = tm.GetAllTurbineList()[0];
         }
 
         [TestMethod]
@@ -39,50 +40,36 @@ namespace ArticunoTest
         [DataRow(8.12)]
         [DataRow(0)]
         [DataRow(100)]
-        public void ReadTurbineOperatingStateTest(double testValue)
-        {
-            foreach (Turbine turb in turbineMediator.getTurbineList())
-            {
-                turb.writeOperatingState(testValue);
-                double readValue = Convert.ToDouble(turbineMediator.readTurbineOperatingStateValue(turb.GetTurbinePrefixValue()));
-                Assert.AreEqual(testValue, readValue, 0.001, "Written value does not equal test value");
-            }
+        public void ReadTurbineOperatingStateTest(double testValue) {
+            testTurbine.writeOperatingState(testValue);
+            double readValue = Convert.ToDouble(turbineMediator.readTurbineOperatingStateValue(testTurbine.GetTurbinePrefixValue()));
+            Assert.AreEqual(testValue, readValue, 0.001, "Written value does not equal test value");
         }
 
         [TestMethod]
-        public void writeLoadShutDownTest()
-        {
-            List<Turbine> turbineList = (List<Turbine>)turbineMediator.getTurbineList();
-
-            foreach (Turbine turbine in turbineList)
-            {
-                double temp = turbine.writeTurbineLoadShutdownCommand();
-                Assert.AreEqual(temp, 1.00, 1.001);
-                Assert.AreEqual(Convert.ToBoolean(turbine.readAgcBlockValue()), false);
-            }
+        public void writeLoadShutDownTest() {
+            double temp = testTurbine.writeTurbineLoadShutdownCommand();
+            Assert.AreEqual(temp, 1.00, 1.001);
+            Assert.AreEqual(Convert.ToBoolean(testTurbine.readAgcBlockValue()), false);
         }
 
         [TestMethod]
-        public void raiseArticunoPauseAlarmTest()
-        {
-            List<Turbine> turbineList = (List<Turbine>)turbineMediator.getTurbineList();
-
-            foreach (Turbine turbine in turbineList)
-            {
-                turbine.SetPausedByArticunoAlarmValue(true);
-                Assert.AreEqual(Convert.ToBoolean(turbine.readStoppedByArticunoAlarmValue()), true);
-            }
-
+        public void raiseArticunoPauseAlarmTest() {
+            testTurbine.SetPausedByArticunoAlarmValue(true);
+            Assert.AreEqual(Convert.ToBoolean(testTurbine.readStoppedByArticunoAlarmValue()), true);
         }
 
         [TestMethod]
-        public void turbineIdListTest()
-        {
-            turbineMediator.createPrefixList();
+        public void turbineGetIdTest() {
+            testTurbine.TurbinePrefix = "T001";
+            Assert.IsTrue(testTurbine.TurbinePrefix == "T001");
+        }
+
+        [TestMethod]
+        public void turbineIdListTest() {
             List<string> prefixList = turbineMediator.getTurbinePrefixList();
             List<String> turbineListFromDatabase = getTurbineIdFromDatabase();
-            foreach (string prefix in prefixList)
-            {
+            foreach (string prefix in prefixList) {
                 if (!turbineListFromDatabase.Contains(prefix))
                     Assert.Fail("The config file does not contain turbine id: {0}. Where this {0} come from?", prefix);
             }
@@ -92,8 +79,7 @@ namespace ArticunoTest
         [DataTestMethod]
         //[DataRow("T001", false)]
         [DataRow("T001", true)]
-        public void AlgorithmTest(string turbineId, bool state)
-        {
+        public void AlgorithmTest(string turbineId, bool state) {
             //Articuno.Articuno am = new Articuno.Articuno(true);
 
             //Reset the CTR time and start the turbine. Set the CTR for one minute
@@ -120,7 +106,7 @@ namespace ArticunoTest
             System.Threading.Thread.Sleep(5000);
 
             //The following asserts are for feedback tags 
-            Turbine turbine = TurbineMediator.GetTurbinePrefixFromMediator(turbineId);
+            Turbine turbine = TurbineMediator.GetTurbine(turbineId);
             Assert.AreEqual(state, turbineMediator.isTurbinePausedByArticuno(turbineId));
             Assert.AreEqual(true, turbine.isTurbineParticipating(), "Turbine is not showing particiating state");
             Assert.IsTrue(Convert.ToBoolean(turbine.readTurbineLowRotorSpeedFlagValue()), "Low Rotor Speed flag not triggered");
@@ -128,23 +114,25 @@ namespace ArticunoTest
         }
 
         [TestMethod]
+        public void GetAllTurbineTest() {
+            var turbList = tm.GetAllTurbineList();
+            Assert.IsTrue(turbList.Count > 0);
+        }
+
+        [TestMethod]
         [DataTestMethod]
         [DataRow(5)]
         //There is no tag for internal CTR. Instead you'll be tracking this by writing a value to a member variable and decrementing it/
-        public void setCtrPeriod(int value)
-        {
-            foreach (string prefix in turbineMediator.getTurbinePrefixList())
-            {
+        public void setCtrPeriod(int value) {
+            foreach (string prefix in turbineMediator.getTurbinePrefixList()) {
                 turbineMediator.writeCtrTime(value);
                 Assert.AreEqual(value, turbineMediator.getTurbineCtrTimeRemaining(prefix));
             }
         }
 
         [TestMethod]
-        public void lowRotorSpeedAlarmTest()
-        {
-            foreach (Turbine turbine in turbineMediator.getTurbineList())
-            {
+        public void lowRotorSpeedAlarmTest() {
+            foreach (Turbine turbine in turbineMediator.GetAllTurbineList()) {
                 OpcServer.writeOpcTag(opcServerName, turbine.ParticipationTag, generateRandomBoolean());
                 turbine.SetTurbineUnderPerformanceCondition(generateRandomBoolean());
                 bool lowRotorSpeedValue = turbine.readTurbineLowRotorSpeedFlagValue();
@@ -164,31 +152,17 @@ namespace ArticunoTest
         [DataRow(20.50, 20.00)]
         [DataRow(21.00, 20.00)]
         [DataRow(15.00, 15.00)]
-        public void lowRotorSpeedQualityCheck(double rotorSpeed, double expectedRotorSpeed)
-        {
-            double windSpeed = 3.00;
-            turbineMediator.createTurbines();
-            foreach (Turbine turbine in turbineMediator.getTurbineList())
-            {
-                if (turbine.GetTurbinePrefixValue().Equals("T001"))
-                {
-                    OpcServer.writeOpcTag(opcServerName, turbine.RotorSpeedTag, rotorSpeed);
-                    OpcServer.writeOpcTag(opcServerName, turbine.WindSpeedTag, windSpeed);
-                    Thread.Sleep(300);
-                    turbineMediator.storeMinuteAverages(turbine.GetTurbinePrefixValue());
+        public void lowRotorSpeedQualityCheck(double rotorSpeed, double expectedRotorSpeed) {
+            var rtsQueue = testTurbine.getRotorSpeedQueue();
+            rtsQueue.Enqueue(rotorSpeed);
 
-                    try
-                    {
-                        double storedRotorSpeed = turbine.getRotorSpeedQueue().Peek();
-                        Assert.AreEqual(storedRotorSpeed, expectedRotorSpeed, 3);
-                    }
-                    catch (Exception e)
-                    {
-                        Assert.Fail("Getting an unexpected error: " + e);
-                        throw e;
-                    }
-
-                }
+            try {
+                double storedRotorSpeed = testTurbine.getRotorSpeedQueue().Peek();
+                Assert.AreEqual(storedRotorSpeed, expectedRotorSpeed, 3);
+            }
+            catch (Exception e) {
+                Assert.Fail("Getting an unexpected error: " + e);
+                throw e;
             }
         }
         //public void storeMinuteAverages(string turbineId)
@@ -202,40 +176,24 @@ namespace ArticunoTest
         //}
 
 
-        private bool generateRandomBoolean()
-        {
+        private bool generateRandomBoolean() {
             Random rand = new Random();
             return rand.Next(2) > 0 ? true : false;
         }
 
-        private List<String> getTurbineIdFromDatabase()
-        {
+        private List<String> getTurbineIdFromDatabase() {
 
             DataTable table = dbi.readQuery("SELECT turbineId from TurbineInputTags Order By TurbineId asc");
             List<String> turbineIdList = new List<String>();
-            foreach (DataRow row in table.Rows)
-            {
+            foreach (DataRow row in table.Rows) {
                 turbineIdList.Add(row["TurbineId"].ToString());
             }
             return turbineIdList;
         }
 
-        [SetUp]
-        private void setup()
-        {
-            am = new Articuno.Articuno(true);
-            metTowerMediator = MetTowerMediator.Instance;
-            metTowerMediator.CreateMetTowerObject();
-            turbineMediator = TurbineMediator.Instance;
-            turbineMediator.createTurbines();
-            dbi = DatabaseInterface.Instance;
-            opcServerName = dbi.getOpcServerName();
-        }
         [TestCleanup]
-        public void cleanup()
-        {
-            foreach (Turbine turbine in turbineMediator.getTurbineList())
-            {
+        public void cleanup() {
+            foreach (Turbine turbine in turbineMediator.GetAllTurbineList()) {
                 OpcServer.writeOpcTag(opcServerName, turbine.LowRotorSpeedFlagTag, false);
                 OpcServer.writeOpcTag(opcServerName, turbine.ParticipationTag, true);
                 turbine.SetTemperatureCondition(false);

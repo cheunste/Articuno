@@ -261,7 +261,7 @@ namespace ArticunoTest
             tm.createTurbines();
             string turbine = dbi.GetBackupTurbineForMet(metId);
 
-            Turbine turb = TurbineMediator.GetTurbinePrefixFromMediator(turbine);
+            Turbine turb = TurbineMediator.GetTurbine(turbine);
             OpcServer.writeOpcTag(opcServerName, turb.TemperatureTag, 30); ;
 
             //write the fail values to the met tower

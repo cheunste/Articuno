@@ -67,7 +67,7 @@ namespace ArticunoTest
 
             tm.checkIcingConditions(turbineId);
 
-            foreach(Turbine turbine in tm.getTurbineList())
+            foreach(Turbine turbine in tm.GetAllTurbineList())
             {
                 if (turbine.GetTurbinePrefixValue().Equals(turbineId))
                 {

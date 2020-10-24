@@ -385,7 +385,7 @@ namespace Articuno
             met.CtrTemperatureTag = sitePrefix + dbi.GetMetCtrTemperatureTag(metId);
             met.CtrDewTag = sitePrefix + dbi.GetMetCtrDewTag(metId);
             met.CtrHumidityTag = sitePrefix + dbi.GetMetCtrHumidityTag(metId);
-            met.SetBackupTurbineForMetTower(TurbineMediator.GetTurbinePrefixFromMediator(dbi.GetBackupTurbineForMet(metId)));
+            met.SetBackupTurbineForMetTower(TurbineMediator.GetTurbine(dbi.GetBackupTurbineForMet(metId)));
 
             met.createSensors();
             metTowerList.Add(met);
