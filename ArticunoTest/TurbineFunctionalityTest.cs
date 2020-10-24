@@ -37,14 +37,16 @@ namespace ArticunoTest {
         }
 
         [TestMethod]
-        [DataTestMethod]
-        [DataRow(8.12)]
-        [DataRow(0)]
-        [DataRow(100)]
-        public void ReadTurbineOperatingStateTest(double testValue) {
+        public void ReadTurbineOperatingStateTest() {
+            ReadTurbineOperatingStateTestHelper(8.12);
+            ReadTurbineOperatingStateTestHelper(0);
+            ReadTurbineOperatingStateTestHelper(100);
+        }
+        private void ReadTurbineOperatingStateTestHelper(double testValue) {
             testTurbine.writeOperatingState(testValue);
             double readValue = Convert.ToDouble(turbineMediator.readTurbineOperatingStateValue(testTurbine.GetTurbinePrefixValue()));
             Assert.AreEqual(testValue, readValue, 0.001, "Written value does not equal test value");
+
         }
 
         [TestMethod]
