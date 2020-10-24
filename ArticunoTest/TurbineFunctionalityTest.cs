@@ -8,6 +8,7 @@ using System.Data.SQLite;
 using System.Threading;
 using NUnit.Framework;
 using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+using System.Threading.Tasks;
 
 namespace ArticunoTest {
     /// <summary>
@@ -106,7 +107,7 @@ namespace ArticunoTest {
             System.Threading.Thread.Sleep(5000);
 
             //The following asserts are for feedback tags 
-            Turbine turbine = TurbineMediator.GetTurbine(turbineId);
+            Turbine turbine = tm.GetTurbine(turbineId);
             Assert.AreEqual(state, turbineMediator.isTurbinePausedByArticuno(turbineId));
             Assert.AreEqual(true, turbine.isTurbineParticipating(), "Turbine is not showing particiating state");
             Assert.IsTrue(Convert.ToBoolean(turbine.readTurbineLowRotorSpeedFlagValue()), "Low Rotor Speed flag not triggered");
@@ -124,38 +125,42 @@ namespace ArticunoTest {
         [DataRow(5)]
         //There is no tag for internal CTR. Instead you'll be tracking this by writing a value to a member variable and decrementing it/
         public void setCtrPeriod(int value) {
-            foreach (string prefix in turbineMediator.getTurbinePrefixList()) {
-                turbineMediator.writeCtrTime(value);
-                Assert.AreEqual(value, turbineMediator.getTurbineCtrTimeRemaining(prefix));
-            }
+            turbineMediator.writeCtrTime(value);
+            tm.GetAllTurbineList().ForEach(t => {
+                Assert.AreEqual(value, t.readTurbineCtrTimeRemaining(), "The value in the turbine is {0} while {1} is expected",
+                    t.readTurbineCtrTimeRemaining(), value);
+            });
         }
 
         [TestMethod]
         public void lowRotorSpeedAlarmTest() {
-            foreach (Turbine turbine in turbineMediator.GetAllTurbineList()) {
-                OpcServer.writeOpcTag(opcServerName, turbine.ParticipationTag, generateRandomBoolean());
-                turbine.SetTurbineUnderPerformanceCondition(generateRandomBoolean());
-                bool lowRotorSpeedValue = turbine.readTurbineLowRotorSpeedFlagValue();
-                bool turbineParticipation = turbine.isTurbineParticipating();
+            OpcServer.writeOpcTag(opcServerName, testTurbine.ParticipationTag, generateRandomBoolean());
+            testTurbine.SetTurbineUnderPerformanceCondition(generateRandomBoolean());
+            bool lowRotorSpeedValue = testTurbine.readTurbineLowRotorSpeedFlagValue();
+            bool testTurbineParticipation = testTurbine.isTurbineParticipating();
 
-                if (!turbineParticipation && lowRotorSpeedValue)
-                    Assert.Fail(String.Format("Turbine {0} should not be raising low rotor speed flag as it isn't participating", turbine.GetTurbinePrefixValue()));
+            if (!testTurbineParticipation && lowRotorSpeedValue)
+                Assert.Fail(String.Format("Turbine {0} should not be raising low rotor speed flag as it isn't participating", testTurbine.GetTurbinePrefixValue()));
+            else if (testTurbineParticipation && lowRotorSpeedValue) {
+                Assert.IsTrue(testTurbine.readTurbineLowRotorSpeedFlagValue());
             }
         }
 
         [TestMethod]
-        [DataTestMethod]
-        [DataRow(0.00, 0.00)]
-        [DataRow(0.0101, 0.010)]
-        [DataRow(-0.10, 0.00)]
-        [DataRow(20.00, 20.00)]
-        [DataRow(20.50, 20.00)]
-        [DataRow(21.00, 20.00)]
-        [DataRow(15.00, 15.00)]
-        public void lowRotorSpeedQualityCheck(double rotorSpeed, double expectedRotorSpeed) {
-            var rtsQueue = testTurbine.getRotorSpeedQueue();
-            rtsQueue.Enqueue(rotorSpeed);
+        public void lowRotorSpeedQualityCheck() {
+            lowRotorSpeedQualityHelper(0.00,0.00);
+            lowRotorSpeedQualityHelper(0.0101, 0.010);
+            lowRotorSpeedQualityHelper(-0.10, 0.00);
+            lowRotorSpeedQualityHelper(20.00, 20.00);
+            lowRotorSpeedQualityHelper(20.50, 20.00);
+            lowRotorSpeedQualityHelper(21.00, 20.00);
+            lowRotorSpeedQualityHelper(15.00, 15.00);
 
+        }
+        private void lowRotorSpeedQualityHelper(double rotorSpeed, double expectedRotorSpeed) {
+            var rtsQueue = testTurbine.getRotorSpeedQueue();
+            rtsQueue.Clear();
+            rtsQueue.Enqueue(rotorSpeed);
             try {
                 double storedRotorSpeed = testTurbine.getRotorSpeedQueue().Peek();
                 Assert.AreEqual(storedRotorSpeed, expectedRotorSpeed, 3);
@@ -193,14 +198,12 @@ namespace ArticunoTest {
 
         [TestCleanup]
         public void cleanup() {
-            foreach (Turbine turbine in turbineMediator.GetAllTurbineList()) {
-                OpcServer.writeOpcTag(opcServerName, turbine.LowRotorSpeedFlagTag, false);
-                OpcServer.writeOpcTag(opcServerName, turbine.ParticipationTag, true);
-                turbine.SetTemperatureCondition(false);
-                turbine.SetOperatingStateCondition(false);
-                turbine.TurbineNrsModeChanged(false);
-                turbine.SetTurbineUnderPerformanceCondition(false);
-            }
+            testTurbine.SetTemperatureCondition(false);
+            testTurbine.SetOperatingStateCondition(false);
+            testTurbine.TurbineNrsModeChanged(false);
+            testTurbine.SetTurbineUnderPerformanceCondition(false);
+            OpcServer.writeOpcTag(opcServerName, testTurbine.LowRotorSpeedFlagTag, false);
+            OpcServer.writeOpcTag(opcServerName, testTurbine.ParticipationTag, true);
         }
     }
 }

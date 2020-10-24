@@ -254,7 +254,11 @@ namespace Articuno
         /// <param name="articunoCtrTime"></param>
         public void writeCtrTime(int articunoCtrTime)
         {
-            foreach (string turbinePrefix in getTurbinePrefixList()) { writeToTurbineCtrTag(turbinePrefix, articunoCtrTime); }
+
+            Parallel.ForEach(GetAllTurbineList(), t => {
+                t.writeTurbineCtrValue(articunoCtrTime);
+            });
+            //foreach (string turbinePrefix in getTurbinePrefixList()) { writeToTurbineCtrTag(turbinePrefix, articunoCtrTime); }
         }
 
         public void decrementTurbineCtrTime()
@@ -308,13 +312,7 @@ namespace Articuno
         /// </summary>
         /// <param name="prefix"></param>
         /// <returns></returns>
-        public static Turbine GetTurbine(string prefix)
-        {
-            foreach (Turbine turbine in turbineList) { if (turbine.GetTurbinePrefixValue().Equals(prefix)) { return turbine; } }
-            return null;
-
-            
-        }
+        public Turbine GetTurbine(string prefix)=> GetAllTurbineList().Where(t => t.TurbinePrefix.Equals(prefix)).FirstOrDefault();
 
         public enum TurbineEnum
         {

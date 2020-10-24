@@ -70,7 +70,7 @@ namespace Articuno
         public Object readTurbineScalingFactorValue() { return ScalingFactorValue; }
         public Boolean isTurbineParticipating() { return Convert.ToBoolean(OpcServer.readBooleanTag(OpcServerName, ParticipationTag)); }
         public Object readStoppedByArticunoAlarmValue() { return OpcServer.readAnalogTag(OpcServerName, StoppedAlarmTag); }
-        public Object readTurbineCtrTimeRemaining() { return OpcServer.readAnalogTag(OpcServerName, CtrCountdownTag); }
+        public Object readTurbineCtrTimeRemaining() => Convert.ToInt32(OpcServer.readAnalogTag(OpcServerName, CtrCountdownTag));
         public Boolean readTurbineLowRotorSpeedFlagValue() { return Convert.ToBoolean(OpcServer.readBooleanTag(OpcServerName, LowRotorSpeedFlagTag)); }
         public Object readAgcBlockValue() { return OpcServer.readBooleanTag(OpcServerName, AgcBlockingTag); }
 

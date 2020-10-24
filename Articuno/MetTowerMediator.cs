@@ -17,6 +17,7 @@ namespace Articuno
         public static int numMetTower;
         private string opcServerName;
         private string sitePrefix;
+        private TurbineMediator tm = TurbineMediator.Instance;
         private static List<MetTower> metTowerList = new List<MetTower>();
         private static List<String> metPrefixList = new List<String>();
 
@@ -385,7 +386,7 @@ namespace Articuno
             met.CtrTemperatureTag = sitePrefix + dbi.GetMetCtrTemperatureTag(metId);
             met.CtrDewTag = sitePrefix + dbi.GetMetCtrDewTag(metId);
             met.CtrHumidityTag = sitePrefix + dbi.GetMetCtrHumidityTag(metId);
-            met.SetBackupTurbineForMetTower(TurbineMediator.GetTurbine(dbi.GetBackupTurbineForMet(metId)));
+            met.SetBackupTurbineForMetTower(tm.GetTurbine(dbi.GetBackupTurbineForMet(metId)));
 
             met.createSensors();
             metTowerList.Add(met);

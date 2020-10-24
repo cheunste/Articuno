@@ -30,7 +30,8 @@ namespace ArticunoTest
         string opcServerName = "SV.OPCDAServer.1";
 
 
-        public MetTowerFunctionalityTest()
+        [TestInitialize]
+        public void initialize()
         {
             met1Tags = new List<String>();
             met2Tags = new List<String>();
@@ -261,7 +262,7 @@ namespace ArticunoTest
             tm.createTurbines();
             string turbine = dbi.GetBackupTurbineForMet(metId);
 
-            Turbine turb = TurbineMediator.GetTurbine(turbine);
+            Turbine turb = tm.GetTurbine(turbine);
             OpcServer.writeOpcTag(opcServerName, turb.TemperatureTag, 30); ;
 
             //write the fail values to the met tower
