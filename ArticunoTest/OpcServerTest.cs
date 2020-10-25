@@ -14,24 +14,27 @@ namespace ArticunoTest
     {
         OpcServer opcServer;
         public string prefix;
+        private string siteName;
+        DatabaseInterface dbi;
 
         public OpcServerTest()
         {
-            opcServer = new OpcServer("SV.OPCDAServer.1");
-            prefix = "SCRAB";
+            dbi = DatabaseInterface.Instance;
+            siteName = dbi.getSitePrefixValue();
+            opcServer = new OpcServer(dbi.getOpcServerName());
+            prefix = dbi.getOpcServerName();
         }
 
 
         [TestMethod]
-        //Test to see if tags will read from the server 
-        public void readTagTest()
+        public void readValueFromOpcTagTest()
         {
-            string opcStringTestTag = "Folder1.StringItem";
-            string opcBoolTestTag = "Folder1.BooleanItem";
-            string opcIntTestTag = "Folder1.IntegerItem";
+            string opcStringTestTag = dbi.getActiveUccOpcTag();
+            string opcBoolTestTag = siteName+dbi.GetTurbineParticiaptionTag("T001");
+            string opcIntTestTag =siteName+dbi.GetTurbineRotorSpeedTag("T001");
 
             string result = opcServer.readTagValue(opcStringTestTag);
-            Assert.IsNotNull(opcStringTestTag);
+            Assert.IsNotNull(result);
 
             result = opcServer.readTagValue(opcBoolTestTag);
             Assert.IsNotNull(result);
@@ -39,66 +42,29 @@ namespace ArticunoTest
             result = opcServer.readTagValue(opcIntTestTag);
             Assert.IsNotNull(result);
 
+            int flatLineSamples = DatabaseInterface.Instance.getSampleCountForStaleData();
         }
 
+
         [TestMethod]
-        //Tests to see if the values will write to the Opc Server
-        public void setTagTest()
+        public void writeValueToOpcTagTest()
         {
+            string opcBoolTestTag = siteName+dbi.getArticunoEnableTag();
+            string result = opcServer.readTagValue(opcBoolTestTag);
+            Assert.IsNotNull(result);
 
-            //Opc Tags These 
-            string opcStringTestTag = "Folder1.StringItem";
-            string opcBoolTestTag = "Folder1.BooleanItem";
-            string opcIntTestTag = "Folder1.IntegerItem";
-
-            string stringTestValue = "Fuck this shit";
-            int intTestValue = 1234512345;
-            bool boolTestValue = false;
-
-            opcServer.writeTagValue(opcStringTestTag, stringTestValue);
-            string result = opcServer.readTagValue(opcStringTestTag);
-            Assert.AreEqual(result, stringTestValue);
+            bool boolTestValue = true;
 
             opcServer.writeTagValue(opcBoolTestTag, boolTestValue);
             result = opcServer.readTagValue(opcBoolTestTag);
-            Assert.AreEqual(result.ToString(), boolTestValue.ToString());
+            Assert.IsTrue(Convert.ToBoolean(result));
 
-            opcServer.writeTagValue(opcIntTestTag, intTestValue);
-            result = opcServer.readTagValue(opcIntTestTag);
-            Assert.AreEqual(result, intTestValue.ToString());
+            boolTestValue = false;
+            opcServer.writeTagValue(opcBoolTestTag, boolTestValue);
+            result = opcServer.readTagValue(opcBoolTestTag);
+            Assert.AreEqual(Convert.ToBoolean(result),boolTestValue);
 
-        }
-
-        [TestMethod]
-        //Test to read from turbine input tags and write to turbine output tags 
-        public void turbineTagTest()
-        {
-            //Test the read/write from the input tag
-            string[] turbineInputTags =
-            {
-                prefix + "." + "T001.WTUR.DmdW.actVal",
-                prefix + "." + "T001.WTUR.NoiseLev",
-                prefix + "." + "T001.WTUR.TURST.ACTST",
-                prefix + "." + "T001.WTUR.SetTurOp.ActSt.Stop",
-                prefix + "." + "T001.WROT.RotSpdAv",
-                prefix + "." + "T001.wnac.ExTmp",
-                prefix + "." + "T001.wnac.wdspda"
-            };
-
-            foreach (string inputTag in turbineInputTags)
-            {
-                var temp = opcServer.readTagValue(inputTag);
-                Assert.AreNotEqual(temp, "-1");
-            }
-
-
-            //Test the write to the hearbeat
-            string[] turbineOutputTags =
-            {
-                prefix+"."+"Articuno.T001.PlwArticunoStop",
-                prefix + "." + "Articuno.T001.Participation"
-            };
-
+            opcServer.writeTagValue(opcBoolTestTag, true);
         }
 
         [TestMethod]
@@ -106,12 +72,18 @@ namespace ArticunoTest
         public void tagNotFound()
         {
             string tagName = prefix + ".TagNotFound";
-            var temp = opcServer.readTagValue(tagName);
-            //Assert.IsNull(temp);
-
-            //tagName = prefix + ".TagNotFound";
-            opcServer.writeTagValue(tagName, 0);
+            try
+            {
+                var tagThatDoesntExist = opcServer.readTagValue(tagName);
+                opcServer.writeTagValue(tagName, 0);
+            }
+            catch (Exception e)
+            {
+                Assert.IsTrue(true, String.Format("Null exception caught for tag {0} ",tagName));
+            }
         }
+
+
 
     }
 }

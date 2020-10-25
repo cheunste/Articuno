@@ -25,7 +25,7 @@ namespace ArticunoTest
         {
             //Get all the columns from the SystemParemeters
             //NOTE: To see the output, click the output in 'Test Explorer' after the test is executed.
-            DataTable reader = dbi.readCommand(sqlcmd);
+            DataTable reader = dbi.readQuery(sqlcmd);
             Console.WriteLine(reader.Rows.Count);
 
             for (int i = 0; i < reader.Rows.Count; i++)
@@ -50,7 +50,7 @@ namespace ArticunoTest
         //[DataRow("SELECT TurbineId from TurbineOutputTags")]
         public void readFromTurbine(string sqlcmd)
         {
-            DataTable reader = dbi.readCommand(sqlcmd);
+            DataTable reader = dbi.readQuery(sqlcmd);
             Console.WriteLine(reader.Rows.Count);
 
             for (int i = 0; i < reader.Rows.Count; i++)
@@ -80,10 +80,10 @@ namespace ArticunoTest
             int randomNumber = rnd.Next();
             //testConnection.Update
             string sqlcmd = String.Format("UPDATE SystemOutputTags SET DefaultValue ='{0}' WHERE Description = 'Heartbeat'", randomNumber);
-            dbi.updateCommand(sqlcmd);
+            dbi.updateDatabaseWithQuery(sqlcmd);
 
             sqlcmd = "SELECT DefaultValue from SystemOutputTags where Description='Heartbeat'";
-            DataTable reader = dbi.readCommand(sqlcmd);
+            DataTable reader = dbi.readQuery(sqlcmd);
             int readHeartbeat = Convert.ToInt32(reader.Rows[0]["DefaultValue"]);
             Assert.AreEqual(readHeartbeat, randomNumber);
             Console.WriteLine("Random Number: {0}", randomNumber);
@@ -103,7 +103,7 @@ namespace ArticunoTest
         public void turbineTableTest(string cmd, string turbinePrefix)
         {
             string sqlcmd = cmd + turbinePrefix;
-            DataTable reader = dbi.readCommand(sqlcmd);
+            DataTable reader = dbi.readQuery(sqlcmd);
             Assert.IsNotNull(reader.Rows[0][0]);
             Console.WriteLine(reader.Rows[0][0]);
 

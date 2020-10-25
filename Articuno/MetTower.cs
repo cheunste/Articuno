@@ -23,62 +23,96 @@ namespace Articuno
     sealed internal class MetTower
     {
         //Member variables;
-        private double ambTempThreshold;
-        private double deltaTempThreshold;
-
-        private int frozenPrimTempCnt;
-        private int frozenSecTempCnt;
-        private int frozenHumidityCnt;
         private double lastPrimTemp;
         private double lastSecTemp;
 
-        //Queues
+        //Constants
+        private double MIN_TEMP_VALUE = -20.0;
+        private double MAX_TEMP_VALUE = 60.0;
+        private double MIN_HUMIDITY_VALUE = 0.0;
+        private double MAX_HUMIDITY_VALUE = 0.99;
+
         private Queue<double> temperatureQueue;
         private Queue<double> humidityQueue;
 
-        //Member prefix
         private string metTowerPrefix;
-
-        //Turbine reference (for backup)
         private Turbine nearestTurbine;
 
-        //opc server
         private string opcServerName;
 
-        //log
+        MetTowerSensor primTempSensor;
+        MetTowerSensor secTempSensor;
+        MetTowerSensor primHumidSensor;
+
         private static readonly ILog log = LogManager.GetLogger(typeof(MetTower));
 
         public MetTower(string MetId, string opcServerName)
         {
-            //Set OPC Server Name
             this.opcServerName = opcServerName;
-
-            //Set OPC Server Name
-            this.opcServerName = opcServerName;
-
-            //Set up met id
             this.metTowerPrefix = MetId;
 
             temperatureQueue = new Queue<double>();
             humidityQueue = new Queue<double>();
-            frozenHumidityCnt = 0;
-            frozenPrimTempCnt = 0;
-            frozenSecTempCnt = 0;
-            lastPrimTemp= 0;
-            lastSecTemp= 0;
+            lastPrimTemp = 0;
+            lastSecTemp = 0;
 
             SampleHumidity = 0;
         }
+
+        public void createSensors()
+        {
+            this.primTempSensor = new MetTowerSensor(opcServerName, PrimTemperatureTag, TemperaturePrimOutOfRangeTag, TemperaturePrimBadQualityTag, MIN_TEMP_VALUE, MAX_TEMP_VALUE,StaleDataSamples);
+            this.secTempSensor = new MetTowerSensor(opcServerName, SecTemperatureTag, TemperatureSecOutOfRangeTag, TemperatureSecBadQualityTag, MIN_TEMP_VALUE, MAX_TEMP_VALUE,StaleDataSamples);
+            this.primHumidSensor = new MetTowerSensor(opcServerName, HumidityPrimValueTag, HumidtyOutOfRangeTag, HumidityBadQualityTag, MIN_HUMIDITY_VALUE, MAX_HUMIDITY_VALUE,StaleDataSamples);
+
+        }
+
+        public MetTowerSensor getPrimaryTemperatureSensor() => primTempSensor;
+        public MetTowerSensor getSecondaryTemperatureSensor() => secTempSensor;
+
+        /// <summary>
+        /// Get the Primary Humidity Sensor. WARNING: Caller MUST provide the divide by 100.0 scaling after a readValue() call
+        /// </summary>
+        /// <returns></returns>
+        public MetTowerSensor getPrimaryHumiditySensor() => primHumidSensor;
 
         /// <summary>
         /// Accessor the RelativeHumidity OPC Tag
         /// </summary>
         public string RelativeHumidityTag { set; get; }
 
+        /// <summary>
+        /// Returns the Relative Humdity value from the sensor. Returned value will be in decimal format and NOT percentage
+        /// </summary>
         public Object RelativeHumidityValue
         {
             set { OpcServer.writeOpcTag(opcServerName, RelativeHumidityTag, value); }
-            get { return OpcServer.readAnalogTag(opcServerName, RelativeHumidityTag); }
+            get { return primHumidSensor.readValue(true); }
+        }
+
+        /// <summary>
+        /// funciton to check whether all sensor quality is good or not. If they're all bad, the "No Data" alarm will be raised"
+        /// </summary>
+        /// <returns>False if all data sensor is bad. True otherwise</returns>
+        public bool isAllSensorGood()
+        {
+            bool badQuality =
+                (getPrimaryHumiditySensor().isSensorBadQuality() && getPrimaryTemperatureSensor().isSensorBadQuality() && getSecondaryTemperatureSensor().isSensorBadQuality()) ||
+                (getPrimaryHumiditySensor().isSensorOutofRange() && getPrimaryTemperatureSensor().isSensorOutofRange() && getSecondaryTemperatureSensor().isSensorOutofRange())
+                ;
+
+            //All sensors bad quality
+            if (badQuality)
+            {
+                NoDataAlarmValue = true;
+                return false;
+            }
+            //Normal oepration
+            else
+            {
+                NoDataAlarmValue = false;
+                return true;
+            }
         }
 
         /// <summary>
@@ -88,7 +122,7 @@ namespace Articuno
 
         public Object PrimTemperatureValue
         {
-            get { return OpcServer.readAnalogTag(opcServerName, PrimTemperatureTag); }
+            get { return primTempSensor.readValue(); }
             set { OpcServer.writeOpcTag(opcServerName, PrimTemperatureTag, value); }
         }
 
@@ -101,7 +135,7 @@ namespace Articuno
         /// </summary>
         public Object SecTemperatureValue
         {
-            get { return OpcServer.readAnalogTag(opcServerName, SecTemperatureTag); }
+            get { return secTempSensor.readValue(); }
             set { OpcServer.writeOpcTag(opcServerName, SecTemperatureTag, value); }
         }
 
@@ -112,7 +146,11 @@ namespace Articuno
         /// </summary>
         /// <returns></returns>
         public string NoDataAlarmTag { set; get; }
-        public Object NoDataAlarmValue { set { OpcServer.writeOpcTag(opcServerName, NoDataAlarmTag, value); } get { return OpcServer.readBooleanTag(opcServerName, NoDataAlarmTag); } }
+        public Object NoDataAlarmValue
+        {
+            get { return OpcServer.readBooleanTag(opcServerName, NoDataAlarmTag); }
+            set { OpcServer.writeOpcTag(opcServerName, NoDataAlarmTag, value); }
+        }
 
         /// <summary>
         /// Gets the IceIndicationValue OPC Value
@@ -125,7 +163,6 @@ namespace Articuno
             set { OpcServer.writeOpcTag(opcServerName, IceIndicationTag, value); }
         }
 
-        //For Met TOwer siwtching
         public string MetSwitchTag { get; set; }
         public bool MetSwitchValue
         {
@@ -134,11 +171,16 @@ namespace Articuno
         }
 
         //Threshold setters and getters
-        public double AmbTempThreshold { get { return ambTempThreshold; } set { ambTempThreshold = value; } }
-        public double DeltaTempThreshold { get { return deltaTempThreshold; } set { deltaTempThreshold = value; } }
+        public double AmbTempThreshold { get; set; }
+        public double DeltaTempThreshold { get; set; }
+
+        public int StaleDataSamples { get; set; }
+
 
         //Humidity Accessors
         public string HumidityPrimValueTag { get; set; }
+
+        //Secondary humidity is unused because there's no secondary humidity designed wit hthe sepeciifcation
         public string HumiditySecValueTag { get; set; }
         public string HumidtyOutOfRangeTag { get; set; }
         public string HumidityBadQualityTag { get; set; }
@@ -156,41 +198,42 @@ namespace Articuno
         public string CtrTemperatureTag { get; set; }
         public string CtrHumidityTag { get; set; }
         public string CtrDewTag { get; set; }
-        //The following are for humidity out of range, bad quality, etc.
+
+        //The following are for humidity out of range, bad quality
         public Object HumidityOutOfRng
         {
-            get { return OpcServer.readBooleanTag(opcServerName, HumidtyOutOfRangeTag); }
+            get { return primHumidSensor.isSensorOutofRange(); }
             set { OpcServer.writeOpcTag(opcServerName, HumidtyOutOfRangeTag, value); }
         }
 
         public Object HumidityBadQuality
         {
-            get { return OpcServer.readBooleanTag(opcServerName, HumidityBadQualityTag); }
+            get { return primHumidSensor.isSensorBadQuality(); }
             set { OpcServer.writeOpcTag(opcServerName, HumidityBadQualityTag, value); }
         }
 
         //The following are for temperature out of range, bad quality
         public Object TemperaturePrimOutOfRange
         {
-            get { return OpcServer.readBooleanTag(opcServerName, TemperaturePrimOutOfRangeTag); }
+            get { return primTempSensor.isSensorOutofRange(); }
             set { OpcServer.writeOpcTag(opcServerName, TemperaturePrimOutOfRangeTag, value); }
         }
 
         public Object TemperaturePrimBadQuality
         {
-            get { return OpcServer.readBooleanTag(opcServerName, TemperaturePrimBadQualityTag); }
+            get { return primTempSensor.isSensorBadQuality(); }
             set { OpcServer.writeOpcTag(opcServerName, TemperaturePrimBadQualityTag, value); }
         }
 
         public Object TemperatureSecOutOfRange
         {
-            get { return OpcServer.readBooleanTag(opcServerName, TemperatureSecOutOfRangeTag); }
+            get { return secTempSensor.isSensorOutofRange(); }
             set { OpcServer.writeOpcTag(opcServerName, TemperatureSecOutOfRangeTag, value); }
         }
 
         public Object TemperatureSecBadQuality
         {
-            get { return OpcServer.readBooleanTag(opcServerName, TemperatureSecBadQualityTag); }
+            get { return secTempSensor.isSensorBadQuality(); }
             set { OpcServer.writeOpcTag(opcServerName, TemperatureSecBadQualityTag, value); }
         }
         /// <summary>
@@ -211,73 +254,20 @@ namespace Articuno
             get { return OpcServer.readBooleanTag(opcServerName, CtrDewTag); }
             set { OpcServer.writeOpcTag(opcServerName, CtrDewTag, value); }
         }
-        /// <summary>
-        /// Verifies whether a quality is good or not
-        /// </summary>
-        /// <param name="opcTag"></param>
-        /// <returns></returns>
-        public bool isQualityGood(string opcTag) { return Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, opcTag)); }
-
-        public double SamplePrimTemperature { get; set; }
-        public double SampleSecTemperature { get; set; }
-        public void setLastStoredSample(string opcTag,double sampledTemp)
-        {
-            if (opcTag.Equals(PrimTemperatureTag))
-                lastPrimTemp=sampledTemp;
-            else
-                lastSecTemp=sampledTemp;
-        }
-
-        public double getLastStoredSample(string opcTag)
-        {
-            if (opcTag.Equals(PrimTemperatureTag))
-                return lastPrimTemp;
-            else
-                return lastSecTemp;
-
-        } 
         public double SampleHumidity { get; set; }
 
-
-        //Met Id methods
         public string getMetTowerPrefix { set { } get { return this.metTowerPrefix; } }
 
-        //turbien methods for measurement reduedancy
-        public void setNearestTurbine(Turbine turbine) { nearestTurbine = turbine; }
-        public Turbine getNearestTurbine() { return nearestTurbine; }
+        public void SetBackupTurbineForMetTower(Turbine turbine) { nearestTurbine = turbine; }
+        public Turbine GetBackupTurbineForMetTower() { return nearestTurbine; }
 
         public void writeToQueue(double temperature, double humidity)
         {
-            //Should this be prim temp or something else?
             temperatureQueue.Enqueue(temperature);
             humidityQueue.Enqueue(humidity);
         }
 
         public Queue<double> getTemperatureQueue() { return this.temperatureQueue; }
         public Queue<double> getHumidityQueue() { return this.humidityQueue; }
-
-        public void incrementFrozen(string opcTag)
-        {
-            if (opcTag.Equals(PrimTemperatureTag))
-                frozenPrimTempCnt++;
-            else
-                frozenSecTempCnt++;
-        }
-
-        public int getFrozenIncrement(string opcTag)
-        {
-            if (opcTag.Equals(PrimTemperatureTag))
-                return frozenPrimTempCnt;
-            else
-                return frozenSecTempCnt;
-        }
-
-        public void resetFrozenIncrement(string opcTag)
-        {
-            if (opcTag.Equals(PrimTemperatureTag))
-                frozenPrimTempCnt = 0;
-            else
-                frozenSecTempCnt = 0;
-        }
     }
 }

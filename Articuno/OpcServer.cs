@@ -44,6 +44,7 @@ namespace Articuno
             }
             catch (Exception e)
             {
+                throw e;
                 //Log Exception here
                 log.ErrorFormat("Reading tag: {0} failed. Does {0} exist on the server?", tag);
                 log.ErrorFormat("Error:\n{0}", e);
@@ -62,12 +63,13 @@ namespace Articuno
         {
             try
             {
-                //Only write to OPC Server if the UCC is active
                 if (isActiveUCC())
                 {
                     client.WriteItemValue(serverName, tag, value);
+                    return true;
                 }
-                return true;
+                else
+                    return false;
             }
             catch (Exception e)
             {
@@ -130,12 +132,8 @@ namespace Articuno
         {
             try
             {
-                //Only write to OPC Server if the UCC is active
                 if (isActiveUCC())
-                {
                     opcServer.WriteItemValue(serverName, tag, value);
-                }
-
             }
             catch (Exception e)
             {
@@ -150,14 +148,9 @@ namespace Articuno
             return vtq.Quality.IsGood ? true : false;
         }
 
-        public static bool isActiveUCC(string serverName, string tag)
-        {
-            return Convert.ToBoolean(readOpcTag(serverName, tag));
-        }
-
         public static bool isActiveUCC()
         {
-            return Convert.ToBoolean(readOpcTag(DatabaseInterface.Instance.getOpcServer(), DatabaseInterface.Instance.getActiveUCCTag()));
+            return Convert.ToBoolean(readOpcTag(DatabaseInterface.Instance.getOpcServerName(), DatabaseInterface.Instance.getActiveUccOpcTag()));
         }
 
     }
