@@ -6,14 +6,12 @@ using Articuno;
 using System.Data.SQLite;
 using System.Threading;
 
-namespace ArticunoTest
-{
+namespace ArticunoTest {
     /// <summary>
     /// Summary description for MetTowerUnitTest
     /// </summary>
     [TestClass]
-    public class MetTowerFunctionalityTest
-    {
+    public class MetTowerFunctionalityTest {
         OpcServer opcServer;
         MetTowerMediator mm;
         TurbineMediator tm;
@@ -31,12 +29,20 @@ namespace ArticunoTest
 
 
         [TestInitialize]
-        public void initialize()
-        {
+        public void initialize() {
             met1Tags = new List<String>();
             met2Tags = new List<String>();
             ArticunoMetAlarmTags = new List<String>();
             dbi = DatabaseInterface.Instance;
+
+            mm = MetTowerMediator.Instance;
+            tm = TurbineMediator.Instance;
+            //Create new met tower mediator
+            mm.CreateMetTowerObject();
+            opcServer = new OpcServer(opcServerName);
+            siteName = dbi.getSitePrefixValue();
+            //set default met tower Data
+            cleanup();
 
             met1Tags.AddRange(new string[] {
                 dbi.GetMetTowerPrimTempValueTag("Met"),
@@ -74,26 +80,9 @@ namespace ArticunoTest
 
             });
         }
-
-        [TestInitialize]
-        public void Initialize()
-        {
-            //Insert some test data into Articuno.db
-            dbi = DatabaseInterface.Instance;
-            mm = MetTowerMediator.Instance;
-            tm = TurbineMediator.Instance;
-            //Create new met tower mediator
-            mm.CreateMetTowerObject();
-            opcServer = new OpcServer(opcServerName);
-            siteName = dbi.getSitePrefixValue();
-            //set default met tower Data
-            cleanup();
-
-        }
-
+        
         [TestMethod]
-        public void createNewMetTower()
-        {
+        public void createNewMetTower() {
             //var derp = MetTowerMediatorSingleton.Instance.getAllMeasurements("Met");
             MetTower met1 = mm.GetMetTowerFromId("Met");
             MetTower met2 = mm.GetMetTowerFromId("Met2");
@@ -129,8 +118,7 @@ namespace ArticunoTest
         [DataRow("Met", 20.0, 60.0, .100)]
         [DataRow("Met2", 40.0, 60.0, .500)]
 
-        public void GetValueTest(string metId, double tempVal1, double tempVal2, double hmdVal)
-        {
+        public void GetValueTest(string metId, double tempVal1, double tempVal2, double hmdVal) {
             MetTower met = mm.GetMetTowerFromId(metId);
             met.RelativeHumidityValue = hmdVal;
             met.PrimTemperatureValue = tempVal1;
@@ -147,8 +135,7 @@ namespace ArticunoTest
 
         [TestMethod]
         //Test the threshold values
-        public void testThresholds()
-        {
+        public void testThresholds() {
 
             MetTower met = mm.GetMetTowerFromId("Met");
             //Get the thresholds
@@ -171,8 +158,7 @@ namespace ArticunoTest
         [TestMethod]
         //Set bad quality to assert met tower throws an alarm
         [DataRow(300.0, 120.0, 1.100, 200.0)]
-        public void checkMetTower(double tempVal1, double tempVal2, double hmdVal1, double hmdVal2)
-        {
+        public void checkMetTower(double tempVal1, double tempVal2, double hmdVal1, double hmdVal2) {
             //Assert.Fail();
             //For this test, you need both met towers because you do not want to fall back on redundancy
             string metId1 = "Met";
@@ -199,8 +185,7 @@ namespace ArticunoTest
         [DataTestMethod]
         [DataRow("Met", 21.0, 31.0, 17.0, 57.0)]
         [DataRow("Met2", 21.0, 41.0, 57.0, 97.0)]
-        public void swtichMetTowers(string metId, double tempVal1, double tempVal2, double hmdVal1, double hmdVal2)
-        {
+        public void swtichMetTowers(string metId, double tempVal1, double tempVal2, double hmdVal1, double hmdVal2) {
             tm.createTurbines();
             var turbine = tm.getTurbinePrefixList()[0];
 
@@ -229,8 +214,7 @@ namespace ArticunoTest
             double humdAfterSwitch = Convert.ToDouble(mm.readHumidity(metId));
             Console.WriteLine("Met Tower {0} temperature after switch {1}, humidty after switch {2}", metId, tempAfterSwitch, humdAfterSwitch);
 
-            switch (metId)
-            {
+            switch (metId) {
                 case "Met":
                     tempBeforeSwitch = tempVal1;
                     humdBeforeSwitch = hmdVal1 / 100;
@@ -257,8 +241,7 @@ namespace ArticunoTest
         [TestMethod]
         [DataTestMethod]
         [DataRow("Met", -50.0)]
-        public void useTurbineTempTest(string metId, double badTemperatureValue)
-        {
+        public void useTurbineTempTest(string metId, double badTemperatureValue) {
             tm.createTurbines();
             string turbine = dbi.GetBackupTurbineForMet(metId);
 
@@ -288,8 +271,7 @@ namespace ArticunoTest
         [DataRow("Met", 10.0, 10.0, 60.0, false)]
         [DataRow("Met", 10.0, -50.0, 60.0, true)]
 
-        public void noDataTest(string metId, double tempVal1, double tempVal2, double hmdVal, bool expectedState)
-        {
+        public void noDataTest(string metId, double tempVal1, double tempVal2, double hmdVal, bool expectedState) {
             mm.writePrimTemperature(metId, tempVal1);
             mm.writeSecTemperature(metId, tempVal2);
             mm.writeHumidity(metId, hmdVal);
@@ -313,34 +295,28 @@ namespace ArticunoTest
             Assert.AreEqual(metTowerQuality, expectedState);
         }
 
-        public void cleanup()
-        {
+        public void cleanup() {
             resetTagsToZero();
             setValidMetData();
         }
 
         //method to set all the input met tags to zero
-        private void resetTagsToZero()
-        {
-            foreach (string tag in met1Tags)
-            {
+        private void resetTagsToZero() {
+            foreach (string tag in met1Tags) {
                 writeValue(String.Format("{0}{1}", siteName, tag), 0);
             }
 
-            foreach (string tag in met2Tags)
-            {
+            foreach (string tag in met2Tags) {
                 writeValue(String.Format("{0}{1}", siteName, tag), 0);
             }
-            foreach (string tag in ArticunoMetAlarmTags)
-            {
+            foreach (string tag in ArticunoMetAlarmTags) {
                 writeValue(String.Format("{0}{1}", siteName, tag), 0);
             }
 
         }
 
         //Sets the met tower data to normal parameters. Needs to be hard coded so I can see a value difference between the two mets
-        private void setValidMetData()
-        {
+        private void setValidMetData() {
             writeValue(String.Format("{0}Met.AmbTmp1", siteName), 50.33);
             writeValue(String.Format("{0}Met.AmbTmp2", siteName), 52.00);
             writeValue(String.Format("{0}Met.RH1", siteName), 30.22);
@@ -352,8 +328,7 @@ namespace ArticunoTest
         }
 
         //Method used in this class to write values 
-        private void writeValue(string tag, double value)
-        {
+        private void writeValue(string tag, double value) {
             opcServer.writeTagValue(tag, value);
         }
 
@@ -361,8 +336,7 @@ namespace ArticunoTest
         [DataRow("Met", -50, -50, MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY)]
         [DataRow("Met", 0, 0, MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY)]
         [DataRow("Met", 61, 61, MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY)]
-        public void tempOutOfRangeTest(string metId, double temp1, double temp2, Object failureExpected)
-        {
+        public void tempOutOfRangeTest(string metId, double temp1, double temp2, Object failureExpected) {
             tm.createTurbines();
             var turbine = tm.getTurbinePrefixList()[0];
 
@@ -399,8 +373,7 @@ namespace ArticunoTest
         [DataRow("Met", -1, -1, MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY)]
         [DataRow("Met", 20, 20, MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY)]
         [DataRow("Met", 101, 101, MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY)]
-        public void humidityOutOfRangeTest(string metId, double humidity, double temp2, Object failureExpected)
-        {
+        public void humidityOutOfRangeTest(string metId, double humidity, double temp2, Object failureExpected) {
             tm.createTurbines();
             var turbine = tm.getTurbinePrefixList()[0];
 
@@ -423,8 +396,7 @@ namespace ArticunoTest
         [DataTestMethod]
         [DataRow("Met", -1, 0)]
         [DataRow("Met", 101, -3)]
-        public void BadHumitiyUseTemperatureOnlyTest(string metId, double humidity, double temperature)
-        {
+        public void BadHumitiyUseTemperatureOnlyTest(string metId, double humidity, double temperature) {
 
             tm.createTurbines();
             var turbine = tm.getTurbinePrefixList()[0];
@@ -455,8 +427,7 @@ namespace ArticunoTest
         [DataRow("Met", 90, .15, false)]
         [DataRow("Met", 00, .99, true)]
         [DataRow("Met", -20, .99, true)]
-        public void FrozenMetTowerTest(string metId, double temperature, double humidity, bool expectedFrozenState)
-        {
+        public void FrozenMetTowerTest(string metId, double temperature, double humidity, bool expectedFrozenState) {
             MetTower met = mm.GetMetTowerFromId(metId);
             mm.writeDeltaThreshold(1);
             mm.UpdateTemperatureThresholdForAllMetTowers(0);
@@ -470,28 +441,23 @@ namespace ArticunoTest
         [DataTestMethod]
         [DataRow("Met", 20, .15, true)]
         [DataRow("Met", 20, .15, false)]
-        public void StaleDataDetectionTest(string metId, double temperature, double humidity, bool Flatline)
-        {
+        public void StaleDataDetectionTest(string metId, double temperature, double humidity, bool Flatline) {
             MetTower met = mm.GetMetTowerFromId(metId);
             mm.writeDeltaThreshold(1);
             mm.UpdateTemperatureThresholdForAllMetTowers(0);
 
             met.PrimTemperatureValue = temperature;
 
-            for (int i = 0; i <= 50; i++)
-            {
-                if (!Flatline)
-                {
+            for (int i = 0; i <= 50; i++) {
+                if (!Flatline) {
                     Random rnd = new Random();
                     met.PrimTemperatureValue = rnd.Next((int)temperature - 5, (int)temperature);
                 }
-                try
-                {
+                try {
                     var temp = mm.GetMetTowerFromId(metId).PrimTemperatureValue;
                 }
                 //Reaching here is good as an exception will be thrown because Aritcuno will attempt to read from turbine data...which I havne't set up for in this test.
-                catch (NullReferenceException)
-                {
+                catch (NullReferenceException) {
                     Assert.IsTrue(true);
                 }
             }
@@ -504,20 +470,16 @@ namespace ArticunoTest
             //Check Humidity
             met.RelativeHumidityValue = humidity;
 
-            for (int i = 0; i <= 50; i++)
-            {
-                if (!Flatline)
-                {
+            for (int i = 0; i <= 50; i++) {
+                if (!Flatline) {
                     Random rnd = new Random();
                     met.RelativeHumidityValue = rnd.Next((int)humidity - 5, (int)humidity);
                 }
-                try
-                {
+                try {
                     var temp = mm.GetMetTowerFromId(metId).RelativeHumidityValue;
                 }
                 //Reaching here is good as an exception will be thrown because Aritcuno will attempt to read from turbine data...which I havne't set up for in this test.
-                catch (NullReferenceException)
-                {
+                catch (NullReferenceException) {
                     Assert.IsTrue(true);
                 }
             }
@@ -528,10 +490,8 @@ namespace ArticunoTest
                 Assert.AreEqual(Flatline, met.HumidityBadQuality);
 
         }
-        private void createStaleData(MetTower met)
-        {
-            for (int i = 0; i <= 100; i++)
-            {
+        private void createStaleData(MetTower met) {
+            for (int i = 0; i <= 100; i++) {
                 var humid = met.RelativeHumidityValue;
                 var temp1 = met.PrimTemperatureValue;
                 var temp2 = met.SecTemperatureValue;

@@ -34,6 +34,8 @@ namespace ArticunoTest {
             dbi = DatabaseInterface.Instance;
             opcServerName = dbi.getOpcServerName();
             testTurbine = tm.GetAllTurbineList()[0];
+            tm.GetAllTurbineList().Clear();
+            tm.GetAllTurbineList().Add(testTurbine);
         }
 
         [TestMethod]

@@ -93,11 +93,13 @@ namespace Articuno
         {
             if (sensorValue >= maxValue)
             {
+                log.InfoFormat("Sensor value overrange detected for {0}. Value: {1}", sensorTag,sensorValue);
                 SetAlarmStatus(sensorOutofRangeTag, true);
                 return maxValue;
             }
             else if (sensorValue <= minValue)
             {
+                log.InfoFormat("Sensor value underrange detected for {0}. Value: {1}", sensorTag,sensorValue);
                 SetAlarmStatus(sensorOutofRangeTag, true);
                 return minValue;
             }
