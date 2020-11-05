@@ -23,7 +23,7 @@ namespace Articuno
             HostFactory.Run(serviceConfig =>
             {
                 //Call NLog
-                //serviceConfig.UseNLog();
+                serviceConfig.UseNLog();
 
                 //ConverterService is the class
                 serviceConfig.Service<ArticunoService>(serviceInstance =>
