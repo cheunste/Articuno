@@ -57,23 +57,22 @@ namespace Articuno {
 
         public List<MetTower> GetMetTowerList() => metTowerList;
 
-        public void CalculateAverage() {
-            foreach(MetTower t in GetMetTowerList()) {
-                double tempAvg = calculateCtrAvgTemperature(t);
-                double humidityAvg = calculateCtrAvgHumidity(t);
-                ArticunoLogger.DataLogger.Debug("CTR avg temp: {0}, avg Humidity: {1}", tempAvg, humidityAvg);
-                CalculateFrozenMetTowerCondition(t, tempAvg, humidityAvg);
-                //Update the Dew Point calculation. This value will show up on the faceplate
-                updateDewPoint(t, tempAvg, humidityAvg);
-                tm.checkMetTowerFrozen(t);
-            }
-        }
+        public void CalculateAverage() =>
+            GetMetTowerList().ForEach(m => {
+                ArticunoLogger.DataLogger.Debug("In MetTowerMediator's CalculateAverage for {0} ",m.MetId);
+                double tempAvg = calculateCtrAvgTemperature(m);
+                double humidityAvg = calculateCtrAvgHumidity(m);
+                ArticunoLogger.DataLogger.Debug("{0} CTR avg temp: {1}, avg Humidity: {2}", m.MetId,tempAvg, humidityAvg);
+                CalculateFrozenMetTowerCondition(m, tempAvg, humidityAvg);
+                updateDewPoint(m, tempAvg, humidityAvg);
+                tm.checkMetTowerFrozen(m);
+            });
 
         /// <summary>
         /// Method to check a met tower to see if it meets the freezing condition and set its condition. Returns true if iti s frozen, false otherwise
         /// </summary>
         public void CalculateFrozenMetTowerCondition(MetTower met, double avgTemperature, double avgHumidity) {
-            string metId = met.getMetTowerPrefix;
+            string metId = met.MetId;
 
             double tempThreshold = ReadTemperatureThresholdForMetTower(metId);
             double deltaThreshold = readDeltaThreshold(metId);
@@ -248,7 +247,7 @@ namespace Articuno {
         }
 
         internal void updateDewPoint(MetTower met, double ctrTemperature, double ctrHumidity) {
-            string metId = met.getMetTowerPrefix;
+            string metId = met.MetId;
             double dew = CalculateDewPointTemperature(ctrHumidity, ctrTemperature);
             ArticunoLogger.DataLogger.Debug("CTR Dew: {0}", dew);
             if (Articuno.isUccActive())
@@ -366,7 +365,7 @@ namespace Articuno {
         /// <param name="metTowerId"></param>
         /// <returns>A Met Tower Object if exist. Null otherwise. createMetTower() must be called before using this fucntion</returns>
         public MetTower GetMetTowerFromId(string metTowerId) {
-            for (int i = 0; i < metTowerList.Count; i++) { if (metTowerList.ElementAt(i).getMetTowerPrefix.Equals(metTowerId)) { return metTowerList.ElementAt(i); } }
+            for (int i = 0; i < metTowerList.Count; i++) { if (metTowerList.ElementAt(i).MetId.Equals(metTowerId)) { return metTowerList.ElementAt(i); } }
             return null;
         }
         public double CalculateStdDev(Queue<double> queue) {

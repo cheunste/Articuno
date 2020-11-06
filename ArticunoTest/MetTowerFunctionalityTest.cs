@@ -469,13 +469,6 @@ namespace ArticunoTest {
         }
 
         [TestMethod]
-        public void CalculateMetTowerAverageTest() {
-            mm.CalculateAverage();
-
-        }
-
-
-        [TestMethod]
         public void MetTowerCtrAvgHumidityTest() {
             createStaticData(testMetTower, 0);
             var average = mm.calculateCtrAvgHumidity(testMetTower);

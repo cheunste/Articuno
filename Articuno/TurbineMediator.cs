@@ -255,7 +255,7 @@ namespace Articuno {
         /// </summary>
         /// <param name="metId">A met tower prefix</param>
         public void checkMetTowerFrozen(MetTower met) {
-            GetAllTurbineList().Where(t => MetTowerMediator.Instance.isMetTowerSwitched(t.MainMetTowerReference) == met.getMetTowerPrefix)
+            GetAllTurbineList().Where(t => MetTowerMediator.Instance.isMetTowerSwitched(t.MainMetTowerReference) == met.MetId)
                 .ToList().ForEach(t => {
                     bool isMetFrozen = MetTowerMediator.Instance.IsMetTowerFrozen(met);
                     t.SetTemperatureCondition(isMetFrozen);

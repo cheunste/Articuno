@@ -253,7 +253,7 @@ namespace Articuno
         }
         public double SampleHumidity { get; set; }
 
-        public string getMetTowerPrefix { set { } get { return this.metTowerPrefix; } }
+        public string MetId { set { } get { return this.metTowerPrefix; } }
 
         public void SetBackupTurbineForMetTower(Turbine turbine) { nearestTurbine = turbine; }
         public Turbine GetBackupTurbineForMetTower() { return nearestTurbine; }
