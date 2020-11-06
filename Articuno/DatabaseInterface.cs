@@ -1,5 +1,4 @@
-﻿using log4net;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
@@ -17,9 +16,6 @@ namespace Articuno
 
         static string dataSource = ".\\articuno.db";
         static string ConnectionString = String.Format("Data Source ={0};Version=3;", dataSource);
-
-        //Log
-        private static readonly ILog log = LogManager.GetLogger(typeof(DatabaseInterface));
 
         private DatabaseInterface() { }
 

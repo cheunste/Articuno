@@ -1,5 +1,4 @@
-﻿using log4net;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.Entity.Core.Mapping;
 using System.Linq;
@@ -24,8 +23,6 @@ namespace Articuno
         private string sensorTag;
         private string sensorOutofRangeTag;
         private string sensorBadQualtiyTag;
-
-        private static readonly ILog log = LogManager.GetLogger(typeof(MetTowerSensor));
         private string opcServerName;
 
         public MetTowerSensor(string serverName, string valueTag, string outOfRangeTag, string badQualityTag, double minValue, double maxValue,int staleDataCount)
@@ -78,7 +75,8 @@ namespace Articuno
             //If there are 50 or so samples (or whatever) that are equally the same, that implies the temperature from the sensor is flatlined. At this point, return a bad quality alert.
             if (frozenCount >= this.staleDataCount)
             {
-                log.InfoFormat("Flatline detected for {0}", sensorTag);
+                ArticunoLogger.DataLogger.Info("Flatline detected for {0}", sensorTag);
+                ArticunoLogger.GeneralLogger.Info("Flatline detected for {0}", sensorTag);
                 SetAlarmStatus(sensorBadQualtiyTag, true);
                 return true;
             }
@@ -93,13 +91,15 @@ namespace Articuno
         {
             if (sensorValue >= maxValue)
             {
-                log.InfoFormat("Sensor value overrange detected for {0}. Value: {1}", sensorTag,sensorValue);
+                ArticunoLogger.DataLogger.Info("Sensor value overrange detected for {0}. Value: {1}", sensorTag,sensorValue);
+                ArticunoLogger.GeneralLogger.Info("Sensor value overrange detected for {0}. Value: {1}", sensorTag,sensorValue);
                 SetAlarmStatus(sensorOutofRangeTag, true);
                 return maxValue;
             }
             else if (sensorValue <= minValue)
             {
-                log.InfoFormat("Sensor value underrange detected for {0}. Value: {1}", sensorTag,sensorValue);
+                ArticunoLogger.DataLogger.Info("Sensor value underrange detected for {0}. Value: {1}", sensorTag,sensorValue);
+                ArticunoLogger.GeneralLogger.Info("Sensor value underrange detected for {0}. Value: {1}", sensorTag,sensorValue);
                 SetAlarmStatus(sensorOutofRangeTag, true);
                 return minValue;
             }

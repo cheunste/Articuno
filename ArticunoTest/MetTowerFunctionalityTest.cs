@@ -80,7 +80,7 @@ namespace ArticunoTest {
 
             });
         }
-        
+
         [TestMethod]
         public void createNewMetTower() {
             //var derp = MetTowerMediatorSingleton.Instance.getAllMeasurements("Met");
@@ -275,22 +275,29 @@ namespace ArticunoTest {
             mm.writePrimTemperature(metId, tempVal1);
             mm.writeSecTemperature(metId, tempVal2);
             mm.writeHumidity(metId, hmdVal);
+
             Thread.Sleep(500);
 
             if (expectedState)
                 createStaleData(mm.GetMetTowerFromId(metId));
+            else
+                createRandomData(mm.GetMetTowerFromId(metId), hmdVal, tempVal1);
 
-            var humidQuality = mm.GetMetTowerFromId(metId).getPrimaryHumiditySensor().isSensorBadQuality();
-            var primTempQuality = mm.GetMetTowerFromId(metId).getPrimaryTemperatureSensor().isSensorBadQuality();
-            var secTempQuality = mm.GetMetTowerFromId(metId).getSecondaryTemperatureSensor().isSensorBadQuality();
 
-            var humidOutOfRange = mm.GetMetTowerFromId(metId).getPrimaryHumiditySensor().isSensorOutofRange();
-            var primTempOutOfRange = mm.GetMetTowerFromId(metId).getPrimaryTemperatureSensor().isSensorOutofRange();
-            var secTempOutOfRange = mm.GetMetTowerFromId(metId).getSecondaryTemperatureSensor().isSensorOutofRange();
+            mm.GetMetTowerFromId(metId).getPrimaryHumiditySensor().isSensorBadQuality();
+            mm.GetMetTowerFromId(metId).getPrimaryTemperatureSensor().isSensorBadQuality();
+            mm.GetMetTowerFromId(metId).getSecondaryTemperatureSensor().isSensorBadQuality();
+
+            mm.GetMetTowerFromId(metId).getPrimaryHumiditySensor().isSensorBadQuality();
+            mm.GetMetTowerFromId(metId).getPrimaryTemperatureSensor().isSensorBadQuality();
+            mm.GetMetTowerFromId(metId).getSecondaryTemperatureSensor().isSensorBadQuality();
+
+            mm.GetMetTowerFromId(metId).getPrimaryHumiditySensor().BadQualityCheck();
+            mm.GetMetTowerFromId(metId).getPrimaryTemperatureSensor().BadQualityCheck();
+            mm.GetMetTowerFromId(metId).getSecondaryTemperatureSensor().BadQualityCheck();
+
 
             var metTowerQuality = mm.isAllMetTowerSensorBadQuality(metId);
-
-            Thread.Sleep(500);
 
             Assert.AreEqual(metTowerQuality, expectedState);
         }
@@ -495,6 +502,15 @@ namespace ArticunoTest {
                 var humid = met.RelativeHumidityValue;
                 var temp1 = met.PrimTemperatureValue;
                 var temp2 = met.SecTemperatureValue;
+            }
+        }
+
+        private void createRandomData(MetTower met, double humidity, double temperature) {
+            for (int i = 0; i <= 100; i++) {
+                Random rnd = new Random();
+                met.RelativeHumidityValue = rnd.Next((int)humidity - 5, (int)humidity);
+                met.PrimTemperatureValue = rnd.Next((int)temperature - 5, (int)temperature);
+                met.SecTemperatureValue = rnd.Next((int)temperature - 5, (int)temperature);
             }
 
         }

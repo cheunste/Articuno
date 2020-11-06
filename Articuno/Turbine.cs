@@ -1,5 +1,4 @@
-﻿using log4net;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,9 +43,6 @@ namespace Articuno
         private readonly double AGC_UNBLOCK_COMMAND = 1.00;
         public static readonly int NRS_NOT_ACTIVE = 5;
         public static readonly int NRS_ACTIVE = 0;
-
-        //Log
-        private static readonly ILog log = LogManager.GetLogger(typeof(Turbine));
 
         //Constructors
         public Turbine(string prefix, String OpcServerName)
@@ -105,7 +101,7 @@ namespace Articuno
 
         public double writeTurbineLoadShutdownCommand()
         {
-            log.DebugFormat("Shutdown command for {0} has been sent", this.TurbinePrefix);
+            ArticunoLogger.DataLogger.Debug("Shutdown command for {0} has been sent", this.TurbinePrefix);
             try
             {
                 OpcServer.writeOpcTag(OpcServerName, this.LoadShutdownTag, 1.00);
@@ -113,7 +109,7 @@ namespace Articuno
             }
             catch (OpcException opcException)
             {
-                log.ErrorFormat("Error stropping {0}: {1}", this.TurbinePrefix, opcException.GetBaseException().Message);
+                ArticunoLogger.DataLogger.Error("Error stropping {0}: {1}", this.TurbinePrefix, opcException.GetBaseException().Message);
                 return -1.0;
             }
         }
@@ -129,7 +125,8 @@ namespace Articuno
         public void decrementTurbineCtrTime()
         {
             ctrRemaining--;
-            log.InfoFormat("{0} Current CTR: {1}", GetTurbinePrefixValue(), ctrRemaining);
+            ArticunoLogger.DataLogger.Info("{0} Current CTR: {1}", GetTurbinePrefixValue(), ctrRemaining);
+            ArticunoLogger.GeneralLogger.Info("{0} Current CTR: {1}", GetTurbinePrefixValue(), ctrRemaining);
             OpcServer.writeOpcTag(OpcServerName, CtrCountdownTag, ctrRemaining);
 
             // When  a turbine is started, additional startup time is needed. The time after startup will be greather than the TurbineCtr time.
@@ -138,7 +135,8 @@ namespace Articuno
                 emptyQueue();
             if (ctrRemaining <= 0)
             {
-                log.InfoFormat("CTR period for Turbine {0} reached Zero.", GetTurbinePrefixValue());
+                ArticunoLogger.DataLogger.Info("CTR period for Turbine {0} reached Zero.", GetTurbinePrefixValue());
+                ArticunoLogger.GeneralLogger.Info("CTR period for Turbine {0} reached Zero.", GetTurbinePrefixValue());
                 resetTurbineCtrTime();
                 tm.RotorSpeedCheck(GetTurbinePrefixValue());
                 if (tm.isUccActive())
@@ -182,18 +180,18 @@ namespace Articuno
         {
 
             bool frozenCondition = isTurbineParticipating() && temperatureConditionMet && operatingStateConditionMet && turbinePerformanceConditionMet;
-            log.DebugFormat("Checking ice condition for {5}.  Paused by Articuno: {0}\nTurbine Participation?: {1} " +
+            ArticunoLogger.DataLogger.Debug("Checking ice condition for {5}.  Paused by Articuno: {0}\nTurbine Participation?: {1} " +
                 "Icy Temp Condition?: {2}, OperatingState: {3}, Low TurbinePerf Condition?: {4}", frozenCondition,
                 isTurbineParticipating(), temperatureConditionMet, operatingStateConditionMet, turbinePerformanceConditionMet, GetTurbinePrefixValue());
 
             if (frozenCondition)
             {
-                log.DebugFormat("Icing conditions satisfied for {0}", GetTurbinePrefixValue());
+                ArticunoLogger.DataLogger.Debug("Icing conditions satisfied for {0}", GetTurbinePrefixValue());
                 pauseByArticuno(true);
             }
             else
             {
-                log.DebugFormat("No ice detected for turbine {0}", GetTurbinePrefixValue());
+                ArticunoLogger.DataLogger.Debug("No ice detected for turbine {0}", GetTurbinePrefixValue());
                 pauseByArticuno(false);
             }
         }
@@ -216,14 +214,16 @@ namespace Articuno
             //Unblock Turbine from AGC
             BlockTurbineFromAGC(false);
 
-            log.DebugFormat("Start Command Received for Turbine {0}", GetTurbinePrefixValue());
+            ArticunoLogger.DataLogger.Debug("Start Command Received for Turbine {0}", GetTurbinePrefixValue());
             //Give the turbine some time to start 
             int startupTime = Convert.ToInt32(StartupTime);
-            log.DebugFormat("Giving additional {0} minutes to allow turbine to start up....", startupTime);
+            ArticunoLogger.DataLogger.Debug("Giving additional {0} minutes to allow turbine to start up....", startupTime);
             SetPausedByArticunoAlarmValue(false);
             emptyQueue();
-            log.InfoFormat("Turbine {0} has started", GetTurbinePrefixValue());
-            log.DebugFormat("Turbine {0} CTR Value reset to: {1}", GetTurbinePrefixValue(), (Convert.ToInt32(TurbineDefaultCtr)) + startupTime);
+            ArticunoLogger.DataLogger.Info("Turbine {0} has started", GetTurbinePrefixValue());
+            ArticunoLogger.GeneralLogger.Info("Turbine {0} has started", GetTurbinePrefixValue());
+            ArticunoLogger.DataLogger.Info("Turbine {0} CTR Value reset to: {1}", GetTurbinePrefixValue(), (Convert.ToInt32(TurbineDefaultCtr)) + startupTime);
+            ArticunoLogger.GeneralLogger.Info("Turbine {0} CTR Value reset to: {1}", GetTurbinePrefixValue(), (Convert.ToInt32(TurbineDefaultCtr)) + startupTime);
             resetTurbineCtrTime(startupTime);
         }
 
@@ -263,12 +263,13 @@ namespace Articuno
                 {
                     //Block Turbine in AGC
                     BlockTurbineFromAGC(true);
-                    log.DebugFormat("Sending pause commmand for {0}", GetTurbinePrefixValue());
+                    ArticunoLogger.DataLogger.Debug("Sending pause commmand for {0}", GetTurbinePrefixValue());
                     writeTurbineLoadShutdownCommand();
-                    log.DebugFormat("Writing alarm for {0}", GetTurbinePrefixValue());
+                    ArticunoLogger.DataLogger.Debug("Writing alarm for {0}", GetTurbinePrefixValue());
                     SetPausedByArticunoAlarmValue(true);
                     tm.UpdateArticunoMain(TurbineMediator.TurbineEnum.PausedByArticuno, TurbinePrefix);
-                    log.InfoFormat("Turbine {0} is now paused", GetTurbinePrefixValue());
+                    ArticunoLogger.DataLogger.Info("Turbine {0} is now paused", GetTurbinePrefixValue());
+                    ArticunoLogger.GeneralLogger.Info("Turbine {0} is now paused", GetTurbinePrefixValue());
                 }
             }
         }

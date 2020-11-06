@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using log4net;
 using OpcLabs.EasyOpc.DataAccess;
 
 namespace Articuno
@@ -17,9 +16,6 @@ namespace Articuno
         EasyDAClient client = new EasyDAClient();
         static EasyDAClient opcServer = new EasyDAClient();
         private string serverName;
-
-        //log
-        private static readonly ILog log = LogManager.GetLogger(typeof(OpcServer));
 
         //Constructor. Tages in a server name and sets the 
         public OpcServer(String serverName)
@@ -46,8 +42,8 @@ namespace Articuno
             {
                 throw e;
                 //Log Exception here
-                log.ErrorFormat("Reading tag: {0} failed. Does {0} exist on the server?", tag);
-                log.ErrorFormat("Error:\n{0}", e);
+                ArticunoLogger.DataLogger.Error("Reading tag: {0} failed. Does {0} exist on the server?", tag);
+                ArticunoLogger.DataLogger.Error("Error:\n{0}", e);
                 return "";
             }
         }
@@ -73,8 +69,8 @@ namespace Articuno
             }
             catch (Exception e)
             {
-                log.ErrorFormat("Write to tag: {0} failed. Does {0} exist on the server? Did the server die?", tag);
-                log.ErrorFormat("Error:\n{0}", e);
+                ArticunoLogger.DataLogger.Error("Write to tag: {0} failed. Does {0} exist on the server? Did the server die?", tag);
+                ArticunoLogger.DataLogger.Error("Error:\n{0}", e);
                 return false;
             }
         }
@@ -91,7 +87,7 @@ namespace Articuno
             }
             catch (Exception e)
             {
-                log.DebugFormat("Error relating to tag: {0}\nDetails: {1}", tag, e);
+                ArticunoLogger.DataLogger.Debug("Error relating to tag: {0}\nDetails: {1}", tag, e);
                 return null;
             }
         }
@@ -100,7 +96,7 @@ namespace Articuno
         {
             Object obj = readOpcTag(serverName, tag);
             if (obj == null)
-                log.ErrorFormat("Issue reading tag: {0}. Will be sending back an {1} to Artiucno  ", tag, 0);
+                ArticunoLogger.DataLogger.Error("Issue reading tag: {0}. Will be sending back an {1} to Artiucno  ", tag, 0);
             return (obj ?? 0);
         }
 
@@ -108,7 +104,7 @@ namespace Articuno
         {
             Object obj = readOpcTag(serverName, tag);
             if (obj == null)
-                log.ErrorFormat("Issue reading tag: {0}. Will be sending back an {1} to Artiucno  ", tag, " empty string ");
+                ArticunoLogger.DataLogger.Error("Issue reading tag: {0}. Will be sending back an {1} to Artiucno  ", tag, " empty string ");
 
             return (obj ?? "");
         }
@@ -117,7 +113,7 @@ namespace Articuno
         {
             Object obj = readOpcTag(serverName, tag);
             if (obj == null)
-                log.ErrorFormat("Issue reading tag: {0}. Will be sending back an {1} to Artiucno  ", tag, false);
+                ArticunoLogger.DataLogger.Error("Issue reading tag: {0}. Will be sending back an {1} to Artiucno  ", tag, false);
             return (obj ?? false);
         }
 
@@ -137,8 +133,8 @@ namespace Articuno
             }
             catch (Exception e)
             {
-                log.ErrorFormat("Write to tag: {0} failed. Does {0} exist on the server? Did the server die?", tag);
-                log.ErrorFormat("Error:\n{0}", e);
+                ArticunoLogger.DataLogger.Error("Write to tag: {0} failed. Does {0} exist on the server? Did the server die?", tag);
+                ArticunoLogger.DataLogger.Error("Error:\n{0}", e);
             }
         }
 

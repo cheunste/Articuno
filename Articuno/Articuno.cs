@@ -1,5 +1,4 @@
-﻿using log4net;
-using OpcLabs.EasyOpc.DataAccess;
+﻿using OpcLabs.EasyOpc.DataAccess;
 using OpcLabs.EasyOpc.DataAccess.Generic;
 using OpcLabs.EasyOpc.DataAccess.OperationModel;
 using System;
@@ -60,8 +59,6 @@ namespace Articuno
         private static int MAX_CTR_TIME = 60;
         private static int MIN_CTR_TIME = 1;
         private static int ENABLE = 1;
-
-        private static readonly ILog log = LogManager.GetLogger(typeof(Articuno));
 
         private static DatabaseInterface dbi;
         private static MetTowerMediator mm;
@@ -129,7 +126,7 @@ namespace Articuno
         /// <param name="turbineId"></param>
         public static void turbinePausedByArticuno(string turbineId)
         {
-            log.DebugFormat("ArticunoMain has detected Turbine {0} has paused. ", turbineId);
+            ArticunoLogger.DataLogger.Debug("ArticunoMain has detected Turbine {0} has paused. ", turbineId);
             MoveTurbineIdToAnotherList(turbineId, turbinesWaitingForPause, turbinesPausedByArticuno);
             updateNumberOfTurbinesPaused();
             LogCurrentTurbineStatusesInArticuno();
@@ -140,7 +137,7 @@ namespace Articuno
         /// </summary>
         public static void turbineClearedOfIce(string turbineId)
         {
-            log.DebugFormat("ArticunoMain has detected Turbine {0} has started running from the site.", turbineId);
+            ArticunoLogger.DataLogger.Debug("ArticunoMain has detected Turbine {0} has started running from the site.", turbineId);
             MoveTurbineIdToAnotherList(turbineId, turbinesPausedByArticuno, turbinesWaitingForPause);
             updateNumberOfTurbinesPaused();
             LogCurrentTurbineStatusesInArticuno();
@@ -148,7 +145,8 @@ namespace Articuno
 
         public static bool isAlreadyPaused(string turbineId)
         {
-            log.DebugFormat("Turbine {0} is {1} ", turbineId, turbinesPausedByArticuno.Contains(turbineId));
+            ArticunoLogger.DataLogger.Info("Turbine {0} is {1} ", turbineId, turbinesPausedByArticuno.Contains(turbineId));
+            ArticunoLogger.GeneralLogger.Info("Turbine {0} is {1} ", turbineId, turbinesPausedByArticuno.Contains(turbineId));
             LogCurrentTurbineStatusesInArticuno();
             return turbinesPausedByArticuno.Contains(turbineId);
         }
@@ -225,7 +223,7 @@ namespace Articuno
                         turbineInputTags.Add(new DAItemGroupArguments("",
                             opcServerName, tm.getNrsStateTag(turbinePrefix), FAST_UPDATE_RATE, null));
                 }
-                catch (Exception e) { log.ErrorFormat("Error when attempting to add to assetInputTags list. {0}", e); }
+                catch (Exception e) { ArticunoLogger.DataLogger.Error("Error when attempting to add to assetInputTags list. {0}", e); }
             }
             return turbineInputTags;
         }
@@ -241,7 +239,7 @@ namespace Articuno
                 {
                     metTowerInputTags.Add(new DAItemGroupArguments("", opcServerName, sitePrefix + reader.Rows[i]["Switch"].ToString(), NORMAL_UPDATE_RATE, null));
                 }
-                catch (Exception e) { log.ErrorFormat("Error when attempting to add {0} to assetInputTags list. {1}", switchTag, e); }
+                catch (Exception e) { ArticunoLogger.DataLogger.Error("Error when attempting to add {0} to assetInputTags list. {1}", switchTag, e); }
             }
             return metTowerInputTags;
         }
@@ -300,7 +298,8 @@ namespace Articuno
 
         private static void calculateMetTowerAverages()
         {
-            log.InfoFormat("CTR countdown reached 0 in ArticunoMain");
+            ArticunoLogger.DataLogger.Info("CTR countdown reached 0 in ArticunoMain");
+            ArticunoLogger.GeneralLogger.Info("CTR countdown reached 0 in ArticunoMain");
             for (int i = 1; i <= MetTowerMediator.GetNumberOfMetTowers(); i++)
             {
                 //There is no such thing as "Met1", just "Met" hence the following
@@ -309,7 +308,7 @@ namespace Articuno
                 double tempAvg = mm.calculateCtrAvgTemperature("Met" + j);
                 double humidityAvg = mm.calculateCtrAvgHumidity("Met" + j);
 
-                log.DebugFormat("CTR avg temp: {0}, avg Humidity: {1}", tempAvg, humidityAvg);
+                ArticunoLogger.DataLogger.Debug("CTR avg temp: {0}, avg Humidity: {1}", tempAvg, humidityAvg);
 
                 mm.CalculateFrozenMetTowerCondition("Met" + j, tempAvg, humidityAvg);
 
@@ -360,10 +359,11 @@ namespace Articuno
             {
                 case MetTowerMediator.MetTowerEnum.Switched:
                     string referencedMet = mm.isMetTowerSwitched(prefix);
-                    log.InfoFormat("{0} switched to {1}", prefix, referencedMet);
+                    ArticunoLogger.DataLogger.Info("{0} switched to {1}", prefix, referencedMet);
+                    ArticunoLogger.GeneralLogger.Info("{0} switched to {1}", prefix, referencedMet);
                     break;
                 default:
-                    log.DebugFormat("Event Changed detected for {0}. However, there is nothing to be done", opcTag);
+                    ArticunoLogger.DataLogger.Debug("Event Changed detected for {0}. However, there is nothing to be done", opcTag);
                     break;
             }
         }
@@ -388,7 +388,7 @@ namespace Articuno
                     CheckTurbineParticipationInArticunoEventListener(prefix, value);
                     break;
                 default:
-                    log.DebugFormat("Event CHanged detected for {0}. However, there is nothing to be doen", opcTag);
+                    ArticunoLogger.DataLogger.Debug("Event CHanged detected for {0}. However, there is nothing to be doen", opcTag);
                     break;
             }
         }
@@ -416,7 +416,8 @@ namespace Articuno
         {
             if (Convert.ToBoolean(startCommand) == true)
             {
-                log.InfoFormat("Turbine {0} has started from NCC or site", turbineId);
+                ArticunoLogger.DataLogger.Info("Turbine {0} has started from NCC or site", turbineId);
+                ArticunoLogger.GeneralLogger.Info("Turbine {0} has started from NCC or site", turbineId);
                 if (IsTurbinePausedByArticuno(turbineId))
                 {
                     turbineClearedOfIce(turbineId);
@@ -428,7 +429,8 @@ namespace Articuno
         private static void CheckTurbineOperatingState(string turbineId, object value)
         {
             int turbineOperatinoalState = Convert.ToInt32(tm.readTurbineOperatingStateValue(turbineId));
-            log.InfoFormat("{0} Current Operating State: {1} onChangeValue: {2}", turbineId, turbineOperatinoalState, value);
+            ArticunoLogger.DataLogger.Info("{0} Current Operating State: {1} onChangeValue: {2}", turbineId, turbineOperatinoalState, value);
+            ArticunoLogger.GeneralLogger.Info("{0} Current Operating State: {1} onChangeValue: {2}", turbineId, turbineOperatinoalState, value);
             bool participationStatus = Convert.ToBoolean(tm.readTurbineParticipationStatus(turbineId));
             //If already paused by Articuno, then there's nothing to do
             if (IsTurbinePausedByArticuno(turbineId)) { }
@@ -454,7 +456,8 @@ namespace Articuno
         private static void CheckTurbineParticipationInArticunoEventListener(string turbineId, object value)
         {
             bool participationStatus = Convert.ToBoolean(tm.readTurbineParticipationStatus(turbineId));
-            log.InfoFormat("Turbine {0} Participation in Articuno {1} OnChangeValue {2}", turbineId, participationStatus, value);
+            ArticunoLogger.DataLogger.Info("Turbine {0} Participation in Articuno {1} OnChangeValue {2}", turbineId, participationStatus, value);
+            ArticunoLogger.GeneralLogger.Info("Turbine {0} Participation in Articuno {1} OnChangeValue {2}", turbineId, participationStatus, value);
             //do nothing if turbine is already in paused by Articuno
             if (IsTurbinePausedByArticuno(turbineId)) { }
             //If turbine not paused by Articuno, then you check for participation status
@@ -477,7 +480,7 @@ namespace Articuno
                 string tag = e.Arguments.ItemDescriptor.ItemId;
                 MetTowerAndTurbineValueChangeHandler(tag, e.Vtq.Value);
             }
-            else { log.ErrorFormat("Error occured in MetTowerTurbineOpcTagValueChangedEventListener with {0}. Msg: {1}", e.Arguments.ItemDescriptor.ItemId, e.ErrorMessageBrief); }
+            else { ArticunoLogger.DataLogger.Error("Error occured in MetTowerTurbineOpcTagValueChangedEventListener with {0}. Msg: {1}", e.Arguments.ItemDescriptor.ItemId, e.ErrorMessageBrief); }
 
         }
 
@@ -495,7 +498,7 @@ namespace Articuno
                 if (systemInputOpcTag.Equals(enableArticunoTag))
                 {
                     articunoEnable = (value == ENABLE) ? true : false;
-                    log.DebugFormat("Articuno is : {0}", articunoEnable ? "Enabled" : "Disabled");
+                    ArticunoLogger.DataLogger.Debug("Articuno is : {0}", articunoEnable ? "Enabled" : "Disabled");
                 }
                 if (systemInputOpcTag.Equals(articunoCtrTag))
                 {
@@ -504,16 +507,16 @@ namespace Articuno
                 if (systemInputOpcTag.Equals(tempThresholdTag))
                 {
                     mm.UpdateTemperatureThresholdForAllMetTowers(value);
-                    log.DebugFormat("Articuno Temperature Threshold updated to: {0} deg C", value);
+                    ArticunoLogger.DataLogger.Debug("Articuno Temperature Threshold updated to: {0} deg C", value);
                 }
                 if (systemInputOpcTag.Equals(deltaThresholdTag))
                 {
                     mm.writeDeltaThreshold(value);
-                    log.DebugFormat("Articuno Temperature Delta updated to: {0} deg C", value);
+                    ArticunoLogger.DataLogger.Debug("Articuno Temperature Delta updated to: {0} deg C", value);
                 }
 
             }
-            else { log.ErrorFormat("Error occured in systemInputOnChangeHandler with {0}. Msg: {1}", e.Arguments.ItemDescriptor.ItemId, e.ErrorMessageBrief); }
+            else { ArticunoLogger.DataLogger.Error("Error occured in systemInputOnChangeHandler with {0}. Msg: {1}", e.Arguments.ItemDescriptor.ItemId, e.ErrorMessageBrief); }
         }
 
         /// <summary>
@@ -529,7 +532,7 @@ namespace Articuno
             articunoCtrTime = value;
             ctrCountdown = value;
             tm.writeCtrTime(value);
-            log.DebugFormat("Articuno CTR updated to: {0} minute", value);
+            ArticunoLogger.DataLogger.Debug("Articuno CTR updated to: {0} minute", value);
 
         }
 
@@ -562,10 +565,10 @@ namespace Articuno
             turbinesPausedByArticuno.Sort();
             turbinesExcludedList.Sort();
             turbinesConditionNotMet.Sort();
-            log.InfoFormat("Turbines Waiting for Pause: {0}", string.Join(",", turbinesWaitingForPause.ToArray()));
-            log.InfoFormat("Turbines paused by Articuno: {0}", string.Join(",", turbinesPausedByArticuno.ToArray()));
-            log.InfoFormat("Turbines exlucded from Articuno: {0}", string.Join(",", turbinesExcludedList.ToArray()));
-            log.InfoFormat("Turbines awaiting proper condition: {0}", string.Join(",", turbinesConditionNotMet.ToArray()));
+            ArticunoLogger.DataLogger.Debug("Turbines Waiting for Pause: {0}", string.Join(",", turbinesWaitingForPause.ToArray()));
+            ArticunoLogger.DataLogger.Debug("Turbines paused by Articuno: {0}", string.Join(",", turbinesPausedByArticuno.ToArray()));
+            ArticunoLogger.DataLogger.Debug("Turbines exlucded from Articuno: {0}", string.Join(",", turbinesExcludedList.ToArray()));
+            ArticunoLogger.DataLogger.Debug("Turbines awaiting proper condition: {0}", string.Join(",", turbinesConditionNotMet.ToArray()));
         }
 
         /// <summary>

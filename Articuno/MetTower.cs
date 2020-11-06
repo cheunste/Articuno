@@ -1,5 +1,4 @@
-﻿using log4net;
-using OpcLabs.EasyOpc.DataAccess;
+﻿using OpcLabs.EasyOpc.DataAccess;
 using OpcLabs.EasyOpc.OperationModel;
 using System;
 using System.Collections.Generic;
@@ -43,8 +42,6 @@ namespace Articuno
         MetTowerSensor primTempSensor;
         MetTowerSensor secTempSensor;
         MetTowerSensor primHumidSensor;
-
-        private static readonly ILog log = LogManager.GetLogger(typeof(MetTower));
 
         public MetTower(string MetId, string opcServerName)
         {

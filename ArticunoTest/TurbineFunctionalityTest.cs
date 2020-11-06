@@ -206,8 +206,8 @@ namespace ArticunoTest {
             testTurbine.SetOperatingStateCondition(false);
             testTurbine.TurbineNrsModeChanged(false);
             testTurbine.SetTurbineUnderPerformanceCondition(false);
-            OpcServer.writeOpcTag(opcServerName, testTurbine.LowRotorSpeedFlagTag, false);
-            OpcServer.writeOpcTag(opcServerName, testTurbine.ParticipationTag, true);
+            //OpcServer.writeOpcTag(opcServerName, testTurbine.LowRotorSpeedFlagTag, false);
+            //OpcServer.writeOpcTag(opcServerName, testTurbine.ParticipationTag, true);
         }
     }
 }
