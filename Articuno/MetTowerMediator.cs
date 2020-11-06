@@ -55,6 +55,8 @@ namespace Articuno {
             return numMetTower;
         }
 
+        public List<MetTower> GetMetTowerList() => metTowerList;
+
         /// <summary>
         /// Method to check a met tower to see if it meets the freezing condition and set its condition. Returns true if iti s frozen, false otherwise
         /// </summary>
@@ -184,11 +186,10 @@ namespace Articuno {
         internal double calculateCtrAvgTemperature(string metId) {
             MetTower met = GetMetTowerFromId(metId);
             Queue<double> tempQueue = met.getTemperatureQueue();
-            double temperatureCtrAverage = 0.0;
-            double count = tempQueue.Count;
-            while (tempQueue.Count != 0) { temperatureCtrAverage += tempQueue.Dequeue(); }
+            double average = 0.0;
+            if(tempQueue.Count>0)
+                average = tempQueue.Average();
 
-            double average = temperatureCtrAverage / count;
             if (Articuno.isUccActive())
                 met.CtrTemperatureValue = average;
             return average;
@@ -199,9 +200,35 @@ namespace Articuno {
             Queue<double> humidityQueue = met.getHumidityQueue();
             double humidityCtrAverage = 0.0;
             double count = humidityQueue.Count;
-            while (humidityQueue.Count != 0) { humidityCtrAverage += humidityQueue.Dequeue(); }
+            double average = 0.0;
 
-            double average = humidityCtrAverage / count;
+            if (humidityQueue.Count > 0)
+                average = humidityQueue.Average();
+
+            //You need to multiple the CtrHumidityValue by 100 because it is currently in decimal form and needs to be displayed in percentage form
+            if (Articuno.isUccActive())
+                met.CtrHumidityValue = average * 100.0;
+            return average;
+        }
+        internal double calculateCtrAvgTemperature(MetTower met) {
+            Queue<double> tempQueue = met.getTemperatureQueue();
+            double average = 0.0;
+            if(tempQueue.Count>0)
+                average = tempQueue.Average();
+            if (Articuno.isUccActive())
+                met.CtrTemperatureValue = average;
+            return average;
+        }
+
+        internal double calculateCtrAvgHumidity(MetTower met) {
+            Queue<double> humidityQueue = met.getHumidityQueue();
+            double humidityCtrAverage = 0.0;
+            double count = humidityQueue.Count;
+            double average = 0.0;
+
+            if (humidityQueue.Count > 0)
+                average = humidityQueue.Average();
+
             //You need to multiple the CtrHumidityValue by 100 because it is currently in decimal form and needs to be displayed in percentage form
             if (Articuno.isUccActive())
                 met.CtrHumidityValue = average * 100.0;

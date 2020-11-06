@@ -26,6 +26,7 @@ namespace ArticunoTest {
 
         string siteName;
         string opcServerName = "SV.OPCDAServer.1";
+        MetTower testMetTower;
 
 
         [TestInitialize]
@@ -41,6 +42,9 @@ namespace ArticunoTest {
             mm.CreateMetTowerObject();
             opcServer = new OpcServer(opcServerName);
             siteName = dbi.getSitePrefixValue();
+            testMetTower = mm.GetMetTowerList()[0];
+            mm.GetMetTowerList().Clear();
+            mm.GetMetTowerList().Add(testMetTower);
             //set default met tower Data
             cleanup();
 
@@ -497,6 +501,42 @@ namespace ArticunoTest {
                 Assert.AreEqual(Flatline, met.HumidityBadQuality);
 
         }
+
+
+        [TestMethod]
+        public void MetTowerCtrAvgHumidityTest() {
+            createStaticData(testMetTower,0);
+            var average = mm.calculateCtrAvgHumidity(testMetTower);
+            Assert.IsTrue( average == 0.0);
+
+            createStaticData(testMetTower,20);
+            average = mm.calculateCtrAvgHumidity(testMetTower);
+            Assert.IsTrue(average > 0.0, "average is {0}",average);
+        }
+
+        [TestMethod]
+        public void MetTowerCtrAvgTemperatureTest() {
+            var q =testMetTower.getTemperatureQueue();
+
+            createStaticData(testMetTower,0);
+            var average = mm.calculateCtrAvgTemperature(testMetTower);
+            Assert.IsTrue( average == 0.0);
+
+            createStaticData(testMetTower,20);
+            average = mm.calculateCtrAvgTemperature(testMetTower);
+            Assert.IsTrue(average > 0.0, "average is {0}",average);
+
+            //Test With negative numbers
+            q.Clear();
+            q.Enqueue(-3.0);
+            q.Enqueue(-5.0);
+            q.Enqueue(-8.0);
+            average = mm.calculateCtrAvgTemperature(testMetTower);
+            var calcAvg = (-3.0 - 5.0 - 8.0) / 3;
+            Assert.IsTrue(average==calcAvg, "average is {0}",average);
+
+        }
+
         private void createStaleData(MetTower met) {
             for (int i = 0; i <= 100; i++) {
                 var humid = met.RelativeHumidityValue;
@@ -512,7 +552,18 @@ namespace ArticunoTest {
                 met.PrimTemperatureValue = rnd.Next((int)temperature - 5, (int)temperature);
                 met.SecTemperatureValue = rnd.Next((int)temperature - 5, (int)temperature);
             }
+        }
 
+        private void createStaticData(MetTower met,int samples) {
+
+            for (int i =0; i<samples; i++) {
+                var buffer = 0.1*i;
+                met.getHumidityQueue().Enqueue(20+buffer);
+                met.getTemperatureQueue().Enqueue(20+buffer);
+                //met.RelativeHumidityValue = 20 + buffer;
+                //met.PrimTemperatureValue = 20 + buffer;
+                //met.SecTemperatureValue = 20+buffer;
+            }
         }
 
     }
