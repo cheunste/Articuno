@@ -87,7 +87,7 @@ namespace Articuno
             }
             catch (Exception e)
             {
-                ArticunoLogger.DataLogger.Debug("Error relating to tag: {0}\nDetails: {1}", tag, e);
+                ArticunoLogger.DataLogger.Debug("Error reading tag: {0}\nDetails: {1}", tag, e);
                 return null;
             }
         }

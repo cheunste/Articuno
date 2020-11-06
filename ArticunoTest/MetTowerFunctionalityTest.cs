@@ -259,10 +259,6 @@ namespace ArticunoTest {
             mm.GetMetTowerFromId(metId).getPrimaryTemperatureSensor().isSensorBadQuality();
             mm.GetMetTowerFromId(metId).getSecondaryTemperatureSensor().isSensorBadQuality();
 
-            mm.GetMetTowerFromId(metId).getPrimaryHumiditySensor().isSensorBadQuality();
-            mm.GetMetTowerFromId(metId).getPrimaryTemperatureSensor().isSensorBadQuality();
-            mm.GetMetTowerFromId(metId).getSecondaryTemperatureSensor().isSensorBadQuality();
-
             mm.GetMetTowerFromId(metId).getPrimaryHumiditySensor().BadQualityCheck();
             mm.GetMetTowerFromId(metId).getPrimaryTemperatureSensor().BadQualityCheck();
             mm.GetMetTowerFromId(metId).getSecondaryTemperatureSensor().BadQualityCheck();

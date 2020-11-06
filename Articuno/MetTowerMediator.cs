@@ -368,15 +368,33 @@ namespace Articuno {
             for (int i = 0; i < metTowerList.Count; i++) { if (metTowerList.ElementAt(i).MetId.Equals(metTowerId)) { return metTowerList.ElementAt(i); } }
             return null;
         }
-        public double CalculateStdDev(Queue<double> queue) {
+        public void CheckSampleQuality() {
+            GetMetTowerList().ForEach(m => {
+                var tq =m.getTemperatureQueue();
+                var hq =m.getHumidityQueue();
+
+                var tqStdDev=CalculateStdDev(tq);
+                var hqStdDev=CalculateStdDev(hq);
+
+                var tqAvg = IsAvgInRange(tq,m.MIN_TEMP_VALUE,m.MAX_TEMP_VALUE);
+                var hqAvg = IsAvgInRange(tq,m.MIN_HUMIDITY_VALUE,m.MAX_HUMIDITY_VALUE);
+            });
+        }
+
+        public double CalculateStdDev(Queue<double> q) {
             double stdDev = 0;
-            int count = queue.Count();
+            int count = q.Count();
             if (count > 1) {
-                double avg = queue.Average();
-                double sum = queue.Sum(d => (d - avg) * (d - avg));
+                double avg = q.Average();
+                double sum = q.Sum(d => (d - avg) * (d - avg));
                 stdDev = Math.Sqrt(sum / count);
             }
             return stdDev;
+        }
+
+        public bool IsAvgInRange (Queue<double> q, double min, double max) {
+            var avg = q.Average();
+            return avg< max && avg >= min;
         }
 
         private void InitializeMetTower(string metId) {

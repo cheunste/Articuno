@@ -26,10 +26,10 @@ namespace Articuno
         private double lastSecTemp;
 
         //Constants
-        private double MIN_TEMP_VALUE = -20.0;
-        private double MAX_TEMP_VALUE = 60.0;
-        private double MIN_HUMIDITY_VALUE = 0.0;
-        private double MAX_HUMIDITY_VALUE = 0.99;
+        public  double MIN_TEMP_VALUE = -20.0;
+        public  double MAX_TEMP_VALUE = 60.0;
+        public  double MIN_HUMIDITY_VALUE = 0.0;
+        public  double MAX_HUMIDITY_VALUE = 0.99;
 
         private Queue<double> temperatureQueue;
         private Queue<double> humidityQueue;
