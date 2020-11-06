@@ -43,8 +43,6 @@ namespace ArticunoTest {
             opcServer = new OpcServer(opcServerName);
             siteName = dbi.getSitePrefixValue();
             testMetTower = mm.GetMetTowerList()[0];
-            mm.GetMetTowerList().Clear();
-            mm.GetMetTowerList().Add(testMetTower);
             //set default met tower Data
             cleanup();
 
@@ -84,37 +82,6 @@ namespace ArticunoTest {
 
             });
         }
-
-        [TestMethod]
-        public void createNewMetTower() {
-            //var derp = MetTowerMediatorSingleton.Instance.getAllMeasurements("Met");
-            MetTower met1 = mm.GetMetTowerFromId("Met");
-            MetTower met2 = mm.GetMetTowerFromId("Met2");
-            Assert.IsNotNull(met1);
-            Assert.IsNotNull(met2);
-        }
-
-        #region Additional test attributes
-        //
-        // You can use the following additional attributes as you write your tests:
-        //
-        // Use ClassInitialize to run code before running the first test in the class
-        // [ClassInitialize()]
-        // public static void MyClassInitialize(TestContext testContext) { }
-        //
-        // Use ClassCleanup to run code after all tests in a class have run
-        // [ClassCleanup()]
-        // public static void MyClassCleanup() { }
-        //
-        // Use TestInitialize to run code before running each test 
-        // [TestInitialize()]
-        // public void MyTestInitialize() { }
-        //
-        // Use TestCleanup to run code after each test has run
-        // [TestCleanup()]
-        // public void MyTestCleanup() { }
-        //
-        #endregion
 
         [TestMethod]
         //Test the temperature values and see if they match the database
@@ -424,9 +391,8 @@ namespace ArticunoTest {
 
             Console.WriteLine("Threshold: {0} Temp {1} Humid {2}", threshold, temperature, humidity);
 
-            MetTower met = mm.GetMetTowerFromId(metId);
-            mm.CalculateFrozenMetTowerCondition(metId, temperature, humidity);
-            bool isFrozen = mm.IsMetTowerFrozen(metId);
+            mm.CalculateFrozenMetTowerCondition(testMetTower, temperature, humidity);
+            bool isFrozen = mm.IsMetTowerFrozen(testMetTower);
 
 
             Assert.IsTrue(isFrozen, "Met Tower isn't declaring freezing even though humidity is bad.");
@@ -443,7 +409,7 @@ namespace ArticunoTest {
             mm.writeDeltaThreshold(1);
             mm.UpdateTemperatureThresholdForAllMetTowers(0);
 
-            mm.CalculateFrozenMetTowerCondition(metId, temperature, humidity);
+            mm.CalculateFrozenMetTowerCondition(testMetTower, temperature, humidity);
             Console.WriteLine("Ice Indication Value: {0}", met.IceIndicationValue);
             Assert.AreEqual(expectedFrozenState, Convert.ToBoolean(met.IceIndicationValue));
         }
@@ -499,6 +465,12 @@ namespace ArticunoTest {
                 Assert.IsTrue(met.getPrimaryHumiditySensor().BadQualityCheck(), "Frozen increment should be past 50, but it is {0}");
             else
                 Assert.AreEqual(Flatline, met.HumidityBadQuality);
+
+        }
+
+        [TestMethod]
+        public void CalculateMetTowerAverageTest() {
+            mm.CalculateAverage();
 
         }
 

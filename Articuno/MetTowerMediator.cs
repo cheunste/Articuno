@@ -57,11 +57,23 @@ namespace Articuno {
 
         public List<MetTower> GetMetTowerList() => metTowerList;
 
+        public void CalculateAverage() {
+            foreach(MetTower t in GetMetTowerList()) {
+                double tempAvg = calculateCtrAvgTemperature(t);
+                double humidityAvg = calculateCtrAvgHumidity(t);
+                ArticunoLogger.DataLogger.Debug("CTR avg temp: {0}, avg Humidity: {1}", tempAvg, humidityAvg);
+                CalculateFrozenMetTowerCondition(t, tempAvg, humidityAvg);
+                //Update the Dew Point calculation. This value will show up on the faceplate
+                updateDewPoint(t, tempAvg, humidityAvg);
+                tm.checkMetTowerFrozen(t);
+            }
+        }
+
         /// <summary>
         /// Method to check a met tower to see if it meets the freezing condition and set its condition. Returns true if iti s frozen, false otherwise
         /// </summary>
-        public void CalculateFrozenMetTowerCondition(string metId, double avgTemperature, double avgHumidity) {
-            MetTower met = GetMetTowerFromId(metId);
+        public void CalculateFrozenMetTowerCondition(MetTower met, double avgTemperature, double avgHumidity) {
+            string metId = met.getMetTowerPrefix;
 
             double tempThreshold = ReadTemperatureThresholdForMetTower(metId);
             double deltaThreshold = readDeltaThreshold(metId);
@@ -235,7 +247,8 @@ namespace Articuno {
             return average;
         }
 
-        internal void updateDewPoint(string metId, double ctrTemperature, double ctrHumidity) {
+        internal void updateDewPoint(MetTower met, double ctrTemperature, double ctrHumidity) {
+            string metId = met.getMetTowerPrefix;
             double dew = CalculateDewPointTemperature(ctrHumidity, ctrTemperature);
             ArticunoLogger.DataLogger.Debug("CTR Dew: {0}", dew);
             if (Articuno.isUccActive())
@@ -329,7 +342,7 @@ namespace Articuno {
         /// </summary>
         /// <param name="metTowerId"></param>
         /// <returns>Boolean. True if frozen, false otherwise</returns>
-        public bool IsMetTowerFrozen(string metTowerId) => Convert.ToBoolean(GetMetTowerFromId(metTowerId).IceIndicationValue);
+        public bool IsMetTowerFrozen(MetTower met) => Convert.ToBoolean(met.IceIndicationValue);
 
         /// <summary>
         /// This function checks to see if icing is occuring for either of hte met towers on site. 

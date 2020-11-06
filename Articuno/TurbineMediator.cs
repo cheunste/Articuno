@@ -254,16 +254,14 @@ namespace Articuno {
         /// This function is used to inform all Turbines to check if their mapped met tower is frozen up
         /// </summary>
         /// <param name="metId">A met tower prefix</param>
-        public void checkMetTowerFrozen(string metId) {
-            foreach (string turbinePrefix in getTurbinePrefixList()) {
-                string temp = GetTurbine(turbinePrefix).MainMetTowerReference;
-                string metPrefix = MetTowerMediator.Instance.isMetTowerSwitched(temp);
-                bool isMetFrozen = MetTowerMediator.Instance.IsMetTowerFrozen(metPrefix);
-
-                if (metId.Equals(metPrefix))
-                    setTemperatureCondition(turbinePrefix, isMetFrozen);
-            }
+        public void checkMetTowerFrozen(MetTower met) {
+            GetAllTurbineList().Where(t => MetTowerMediator.Instance.isMetTowerSwitched(t.MainMetTowerReference) == met.getMetTowerPrefix)
+                .ToList().ForEach(t => {
+                    bool isMetFrozen = MetTowerMediator.Instance.IsMetTowerFrozen(met);
+                    t.SetTemperatureCondition(isMetFrozen);
+                });
         }
+
 
         public List<string> getTurbinePrefixList() => GetAllTurbineList().Select(t => t.TurbinePrefix).ToList();
 

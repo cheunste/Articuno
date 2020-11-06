@@ -300,24 +300,26 @@ namespace Articuno
         {
             ArticunoLogger.DataLogger.Info("CTR countdown reached 0 in ArticunoMain");
             ArticunoLogger.GeneralLogger.Info("CTR countdown reached 0 in ArticunoMain");
-            for (int i = 1; i <= MetTowerMediator.GetNumberOfMetTowers(); i++)
-            {
-                //There is no such thing as "Met1", just "Met" hence the following
-                string j = (i == 1) ? "" : Convert.ToString(i);
+            mm.CalculateAverage();
+            //for (int i = 1; i <= MetTowerMediator.GetNumberOfMetTowers(); i++)
+            //{
+            //    //There is no such thing as "Met1", just "Met" hence the following
+            //    string j = (i == 1) ? "" : Convert.ToString(i);
 
-                double tempAvg = mm.calculateCtrAvgTemperature("Met" + j);
-                double humidityAvg = mm.calculateCtrAvgHumidity("Met" + j);
+            //    double tempAvg = mm.calculateCtrAvgTemperature("Met" + j);
+            //    double humidityAvg = mm.calculateCtrAvgHumidity("Met" + j);
 
-                ArticunoLogger.DataLogger.Debug("CTR avg temp: {0}, avg Humidity: {1}", tempAvg, humidityAvg);
+            //    ArticunoLogger.DataLogger.Debug("CTR avg temp: {0}, avg Humidity: {1}", tempAvg, humidityAvg);
 
-                mm.CalculateFrozenMetTowerCondition("Met" + j, tempAvg, humidityAvg);
+            //    mm.CalculateFrozenMetTowerCondition("Met" + j, tempAvg, humidityAvg);
 
-                //Update the Dew Point calculation. This value will show up on the faceplate
-                mm.updateDewPoint("Met" + j, tempAvg, humidityAvg);
-                tm.checkMetTowerFrozen("Met" + j);
+            //    //Update the Dew Point calculation. This value will show up on the faceplate
+            //    mm.updateDewPoint("Met" + j, tempAvg, humidityAvg);
+            //    tm.checkMetTowerFrozen("Met" + j);
 
-                OpcServer.writeOpcTag(opcServerName, icePossibleAlarmTag, mm.IsAnyMetTowerFrozenAtSite());
-            }
+            //    OpcServer.writeOpcTag(opcServerName, icePossibleAlarmTag, mm.IsAnyMetTowerFrozenAtSite());
+            //}
+            OpcServer.writeOpcTag(opcServerName, icePossibleAlarmTag, mm.IsAnyMetTowerFrozenAtSite());
             ctrCountdown = articunoCtrTime;
         }
 

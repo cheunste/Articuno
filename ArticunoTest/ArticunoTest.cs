@@ -18,9 +18,13 @@ namespace ArticunoTest
         MetTowerMediator mm;
         TurbineMediator tm;
         DatabaseInterface di;
+        MetTower testMetTower;
+        Turbine testTurbine;
         string opcServerName = "SV.OPCDAServer.1";
         string sitePrefix;
-        public ArticunoTest()
+
+        [TestInitialize]
+        public void initialize()
         {
             mm = MetTowerMediator.Instance;
             tm = TurbineMediator.Instance;
@@ -29,6 +33,9 @@ namespace ArticunoTest
             mm.CreateMetTowerObject();
             tm.createTurbines();
             sitePrefix = di.getSitePrefixValue();
+
+            testMetTower = mm.GetMetTowerList()[0];
+            testTurbine = tm.GetAllTurbineList()[0];
         }
 
         [TestMethod]
@@ -43,8 +50,8 @@ namespace ArticunoTest
             mm.writeSecTemperature(metId, temp2);
             mm.writeHumidity(metId, humidity);
 
-            mm.CalculateFrozenMetTowerCondition(metId, temp1, humidity);
-            Assert.AreEqual(mm.IsMetTowerFrozen(metId), true);
+            mm.CalculateFrozenMetTowerCondition(testMetTower, temp1, humidity);
+            Assert.IsTrue(mm.IsMetTowerFrozen(testMetTower), "Met Tower is not frozen as expected");
         }
 
         [TestMethod]
