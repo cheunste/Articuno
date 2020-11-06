@@ -87,6 +87,8 @@ namespace Articuno
             }
         }
 
+
+
         public double outOfRangeCheck(double sensorValue)
         {
             if (sensorValue >= maxValue)

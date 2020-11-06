@@ -187,7 +187,7 @@ namespace Articuno {
             MetTower met = GetMetTowerFromId(metId);
             Queue<double> tempQueue = met.getTemperatureQueue();
             double average = 0.0;
-            if(tempQueue.Count>0)
+            if (tempQueue.Count > 0)
                 average = tempQueue.Average();
 
             if (Articuno.isUccActive())
@@ -213,7 +213,7 @@ namespace Articuno {
         internal double calculateCtrAvgTemperature(MetTower met) {
             Queue<double> tempQueue = met.getTemperatureQueue();
             double average = 0.0;
-            if(tempQueue.Count>0)
+            if (tempQueue.Count > 0)
                 average = tempQueue.Average();
             if (Articuno.isUccActive())
                 met.CtrTemperatureValue = average;
@@ -254,14 +254,14 @@ namespace Articuno {
         /// </summary>
         /// <param name="metTowerId"></param>
         /// <returns></returns>
-        public double ReadTemperatureThresholdForMetTower(string metTowerId) =>GetMetTowerFromId(metTowerId).AmbTempThreshold;
+        public double ReadTemperatureThresholdForMetTower(string metTowerId) => GetMetTowerFromId(metTowerId).AmbTempThreshold;
 
         /// <summary>
         /// Writes the delta threshold for all the met tower
         /// </summary>
         /// <param name="value">A double vlaue that represents the delta threshold<</param>
         public void writeDeltaThreshold(double value) { foreach (MetTower tower in metTowerList) { tower.DeltaTempThreshold = value; } }
-        public double readDeltaThreshold(string metTowerId) =>GetMetTowerFromId(metTowerId).DeltaTempThreshold;
+        public double readDeltaThreshold(string metTowerId) => GetMetTowerFromId(metTowerId).DeltaTempThreshold;
         public void writePrimTemperature(string metId, double value) => GetMetTowerFromId(metId).PrimTemperatureValue = value;
         public void writeSecTemperature(string metId, double value) => GetMetTowerFromId(metId).SecTemperatureValue = value;
         public void writeHumidity(string metId, double value) {
@@ -329,7 +329,7 @@ namespace Articuno {
         /// </summary>
         /// <param name="metTowerId"></param>
         /// <returns>Boolean. True if frozen, false otherwise</returns>
-        public bool IsMetTowerFrozen(string metTowerId) =>Convert.ToBoolean(GetMetTowerFromId(metTowerId).IceIndicationValue);
+        public bool IsMetTowerFrozen(string metTowerId) => Convert.ToBoolean(GetMetTowerFromId(metTowerId).IceIndicationValue);
 
         /// <summary>
         /// This function checks to see if icing is occuring for either of hte met towers on site. 
@@ -355,6 +355,16 @@ namespace Articuno {
         public MetTower GetMetTowerFromId(string metTowerId) {
             for (int i = 0; i < metTowerList.Count; i++) { if (metTowerList.ElementAt(i).getMetTowerPrefix.Equals(metTowerId)) { return metTowerList.ElementAt(i); } }
             return null;
+        }
+        public double CalculateStdDev(Queue<double> queue) {
+            double stdDev = 0;
+            int count = queue.Count();
+            if (count > 1) {
+                double avg = queue.Average();
+                double sum = queue.Sum(d => (d - avg) * (d - avg));
+                stdDev = Math.Sqrt(sum / count);
+            }
+            return stdDev;
         }
 
         private void InitializeMetTower(string metId) {

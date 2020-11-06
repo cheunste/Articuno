@@ -505,26 +505,26 @@ namespace ArticunoTest {
 
         [TestMethod]
         public void MetTowerCtrAvgHumidityTest() {
-            createStaticData(testMetTower,0);
+            createStaticData(testMetTower, 0);
             var average = mm.calculateCtrAvgHumidity(testMetTower);
-            Assert.IsTrue( average == 0.0);
+            Assert.IsTrue(average == 0.0);
 
-            createStaticData(testMetTower,20);
+            createStaticData(testMetTower, 20);
             average = mm.calculateCtrAvgHumidity(testMetTower);
-            Assert.IsTrue(average > 0.0, "average is {0}",average);
+            Assert.IsTrue(average > 0.0, "average is {0}", average);
         }
 
         [TestMethod]
         public void MetTowerCtrAvgTemperatureTest() {
-            var q =testMetTower.getTemperatureQueue();
+            var q = testMetTower.getTemperatureQueue();
 
-            createStaticData(testMetTower,0);
+            createStaticData(testMetTower, 0);
             var average = mm.calculateCtrAvgTemperature(testMetTower);
-            Assert.IsTrue( average == 0.0);
+            Assert.IsTrue(average == 0.0);
 
-            createStaticData(testMetTower,20);
+            createStaticData(testMetTower, 20);
             average = mm.calculateCtrAvgTemperature(testMetTower);
-            Assert.IsTrue(average > 0.0, "average is {0}",average);
+            Assert.IsTrue(average > 0.0, "average is {0}", average);
 
             //Test With negative numbers
             q.Clear();
@@ -533,7 +533,26 @@ namespace ArticunoTest {
             q.Enqueue(-8.0);
             average = mm.calculateCtrAvgTemperature(testMetTower);
             var calcAvg = (-3.0 - 5.0 - 8.0) / 3;
-            Assert.IsTrue(average==calcAvg, "average is {0}",average);
+            Assert.IsTrue(average == calcAvg, "average is {0}", average);
+
+        }
+
+        [TestMethod]
+        public void CalculateStdDevTest() {
+            var q = new Queue<double>();
+            for (int i = 0; i <= 20; i++)
+                q.Enqueue(5);
+            var stdDev = mm.CalculateStdDev(q);
+            Assert.IsTrue(stdDev == 0, "Std Dev is not zero as expected");
+
+            q.Clear();
+            Random rnd = new Random();
+            for (int i = 0; i < 20; i++) {
+                var temp =rnd.Next(0, 20);
+                q.Enqueue(temp);
+            }
+            stdDev = mm.CalculateStdDev(q);
+            Assert.IsTrue(stdDev != 0, "Std Dev is not zero as expected. It is showing {0}",stdDev);
 
         }
 
@@ -554,12 +573,12 @@ namespace ArticunoTest {
             }
         }
 
-        private void createStaticData(MetTower met,int samples) {
+        private void createStaticData(MetTower met, int samples) {
 
-            for (int i =0; i<samples; i++) {
-                var buffer = 0.1*i;
-                met.getHumidityQueue().Enqueue(20+buffer);
-                met.getTemperatureQueue().Enqueue(20+buffer);
+            for (int i = 0; i < samples; i++) {
+                var buffer = 0.1 * i;
+                met.getHumidityQueue().Enqueue(20 + buffer);
+                met.getTemperatureQueue().Enqueue(20 + buffer);
                 //met.RelativeHumidityValue = 20 + buffer;
                 //met.PrimTemperatureValue = 20 + buffer;
                 //met.SecTemperatureValue = 20+buffer;
