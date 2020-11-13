@@ -254,14 +254,14 @@ namespace ArticunoTest {
             else
                 createRandomData(mm.GetMetTowerFromId(metId), hmdVal, tempVal1);
 
+            mm.GetMetTowerFromId(metId).getPrimaryHumiditySensor().BadQualityCheck();
+            mm.GetMetTowerFromId(metId).getPrimaryTemperatureSensor().BadQualityCheck();
+            mm.GetMetTowerFromId(metId).getSecondaryTemperatureSensor().BadQualityCheck();
 
             mm.GetMetTowerFromId(metId).getPrimaryHumiditySensor().isSensorBadQuality();
             mm.GetMetTowerFromId(metId).getPrimaryTemperatureSensor().isSensorBadQuality();
             mm.GetMetTowerFromId(metId).getSecondaryTemperatureSensor().isSensorBadQuality();
 
-            mm.GetMetTowerFromId(metId).getPrimaryHumiditySensor().BadQualityCheck();
-            mm.GetMetTowerFromId(metId).getPrimaryTemperatureSensor().BadQualityCheck();
-            mm.GetMetTowerFromId(metId).getSecondaryTemperatureSensor().BadQualityCheck();
 
 
             var metTowerQuality = mm.isAllMetTowerSensorBadQuality(metId);
@@ -509,11 +509,11 @@ namespace ArticunoTest {
             q.Clear();
             Random rnd = new Random();
             for (int i = 0; i < 20; i++) {
-                var temp =rnd.Next(0, 20);
+                var temp = rnd.Next(0, 20);
                 q.Enqueue(temp);
             }
             stdDev = mm.CalculateStdDev(q);
-            Assert.IsTrue(stdDev != 0, "Std Dev is not zero as expected. It is showing {0}",stdDev);
+            Assert.IsTrue(stdDev != 0, "Std Dev is not zero as expected. It is showing {0}", stdDev);
 
         }
 
@@ -531,6 +531,11 @@ namespace ArticunoTest {
                 met.RelativeHumidityValue = rnd.Next((int)humidity - 5, (int)humidity);
                 met.PrimTemperatureValue = rnd.Next((int)temperature - 5, (int)temperature);
                 met.SecTemperatureValue = rnd.Next((int)temperature - 5, (int)temperature);
+
+                var humid = met.RelativeHumidityValue;
+                var temp1 = met.PrimTemperatureValue;
+                var temp2 = met.SecTemperatureValue;
+
             }
         }
 
