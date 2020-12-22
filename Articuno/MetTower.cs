@@ -58,10 +58,23 @@ namespace Articuno
 
         public void createSensors()
         {
-            this.primTempSensor = new MetTowerSensor(opcServerName, PrimTemperatureTag, TemperaturePrimOutOfRangeTag, TemperaturePrimBadQualityTag, MIN_TEMP_VALUE, MAX_TEMP_VALUE,StaleDataSamples);
-            this.secTempSensor = new MetTowerSensor(opcServerName, SecTemperatureTag, TemperatureSecOutOfRangeTag, TemperatureSecBadQualityTag, MIN_TEMP_VALUE, MAX_TEMP_VALUE,StaleDataSamples);
-            this.primHumidSensor = new MetTowerSensor(opcServerName, HumidityPrimValueTag, HumidtyOutOfRangeTag, HumidityBadQualityTag, MIN_HUMIDITY_VALUE, MAX_HUMIDITY_VALUE,StaleDataSamples);
+            primTempSensor = new MetTowerSensor(opcServerName, MIN_TEMP_VALUE, MAX_TEMP_VALUE);
+            primTempSensor.sensorTag = PrimTemperatureTag;
+            primTempSensor.sensorBadQualtiyTag = TemperaturePrimBadQualityTag;
+            primTempSensor.sensorOutofRangeTag = TemperaturePrimOutOfRangeTag;
+            primTempSensor.staleDataCount = StaleDataSamples;
 
+            secTempSensor = new MetTowerSensor(opcServerName, MIN_TEMP_VALUE, MAX_TEMP_VALUE);
+            secTempSensor.sensorTag = SecTemperatureTag;
+            secTempSensor.sensorBadQualtiyTag = TemperatureSecBadQualityTag;
+            secTempSensor.sensorOutofRangeTag = TemperatureSecOutOfRangeTag;
+            secTempSensor.staleDataCount = StaleDataSamples;
+
+            primHumidSensor = new MetTowerSensor(opcServerName, MIN_HUMIDITY_VALUE, MAX_HUMIDITY_VALUE);
+            primHumidSensor.sensorTag = HumidityPrimValueTag;
+            primHumidSensor.sensorBadQualtiyTag = HumidityBadQualityTag;
+            primHumidSensor.sensorOutofRangeTag = HumidtyOutOfRangeTag;
+            primHumidSensor.staleDataCount = StaleDataSamples;
         }
 
         public MetTowerSensor getPrimaryTemperatureSensor() => primTempSensor;

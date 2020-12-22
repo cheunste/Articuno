@@ -15,26 +15,25 @@ namespace Articuno
         //Member variables
         private int frozenCount;
         private double lastReadValue;
+
         private double maxValue;
         private double minValue;
-        private int staleDataCount;
+        public int staleDataCount;
 
         //OPC Tag values
-        private string sensorTag;
-        private string sensorOutofRangeTag;
-        private string sensorBadQualtiyTag;
+        public string sensorTag { get; set; }
+        public string sensorOutofRangeTag { get; set; }
+        public string sensorBadQualtiyTag { get; set; }
         private string opcServerName;
 
-        public MetTowerSensor(string serverName, string valueTag, string outOfRangeTag, string badQualityTag, double minValue, double maxValue,int staleDataCount)
+        public MetTowerSensor(string serverName, double minValue, double maxValue)
         {
-
-            sensorTag = valueTag;
             opcServerName = serverName;
-            sensorOutofRangeTag = outOfRangeTag;
-            sensorBadQualtiyTag = badQualityTag;
+            //sensorTag = valueTag;
+            //sensorOutofRangeTag = outOfRangeTag;
+            //sensorBadQualtiyTag = badQualityTag;
             this.maxValue = maxValue;
             this.minValue = minValue;
-            this.staleDataCount = staleDataCount;
 
             frozenCount = 0;
             lastReadValue = 0.00;
@@ -61,10 +60,8 @@ namespace Articuno
         /// Writes a value to a tag. Used only for unit testing
         /// </summary>
         /// <param name="value"></param>
-        public void writeValue(double value)
-        {
+        public void writeValue(double value)=>
             OpcServer.writeOpcTag(opcServerName, sensorTag, value);
-        }
 
         /// <summary>
         /// Method to check if the sensor is stale. The MetTower class must handle the rest
@@ -128,10 +125,7 @@ namespace Articuno
         /// </summary>
         /// <param name="opcTag"></param>
         /// <param name="alarmValue"></param>
-        private void SetAlarmStatus(string opcTag, bool alarmValue)
-        {
-            OpcServer.writeOpcTag(opcServerName, opcTag, alarmValue);
-        }
+        private void SetAlarmStatus(string opcTag, bool alarmValue)=> OpcServer.writeOpcTag(opcServerName, opcTag, alarmValue);
         /// <summary>
         /// Method to sample flatline. It checks the flatline of a value. If the value is stale, then it increments a frozenCount indicator
         /// </summary>
