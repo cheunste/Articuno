@@ -208,33 +208,6 @@ namespace Articuno {
 
         internal void writeToQueue(string metId, double temperature, double humidity) => GetMetTowerFromId(metId).writeToQueue(temperature, humidity);
 
-        internal double calculateCtrAvgTemperature(string metId) {
-            MetTower met = GetMetTowerFromId(metId);
-            Queue<double> tempQueue = met.getTemperatureQueue();
-            double average = 0.0;
-            if (tempQueue.Count > 0)
-                average = tempQueue.Average();
-
-            if (Articuno.isUccActive())
-                met.CtrTemperatureValue = average;
-            return average;
-        }
-
-        internal double calculateCtrAvgHumidity(string metId) {
-            MetTower met = GetMetTowerFromId(metId);
-            Queue<double> humidityQueue = met.getHumidityQueue();
-            double humidityCtrAverage = 0.0;
-            double count = humidityQueue.Count;
-            double average = 0.0;
-
-            if (humidityQueue.Count > 0)
-                average = humidityQueue.Average();
-
-            //You need to multiple the CtrHumidityValue by 100 because it is currently in decimal form and needs to be displayed in percentage form
-            if (Articuno.isUccActive())
-                met.CtrHumidityValue = average * 100.0;
-            return average;
-        }
         internal double calculateCtrAvgTemperature(MetTower met) {
             Queue<double> tempQueue = met.getTemperatureQueue();
             double average = 0.0;
@@ -247,8 +220,6 @@ namespace Articuno {
 
         internal double calculateCtrAvgHumidity(MetTower met) {
             Queue<double> humidityQueue = met.getHumidityQueue();
-            double humidityCtrAverage = 0.0;
-            double count = humidityQueue.Count;
             double average = 0.0;
 
             if (humidityQueue.Count > 0)

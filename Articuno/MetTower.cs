@@ -10,8 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 [assembly: InternalsVisibleTo("ArticunoTest")]
-namespace Articuno
-{
+namespace Articuno {
     /// <summary>
     /// The Met Tower class is responsible for fetching humidity and temperature from the field's met tower and perform calculations when valid
     /// Fetches: humidty and temperature values from the field
@@ -19,17 +18,16 @@ namespace Articuno
     /// Errors: Thrwos errors if values are bad 
     /// </summary>
 
-    sealed internal class MetTower
-    {
+    sealed internal class MetTower {
         //Member variables;
         private double lastPrimTemp;
         private double lastSecTemp;
 
         //Constants
-        public  double MIN_TEMP_VALUE = -20.0;
-        public  double MAX_TEMP_VALUE = 60.0;
-        public  double MIN_HUMIDITY_VALUE = 0.0;
-        public  double MAX_HUMIDITY_VALUE = 0.99;
+        public double MIN_TEMP_VALUE = -20.0;
+        public double MAX_TEMP_VALUE = 60.0;
+        public double MIN_HUMIDITY_VALUE = 0.0;
+        public double MAX_HUMIDITY_VALUE = 0.99;
 
         private Queue<double> temperatureQueue;
         private Queue<double> humidityQueue;
@@ -43,8 +41,7 @@ namespace Articuno
         MetTowerSensor secTempSensor;
         MetTowerSensor primHumidSensor;
 
-        public MetTower(string MetId, string opcServerName)
-        {
+        public MetTower(string MetId, string opcServerName) {
             this.opcServerName = opcServerName;
             this.metTowerPrefix = MetId;
 
@@ -56,8 +53,7 @@ namespace Articuno
             SampleHumidity = 0;
         }
 
-        public void createSensors()
-        {
+        public void createSensors() {
             primTempSensor = new MetTowerSensor(opcServerName, MIN_TEMP_VALUE, MAX_TEMP_VALUE);
             primTempSensor.sensorTag = PrimTemperatureTag;
             primTempSensor.sensorBadQualtiyTag = TemperaturePrimBadQualityTag;
@@ -94,8 +90,7 @@ namespace Articuno
         /// <summary>
         /// Returns the Relative Humdity value from the sensor. Returned value will be in decimal format and NOT percentage
         /// </summary>
-        public Object RelativeHumidityValue
-        {
+        public Object RelativeHumidityValue {
             set { OpcServer.writeOpcTag(opcServerName, RelativeHumidityTag, value); }
             get { return primHumidSensor.readValue(true); }
         }
@@ -104,22 +99,19 @@ namespace Articuno
         /// funciton to check whether all sensor quality is good or not. If they're all bad, the "No Data" alarm will be raised"
         /// </summary>
         /// <returns>False if all data sensor is bad. True otherwise</returns>
-        public bool isAllSensorGood()
-        {
+        public bool isAllSensorGood() {
             bool badQuality =
                 (getPrimaryHumiditySensor().isSensorBadQuality() && getPrimaryTemperatureSensor().isSensorBadQuality() && getSecondaryTemperatureSensor().isSensorBadQuality()) ||
                 (getPrimaryHumiditySensor().isSensorOutofRange() && getPrimaryTemperatureSensor().isSensorOutofRange() && getSecondaryTemperatureSensor().isSensorOutofRange())
                 ;
 
             //All sensors bad quality
-            if (badQuality)
-            {
+            if (badQuality) {
                 NoDataAlarmValue = true;
                 return false;
             }
             //Normal oepration
-            else
-            {
+            else {
                 NoDataAlarmValue = false;
                 return true;
             }
@@ -130,8 +122,7 @@ namespace Articuno
         /// </summary>
         public string PrimTemperatureTag { set; get; }
 
-        public Object PrimTemperatureValue
-        {
+        public Object PrimTemperatureValue {
             get { return primTempSensor.readValue(); }
             set { OpcServer.writeOpcTag(opcServerName, PrimTemperatureTag, value); }
         }
@@ -143,8 +134,7 @@ namespace Articuno
         /// <summary>
         /// Accessor for the Secondary Temperature Value 
         /// </summary>
-        public Object SecTemperatureValue
-        {
+        public Object SecTemperatureValue {
             get { return secTempSensor.readValue(); }
             set { OpcServer.writeOpcTag(opcServerName, SecTemperatureTag, value); }
         }
@@ -156,8 +146,7 @@ namespace Articuno
         /// </summary>
         /// <returns></returns>
         public string NoDataAlarmTag { set; get; }
-        public Object NoDataAlarmValue
-        {
+        public Object NoDataAlarmValue {
             get { return OpcServer.readBooleanTag(opcServerName, NoDataAlarmTag); }
             set { OpcServer.writeOpcTag(opcServerName, NoDataAlarmTag, value); }
         }
@@ -167,15 +156,13 @@ namespace Articuno
         /// </summary>
         /// <returns></returns>
         public string IceIndicationTag { set; get; }
-        public Object IceIndicationValue
-        {
+        public Object IceIndicationValue {
             get { return OpcServer.readBooleanTag(opcServerName, IceIndicationTag); }
             set { OpcServer.writeOpcTag(opcServerName, IceIndicationTag, value); }
         }
 
         public string MetSwitchTag { get; set; }
-        public bool MetSwitchValue
-        {
+        public bool MetSwitchValue {
             get { return Convert.ToBoolean(OpcServer.readBooleanTag(opcServerName, MetSwitchTag)); }
             set { OpcServer.writeOpcTag(opcServerName, MetSwitchTag, value); }
         }
@@ -210,57 +197,48 @@ namespace Articuno
         public string CtrDewTag { get; set; }
 
         //The following are for humidity out of range, bad quality
-        public Object HumidityOutOfRng
-        {
+        public Object HumidityOutOfRng {
             get { return primHumidSensor.isSensorOutofRange(); }
             set { OpcServer.writeOpcTag(opcServerName, HumidtyOutOfRangeTag, value); }
         }
 
-        public Object HumidityBadQuality
-        {
+        public Object HumidityBadQuality {
             get { return primHumidSensor.isSensorBadQuality(); }
             set { OpcServer.writeOpcTag(opcServerName, HumidityBadQualityTag, value); }
         }
 
         //The following are for temperature out of range, bad quality
-        public Object TemperaturePrimOutOfRange
-        {
+        public Object TemperaturePrimOutOfRange {
             get { return primTempSensor.isSensorOutofRange(); }
             set { OpcServer.writeOpcTag(opcServerName, TemperaturePrimOutOfRangeTag, value); }
         }
 
-        public Object TemperaturePrimBadQuality
-        {
+        public Object TemperaturePrimBadQuality {
             get { return primTempSensor.isSensorBadQuality(); }
             set { OpcServer.writeOpcTag(opcServerName, TemperaturePrimBadQualityTag, value); }
         }
 
-        public Object TemperatureSecOutOfRange
-        {
+        public Object TemperatureSecOutOfRange {
             get { return secTempSensor.isSensorOutofRange(); }
             set { OpcServer.writeOpcTag(opcServerName, TemperatureSecOutOfRangeTag, value); }
         }
 
-        public Object TemperatureSecBadQuality
-        {
+        public Object TemperatureSecBadQuality {
             get { return secTempSensor.isSensorBadQuality(); }
             set { OpcServer.writeOpcTag(opcServerName, TemperatureSecBadQualityTag, value); }
         }
         /// <summary>
         /// Sets the average temperture to the output 
         /// </summary>
-        public Object CtrTemperatureValue
-        {
+        public Object CtrTemperatureValue {
             get { return OpcServer.readBooleanTag(opcServerName, CtrTemperatureTag); }
             set { OpcServer.writeOpcTag(opcServerName, CtrTemperatureTag, value); }
         }
-        public Object CtrHumidityValue
-        {
+        public Object CtrHumidityValue {
             get { return OpcServer.readBooleanTag(opcServerName, CtrHumidityTag); }
             set { OpcServer.writeOpcTag(opcServerName, CtrHumidityTag, value); }
         }
-        public Object CtrDewValue
-        {
+        public Object CtrDewValue {
             get { return OpcServer.readBooleanTag(opcServerName, CtrDewTag); }
             set { OpcServer.writeOpcTag(opcServerName, CtrDewTag, value); }
         }
@@ -271,8 +249,7 @@ namespace Articuno
         public void SetBackupTurbineForMetTower(Turbine turbine) { nearestTurbine = turbine; }
         public Turbine GetBackupTurbineForMetTower() { return nearestTurbine; }
 
-        public void writeToQueue(double temperature, double humidity)
-        {
+        public void writeToQueue(double temperature, double humidity) {
             temperatureQueue.Enqueue(temperature);
             humidityQueue.Enqueue(humidity);
         }
