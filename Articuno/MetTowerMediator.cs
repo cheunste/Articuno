@@ -87,6 +87,12 @@ namespace Articuno {
                     if (isHumidityBad) {
                         ArticunoLogger.DataLogger.Debug("{0} Humidity is bad quality. Ignoring and currently using avg temperature {1}", metId, avgTemperature);
                         met.IceIndicationValue = true;
+
+                        ArticunoLogger.CurtailmentLogger.Debug("Icing conditions met for {0}. \n" +
+                            "{0} Average Temperature {1}, \n" +
+                            "{0} Temperature threshold {2} \n",
+                            metId, avgTemperature, tempThreshold);
+
                         ArticunoLogger.DataLogger.Debug("Icing conditions met for {0}. \n" +
                             "{0} Average Temperature {1}, \n" +
                             "{0} Temperature threshold {2} \n",
@@ -106,7 +112,7 @@ namespace Articuno {
                 }
                 catch (Exception e) {
                     //in case you can't write to OPC Server
-                    ArticunoLogger.DataLogger.Debug("Error when writing to the Ice indication tag.\n" +
+                    ArticunoLogger.CurtailmentLogger.Debug("Error when writing to the Ice indication tag.\n" +
                         "Error: {0}. \n" + "Met: {1}, \n" +
                         "avgTemp: {2}, \n" + "tempThreshold {3}\n",
                         e, metId, avgTemperature, tempThreshold);
@@ -119,6 +125,14 @@ namespace Articuno {
             //No ice condition
             else {
                 met.IceIndicationValue = false;
+                ArticunoLogger.CurtailmentLogger.Debug("No Ice detected for met {0}.\n" +
+                    "{0} Average Temperature {1}, \n" +
+                    "{0} Temperature threshold {2} \n" +
+                    "{0} Average Humidity {3}, \n" +
+                    "{0} Delta threshold {4} \n",
+                    metId, avgTemperature, tempThreshold, avgHumidity, deltaThreshold
+                    );
+
                 ArticunoLogger.DataLogger.Debug("No Ice detected for met {0}.\n" +
                     "{0} Average Temperature {1}, \n" +
                     "{0} Temperature threshold {2} \n" +
