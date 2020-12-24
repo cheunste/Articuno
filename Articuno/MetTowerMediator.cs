@@ -164,14 +164,14 @@ namespace Articuno {
             metId = isMetTowerSwitched(metId);
             MetTower met = GetMetTowerFromId(metId);
             double temperature;
-            var primTempSensor = met.getPrimaryTemperatureSensor();
-            var secTempSensor = met.getSecondaryTemperatureSensor();
+            var pts = met.getPrimaryTemperatureSensor();
+            var sts = met.getSecondaryTemperatureSensor();
 
             //Get the primary sensor temperature. If its quality is bad, then use the sencondary sensor. If secondary is bad, then use the turbine sensor
-            temperature = primTempSensor.readValue();
-            if (primTempSensor.isSensorBadQuality()) {
-                temperature = secTempSensor.readValue();
-                if (secTempSensor.isSensorBadQuality())
+            temperature = pts.outOfRangeCheck(pts.readValue());
+            if (pts.isSensorBadQuality()) {
+                temperature = sts.outOfRangeCheck(sts.readValue());
+                if (sts.isSensorBadQuality())
                     temperature = Convert.ToDouble(met.GetBackupTurbineForMetTower().readTurbineTemperatureValue());
             }
             return temperature;

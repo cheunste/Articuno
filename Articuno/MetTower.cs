@@ -92,7 +92,7 @@ namespace Articuno {
         /// </summary>
         public Object RelativeHumidityValue {
             set { OpcServer.writeOpcTag(opcServerName, RelativeHumidityTag, value); }
-            get { return primHumidSensor.readValue(true); }
+            get { return primHumidSensor.outOfRangeCheck(primHumidSensor.readValue(true)); }
         }
 
         /// <summary>
@@ -123,7 +123,7 @@ namespace Articuno {
         public string PrimTemperatureTag { set; get; }
 
         public Object PrimTemperatureValue {
-            get { return primTempSensor.readValue(); }
+            get { return primTempSensor.outOfRangeCheck(primTempSensor.readValue()); }
             set { OpcServer.writeOpcTag(opcServerName, PrimTemperatureTag, value); }
         }
 
@@ -135,7 +135,7 @@ namespace Articuno {
         /// Accessor for the Secondary Temperature Value 
         /// </summary>
         public Object SecTemperatureValue {
-            get { return secTempSensor.readValue(); }
+            get { return secTempSensor.outOfRangeCheck(secTempSensor.readValue()); }
             set { OpcServer.writeOpcTag(opcServerName, SecTemperatureTag, value); }
         }
 

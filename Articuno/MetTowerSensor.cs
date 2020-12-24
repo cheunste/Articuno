@@ -46,7 +46,7 @@ namespace Articuno {
                 value = value / 100.0;
             CheckStaleValue(value);
             BadQualityCheck();
-            return outOfRangeCheck(value);
+            return value;
         }
 
         /// <summary>
