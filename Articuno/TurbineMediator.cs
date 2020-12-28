@@ -184,13 +184,11 @@ namespace Articuno {
             bool nrsMode = turbine.IsTurbineNrsInActiveMode();
 
             var windSpeedQueueCount = windSpeedQueue.Count;
-            var windSpeedAverage = 0.0;
             var rotorSpeedQueueCount = rotorSpeedQueue.Count;
-            var rotorSpeedAverage = 0.0;
 
             //Loop through the queue until the queue is empty and then divide it by the queue count stored earlier
-            while (windSpeedQueue.Count != 0) { windSpeedAverage += windSpeedQueue.Dequeue(); }
-            while (rotorSpeedQueue.Count != 0) { rotorSpeedAverage += rotorSpeedQueue.Dequeue(); }
+            var rotorSpeedAverage = Turbine.CalculateAverageRotorSpeed(rotorSpeedQueue);
+            var windSpeedAverage = Turbine.CalculateAverageWindSpeed(windSpeedQueue);
 
             var filterTuple = filterTable.FindRotorSpeedAndStdDev(windSpeedAverage / windSpeedQueueCount, nrsMode);
 
