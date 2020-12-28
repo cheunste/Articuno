@@ -90,6 +90,7 @@ namespace Articuno {
         public string LowRotorSpeedFlagTag { get; set; }
         public string CtrCountdownTag { get; set; }
         public string ScalingFactorValue { get; set; }
+        public string AvgRotorSpeedTag { get; set; }
 
         public void writeTurbineCtrValue(int articunoCtrValue) {
             TurbineDefaultCtr = articunoCtrValue.ToString();
@@ -212,6 +213,9 @@ namespace Articuno {
             ArticunoLogger.GeneralLogger.Info("Turbine {0} CTR Value reset to: {1}", GetTurbinePrefixValue(), (Convert.ToInt32(TurbineDefaultCtr)) + startupTime);
             resetTurbineCtrTime(startupTime);
         }
+
+        public static double CalculateAverageRotorSpeed(Queue<double> rsq) => rsq.Average();
+        public static double CalculateAverageWindSpeed(Queue<double> wsq) => wsq.Average();
 
         public void resetTurbineCtrTime(int startupTime = 0) {
             double currentCtr = Convert.ToInt32(readTurbineCtrTimeRemaining());

@@ -152,7 +152,7 @@ namespace ArticunoTest {
 
         [TestMethod]
         public void lowRotorSpeedQualityCheck() {
-            lowRotorSpeedQualityHelper(0.00,0.00);
+            lowRotorSpeedQualityHelper(0.00, 0.00);
             lowRotorSpeedQualityHelper(0.0101, 0.010);
             lowRotorSpeedQualityHelper(-0.10, 0.00);
             lowRotorSpeedQualityHelper(20.00, 20.00);
@@ -161,6 +161,27 @@ namespace ArticunoTest {
             lowRotorSpeedQualityHelper(15.00, 15.00);
 
         }
+
+        [TestMethod]
+        public void rotorSpeedAverageTest() {
+            Queue<double> trs = new Queue<double>();
+            trs.Enqueue(3.00);
+            trs.Enqueue(3.00);
+            trs.Enqueue(3.00);
+            double avg = Math.Round(Turbine.CalculateAverageRotorSpeed(trs),2);
+            Assert.IsTrue(avg == 3.00, "The average is {0} which is not 3.00", avg);
+        }
+
+        [TestMethod]
+        public void windSpeedAverageTest() {
+            Queue<double> ws = new Queue<double>();
+            ws.Enqueue(2.75);
+            ws.Enqueue(2.75);
+            ws.Enqueue(2.75);
+            double avg = Math.Round(Turbine.CalculateAverageWindSpeed(ws),2);
+            Assert.IsTrue(avg == 2.75, "The average is {0} which is not 3.00", avg);
+        }
+
         private void lowRotorSpeedQualityHelper(double rotorSpeed, double expectedRotorSpeed) {
             var rtsQueue = testTurbine.getRotorSpeedQueue();
             rtsQueue.Clear();
