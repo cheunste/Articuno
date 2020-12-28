@@ -202,10 +202,11 @@ namespace ArticunoTest {
 
         [TestCleanup]
         public void cleanup() {
-            testTurbine.SetTemperatureCondition(false);
-            testTurbine.SetOperatingStateCondition(false);
-            testTurbine.TurbineNrsModeChanged(false);
-            testTurbine.SetTurbineUnderPerformanceCondition(false);
+            //testTurbine.SetTemperatureCondition(false);
+            //testTurbine.SetOperatingStateCondition(false);
+            //testTurbine.TurbineNrsModeChanged(false);
+            //testTurbine.SetTurbineUnderPerformanceCondition(false);
+
             //OpcServer.writeOpcTag(opcServerName, testTurbine.LowRotorSpeedFlagTag, false);
             //OpcServer.writeOpcTag(opcServerName, testTurbine.ParticipationTag, true);
         }
