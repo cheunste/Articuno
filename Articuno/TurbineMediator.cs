@@ -333,6 +333,7 @@ namespace Articuno {
             turbine.ParticipationTag = sitePrefix + dbi.GetTurbineParticiaptionTag(turbinePrefix);
             turbine.LoadShutdownTag = sitePrefix + dbi.GetTurbinePauseCommandTag(turbinePrefix);
             turbine.StartCommandTag = sitePrefix + dbi.GetTurbineStartCommandTag(turbinePrefix);
+            turbine.AvgRotorSpeedTag = sitePrefix + dbi.GetTurbineAvgRotorSpeedTag(turbinePrefix);
             //Do not include the site prefix for this column. 
             turbine.MainMetTowerReference = dbi.GetMetTowerReference(turbinePrefix);
 
