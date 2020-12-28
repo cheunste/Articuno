@@ -7,8 +7,7 @@ using System.Threading.Tasks;
 using OpcLabs.EasyOpc.DataAccess;
 using OpcLabs.EasyOpc.OperationModel;
 
-namespace Articuno
-{
+namespace Articuno {
     /// <summary>
     /// The turbine class exposes OPC tags that are relevant to the program.
     /// You can set the tags via the setXXXXXTag method and get the value of said tag via the getXXXXXXValue method
@@ -18,8 +17,7 @@ namespace Articuno
      * This is the turbine class. It represents a turbine object in Articuno 
      * It probably should be an interface...but having an interface to create just one type of turbine seems kinda redundant. That's why I have a factory class
      */
-    sealed internal class Turbine
-    {
+    sealed internal class Turbine {
         //Instance of OPC server
         string OpcServerName;
 
@@ -37,6 +35,8 @@ namespace Articuno
         private Queue<Double> rotorSpeedQueue;
 
         //Other fields
+        private string RELEASE = "Release";
+        private string CURTAIL = "Curtail";
 
         //Constants
         private readonly double AGC_BLOCK_COMMAND = 0.00;
@@ -45,8 +45,7 @@ namespace Articuno
         public static readonly int NRS_ACTIVE = 0;
 
         //Constructors
-        public Turbine(string prefix, String OpcServerName)
-        {
+        public Turbine(string prefix, String OpcServerName) {
             this.TurbinePrefix = prefix;
             this.OpcServerName = OpcServerName;
             windSpeedQueue = new Queue<double>();
@@ -92,29 +91,24 @@ namespace Articuno
         public string CtrCountdownTag { get; set; }
         public string ScalingFactorValue { get; set; }
 
-        public void writeTurbineCtrValue(int articunoCtrValue)
-        {
+        public void writeTurbineCtrValue(int articunoCtrValue) {
             TurbineDefaultCtr = articunoCtrValue.ToString();
             ctrRemaining = articunoCtrValue;
             OpcServer.writeOpcTag(OpcServerName, CtrCountdownTag, articunoCtrValue);
         }
 
-        public double writeTurbineLoadShutdownCommand()
-        {
+        public double writeTurbineLoadShutdownCommand() {
             ArticunoLogger.DataLogger.Debug("Shutdown command for {0} has been sent", this.TurbinePrefix);
-            try
-            {
+            try {
                 OpcServer.writeOpcTag(OpcServerName, this.LoadShutdownTag, 1.00);
                 return 1.0;
             }
-            catch (OpcException opcException)
-            {
+            catch (OpcException opcException) {
                 ArticunoLogger.DataLogger.Error("Error stropping {0}: {1}", this.TurbinePrefix, opcException.GetBaseException().Message);
                 return -1.0;
             }
         }
-        public void writeTurbineNoiseLevel(Object value)
-        {
+        public void writeTurbineNoiseLevel(Object value) {
             if (NrsStateTag.Equals("")) { }
             else
                 OpcServer.writeOpcTag(OpcServerName, NrsStateTag, Convert.ToDouble(value));
@@ -122,8 +116,7 @@ namespace Articuno
             resetTurbineCtrTime();
         }
         public void writeOperatingState(Object value) { OpcServer.writeOpcTag(OpcServerName, OperatingStateTag, Convert.ToDouble(value)); }
-        public void decrementTurbineCtrTime()
-        {
+        public void decrementTurbineCtrTime() {
             ctrRemaining--;
             ArticunoLogger.DataLogger.Info("{0} Current CTR: {1}", GetTurbinePrefixValue(), ctrRemaining);
             ArticunoLogger.GeneralLogger.Info("{0} Current CTR: {1}", GetTurbinePrefixValue(), ctrRemaining);
@@ -133,8 +126,7 @@ namespace Articuno
             // During this startup period, you should not store the data in the queues as they're unreliable
             if (ctrRemaining > Convert.ToInt32(TurbineDefaultCtr))
                 emptyQueue();
-            if (ctrRemaining <= 0)
-            {
+            if (ctrRemaining <= 0) {
                 ArticunoLogger.DataLogger.Info("CTR period for Turbine {0} reached Zero.", GetTurbinePrefixValue());
                 ArticunoLogger.GeneralLogger.Info("CTR period for Turbine {0} reached Zero.", GetTurbinePrefixValue());
                 resetTurbineCtrTime();
@@ -143,8 +135,7 @@ namespace Articuno
                     CheckArticunoPausingConditions();
             }
         }
-        public bool IsTurbineNrsInActiveMode()
-        {
+        public bool IsTurbineNrsInActiveMode() {
             int state = Convert.ToInt32(readNrsStateValue());
             if (state == NRS_ACTIVE)
                 return true;
@@ -159,13 +150,11 @@ namespace Articuno
         /// <summary>
         /// Method called after a NRS mode has been changed by the site. Changing the NRS condition also resets the CTR and clears all stored queues
         /// </summary>
-        public void TurbineNrsModeChanged(bool state)
-        {
+        public void TurbineNrsModeChanged(bool state) {
             resetTurbineCtrTime();
             emptyQueue();
         }
-        public void SetTurbineUnderPerformanceCondition(bool state)
-        {
+        public void SetTurbineUnderPerformanceCondition(bool state) {
             //Do not set the turbine underperformance flag if turbine isn't participating in Articuno
             //as this will trigger an unwanted alarm by multiple parties
             if (!isTurbineParticipating())
@@ -176,21 +165,18 @@ namespace Articuno
 
         public string MainMetTowerReference { set; get; }
 
-        public void CheckArticunoPausingConditions()
-        {
+        public void CheckArticunoPausingConditions() {
 
             bool frozenCondition = isTurbineParticipating() && temperatureConditionMet && operatingStateConditionMet && turbinePerformanceConditionMet;
             ArticunoLogger.DataLogger.Debug("Checking ice condition for {5}.  Paused by Articuno: {0}\nTurbine Participation?: {1} " +
                 "Icy Temp Condition?: {2}, OperatingState: {3}, Low TurbinePerf Condition?: {4}", frozenCondition,
                 isTurbineParticipating(), temperatureConditionMet, operatingStateConditionMet, turbinePerformanceConditionMet, GetTurbinePrefixValue());
 
-            if (frozenCondition)
-            {
+            if (frozenCondition) {
                 ArticunoLogger.DataLogger.Debug("Icing conditions satisfied for {0}", GetTurbinePrefixValue());
                 pauseByArticuno(true);
             }
-            else
-            {
+            else {
                 ArticunoLogger.DataLogger.Debug("No ice detected for turbine {0}", GetTurbinePrefixValue());
                 pauseByArticuno(false);
             }
@@ -209,11 +195,11 @@ namespace Articuno
         /// <summary>
         /// Start the turbine. This function clears its alarm, reset its CTRCount and empty its queue
         /// </summary>
-        public void startTurbine()
-        {
+        public void startTurbine() {
             //Unblock Turbine from AGC
             BlockTurbineFromAGC(false);
 
+            LogTurbineCurtailmentRecord(TurbinePrefix,RELEASE);
             ArticunoLogger.DataLogger.Debug("Start Command Received for Turbine {0}", GetTurbinePrefixValue());
             //Give the turbine some time to start 
             int startupTime = Convert.ToInt32(StartupTime);
@@ -227,20 +213,17 @@ namespace Articuno
             resetTurbineCtrTime(startupTime);
         }
 
-        public void resetTurbineCtrTime(int startupTime = 0)
-        {
+        public void resetTurbineCtrTime(int startupTime = 0) {
             double currentCtr = Convert.ToInt32(readTurbineCtrTimeRemaining());
             double turbineDefaultCtrTime = Convert.ToInt32(TurbineDefaultCtr);
             //If the current CTR is larger than the default TurbineCtr, then don't reset it as that means turbine was recently start
-            if (turbineDefaultCtrTime >= currentCtr)
-            {
+            if (turbineDefaultCtrTime >= currentCtr) {
                 ctrRemaining = Convert.ToInt32(TurbineDefaultCtr) + startupTime;
                 OpcServer.writeOpcTag(OpcServerName, CtrCountdownTag, ctrRemaining);
             }
         }
 
-        private Object readNrsStateValue()
-        {
+        private Object readNrsStateValue() {
             if (NrsStateTag.Equals("")) { return NRS_NOT_ACTIVE; }
             else { return OpcServer.readAnalogTag(OpcServerName, NrsStateTag); }
         }
@@ -255,12 +238,11 @@ namespace Articuno
         /// Method used to trigger a pausing condition due to ice.
         /// </summary>
         /// <param name="state"></param>
-        private void pauseByArticuno(bool state)
-        {
-            if (state)
-            {
-                if (!tm.IsTurbinePausedByArticuno(TurbinePrefix))
-                {
+        private void pauseByArticuno(bool state) {
+            if (state) {
+                if (!tm.IsTurbinePausedByArticuno(TurbinePrefix)) {
+                    LogTurbineCurtailmentRecord(TurbinePrefix,CURTAIL);
+                    ArticunoLogger.CurtailmentLogger.Debug("Turbine {0} is getting paused by Articuno", TurbinePrefix);
                     //Block Turbine in AGC
                     BlockTurbineFromAGC(true);
                     ArticunoLogger.DataLogger.Debug("Sending pause commmand for {0}", GetTurbinePrefixValue());
@@ -278,12 +260,23 @@ namespace Articuno
         /// function to block the turbine from AGC.
         /// </summary>
         /// <param name="state"></param>
-        private void BlockTurbineFromAGC(bool state)
-        {
+        private void BlockTurbineFromAGC(bool state) {
             if (state)
                 OpcServer.writeOpcTag(OpcServerName, AgcBlockingTag, Convert.ToDouble(AGC_BLOCK_COMMAND));
             else
                 OpcServer.writeOpcTag(OpcServerName, AgcBlockingTag, Convert.ToDouble(AGC_UNBLOCK_COMMAND));
+        }
+
+        private void LogTurbineCurtailmentRecord(string turbinePrefix, string activity) {
+            ArticunoLogger.CurtailmentLogger.WithProperty("prop", new {
+                activity=activity,
+                tempCondition=temperatureConditionMet,
+                operatingStateCondition=operatingStateConditionMet,
+                turbPerfCondition=turbinePerformanceConditionMet,
+                wsQueue=string.Join(",",windSpeedQueue.ToArray()),
+                rsQueue=string.Join(",",rotorSpeedQueue.ToArray())
+            }).Debug("Turbine {0} is ",turbinePrefix, 
+            activity.ToUpper().Equals(RELEASE) ? "being released" : "curtailed due to ice");
         }
     }
 }
