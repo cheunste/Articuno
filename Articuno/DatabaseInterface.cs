@@ -152,6 +152,7 @@ namespace Articuno
         public string GetTurbineAgcBlockingTag(string turbinePrefix) { return ReadQueryFromTurbineOutputTagsTable("AGCBlocking", turbinePrefix); }
         public string GetTurbineLowRotorSpeedFlagTag(string turbinePrefix) { return ReadQueryFromTurbineOutputTagsTable("LowRotorSpeedFlag", turbinePrefix); }
         public string GetTurbineCtrCountdownTag(string turbinePrefix) { return ReadQueryFromTurbineOutputTagsTable("CTRCountdown", turbinePrefix); }
+        public string GetTurbineAvgRotorSpeedTag(string turbinePrefix) { return ReadQueryFromTurbineOutputTagsTable("AvgRotorSpeedTag", turbinePrefix); }
 
 
         private string ReadQueryFromMetTowerInputTagsTable(string command, string metId)
