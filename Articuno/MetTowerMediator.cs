@@ -87,6 +87,12 @@ namespace Articuno {
                     if (isHumidityBad) {
                         ArticunoLogger.DataLogger.Debug("{0} Humidity is bad quality. Ignoring and currently using avg temperature {1}", metId, avgTemperature);
                         met.IceIndicationValue = true;
+
+                        ArticunoLogger.CurtailmentLogger.Debug("Icing conditions met for {0}. \n" +
+                            "{0} Average Temperature {1}, \n" +
+                            "{0} Temperature threshold {2} \n",
+                            metId, avgTemperature, tempThreshold);
+
                         ArticunoLogger.DataLogger.Debug("Icing conditions met for {0}. \n" +
                             "{0} Average Temperature {1}, \n" +
                             "{0} Temperature threshold {2} \n",
@@ -106,7 +112,7 @@ namespace Articuno {
                 }
                 catch (Exception e) {
                     //in case you can't write to OPC Server
-                    ArticunoLogger.DataLogger.Debug("Error when writing to the Ice indication tag.\n" +
+                    ArticunoLogger.CurtailmentLogger.Debug("Error when writing to the Ice indication tag.\n" +
                         "Error: {0}. \n" + "Met: {1}, \n" +
                         "avgTemp: {2}, \n" + "tempThreshold {3}\n",
                         e, metId, avgTemperature, tempThreshold);
@@ -119,6 +125,14 @@ namespace Articuno {
             //No ice condition
             else {
                 met.IceIndicationValue = false;
+                ArticunoLogger.CurtailmentLogger.Debug("No Ice detected for met {0}.\n" +
+                    "{0} Average Temperature {1}, \n" +
+                    "{0} Temperature threshold {2} \n" +
+                    "{0} Average Humidity {3}, \n" +
+                    "{0} Delta threshold {4} \n",
+                    metId, avgTemperature, tempThreshold, avgHumidity, deltaThreshold
+                    );
+
                 ArticunoLogger.DataLogger.Debug("No Ice detected for met {0}.\n" +
                     "{0} Average Temperature {1}, \n" +
                     "{0} Temperature threshold {2} \n" +
@@ -150,14 +164,14 @@ namespace Articuno {
             metId = isMetTowerSwitched(metId);
             MetTower met = GetMetTowerFromId(metId);
             double temperature;
-            var primTempSensor = met.getPrimaryTemperatureSensor();
-            var secTempSensor = met.getSecondaryTemperatureSensor();
+            var pts = met.getPrimaryTemperatureSensor();
+            var sts = met.getSecondaryTemperatureSensor();
 
             //Get the primary sensor temperature. If its quality is bad, then use the sencondary sensor. If secondary is bad, then use the turbine sensor
-            temperature = primTempSensor.readValue();
-            if (primTempSensor.isSensorBadQuality()) {
-                temperature = secTempSensor.readValue();
-                if (secTempSensor.isSensorBadQuality())
+            temperature = pts.outOfRangeCheck(pts.readValue());
+            if (pts.isSensorBadQuality()) {
+                temperature = sts.outOfRangeCheck(sts.readValue());
+                if (sts.isSensorBadQuality())
                     temperature = Convert.ToDouble(met.GetBackupTurbineForMetTower().readTurbineTemperatureValue());
             }
             return temperature;
@@ -194,33 +208,6 @@ namespace Articuno {
 
         internal void writeToQueue(string metId, double temperature, double humidity) => GetMetTowerFromId(metId).writeToQueue(temperature, humidity);
 
-        internal double calculateCtrAvgTemperature(string metId) {
-            MetTower met = GetMetTowerFromId(metId);
-            Queue<double> tempQueue = met.getTemperatureQueue();
-            double average = 0.0;
-            if (tempQueue.Count > 0)
-                average = tempQueue.Average();
-
-            if (Articuno.isUccActive())
-                met.CtrTemperatureValue = average;
-            return average;
-        }
-
-        internal double calculateCtrAvgHumidity(string metId) {
-            MetTower met = GetMetTowerFromId(metId);
-            Queue<double> humidityQueue = met.getHumidityQueue();
-            double humidityCtrAverage = 0.0;
-            double count = humidityQueue.Count;
-            double average = 0.0;
-
-            if (humidityQueue.Count > 0)
-                average = humidityQueue.Average();
-
-            //You need to multiple the CtrHumidityValue by 100 because it is currently in decimal form and needs to be displayed in percentage form
-            if (Articuno.isUccActive())
-                met.CtrHumidityValue = average * 100.0;
-            return average;
-        }
         internal double calculateCtrAvgTemperature(MetTower met) {
             Queue<double> tempQueue = met.getTemperatureQueue();
             double average = 0.0;
@@ -233,8 +220,6 @@ namespace Articuno {
 
         internal double calculateCtrAvgHumidity(MetTower met) {
             Queue<double> humidityQueue = met.getHumidityQueue();
-            double humidityCtrAverage = 0.0;
-            double count = humidityQueue.Count;
             double average = 0.0;
 
             if (humidityQueue.Count > 0)

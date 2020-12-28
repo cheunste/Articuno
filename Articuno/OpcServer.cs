@@ -40,11 +40,10 @@ namespace Articuno
             }
             catch (Exception e)
             {
-                throw e;
                 //Log Exception here
                 ArticunoLogger.DataLogger.Error("Reading tag: {0} failed. Does {0} exist on the server?", tag);
                 ArticunoLogger.DataLogger.Error("Error:\n{0}", e);
-                return "";
+                throw e;
             }
         }
 

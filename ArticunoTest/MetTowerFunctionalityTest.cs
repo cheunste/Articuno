@@ -38,6 +38,8 @@ namespace ArticunoTest {
 
             mm = MetTowerMediator.Instance;
             tm = TurbineMediator.Instance;
+            tm.createTurbines();
+
             //Create new met tower mediator
             mm.CreateMetTowerObject();
             opcServer = new OpcServer(opcServerName);
@@ -157,9 +159,6 @@ namespace ArticunoTest {
         [DataRow("Met", 21.0, 31.0, 17.0, 57.0)]
         [DataRow("Met2", 21.0, 41.0, 57.0, 97.0)]
         public void swtichMetTowers(string metId, double tempVal1, double tempVal2, double hmdVal1, double hmdVal2) {
-            tm.createTurbines();
-            var turbine = tm.getTurbinePrefixList()[0];
-
             //setValidMetData();
             double tempBeforeSwitch;
             double humdBeforeSwitch;
@@ -213,7 +212,6 @@ namespace ArticunoTest {
         [DataTestMethod]
         [DataRow("Met", -50.0)]
         public void useTurbineTempTest(string metId, double badTemperatureValue) {
-            tm.createTurbines();
             string turbine = dbi.GetBackupTurbineForMet(metId);
 
             Turbine turb = tm.GetTurbine(turbine);
@@ -254,14 +252,14 @@ namespace ArticunoTest {
             else
                 createRandomData(mm.GetMetTowerFromId(metId), hmdVal, tempVal1);
 
+            mm.GetMetTowerFromId(metId).getPrimaryHumiditySensor().BadQualityCheck();
+            mm.GetMetTowerFromId(metId).getPrimaryTemperatureSensor().BadQualityCheck();
+            mm.GetMetTowerFromId(metId).getSecondaryTemperatureSensor().BadQualityCheck();
 
             mm.GetMetTowerFromId(metId).getPrimaryHumiditySensor().isSensorBadQuality();
             mm.GetMetTowerFromId(metId).getPrimaryTemperatureSensor().isSensorBadQuality();
             mm.GetMetTowerFromId(metId).getSecondaryTemperatureSensor().isSensorBadQuality();
 
-            mm.GetMetTowerFromId(metId).getPrimaryHumiditySensor().BadQualityCheck();
-            mm.GetMetTowerFromId(metId).getPrimaryTemperatureSensor().BadQualityCheck();
-            mm.GetMetTowerFromId(metId).getSecondaryTemperatureSensor().BadQualityCheck();
 
 
             var metTowerQuality = mm.isAllMetTowerSensorBadQuality(metId);
@@ -311,9 +309,6 @@ namespace ArticunoTest {
         [DataRow("Met", 0, 0, MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY)]
         [DataRow("Met", 61, 61, MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY)]
         public void tempOutOfRangeTest(string metId, double temp1, double temp2, Object failureExpected) {
-            tm.createTurbines();
-            var turbine = tm.getTurbinePrefixList()[0];
-
             mm.writePrimTemperature(metId, temp1);
             mm.writeSecTemperature(metId, temp2);
 
@@ -348,9 +343,6 @@ namespace ArticunoTest {
         [DataRow("Met", 20, 20, MetTowerMediator.MetQualityEnum.MET_GOOD_QUALITY)]
         [DataRow("Met", 101, 101, MetTowerMediator.MetQualityEnum.MET_BAD_QUALITY)]
         public void humidityOutOfRangeTest(string metId, double humidity, double temp2, Object failureExpected) {
-            tm.createTurbines();
-            var turbine = tm.getTurbinePrefixList()[0];
-
             mm.writeHumidity(metId, humidity);
             MetTower met = mm.GetMetTowerFromId(metId);
 
@@ -371,10 +363,6 @@ namespace ArticunoTest {
         [DataRow("Met", -1, 0)]
         [DataRow("Met", 101, -3)]
         public void BadHumitiyUseTemperatureOnlyTest(string metId, double humidity, double temperature) {
-
-            tm.createTurbines();
-            var turbine = tm.getTurbinePrefixList()[0];
-
             mm.writeHumidity(metId, humidity);
             mm.writePrimTemperature(metId, temperature);
             mm.writeSecTemperature(metId, temperature);
@@ -509,11 +497,11 @@ namespace ArticunoTest {
             q.Clear();
             Random rnd = new Random();
             for (int i = 0; i < 20; i++) {
-                var temp =rnd.Next(0, 20);
+                var temp = rnd.Next(0, 20);
                 q.Enqueue(temp);
             }
             stdDev = mm.CalculateStdDev(q);
-            Assert.IsTrue(stdDev != 0, "Std Dev is not zero as expected. It is showing {0}",stdDev);
+            Assert.IsTrue(stdDev != 0, "Std Dev is not zero as expected. It is showing {0}", stdDev);
 
         }
 
@@ -531,6 +519,11 @@ namespace ArticunoTest {
                 met.RelativeHumidityValue = rnd.Next((int)humidity - 5, (int)humidity);
                 met.PrimTemperatureValue = rnd.Next((int)temperature - 5, (int)temperature);
                 met.SecTemperatureValue = rnd.Next((int)temperature - 5, (int)temperature);
+
+                var humid = met.RelativeHumidityValue;
+                var temp1 = met.PrimTemperatureValue;
+                var temp2 = met.SecTemperatureValue;
+
             }
         }
 
