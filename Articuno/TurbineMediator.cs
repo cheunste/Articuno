@@ -183,14 +183,11 @@ namespace Articuno {
 
             bool nrsMode = turbine.IsTurbineNrsInActiveMode();
 
-            var windSpeedQueueCount = windSpeedQueue.Count;
-            var rotorSpeedQueueCount = rotorSpeedQueue.Count;
-
             //Loop through the queue until the queue is empty and then divide it by the queue count stored earlier
             var rotorSpeedAverage = Turbine.CalculateAverageRotorSpeed(rotorSpeedQueue);
             var windSpeedAverage = Turbine.CalculateAverageWindSpeed(windSpeedQueue);
 
-            var filterTuple = filterTable.FindRotorSpeedAndStdDev(windSpeedAverage / windSpeedQueueCount, nrsMode);
+            var filterTuple = filterTable.FindRotorSpeedAndStdDev(windSpeedAverage , nrsMode);
 
             var referenceRotorSpeed = filterTuple.Item1;
             var referenceStdDev = filterTuple.Item2;
@@ -205,7 +202,7 @@ namespace Articuno {
                 turbineId, calculatedRotorThreshold, rotorSpeedAverage);
 
             //Set under performance condition to be true. Else, clear it
-            if ((rotorSpeedAverage / rotorSpeedQueueCount) < calculatedRotorThreshold) {
+            if (rotorSpeedAverage < calculatedRotorThreshold) {
                 ArticunoLogger.DataLogger.Debug("{0} rotor performance low condition: {1}", turbineId, true);
                 turbine.SetTurbineUnderPerformanceCondition(true);
             }
@@ -235,17 +232,8 @@ namespace Articuno {
         /// Write CTR Time for all the turbines. 
         /// </summary>
         /// <param name="articunoCtrTime"></param>
-        public void writeCtrTime(int articunoCtrTime) {
-
-            Parallel.ForEach(GetAllTurbineList(), t => {
-                t.writeTurbineCtrValue(articunoCtrTime);
-            });
-            //foreach (string turbinePrefix in getTurbinePrefixList()) { writeToTurbineCtrTag(turbinePrefix, articunoCtrTime); }
-        }
-
-        public void decrementTurbineCtrTime() {
-            foreach (string turbinePrefix in getTurbinePrefixList()) { GetTurbine(turbinePrefix).decrementTurbineCtrTime(); }
-        }
+        public void writeCtrTime(int articunoCtrTime) => Parallel.ForEach(GetAllTurbineList(), t => { t.writeTurbineCtrValue(articunoCtrTime); });
+        public void decrementTurbineCtrTime() => Parallel.ForEach(getTurbinePrefixList(),p => GetTurbine(p).decrementTurbineCtrTime());
 
 
         /// <summary>
@@ -323,7 +311,6 @@ namespace Articuno {
             turbine.ScalingFactorValue = dbi.GetTurbineScalingFactorValue();
             turbine.StartupTime = dbi.GetTurbineStartupTime();
 
-            SetTurbineNrsTag(turbine);
             turbine.OperatingStateTag = sitePrefix + dbi.GetTurbineOperatingStateTag(turbinePrefix);
             turbine.RotorSpeedTag = sitePrefix + dbi.GetTurbineRotorSpeedTag(turbinePrefix);
             turbine.TemperatureTag = sitePrefix + dbi.GetTurbineTemperatureTag(turbinePrefix);
@@ -335,6 +322,7 @@ namespace Articuno {
             //Do not include the site prefix for this column. 
             turbine.MainMetTowerReference = dbi.GetMetTowerReference(turbinePrefix);
 
+            SetTurbineNrsTag(turbine);
             InitializeTurbineOutputTags(turbine);
 
             turbineList.Add(turbine);
@@ -346,14 +334,14 @@ namespace Articuno {
                 noiseLevelTag = sitePrefix + dbi.GetTurbineNrsModeTag(turbine.GetTurbinePrefixValue());
                 if (noiseLevelTag.Equals(sitePrefix + "")) {
                     turbine.NrsStateTag = "";
-                    turbine.TurbineNrsModeChanged(false);
+                    //turbine.TurbineNrsModeChanged(false);
                 }
                 else
                     turbine.NrsStateTag = noiseLevelTag;
             }
             catch (NullReferenceException) {
                 turbine.NrsStateTag = "";
-                turbine.TurbineNrsModeChanged(false);
+                //turbine.TurbineNrsModeChanged(false);
             }
         }
 
