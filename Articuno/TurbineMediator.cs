@@ -234,7 +234,7 @@ namespace Articuno {
         /// <param name="articunoCtrTime"></param>
         public void writeCtrTime(int articunoCtrTime) => Parallel.ForEach(GetAllTurbineList(), t => { t.writeTurbineCtrValue(articunoCtrTime); });
         public void decrementTurbineCtrTime() => Parallel.ForEach(getTurbinePrefixList(),p => GetTurbine(p).decrementTurbineCtrTime());
-
+        public void UpdateRotorSpeedDisplayForAllTurbine() => Parallel.ForEach(getTurbinePrefixList(), p => GetTurbine(p).updateRotorSpeedDisplay());
 
         /// <summary>
         /// This function is used to inform all Turbines to check if their mapped met tower is frozen up

@@ -21,8 +21,6 @@ namespace Articuno
         public OpcServer(String serverName)
         {
             this.serverName = serverName;
-            EasyDAClient.SharedParameters.TopicParameters.SlowdownWeight = 0.0f;
-            EasyDAClient.SharedParameters.TopicParameters.SpeedupWeight = 0.0f;
         }
 
         /// <summary>
