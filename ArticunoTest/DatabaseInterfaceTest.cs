@@ -104,7 +104,12 @@ namespace ArticunoTest {
             Assert.IsTrue(tag != "", "Tag contains no value");
             Assert.IsNotNull(tag);
         }
-
+        [TestMethod]
+        public void GetTurbineAverageWindSpeedTagTest() {
+            var tag = dbi.GetTurbineAvgWindSpeedTag("T001");
+            Assert.IsTrue(tag != "", "Tag contains no value");
+            Assert.IsNotNull(tag);
+        }
         [TestMethod]
         public void GetTurbineCtrTagTest() {
             var tag = dbi.GetTurbineCtrCountdownTag("T001");
