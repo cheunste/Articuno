@@ -186,8 +186,19 @@ namespace Articuno {
         //For Wind speed and Rotor Speed queues. 
         public void addWindSpeedToQueue(double windSpeed) { windSpeedQueue.Enqueue(windSpeed); }
         public void addRotorSpeedToQueue(double rotorSpeed) { rotorSpeedQueue.Enqueue(rotorSpeed); }
-        public Queue<double> getWindSpeedQueue() { return windSpeedQueue; }
-        public Queue<double> getRotorSpeedQueue() { return rotorSpeedQueue; }
+        public Queue<double> getWindSpeedQueue() => windSpeedQueue;
+        public Queue<double> getRotorSpeedQueue() => rotorSpeedQueue;
+
+        public void updateRotorSpeedDisplay() {
+
+            try {
+                var avgRotorSpeed = CalculateAverageRotorSpeed(rotorSpeedQueue);
+                OpcServer.writeOpcTag(OpcServerName, AvgRotorSpeedTag, avgRotorSpeed);
+            }
+            catch (Exception e) {
+                ArticunoLogger.DataLogger.Error("There is no data stored in the rotor speed queue size: {0}",rotorSpeedQueue.Count );
+            }
+        }
         /// <summary>
         /// Method call to clear all content of a turbine's wind speed queue and rotor speed queue
         /// </summary>
@@ -200,7 +211,7 @@ namespace Articuno {
             //Unblock Turbine from AGC
             BlockTurbineFromAGC(false);
 
-            LogTurbineCurtailmentRecord(TurbinePrefix,RELEASE);
+            LogTurbineCurtailmentRecord(TurbinePrefix, RELEASE);
             ArticunoLogger.DataLogger.Debug("Start Command Received for Turbine {0}", GetTurbinePrefixValue());
             //Give the turbine some time to start 
             int startupTime = Convert.ToInt32(StartupTime);
@@ -245,7 +256,7 @@ namespace Articuno {
         private void pauseByArticuno(bool state) {
             if (state) {
                 if (!tm.IsTurbinePausedByArticuno(TurbinePrefix)) {
-                    LogTurbineCurtailmentRecord(TurbinePrefix,CURTAIL);
+                    LogTurbineCurtailmentRecord(TurbinePrefix, CURTAIL);
                     ArticunoLogger.CurtailmentLogger.Debug("Turbine {0} is getting paused by Articuno", TurbinePrefix);
                     //Block Turbine in AGC
                     BlockTurbineFromAGC(true);
@@ -273,13 +284,13 @@ namespace Articuno {
 
         private void LogTurbineCurtailmentRecord(string turbinePrefix, string activity) {
             ArticunoLogger.CurtailmentLogger.WithProperty("prop", new {
-                activity=activity,
-                tempCondition=temperatureConditionMet,
-                operatingStateCondition=operatingStateConditionMet,
-                turbPerfCondition=turbinePerformanceConditionMet,
-                wsQueue=string.Join(",",windSpeedQueue.ToArray()),
-                rsQueue=string.Join(",",rotorSpeedQueue.ToArray())
-            }).Debug("Turbine {0} is ",turbinePrefix, 
+                activity = activity,
+                tempCondition = temperatureConditionMet,
+                operatingStateCondition = operatingStateConditionMet,
+                turbPerfCondition = turbinePerformanceConditionMet,
+                wsQueue = string.Join(",", windSpeedQueue.ToArray()),
+                rsQueue = string.Join(",", rotorSpeedQueue.ToArray())
+            }).Debug("Turbine {0} is ", turbinePrefix,
             activity.ToUpper().Equals(RELEASE) ? "being released" : "curtailed due to ice");
         }
     }

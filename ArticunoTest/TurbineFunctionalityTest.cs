@@ -9,6 +9,7 @@ using System.Threading;
 using NUnit.Framework;
 using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace ArticunoTest {
     /// <summary>
@@ -74,10 +75,12 @@ namespace ArticunoTest {
         public void turbineIdListTest() {
             List<string> prefixList = turbineMediator.getTurbinePrefixList();
             List<String> turbineListFromDatabase = getTurbineIdFromDatabase();
-            foreach (string prefix in prefixList) {
-                if (!turbineListFromDatabase.Contains(prefix))
-                    Assert.Fail("The config file does not contain turbine id: {0}. Where this {0} come from?", prefix);
-            }
+
+            Enumerable.SequenceEqual(prefixList, turbineListFromDatabase);
+            //foreach (string prefix in prefixList) {
+            //    if (!turbineListFromDatabase.Contains(prefix))
+            //        Assert.Fail("The config file does not contain turbine id: {0}. Where this {0} come from?", prefix);
+            //}
         }
 
         [TestMethod]
@@ -168,7 +171,7 @@ namespace ArticunoTest {
             trs.Enqueue(3.00);
             trs.Enqueue(3.00);
             trs.Enqueue(3.00);
-            double avg = Math.Round(Turbine.CalculateAverageRotorSpeed(trs),2);
+            double avg = Math.Round(Turbine.CalculateAverageRotorSpeed(trs), 2);
             Assert.IsTrue(avg == 3.00, "The average is {0} which is not 3.00", avg);
         }
 
@@ -178,8 +181,17 @@ namespace ArticunoTest {
             ws.Enqueue(2.75);
             ws.Enqueue(2.75);
             ws.Enqueue(2.75);
-            double avg = Math.Round(Turbine.CalculateAverageWindSpeed(ws),2);
+            double avg = Math.Round(Turbine.CalculateAverageWindSpeed(ws), 2);
             Assert.IsTrue(avg == 2.75, "The average is {0} which is not 3.00", avg);
+        }
+
+        [TestMethod]
+        public void UpdateRotorSpeedToTagTest() {
+            testTurbine.updateRotorSpeedDisplay();
+            testTurbine.addRotorSpeedToQueue(2.75);
+            testTurbine.updateRotorSpeedDisplay();
+            var readRotorSpeed = Convert.ToDouble(OpcServer.readAnalogTag(opcServerName, testTurbine.AvgRotorSpeedTag));
+            Assert.IsTrue( readRotorSpeed == 2.75, "The value read from the tag is not the test value. It is {0}",readRotorSpeed);
         }
 
         private void lowRotorSpeedQualityHelper(double rotorSpeed, double expectedRotorSpeed) {
@@ -195,16 +207,6 @@ namespace ArticunoTest {
                 throw e;
             }
         }
-        //public void storeMinuteAverages(string turbineId)
-        //{
-        //    Turbine turbine = GetTurbinePrefixFromMediator(turbineId);
-        //    double windSpeedAvg = WindSpeedAverageCheck(Convert.ToDouble(turbine.readTurbineWindSpeedValue()));
-        //    double rotorSpeedAvg = RotorSpeedQualityCheck(Convert.ToDouble(turbine.readTurbineRotorSpeedValue()));
-
-        //    turbine.addWindSpeedToQueue(windSpeedAvg);
-        //    turbine.addRotorSpeedToQueue(rotorSpeedAvg);
-        //}
-
 
         private bool generateRandomBoolean() {
             Random rand = new Random();
