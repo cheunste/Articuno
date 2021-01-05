@@ -6,14 +6,12 @@ using Articuno;
 using System.Data;
 using System.Threading;
 
-namespace ArticunoTest
-{
+namespace ArticunoTest {
     /// <summary>
     /// Summary description for ArticunoTest
     /// </summary>
     [TestClass]
-    public class ArticunoTest
-    {
+    public class ArticunoTest {
         Articuno.Articuno articuno;
         MetTowerMediator mm;
         TurbineMediator tm;
@@ -24,8 +22,8 @@ namespace ArticunoTest
         string sitePrefix;
 
         [TestInitialize]
-        public void initialize()
-        {
+        public void initialize() {
+            articuno = new Articuno.Articuno(true);
             mm = MetTowerMediator.Instance;
             tm = TurbineMediator.Instance;
             di = DatabaseInterface.Instance;
@@ -41,8 +39,7 @@ namespace ArticunoTest
         [TestMethod]
         [DataTestMethod]
         [DataRow("Met", -15, -15, .97)]
-        public void CalculateFrozenMetTowerConditionTest(string metId, double temp1, double temp2, double humidity)
-        {
+        public void CalculateFrozenMetTowerConditionTest(string metId, double temp1, double temp2, double humidity) {
             int time = 1;
 
             setNormalCondition();
@@ -56,46 +53,43 @@ namespace ArticunoTest
 
         [TestMethod]
         [DataTestMethod]
-        [DataRow("T001", false)]
-        [DataRow("T001", true)]
-        public void FullIcingTest(string turbineId, bool state)
-        {
+        [DataRow(false)]
+        [DataRow(true)]
+        public void FullIcingTest(bool isIced) {
 
-            articuno = new Articuno.Articuno(true);
+            //articuno = new Articuno.Articuno(true);
+            string turbineId = testTurbine.GetTurbinePrefixValue();
             tm.createTurbines();
             mm.CreateMetTowerObject();
             setNormalCondition();
             tm.startTurbineFromTurbineMediator(turbineId);
 
-            tm.setTemperatureCondition(turbineId, state);
-            tm.setOperatingStateCondition(turbineId, state);
-            tm.setNrsActive(turbineId, state);
-            tm.setTurbinePerformanceCondition(turbineId, state);
+            tm.setTemperatureCondition(turbineId, isIced);
+            tm.setOperatingStateCondition(turbineId, isIced);
+            tm.setNrsActive(turbineId, isIced);
+            tm.setTurbinePerformanceCondition(turbineId, isIced);
 
             tm.checkIcingConditions(turbineId);
 
-            foreach(Turbine turbine in tm.GetAllTurbineList())
-            {
-                if (turbine.GetTurbinePrefixValue().Equals(turbineId))
-                {
-                    var blockedValue = turbine.readAgcBlockValue();
-                    Console.WriteLine("Turbine {0} blockec value {1}",turbineId,blockedValue);
-                    if (state) 
-                        Assert.AreEqual(Convert.ToBoolean(blockedValue), Convert.ToBoolean(0.00),"Block statuses do not match");
-                    else
-                        Assert.AreEqual(Convert.ToBoolean(blockedValue), Convert.ToBoolean(1.00),"UnBlock statuses do not match");
-                    var shutdownValue = OpcServer.readBooleanTag(opcServerName, turbine.LoadShutdownTag);
-                    Console.WriteLine("Turbine {0} shtudown value {1}",turbineId,shutdownValue);
-                    Assert.AreEqual(Convert.ToBoolean(shutdownValue), state,"Turbine isn't paused by Articuno");
-                }
+            var blockedValue = testTurbine.readAgcBlockValue();
+            Console.WriteLine("Turbine {0} blockec value {1}", turbineId, blockedValue);
+            var opState = Convert.ToInt32(testTurbine.readTurbineOperatingStateValue());
+            if (isIced) {
+                Assert.AreEqual(Convert.ToBoolean(blockedValue), Convert.ToBoolean(0.00), "Block statuses do not match");
+                Assert.IsTrue(opState == 50, "Turbine Operation state is :{0} and not 50",opState);
             }
+            else 
+                Assert.AreEqual(Convert.ToBoolean(blockedValue), Convert.ToBoolean(1.00), "UnBlock statuses do not match");
+
+            var shutdownStatus = OpcServer.readBooleanTag(opcServerName, testTurbine.StoppedAlarmTag);
+            Console.WriteLine("Turbine {0} stopped by Articuno: {1}", turbineId, shutdownStatus);
+            Assert.AreEqual(Convert.ToBoolean(shutdownStatus), isIced, "Turbine isn't paused by Articuno");
 
         }
 
         [TestMethod]
-        public void SetAndClearTest()
-        {
-            articuno = new Articuno.Articuno(true);
+        public void SetAndClearTest() {
+            //articuno = new Articuno.Articuno(true);
             string turbineId = "T001";
             bool state = true;
             IcedConditions(turbineId, true);
@@ -103,9 +97,8 @@ namespace ArticunoTest
         }
 
         [TestMethod]
-        public void SystemInputEventChangeTest()
-        {
-            articuno = new Articuno.Articuno(true);
+        public void SystemInputEventChangeTest() {
+            //articuno = new Articuno.Articuno(true);
             OpcServer server = new OpcServer("SV.OPCDAServer.1");
             List<String> systemInputTags = new List<String>();
             DataTable reader = di.readQuery("SELECT * from SystemInputTags WHERE Description!='SitePrefix' AND Description!='OpcServerName' order by Description ASC");
@@ -117,11 +110,9 @@ namespace ArticunoTest
             string deltaThresholdTag;
             string dewThresholdTag;
 
-            for (int i = 0; i < reader.Rows.Count; i++)
-            {
+            for (int i = 0; i < reader.Rows.Count; i++) {
                 tag = reader.Rows[i]["OpcTag"].ToString();
-                switch (i)
-                {
+                switch (i) {
                     case 0: tempThresholdTag = tag; break;
                     case 1: enableArticunoTag = tag; break;
                     case 2: articunoCtrTag = tag; break;
@@ -133,9 +124,8 @@ namespace ArticunoTest
 
         [TestMethod]
         [DataRow(5)]
-        public void CTRChangeTest(int ctrTime)
-        {
-            articuno = new Articuno.Articuno(true);
+        public void CTRChangeTest(int ctrTime) {
+            //articuno = new Articuno.Articuno(true);
             OpcServer server = new OpcServer("SV.OPCDAServer.1");
 
             string ctrTimeTag = sitePrefix + di.getArticunoCtrTag();
@@ -146,8 +136,7 @@ namespace ArticunoTest
             Thread.Sleep(3000);
 
             //Assert all turbines CTR have now been updated for all turbine
-            foreach (string turbineId in tm.getTurbinePrefixList())
-            {
+            foreach (string turbineId in tm.getTurbinePrefixList()) {
                 string readCtrTime = server.readTagValue(ctrTimeTag).ToString();
                 Assert.IsTrue(ctrTime.ToString().Equals(readCtrTime), "The written and read time read from the CtrTag is not equal");
                 string turbineCtrTime = tm.getTurbineCtrTimeRemaining(turbineId).ToString();
@@ -159,12 +148,11 @@ namespace ArticunoTest
         }
 
         [TestMethod]
-        public void SiteClearTest()
-        {
+        public void SiteClearTest() {
             Assert.Fail("Test needs revist");
             OpcServer server = new OpcServer("SV.OPCDAServer.1");
             string turbineId = "T001";
-            articuno = new Articuno.Articuno(true);
+            //articuno = new Articuno.Articuno(true);
             IcedConditions(turbineId, true);
 
             //Set Command to false and turbine state to PAUSE (75)
@@ -180,26 +168,23 @@ namespace ArticunoTest
 
         [TestMethod]
         [DataTestMethod]
-        public void MetTowerCtrCountdownTest()
-        {
+        public void MetTowerCtrCountdownTest() {
             Assert.Fail("Test not implemented");
             setNormalCondition();
             setTime(3);
 
             //Wait one minute
-            Thread.Sleep(60*1000);
+            Thread.Sleep(60 * 1000);
 
-            var MetTowerCtrCountdownTag = OpcServer.readAnalogTag(opcServerName,sitePrefix + "");
+            var MetTowerCtrCountdownTag = OpcServer.readAnalogTag(opcServerName, sitePrefix + "");
 
         }
 
-        private void clearAlarm()
-        {
+        private void clearAlarm() {
             Assert.Fail("Test not implemented");
         }
 
-        private void IcedConditions(string turbineId, bool state)
-        {
+        private void IcedConditions(string turbineId, bool state) {
             tm.setTemperatureCondition(turbineId, state);
             tm.setOperatingStateCondition(turbineId, state);
             tm.setNrsActive(turbineId, state);
@@ -208,8 +193,7 @@ namespace ArticunoTest
 
         }
 
-        private void setNormalCondition()
-        {
+        private void setNormalCondition() {
             var time = 1;
             var ctrTag = sitePrefix + di.getArticunoCtrTag();
             var temperatureTag = sitePrefix + di.getTemperatureThresholdTag();
@@ -223,8 +207,7 @@ namespace ArticunoTest
             mm.writeDeltaThreshold(1);
         }
 
-        private void setTime(int time)
-        {
+        private void setTime(int time) {
             var ctrTag = sitePrefix + di.getArticunoCtrTag();
             OpcServer.writeOpcTag(opcServerName, ctrTag, time);
         }
