@@ -49,7 +49,7 @@ namespace Articuno
         static string numTurbinesPausedTag;
 
         private static int ONE_MINUTE_POLLING = 60 * 1000;
-        private static int HEARTBEAT_POLLING = 15 * 1000;
+        private static int HEARTBEAT_POLLING = 5 * 1000;
         private readonly static int NORMAL_UPDATE_RATE = 1000;
         private readonly static int FAST_UPDATE_RATE = 100;
         private static int ACTIVE_NOISE_LEV = 0;
@@ -223,7 +223,9 @@ namespace Articuno
                         turbineInputTags.Add(new DAItemGroupArguments("",
                             opcServerName, tm.getNrsStateTag(turbinePrefix), FAST_UPDATE_RATE, null));
                 }
-                catch (Exception e) { ArticunoLogger.DataLogger.Error("Error when attempting to add to assetInputTags list. {0}", e); }
+                catch (Exception e) { 
+                    ArticunoLogger.DataLogger.Error(e,"Error when attempting to add to assetInputTags list. {0}", e); 
+                }
             }
             return turbineInputTags;
         }
@@ -275,7 +277,7 @@ namespace Articuno
             }
 
             //Call the storeWindSpeed function to store a wind speed average into a turbine queue (for all turbines in the list)
-            foreach (string prefix in tm.getTurbinePrefixList()) { tm.storeMinuteAverages(prefix); }
+            Parallel.ForEach(tm.getTurbinePrefixList(), p => tm.sampleWindAndRotorSpeeds(p));
 
         }
         /// <summary>
@@ -291,8 +293,12 @@ namespace Articuno
             //Write the MetTower CTR to the tag
             OpcServer.writeOpcTag(opcServerName, sitePrefix + dbi.getMetTowerCtrCountdownTag(), ctrCountdown);
 
-            if (isArticunoEnabled())
+            if (isArticunoEnabled()) {
+
                 tm.decrementTurbineCtrTime();
+                tm.UpdateRotorSpeedDisplayForAllTurbine();
+            }
+
             LogCurrentTurbineStatusesInArticuno();
         }
 
