@@ -176,7 +176,7 @@ namespace ArticunoTest {
 
             //Wait one minute
             mm.UpdateCtrCountdown(2);
-            var ctrTag = sitePrefix + di.getMetTowerCtrCountdownTag();
+            var ctrTag = mm.MetTowerCtrCountdownTag;
             var metTowerCtr = Convert.ToInt32(OpcServer.readAnalogTag(opcServerName, ctrTag));
 
             Assert.IsTrue(metTowerCtr == 2, "MetTower CTR is supposed to be 2, but it is {0}", metTowerCtr);

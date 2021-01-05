@@ -194,9 +194,10 @@ namespace Articuno {
             try {
                 var avgRotorSpeed = CalculateAverageRotorSpeed(rotorSpeedQueue);
                 OpcServer.writeOpcTag(OpcServerName, AvgRotorSpeedTag, avgRotorSpeed);
+                ArticunoLogger.DataLogger.Debug("{0} avg rotor speed: {1}",GetTurbinePrefixValue(),avgRotorSpeed);
             }
             catch (Exception e) {
-                ArticunoLogger.DataLogger.Error("There is no data stored in the rotor speed queue size: {0}",rotorSpeedQueue.Count );
+                ArticunoLogger.DataLogger.Error("There is no data stored in  {0}'s rotor speed queue size: {1}",GetTurbinePrefixValue(),rotorSpeedQueue.Count );
             }
         }
         /// <summary>

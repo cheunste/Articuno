@@ -14,6 +14,7 @@ namespace Articuno {
         public static int numMetTower;
         private string opcServerName;
         private string sitePrefix;
+        public string MetTowerCtrCountdownTag;
         private TurbineMediator tm = TurbineMediator.Instance;
         private static List<MetTower> metTowerList = new List<MetTower>();
         private static List<String> metPrefixList = new List<String>();
@@ -25,6 +26,7 @@ namespace Articuno {
             dbi = DatabaseInterface.Instance;
             opcServerName = DatabaseInterface.Instance.getOpcServerName();
             sitePrefix = DatabaseInterface.Instance.getSitePrefixValue();
+            MetTowerCtrCountdownTag = sitePrefix + DatabaseInterface.Instance.getMetTowerCtrCountdownTag();
         }
         public static MetTowerMediator Instance { get { return Nested.instance; } }
 
@@ -58,9 +60,8 @@ namespace Articuno {
         public List<MetTower> GetMetTowerList() => metTowerList;
 
         public void UpdateCtrCountdown(int ctrCountdown) {
-            var tag = sitePrefix + DatabaseInterface.Instance.getMetTowerCtrCountdownTag();
-            var ctrVal = Convert.ToInt32(OpcServer.readAnalogTag("", tag));
-            OpcServer.writeOpcTag(opcServerName, tag, ctrCountdown);
+            var ctrVal = Convert.ToInt32(OpcServer.readAnalogTag("", MetTowerCtrCountdownTag));
+            OpcServer.writeOpcTag(opcServerName, MetTowerCtrCountdownTag, ctrCountdown);
         }
 
         public void CalculateAverage() =>
