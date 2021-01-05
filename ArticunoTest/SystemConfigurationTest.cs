@@ -29,6 +29,9 @@ namespace ArticunoTest {
         public void getActiveUccOpcTagTest() {
             string tag = dbi.getActiveUccOpcTag();
             readTag(tag);
+            var uccStatus = Convert.ToBoolean(opcServer.readTagValue(tag));
+            Assert.IsTrue(uccStatus, "Ucc Status is {0} when it is supposed to be true", uccStatus);
+
         }
 
 

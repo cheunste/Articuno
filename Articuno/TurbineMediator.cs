@@ -218,13 +218,13 @@ namespace Articuno {
         /// Function to tell the turbines to write current temperature and rotor speed values into their queues 
         /// </summary>
         /// <param name="turbineId"></param>
-        public void storeMinuteAverages(string turbineId) {
+        public void sampleWindAndRotorSpeeds(string turbineId) {
             Turbine turbine = GetTurbine(turbineId);
-            double windSpeedAvg = WindSpeedAverageCheck(Convert.ToDouble(turbine.readTurbineWindSpeedValue()));
-            double rotorSpeedAvg = RotorSpeedQualityCheck(Convert.ToDouble(turbine.readTurbineRotorSpeedValue()));
+            double windSpeedSample = windSpeedQualityCheck(Convert.ToDouble(turbine.readTurbineWindSpeedValue()));
+            double rotorSpeedSample = RotorSpeedQualityCheck(Convert.ToDouble(turbine.readTurbineRotorSpeedValue()));
 
-            turbine.addWindSpeedToQueue(windSpeedAvg);
-            turbine.addRotorSpeedToQueue(rotorSpeedAvg);
+            turbine.addWindSpeedToQueue(windSpeedSample);
+            turbine.addRotorSpeedToQueue(rotorSpeedSample);
         }
 
 
@@ -294,7 +294,7 @@ namespace Articuno {
             else { return rotorSpeedValue; }
         }
 
-        private double WindSpeedAverageCheck(double windSpeedValue) {
+        private double windSpeedQualityCheck(double windSpeedValue) {
             if (windSpeedValue <= MIN_WIND_SPEED) { return MIN_WIND_SPEED; }
             else if (windSpeedValue >= MAX_WIND_SPEED) { return MAX_WIND_SPEED; }
             else { return windSpeedValue; }

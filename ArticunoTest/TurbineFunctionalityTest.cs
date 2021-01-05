@@ -194,6 +194,12 @@ namespace ArticunoTest {
             Assert.IsTrue( readRotorSpeed == 2.75, "The value read from the tag is not the test value. It is {0}",readRotorSpeed);
         }
 
+        [TestMethod]
+        public void UpdateRotorSpeedForAllTurbineTest() {
+            tm.UpdateRotorSpeedDisplayForAllTurbine(); 
+        }
+
+
         private void lowRotorSpeedQualityHelper(double rotorSpeed, double expectedRotorSpeed) {
             var rtsQueue = testTurbine.getRotorSpeedQueue();
             rtsQueue.Clear();
