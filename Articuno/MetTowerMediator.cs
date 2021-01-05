@@ -57,12 +57,18 @@ namespace Articuno {
 
         public List<MetTower> GetMetTowerList() => metTowerList;
 
+        public void UpdateCtrCountdown(int ctrCountdown) {
+            var tag = sitePrefix + DatabaseInterface.Instance.getMetTowerCtrCountdownTag();
+            var ctrVal = Convert.ToInt32(OpcServer.readAnalogTag("", tag));
+            OpcServer.writeOpcTag(opcServerName, tag, ctrCountdown);
+        }
+
         public void CalculateAverage() =>
             GetMetTowerList().ForEach(m => {
-                ArticunoLogger.DataLogger.Debug("In MetTowerMediator's CalculateAverage for {0} ",m.MetId);
+                ArticunoLogger.DataLogger.Debug("In MetTowerMediator's CalculateAverage for {0} ", m.MetId);
                 double tempAvg = calculateCtrAvgTemperature(m);
                 double humidityAvg = calculateCtrAvgHumidity(m);
-                ArticunoLogger.DataLogger.Debug("{0} CTR avg temp: {1}, avg Humidity: {2}", m.MetId,tempAvg, humidityAvg);
+                ArticunoLogger.DataLogger.Debug("{0} CTR avg temp: {1}, avg Humidity: {2}", m.MetId, tempAvg, humidityAvg);
                 CalculateFrozenMetTowerCondition(m, tempAvg, humidityAvg);
                 updateDewPoint(m, tempAvg, humidityAvg);
                 tm.checkMetTowerFrozen(m);
@@ -355,14 +361,14 @@ namespace Articuno {
         }
         public void CheckSampleQuality() {
             GetMetTowerList().ForEach(m => {
-                var tq =m.getTemperatureQueue();
-                var hq =m.getHumidityQueue();
+                var tq = m.getTemperatureQueue();
+                var hq = m.getHumidityQueue();
 
-                var tqStdDev=CalculateStdDev(tq);
-                var hqStdDev=CalculateStdDev(hq);
+                var tqStdDev = CalculateStdDev(tq);
+                var hqStdDev = CalculateStdDev(hq);
 
-                var tqAvg = IsAvgInRange(tq,m.MIN_TEMP_VALUE,m.MAX_TEMP_VALUE);
-                var hqAvg = IsAvgInRange(tq,m.MIN_HUMIDITY_VALUE,m.MAX_HUMIDITY_VALUE);
+                var tqAvg = IsAvgInRange(tq, m.MIN_TEMP_VALUE, m.MAX_TEMP_VALUE);
+                var hqAvg = IsAvgInRange(tq, m.MIN_HUMIDITY_VALUE, m.MAX_HUMIDITY_VALUE);
             });
         }
 
@@ -377,9 +383,9 @@ namespace Articuno {
             return stdDev;
         }
 
-        public bool IsAvgInRange (Queue<double> q, double min, double max) {
+        public bool IsAvgInRange(Queue<double> q, double min, double max) {
             var avg = q.Average();
-            return avg< max && avg >= min;
+            return avg < max && avg >= min;
         }
 
         private void InitializeMetTower(string metId) {

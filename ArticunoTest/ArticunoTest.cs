@@ -170,14 +170,16 @@ namespace ArticunoTest {
         [TestMethod]
         [DataTestMethod]
         public void MetTowerCtrCountdownTest() {
-            Assert.Fail("Test not implemented");
+            //Assert.Fail("Test not implemented");
             setNormalCondition();
             setTime(3);
 
             //Wait one minute
-            Thread.Sleep(60 * 1000);
+            mm.UpdateCtrCountdown(2);
+            var ctrTag = sitePrefix + di.getMetTowerCtrCountdownTag();
+            var metTowerCtr = Convert.ToInt32(OpcServer.readAnalogTag(opcServerName, ctrTag));
 
-            var MetTowerCtrCountdownTag = OpcServer.readAnalogTag(opcServerName, sitePrefix + "");
+            Assert.IsTrue(metTowerCtr == 2, "MetTower CTR is supposed to be 2, but it is {0}", metTowerCtr);
 
         }
 

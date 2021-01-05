@@ -6,10 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Articuno
-{
-    sealed internal class DatabaseInterface
-    {
+namespace Articuno {
+    sealed internal class DatabaseInterface {
 
         private static readonly string SYSTEM_INPUT_TABLE = "SystemInputTags";
         private static readonly string SYSTEM_OUTPUT_TABLE = "SystemOutputTags";
@@ -21,24 +19,19 @@ namespace Articuno
 
         public static DatabaseInterface Instance { get { return Nested.instance; } }
 
-        private class Nested
-        {
+        private class Nested {
             static Nested() { }
             internal static readonly DatabaseInterface instance = new DatabaseInterface();
         }
 
-        public DataTable readQuery(string query)
-        {
+        public DataTable readQuery(string query) {
             List<List<object>> content = new List<List<object>>();
             List<object> sublist = new List<object>();
             DataTable dt = new DataTable();
-            using (SQLiteConnection connection = new SQLiteConnection(ConnectionString))
-            {
+            using (SQLiteConnection connection = new SQLiteConnection(ConnectionString)) {
                 connection.Open();
-                using (SQLiteCommand cmd = new SQLiteCommand(query, connection))
-                {
-                    using (SQLiteDataReader reader = cmd.ExecuteReader())
-                    {
+                using (SQLiteCommand cmd = new SQLiteCommand(query, connection)) {
+                    using (SQLiteDataReader reader = cmd.ExecuteReader()) {
                         dt.Load(reader);
                     }
                 }
@@ -51,13 +44,10 @@ namespace Articuno
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
-        public int updateDatabaseWithQuery(string query)
-        {
-            using (SQLiteConnection connection = new SQLiteConnection(ConnectionString))
-            {
+        public int updateDatabaseWithQuery(string query) {
+            using (SQLiteConnection connection = new SQLiteConnection(ConnectionString)) {
                 connection.Open();
-                using (SQLiteCommand cmd = new SQLiteCommand(query, connection))
-                {
+                using (SQLiteCommand cmd = new SQLiteCommand(query, connection)) {
                     cmd.ExecuteNonQuery();
                 }
             }
@@ -68,36 +58,31 @@ namespace Articuno
         /// Gets the name of the OPC Server
         /// </summary>
         /// <returns></returns>
-        public string getOpcServerName()
-        {
+        public string getOpcServerName() {
             DataTable result = readQuery(String.Format("SELECT DefaultValue from {0} WHERE Description ='OpcServerName' ", SYSTEM_INPUT_TABLE));
             return Convert.ToString(result.Rows[0]["DefaultValue"]);
         }
 
-        public string getSitePrefixValue()
-        {
+        public string getSitePrefixValue() {
             DataTable result = readQuery(String.Format("SELECT DefaultValue from {0} WHERE Description ='SitePrefix' ", SYSTEM_INPUT_TABLE));
             return Convert.ToString(result.Rows[0]["DefaultValue"]) + ".";
         }
 
-        public string getActiveUccOpcTag()
-        {
+        public string getActiveUccOpcTag() {
             DataTable result = readQuery(String.Format("SELECT OpcTag from {0} WHERE Description ='ActiveUCC' ", SYSTEM_INPUT_TABLE));
             return Convert.ToString(result.Rows[0]["OpcTag"]);
         }
 
-        public int getSampleCountForStaleData()
-        {
+        public int getSampleCountForStaleData() {
             DataTable result = readQuery(String.Format("SELECT DefaultValue from {0} WHERE Description ='FlatlineSamples' ", SYSTEM_INPUT_TABLE));
             return Convert.ToInt32(result.Rows[0]["DefaultValue"]);
         }
 
-        public string getMetTowerCtrCountdownTag()
-        {
+        public string getMetTowerCtrCountdownTag() {
             DataTable result = readQuery(String.Format("SELECT OpcTag from {0} WHERE Description ='MetTowerCtrCountdown' ", SYSTEM_OUTPUT_TABLE));
             return Convert.ToString(result.Rows[0][0]);
-
         }
+
         public int getHeartbeatIntervalValue() { return Convert.ToInt32(readQuery("SELECT DefaultValue from SystemInputTags WHERE Description='HeartbeatInterval'").Rows[0][0]); }
 
         public string getTemperatureThresholdTag() { return readQuery("SELECT OpcTag from SystemInputTags WHERE Description='AmbTempThreshold'").Rows[0][0].ToString(); }
@@ -133,7 +118,6 @@ namespace Articuno
         public string GetMetCtrTemperatureTag(string metId) { return ReadQueryFromMetTowerOutputTagsTable("CtrTemperature", metId); }
         public string GetMetCtrDewTag(string metId) { return ReadQueryFromMetTowerOutputTagsTable("CtrDew", metId); }
         public string GetMetCtrHumidityTag(string metId) { return ReadQueryFromMetTowerOutputTagsTable("CtrHumidity", metId); }
-
         public string GetBackupTurbineForMet(string metId) { return ReadQueryFromMetTowerInputTagsTable("BackupTurbine", metId); }
 
         //Turbine
@@ -156,27 +140,22 @@ namespace Articuno
         public string GetTurbineAvgWindSpeedTag(string turbinePrefix) { return ReadQueryFromTurbineOutputTagsTable("AvgWindSpeedTag", turbinePrefix); }
 
 
-        private string ReadQueryFromMetTowerInputTagsTable(string command, string metId)
-        {
+        private string ReadQueryFromMetTowerInputTagsTable(string command, string metId) {
             return readQuery(String.Format("SELECT {0} from MetTowerInputTags where MetId='{1}';", command, metId)).Rows[0][0].ToString();
         }
 
-        private string ReadQueryFromMetTowerOutputTagsTable(string command, string metId)
-        {
+        private string ReadQueryFromMetTowerOutputTagsTable(string command, string metId) {
             return readQuery(String.Format("SELECT {0} from MetTowerOutputTags where MetId='{1}';", command, metId)).Rows[0][0].ToString();
         }
 
-        private string ReadQueryFromTurbineInputTagsTable(string command, string turbinePrefix)
-        {
+        private string ReadQueryFromTurbineInputTagsTable(string command, string turbinePrefix) {
             return readQuery(String.Format("SELECT {0} from TurbineInputTags where TurbineId='{1}'", command, turbinePrefix)).Rows[0][0].ToString();
         }
-        private string ReadQueryFromTurbineOutputTagsTable(string command, string turbinePrefix)
-        {
+        private string ReadQueryFromTurbineOutputTagsTable(string command, string turbinePrefix) {
             return readQuery(String.Format("SELECT {0} from TurbineOutputTags where TurbineId='{1}'", command, turbinePrefix)).Rows[0][0].ToString();
         }
 
-        private string ReadQueryFromSystemInput(string description, string field)
-        {
+        private string ReadQueryFromSystemInput(string description, string field) {
             return readQuery(String.Format("SELECT {0} from SystemInputTags where Description='{1}';", field, description)).Rows[0][0].ToString();
         }
     }
