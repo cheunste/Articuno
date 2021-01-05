@@ -76,9 +76,9 @@ namespace ArticunoTest {
             var opState = Convert.ToInt32(testTurbine.readTurbineOperatingStateValue());
             if (isIced) {
                 Assert.AreEqual(Convert.ToBoolean(blockedValue), Convert.ToBoolean(0.00), "Block statuses do not match");
-                Assert.IsTrue(opState == 50, "Turbine Operation state is :{0} and not 50",opState);
+                Assert.IsTrue(opState == 50, "Turbine Operation state is :{0} and not 50", opState);
             }
-            else 
+            else
                 Assert.AreEqual(Convert.ToBoolean(blockedValue), Convert.ToBoolean(1.00), "UnBlock statuses do not match");
 
             var shutdownStatus = OpcServer.readBooleanTag(opcServerName, testTurbine.StoppedAlarmTag);
@@ -135,24 +135,21 @@ namespace ArticunoTest {
             server.writeTagValue(ctrTimeTag, ctrTime);
             Thread.Sleep(3000);
 
-            //Assert all turbines CTR have now been updated for all turbine
-            foreach (string turbineId in tm.getTurbinePrefixList()) {
-                string readCtrTime = server.readTagValue(ctrTimeTag).ToString();
-                Assert.IsTrue(ctrTime.ToString().Equals(readCtrTime), "The written and read time read from the CtrTag is not equal");
-                string turbineCtrTime = tm.getTurbineCtrTimeRemaining(turbineId).ToString();
+            var turbineId = testTurbine.GetTurbinePrefixValue();
+            string readCtrTime = server.readTagValue(ctrTimeTag).ToString();
+            Assert.IsTrue(ctrTime.ToString().Equals(readCtrTime), "The written and read time read from the CtrTag is not equal");
+            string turbineCtrTime = tm.getTurbineCtrTimeRemaining(turbineId).ToString();
 
-                Console.WriteLine("ctrTime Input: {0} turbineCtrTime: {1}", ctrTime.ToString(), turbineCtrTime);
-                Assert.AreEqual(ctrTime.ToString(), turbineCtrTime, "The written and turbine read time are not equal");
+            Console.WriteLine("ctrTime Input: {0} turbineCtrTime: {1}", ctrTime.ToString(), turbineCtrTime);
+            Assert.AreEqual(ctrTime.ToString(), turbineCtrTime, "The written and turbine read time are not equal");
 
-            }
         }
 
         [TestMethod]
         public void SiteClearTest() {
-            Assert.Fail("Test needs revist");
+            //Assert.Fail("Test needs revist");
             OpcServer server = new OpcServer("SV.OPCDAServer.1");
-            string turbineId = "T001";
-            //articuno = new Articuno.Articuno(true);
+            string turbineId = testTurbine.GetTurbinePrefixValue();
             IcedConditions(turbineId, true);
 
             //Set Command to false and turbine state to PAUSE (75)
@@ -160,10 +157,14 @@ namespace ArticunoTest {
             string operatingStateTag = tm.getOperatingStateTag(turbineId);
             server.writeTagValue(operatingStateTag, 75);
 
-            Thread.Sleep(500);
+            Thread.Sleep(100);
 
             //Site start it back up
+            server.writeTagValue(testTurbine.StartCommandTag, true);
             server.writeTagValue(operatingStateTag, 100);
+            var stoppedStatus = Convert.ToBoolean(testTurbine.readStoppedByArticunoAlarmValue());
+            Assert.IsFalse(stoppedStatus, "Turbine's {0} tag is showing {1} when it is supposed to be stopped", testTurbine.StoppedAlarmTag, stoppedStatus);
+            server.writeTagValue(testTurbine.StartCommandTag, false);
         }
 
         [TestMethod]
