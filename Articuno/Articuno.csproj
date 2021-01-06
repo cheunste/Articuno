@@ -460,6 +460,7 @@
     <Compile Include="Articuno.cs" />
     <Compile Include="ArticunoLogger.cs" />
     <Compile Include="ArticunoService.cs" />
+    <Compile Include="CircularQueue.cs" />
     <Compile Include="DatabaseInterface.cs" />
     <Compile Include="MetTowerSensor.cs" />
     <Compile Include="ServiceWrapper.cs" />

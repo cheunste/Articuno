@@ -167,7 +167,7 @@ namespace ArticunoTest {
 
         [TestMethod]
         public void rotorSpeedAverageTest() {
-            Queue<double> trs = new Queue<double>();
+            CircularQueue<double> trs = new CircularQueue<double>(3);
             trs.Enqueue(3.00);
             trs.Enqueue(3.00);
             trs.Enqueue(3.00);
@@ -177,7 +177,7 @@ namespace ArticunoTest {
 
         [TestMethod]
         public void windSpeedAverageTest() {
-            Queue<double> ws = new Queue<double>();
+            CircularQueue<double> ws = new CircularQueue<double>(3);
             ws.Enqueue(2.75);
             ws.Enqueue(2.75);
             ws.Enqueue(2.75);
@@ -191,14 +191,28 @@ namespace ArticunoTest {
             testTurbine.addRotorSpeedToQueue(2.75);
             testTurbine.updateRotorSpeedDisplay();
             var readRotorSpeed = Convert.ToDouble(OpcServer.readAnalogTag(opcServerName, testTurbine.AvgRotorSpeedTag));
-            Assert.IsTrue( readRotorSpeed == 2.75, "The value read from the tag is not the test value. It is {0}",readRotorSpeed);
+            Assert.IsTrue(readRotorSpeed == 2.75, "The value read from the tag is not the test value. It is {0}", readRotorSpeed);
         }
 
         [TestMethod]
         public void UpdateRotorSpeedForAllTurbineTest() {
-            tm.UpdateRotorSpeedDisplayForAllTurbine(); 
+            tm.UpdateRotorSpeedDisplayForAllTurbine();
         }
 
+        [TestMethod]
+        public void SetCircularQueueSizeTest() {
+            tm.MaxQueueSize=1;
+            Assert.IsTrue(tm.MaxQueueSize == 1, "");
+
+            testTurbine.initializeQueue();
+            var val1 = 1.75;
+            var val2 = 3.00;
+            testTurbine.addRotorSpeedToQueue(val1);
+            testTurbine.addRotorSpeedToQueue(val2);
+            var q = testTurbine.getRotorSpeedQueue();
+            Assert.IsTrue(q.Count == 1, "Queue size is {0} and not 1",q.Count);
+            Assert.IsTrue(q.Peek() == val2, "First item in queue is {0} and not {1}",q.Peek(), val2);
+        }
 
         private void lowRotorSpeedQualityHelper(double rotorSpeed, double expectedRotorSpeed) {
             var rtsQueue = testTurbine.getRotorSpeedQueue();

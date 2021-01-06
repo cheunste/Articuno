@@ -31,8 +31,11 @@ namespace Articuno {
         private int ctrRemaining;
 
         //Queues
-        private Queue<Double> windSpeedQueue;
-        private Queue<Double> rotorSpeedQueue;
+        //private Queue<Double> windSpeedQueue;
+        //private Queue<Double> rotorSpeedQueue;
+
+        private CircularQueue<Double> windSpeedQueue;
+        private CircularQueue<Double> rotorSpeedQueue;
 
         //Other fields
         private string RELEASE = "Release";
@@ -48,10 +51,15 @@ namespace Articuno {
         public Turbine(string prefix, String OpcServerName) {
             this.TurbinePrefix = prefix;
             this.OpcServerName = OpcServerName;
-            windSpeedQueue = new Queue<double>();
-            rotorSpeedQueue = new Queue<double>();
-            tm = TurbineMediator.Instance;
+            //windSpeedQueue = new Queue<double>();
+            //rotorSpeedQueue = new Queue<double>();
 
+            tm = TurbineMediator.Instance;
+        }
+
+        public void initializeQueue() {
+            windSpeedQueue = new CircularQueue<double>(tm.MaxQueueSize);
+            rotorSpeedQueue = new CircularQueue<double>(tm.MaxQueueSize);
         }
 
         //Methods to read the value for the wind speed, rotor speed, etc. value from the OPC Server
@@ -194,16 +202,19 @@ namespace Articuno {
             try {
                 var avgRotorSpeed = CalculateAverageRotorSpeed(rotorSpeedQueue);
                 OpcServer.writeOpcTag(OpcServerName, AvgRotorSpeedTag, avgRotorSpeed);
-                ArticunoLogger.DataLogger.Debug("{0} avg rotor speed: {1}",GetTurbinePrefixValue(),avgRotorSpeed);
+                ArticunoLogger.DataLogger.Debug("{0} avg rotor speed: {1}", GetTurbinePrefixValue(), avgRotorSpeed);
             }
             catch (Exception e) {
-                ArticunoLogger.DataLogger.Error("There is no data stored in  {0}'s rotor speed queue size: {1}",GetTurbinePrefixValue(),rotorSpeedQueue.Count );
+                ArticunoLogger.DataLogger.Error("There is no data stored in  {0}'s rotor speed queue size: {1}", GetTurbinePrefixValue(), rotorSpeedQueue.Count);
             }
         }
         /// <summary>
         /// Method call to clear all content of a turbine's wind speed queue and rotor speed queue
         /// </summary>
-        public void emptyQueue() { windSpeedQueue.Clear(); rotorSpeedQueue.Clear(); }
+        public void emptyQueue() {
+            windSpeedQueue.Clear();
+            rotorSpeedQueue.Clear();
+        }
 
         /// <summary>
         /// Start the turbine. This function clears its alarm, reset its CTRCount and empty its queue

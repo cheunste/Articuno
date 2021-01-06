@@ -276,7 +276,7 @@ namespace Articuno {
         /// <param name="prefix"></param>
         /// <returns></returns>
         public Turbine GetTurbine(string prefix) => GetAllTurbineList().Where(t => t.TurbinePrefix.Equals(prefix)).FirstOrDefault();
-
+        public int MaxQueueSize { get; set; }
         public enum TurbineEnum {
             NrsMode,
             OperatingState,
@@ -322,6 +322,7 @@ namespace Articuno {
             //Do not include the site prefix for this column. 
             turbine.MainMetTowerReference = dbi.GetMetTowerReference(turbinePrefix);
 
+            turbine.initializeQueue();
             SetTurbineNrsTag(turbine);
             InitializeTurbineOutputTags(turbine);
 
