@@ -209,11 +209,11 @@ namespace Articuno {
             }
         }
         /// <summary>
-        /// Method call to clear all content of a turbine's wind speed queue and rotor speed queue
+        /// Method call to trim all content of a turbine's wind speed queue and rotor speed queue
         /// </summary>
         public void emptyQueue() {
-            windSpeedQueue.Clear();
-            rotorSpeedQueue.Clear();
+            //windSpeedQueue.Clear();
+            //rotorSpeedQueue.Clear();
         }
 
         /// <summary>
