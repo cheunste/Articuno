@@ -23,15 +23,6 @@ namespace Articuno {
          * Note that all the lists are strings, meaning it works ONLY with Turbine Prefixes
          */
 
-        //Turbines that are removed from Articuno by the dispatchers
-        public static List<string> turbinesExcludedList;
-        //Turbines participating in Articuno and are waiting to be Paused.
-        public static List<string> turbinesWaitingForPause;
-        //Turbines that are already paused by articuno
-        public static List<string> turbinesPausedByArticuno;
-        //Turbines that are taken out of the Waiting list due to some other factor (derate, not running, etc.)
-        public static List<string> turbinesConditionNotMet;
-
         private static string opcServerName;
         private static int articunoCtrTime;
         private static int ctrCountdown;
@@ -71,10 +62,6 @@ namespace Articuno {
             mm.CreateMetTowerObject();
             tm.MaxQueueSize = (HEARTBEAT_POLLING * articunoCtrTime);
             tm.createTurbines();
-            turbinesExcludedList = new List<string>();
-            turbinesPausedByArticuno = new List<string>();
-            turbinesWaitingForPause = new List<string>();
-            turbinesConditionNotMet = new List<string>();
 
             SetUpOpcSystemTags();
         }
@@ -93,11 +80,6 @@ namespace Articuno {
             //The 20 is supposed to be the default CTR time, which is 20
             tm.MaxQueueSize = ((HEARTBEAT_POLLING / 1000) * articunoCtrTime);
             tm.createTurbines();
-
-            turbinesExcludedList = new List<string>();
-            turbinesPausedByArticuno = new List<string>();
-            turbinesWaitingForPause = new List<string>();
-            turbinesConditionNotMet = new List<string>();
 
             //SetUpOpcSystemTags();
             setOpcTagListenerForTurbineAndMetTower();
@@ -127,7 +109,6 @@ namespace Articuno {
         /// <param name="turbineId"></param>
         public static void turbinePausedByArticuno(string turbineId) {
             ArticunoLogger.DataLogger.Debug("ArticunoMain has detected Turbine {0} has paused. ", turbineId);
-            MoveTurbineIdToAnotherList(turbineId, turbinesWaitingForPause, turbinesPausedByArticuno);
             updateNumberOfTurbinesPaused();
             //LogCurrentTurbineStatusesInArticuno();
         }
@@ -140,12 +121,12 @@ namespace Articuno {
             ArticunoLogger.DataLogger.Debug("Clearing Articuno Stop Alarm for {0}", turbineId);
             tm.GetTurbine(turbineId).SetPausedByArticunoAlarmValue(false);
 
-            MoveTurbineIdToAnotherList(turbineId, turbinesPausedByArticuno, turbinesWaitingForPause);
             updateNumberOfTurbinesPaused();
             //LogCurrentTurbineStatusesInArticuno();
         }
 
         public static bool isAlreadyPaused(string turbineId) {
+            var turbinesPausedByArticuno = tm.GetTurbineIdsPausedByArticuno();
             ArticunoLogger.DataLogger.Info("Turbine {0} Paused status: {1} ", turbineId, turbinesPausedByArticuno.Contains(turbineId));
             ArticunoLogger.GeneralLogger.Info("Turbine {0} Paused status: {1} ", turbineId, turbinesPausedByArticuno.Contains(turbineId));
             //LogCurrentTurbineStatusesInArticuno();
@@ -397,7 +378,7 @@ namespace Articuno {
             ArticunoLogger.GeneralLogger.Info("{0} Current Operating State: {1} onChangeValue: {2}", turbineId, turbineOperatinoalState, value);
             bool participationStatus = Convert.ToBoolean(tm.readTurbineParticipationStatus(turbineId));
             //If already paused by Articuno, then there's nothing to do
-            if (IsTurbinePausedByArticuno(turbineId)) { }
+            if (tm.GetTurbineIdsPausedByArticuno().Contains(turbineId)) { }
             //If not paused by Aritcuno, then you need to check the operating state of the turbine...but NOT for turbines that have arleady been excluded
             else if (participationStatus) {
                 //If turbine isn't in run or draft, then that means it is derated or in emergency, or something else. 
@@ -418,17 +399,6 @@ namespace Articuno {
             bool participationStatus = Convert.ToBoolean(tm.readTurbineParticipationStatus(turbineId));
             ArticunoLogger.DataLogger.Info("Turbine {0} Participation in Articuno {1} OnChangeValue {2}", turbineId, participationStatus, value);
             ArticunoLogger.GeneralLogger.Info("Turbine {0} Participation in Articuno {1} OnChangeValue {2}", turbineId, participationStatus, value);
-            //do nothing if turbine is already in paused by Articuno
-            if (IsTurbinePausedByArticuno(turbineId)) { }
-            //If turbine not paused by Articuno, then you check for participation status
-            else {
-                if (!participationStatus) {
-                    MoveTurbineIdToAnotherList(turbineId, turbinesWaitingForPause, turbinesExcludedList);
-                    MoveTurbineIdToAnotherList(turbineId, turbinesConditionNotMet, turbinesExcludedList);
-                }
-                else if (participationStatus)
-                    MoveTurbineIdToAnotherList(turbineId, turbinesExcludedList, turbinesWaitingForPause);
-            }
         }
 
         private static void MetTowerTurbineOpcTagValueChangedEventListener(object sender, EasyDAItemChangedEventArgs e) {
@@ -488,17 +458,10 @@ namespace Articuno {
         private static bool IsTurbinePausedByArticuno(string turbineId) => tm.getTurbinePrefixList().Where(p => tm.IsTurbinePausedByArticuno(p)).Contains(turbineId);
 
         private static void TurbineWaitingForProperCondition(string turbineId) {
-            MoveTurbineIdToAnotherList(turbineId, turbinesWaitingForPause, turbinesConditionNotMet);
             LogCurrentTurbineStatusesInArticuno();
         }
 
         private static void TurbineReadyToBePausedByArticuno(string turbineId) {
-            //If turbine is already paused by Articuno, don't do anything
-            if (turbinesPausedByArticuno.Contains(turbineId)) { }
-            //If turbine wasn't waiting for pause before nor was it in the excluded list, put it into the pause list
-            else if (!turbinesWaitingForPause.Contains(turbineId)) {
-                MoveTurbineIdToAnotherList(turbineId, turbinesConditionNotMet, turbinesWaitingForPause);
-            }
             LogCurrentTurbineStatusesInArticuno();
         }
 
@@ -508,29 +471,11 @@ namespace Articuno {
         private static void LogCurrentTurbineStatusesInArticuno() {
 
 
-            var turbinesWaitingForPause = tm.getTurbinePrefixList().Where(p => { 
-                var t = tm.GetTurbine(p);
-                return t.isTurbineParticipating() == true && Convert.ToBoolean(t.readStoppedByArticunoAlarmValue()) == false;
-            }).ToList();
-            //turbinesWaitingForPause.Sort();
-            var turbinesPausedByArticuno = tm.getTurbinePrefixList().Where(p => {
-                var t = tm.GetTurbine(p);
-                return t.isTurbineParticipating() == true && Convert.ToBoolean(t.readStoppedByArticunoAlarmValue()) == true;
-            }).ToList();
-            //turbinesPausedByArticuno.Sort();
+            var turbinesWaitingForPause = tm.GetTurbineIdsWaitingForPause();
+            var turbinesPausedByArticuno = tm.GetTurbineIdsPausedByArticuno();
 
-            var turbinesExcludedList = tm.getTurbinePrefixList().Where(p => {
-                var t = tm.GetTurbine(p);
-                return t.isTurbineParticipating() == false;
-            }).ToList();
-            //turbinesExcludedList.Sort();
-
-            var turbinesConditionNotMet = tm.getTurbinePrefixList().Where(p => {
-                var t = tm.GetTurbine(p);
-                return Convert.ToInt32(t.readTurbineOperatingStateValue()) == PAUSE_STATE && Convert.ToBoolean(t.readStoppedByArticunoAlarmValue()) == false;
-            }
-            ).ToList();
-            //turbinesConditionNotMet.Sort();
+            var turbinesExcludedList = tm.GetTurbineIdsExcludedList();
+            var turbinesConditionNotMet = tm.GetTurbineIdsConditionNotMet();
 
             ArticunoLogger.DataLogger.Debug("Turbines Waiting for Pause: {0}", string.Join(",", turbinesWaitingForPause));
             ArticunoLogger.DataLogger.Debug("Turbines paused by Articuno: {0}", string.Join(",", turbinesPausedByArticuno));
@@ -544,13 +489,8 @@ namespace Articuno {
         /// <param name="turbineId">Turbine ID (string) ex: T001</param>
         /// <param name="fromList">The list that turbine Id was in originally</param>
         /// <param name="newList">The list that the turbine Id will be moved to</param>
-        private static void MoveTurbineIdToAnotherList(string turbineId, List<string> fromList, List<string> newList) {
-            fromList.RemoveAll(x => x.Equals(turbineId));
-            if (!newList.Contains(turbineId))
-                newList.Add(turbineId);
-        }
         private static void updateNumberOfTurbinesPaused() {
-            OpcServer.writeOpcTag(opcServerName, numTurbinesPausedTag, turbinesPausedByArticuno.Count);
+            OpcServer.writeOpcTag(opcServerName, numTurbinesPausedTag, tm.GetTurbineIdsPausedByArticuno().Count);
         }
 
     }

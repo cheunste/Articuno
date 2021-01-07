@@ -40,6 +40,10 @@ namespace Articuno {
         private double MAX_WIND_SPEED = 40.00;
         private double MIN_WIND_SPEED = 0.00;
 
+        private static int RUN_STATE = 100;
+        private static int DRAFT_STATE = 75;
+        private static int PAUSE_STATE = 50;
+
         private RotorSpeedFilter filterTable;
 
         private DatabaseInterface dbi;
@@ -80,6 +84,24 @@ namespace Articuno {
             ArticunoLogger.DataLogger.Debug("Attempting to start turbine {0} from TurbineMeidator", turbineId);
             GetTurbine(turbineId).startTurbine();
         }
+
+        public List<String> GetTurbineIdsWaitingForPause() => getTurbinePrefixList().Where(p => {
+            return GetTurbine(p).isTurbineParticipating() == true && Convert.ToBoolean(GetTurbine(p).readStoppedByArticunoAlarmValue()) == false;
+        }).ToList();
+        public List<String> GetTurbineIdsPausedByArticuno() => getTurbinePrefixList().Where(p => {
+            var t = GetTurbine(p);
+            return t.isTurbineParticipating() == true && Convert.ToBoolean(t.readStoppedByArticunoAlarmValue()) == true;
+        }).ToList();
+
+        public List<String> GetTurbineIdsExcludedList() => getTurbinePrefixList().Where(p => {
+            var t = GetTurbine(p);
+            return t.isTurbineParticipating() == false;
+        }).ToList();
+
+        public List<String> GetTurbineIdsConditionNotMet() => getTurbinePrefixList().Where(p => {
+            var t = GetTurbine(p);
+            return Convert.ToInt32(t.readTurbineOperatingStateValue()) == PAUSE_STATE && Convert.ToBoolean(t.readStoppedByArticunoAlarmValue()) == false;
+        }).ToList();
 
         /// <summary>
         /// Returns the list of turbines for the site
@@ -187,7 +209,7 @@ namespace Articuno {
             var rotorSpeedAverage = Turbine.CalculateAverageRotorSpeed(rotorSpeedQueue);
             var windSpeedAverage = Turbine.CalculateAverageWindSpeed(windSpeedQueue);
 
-            var filterTuple = filterTable.FindRotorSpeedAndStdDev(windSpeedAverage , nrsMode);
+            var filterTuple = filterTable.FindRotorSpeedAndStdDev(windSpeedAverage, nrsMode);
 
             var referenceRotorSpeed = filterTuple.Item1;
             var referenceStdDev = filterTuple.Item2;
@@ -233,7 +255,7 @@ namespace Articuno {
         /// </summary>
         /// <param name="articunoCtrTime"></param>
         public void writeCtrTime(int articunoCtrTime) => Parallel.ForEach(GetAllTurbineList(), t => { t.writeTurbineCtrValue(articunoCtrTime); });
-        public void decrementTurbineCtrTime() => Parallel.ForEach(getTurbinePrefixList(),p => GetTurbine(p).decrementTurbineCtrTime());
+        public void decrementTurbineCtrTime() => Parallel.ForEach(getTurbinePrefixList(), p => GetTurbine(p).decrementTurbineCtrTime());
         public void UpdateRotorSpeedDisplayForAllTurbine() => Parallel.ForEach(getTurbinePrefixList(), p => GetTurbine(p).updateRotorSpeedDisplay());
 
         /// <summary>
