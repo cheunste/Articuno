@@ -263,7 +263,7 @@ namespace Articuno {
             if (isArticunoEnabled()) {
 
                 tm.decrementTurbineCtrTime();
-                tm.UpdateRotorSpeedDisplayForAllTurbine();
+                tm.UpdateDisplayValuesForAllTurbine();
             }
 
             LogCurrentTurbineStatusesInArticuno();

@@ -116,6 +116,12 @@ namespace ArticunoTest
             DataTable table = dbi.readQuery("Select AvgRotorSpeedTag from TurbineOutputTags");
             checkOpcTag(table);
         }
+        [TestMethod]
+        public void TurbineAvgWindSpeedCheck() {
+
+            DataTable table = dbi.readQuery("Select AvgWindSpeedTag from TurbineOutputTags");
+            checkOpcTag(table);
+        }
 
         [TestMethod]
         public void TurbineIdValidationTest()

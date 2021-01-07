@@ -256,7 +256,7 @@ namespace Articuno {
         /// <param name="articunoCtrTime"></param>
         public void writeCtrTime(int articunoCtrTime) => Parallel.ForEach(GetAllTurbineList(), t => { t.writeTurbineCtrValue(articunoCtrTime); });
         public void decrementTurbineCtrTime() => Parallel.ForEach(getTurbinePrefixList(), p => GetTurbine(p).decrementTurbineCtrTime());
-        public void UpdateRotorSpeedDisplayForAllTurbine() => Parallel.ForEach(getTurbinePrefixList(), p => GetTurbine(p).updateRotorSpeedDisplay());
+        public void UpdateDisplayValuesForAllTurbine() => Parallel.ForEach(getTurbinePrefixList(), p => GetTurbine(p).UpdateDisplayValue());
 
         /// <summary>
         /// This function is used to inform all Turbines to check if their mapped met tower is frozen up
@@ -341,6 +341,7 @@ namespace Articuno {
             turbine.LoadShutdownTag = sitePrefix + dbi.GetTurbinePauseCommandTag(turbinePrefix);
             turbine.StartCommandTag = sitePrefix + dbi.GetTurbineStartCommandTag(turbinePrefix);
             turbine.AvgRotorSpeedTag = sitePrefix + dbi.GetTurbineAvgRotorSpeedTag(turbinePrefix);
+            turbine.AvgWindSpeedTag = sitePrefix + dbi.GetTurbineAvgWindSpeedTag(turbinePrefix);
             //Do not include the site prefix for this column. 
             turbine.MainMetTowerReference = dbi.GetMetTowerReference(turbinePrefix);
 

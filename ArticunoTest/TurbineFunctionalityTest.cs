@@ -31,6 +31,7 @@ namespace ArticunoTest {
             metTowerMediator = MetTowerMediator.Instance;
             metTowerMediator.CreateMetTowerObject();
             turbineMediator = TurbineMediator.Instance;
+            turbineMediator.MaxQueueSize = 1;
             turbineMediator.createTurbines();
             dbi = DatabaseInterface.Instance;
             opcServerName = dbi.getOpcServerName();
@@ -187,21 +188,44 @@ namespace ArticunoTest {
 
         [TestMethod]
         public void UpdateRotorSpeedToTagTest() {
-            testTurbine.updateRotorSpeedDisplay();
-            testTurbine.addRotorSpeedToQueue(2.75);
-            testTurbine.updateRotorSpeedDisplay();
+            var val = 2.75;
+            //Exception is thrown when there are no values in the rotor speed queue
+            try {
+                testTurbine.GetAvgRotorSpeed();
+            }
+            catch(Exception e) {
+                Assert.IsTrue(true);
+            }
+
+            testTurbine.addRotorSpeedToQueue(val);
+            testTurbine.GetAvgRotorSpeed();
             var readRotorSpeed = Convert.ToDouble(OpcServer.readAnalogTag(opcServerName, testTurbine.AvgRotorSpeedTag));
-            Assert.IsTrue(readRotorSpeed == 2.75, "The value read from the tag is not the test value. It is {0}", readRotorSpeed);
+            Assert.IsTrue(readRotorSpeed == val, "The value read from the tag is not the test value. It is {0}", readRotorSpeed);
+        }
+        [TestMethod]
+        public void UpdateWindSpeedToTagTest() {
+            var val = 7.25;
+            //Exception is thrown when there are no values in the wind speed queue
+            try {
+                testTurbine.GetAvgWindSpeed();
+            }
+            catch(Exception e) {
+                Assert.IsTrue(true);
+            }
+            testTurbine.addWindSpeedToQueue(val);
+            testTurbine.GetAvgWindSpeed();
+            var readWindSpeed = Convert.ToDouble(OpcServer.readAnalogTag(opcServerName, testTurbine.AvgWindSpeedTag));
+            Assert.IsTrue(readWindSpeed == val, "The value read from the tag is not the test value. It is {0}", readWindSpeed);
         }
 
         [TestMethod]
         public void UpdateRotorSpeedForAllTurbineTest() {
-            tm.UpdateRotorSpeedDisplayForAllTurbine();
+            tm.UpdateDisplayValuesForAllTurbine();
         }
 
         [TestMethod]
         public void SetCircularQueueSizeTest() {
-            tm.MaxQueueSize=1;
+            tm.MaxQueueSize = 1;
             Assert.IsTrue(tm.MaxQueueSize == 1, "");
 
             testTurbine.initializeQueue();
@@ -210,8 +234,8 @@ namespace ArticunoTest {
             testTurbine.addRotorSpeedToQueue(val1);
             testTurbine.addRotorSpeedToQueue(val2);
             var q = testTurbine.getRotorSpeedQueue();
-            Assert.IsTrue(q.Count == 1, "Queue size is {0} and not 1",q.Count);
-            Assert.IsTrue(q.Peek() == val2, "First item in queue is {0} and not {1}",q.Peek(), val2);
+            Assert.IsTrue(q.Count == 1, "Queue size is {0} and not 1", q.Count);
+            Assert.IsTrue(q.Peek() == val2, "First item in queue is {0} and not {1}", q.Peek(), val2);
         }
 
         private void lowRotorSpeedQualityHelper(double rotorSpeed, double expectedRotorSpeed) {

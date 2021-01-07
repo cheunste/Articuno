@@ -99,6 +99,7 @@ namespace Articuno {
         public string CtrCountdownTag { get; set; }
         public string ScalingFactorValue { get; set; }
         public string AvgRotorSpeedTag { get; set; }
+        public string AvgWindSpeedTag { get; set; }
 
         public void writeTurbineCtrValue(int articunoCtrValue) {
             TurbineDefaultCtr = articunoCtrValue.ToString();
@@ -197,15 +198,15 @@ namespace Articuno {
         public Queue<double> getWindSpeedQueue() => windSpeedQueue;
         public Queue<double> getRotorSpeedQueue() => rotorSpeedQueue;
 
-        public void updateRotorSpeedDisplay() {
-
+        public void UpdateDisplayValue() {
             try {
-                var avgRotorSpeed = CalculateAverageRotorSpeed(rotorSpeedQueue);
-                OpcServer.writeOpcTag(OpcServerName, AvgRotorSpeedTag, avgRotorSpeed);
-                ArticunoLogger.DataLogger.Debug("{0} avg rotor speed: {1}", GetTurbinePrefixValue(), avgRotorSpeed);
+                var rotorSpeed = GetAvgRotorSpeed();
+                var windSpeed = GetAvgWindSpeed();
+                ArticunoLogger.DataLogger.Debug("{0} avg wind speed: {1}, rotor speed: {2}", GetTurbinePrefixValue(), windSpeed, rotorSpeed);
             }
             catch (Exception e) {
-                ArticunoLogger.DataLogger.Error("There is no data stored in  {0}'s rotor speed queue size: {1}", GetTurbinePrefixValue(), rotorSpeedQueue.Count);
+                ArticunoLogger.DataLogger.Error(" No data stored in  {0}'s wind speed queue (size: {1}) or rotor speed queue (size: {2})",
+                    GetTurbinePrefixValue(),windSpeedQueue.Count, rotorSpeedQueue.Count);
             }
         }
         /// <summary>
@@ -292,6 +293,31 @@ namespace Articuno {
                 OpcServer.writeOpcTag(OpcServerName, AgcBlockingTag, Convert.ToDouble(AGC_BLOCK_COMMAND));
             else
                 OpcServer.writeOpcTag(OpcServerName, AgcBlockingTag, Convert.ToDouble(AGC_UNBLOCK_COMMAND));
+        }
+
+
+        public double GetAvgRotorSpeed() {
+            try {
+                var avgRotorSpeed = CalculateAverageRotorSpeed(rotorSpeedQueue);
+                OpcServer.writeOpcTag(OpcServerName, AvgRotorSpeedTag, avgRotorSpeed);
+                return avgRotorSpeed;
+            }
+            catch (Exception e) {
+                ArticunoLogger.DataLogger.Error("There is no data stored in  {0}'s rotor speed queue size: {1}", GetTurbinePrefixValue(), rotorSpeedQueue.Count);
+                throw e;
+            }
+        }
+
+        public double GetAvgWindSpeed() {
+            try {
+                var avgWindSpeed = CalculateAverageWindSpeed(windSpeedQueue);
+                OpcServer.writeOpcTag(OpcServerName, AvgWindSpeedTag, avgWindSpeed);
+                return avgWindSpeed;
+            }
+            catch (Exception e) {
+                ArticunoLogger.DataLogger.Error("There is no data stored in  {0}'s rotor speed queue size: {1}", GetTurbinePrefixValue(), windSpeedQueue.Count);
+                throw e;
+            }
         }
 
         private void LogTurbineCurtailmentRecord(string turbinePrefix, string activity) {
