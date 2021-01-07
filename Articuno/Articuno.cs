@@ -53,6 +53,7 @@ namespace Articuno {
         private static int ACTIVE_NOISE_LEV = 0;
         private static int RUN_STATE = 100;
         private static int DRAFT_STATE = 75;
+        private static int PAUSE_STATE = 50;
 
         private static int MAX_CTR_TIME = 60;
         private static int MIN_CTR_TIME = 1;
@@ -68,6 +69,7 @@ namespace Articuno {
             tm = TurbineMediator.Instance;
 
             mm.CreateMetTowerObject();
+            tm.MaxQueueSize = (HEARTBEAT_POLLING * articunoCtrTime);
             tm.createTurbines();
             turbinesExcludedList = new List<string>();
             turbinesPausedByArticuno = new List<string>();
@@ -82,10 +84,14 @@ namespace Articuno {
             mm = MetTowerMediator.Instance;
             tm = TurbineMediator.Instance;
 
+
             opcServerName = dbi.getOpcServerName();
             sitePrefix = dbi.getSitePrefixValue();
+            SetUpOpcSystemTags();
 
             mm.CreateMetTowerObject();
+            //The 20 is supposed to be the default CTR time, which is 20
+            tm.MaxQueueSize = ((HEARTBEAT_POLLING / 1000) * articunoCtrTime);
             tm.createTurbines();
 
             turbinesExcludedList = new List<string>();
@@ -93,7 +99,8 @@ namespace Articuno {
             turbinesWaitingForPause = new List<string>();
             turbinesConditionNotMet = new List<string>();
 
-            SetUpOpcSystemTags();
+            //SetUpOpcSystemTags();
+            setOpcTagListenerForTurbineAndMetTower();
             StartArticuno();
         }
 
@@ -111,7 +118,7 @@ namespace Articuno {
 
             setSystemInputTags();
             setSystemOutputTags();
-            setOpcTagListenerForTurbineAndMetTower();
+            //setOpcTagListenerForTurbineAndMetTower();
         }
 
         /// <summary>
@@ -122,7 +129,7 @@ namespace Articuno {
             ArticunoLogger.DataLogger.Debug("ArticunoMain has detected Turbine {0} has paused. ", turbineId);
             MoveTurbineIdToAnotherList(turbineId, turbinesWaitingForPause, turbinesPausedByArticuno);
             updateNumberOfTurbinesPaused();
-            LogCurrentTurbineStatusesInArticuno();
+            //LogCurrentTurbineStatusesInArticuno();
         }
 
         /// <summary>
@@ -130,15 +137,18 @@ namespace Articuno {
         /// </summary>
         public static void turbineClearedOfIce(string turbineId) {
             ArticunoLogger.DataLogger.Debug("ArticunoMain has detected Turbine {0} has started running from the site.", turbineId);
+            ArticunoLogger.DataLogger.Debug("Clearing Articuno Stop Alarm for {0}", turbineId);
+            tm.GetTurbine(turbineId).SetPausedByArticunoAlarmValue(false);
+
             MoveTurbineIdToAnotherList(turbineId, turbinesPausedByArticuno, turbinesWaitingForPause);
             updateNumberOfTurbinesPaused();
-            LogCurrentTurbineStatusesInArticuno();
+            //LogCurrentTurbineStatusesInArticuno();
         }
 
         public static bool isAlreadyPaused(string turbineId) {
-            ArticunoLogger.DataLogger.Info("Turbine {0} is {1} ", turbineId, turbinesPausedByArticuno.Contains(turbineId));
-            ArticunoLogger.GeneralLogger.Info("Turbine {0} is {1} ", turbineId, turbinesPausedByArticuno.Contains(turbineId));
-            LogCurrentTurbineStatusesInArticuno();
+            ArticunoLogger.DataLogger.Info("Turbine {0} Paused status: {1} ", turbineId, turbinesPausedByArticuno.Contains(turbineId));
+            ArticunoLogger.GeneralLogger.Info("Turbine {0} Paused status: {1} ", turbineId, turbinesPausedByArticuno.Contains(turbineId));
+            //LogCurrentTurbineStatusesInArticuno();
             return turbinesPausedByArticuno.Contains(turbineId);
         }
 
@@ -165,6 +175,7 @@ namespace Articuno {
             tempThresholdTag = sitePrefix + dbi.getTemperatureThresholdTag();
             enableArticunoTag = sitePrefix + dbi.getArticunoEnableTag();
             articunoCtrTag = sitePrefix + dbi.getArticunoCtrTag();
+            articunoCtrTime = Convert.ToInt32(OpcServer.readAnalogTag(opcServerName, articunoCtrTag));
             deltaThresholdTag = sitePrefix + dbi.GetDeltaThresholdTag();
 
             systemInputTags.Add(new DAItemGroupArguments("", opcServerName, tempThresholdTag, NORMAL_UPDATE_RATE, null));
@@ -474,7 +485,7 @@ namespace Articuno {
 
         }
 
-        private static bool IsTurbinePausedByArticuno(string turbineId) { return turbinesPausedByArticuno.Contains(turbineId); }
+        private static bool IsTurbinePausedByArticuno(string turbineId) => tm.getTurbinePrefixList().Where(p => tm.IsTurbinePausedByArticuno(p)).Contains(turbineId);
 
         private static void TurbineWaitingForProperCondition(string turbineId) {
             MoveTurbineIdToAnotherList(turbineId, turbinesWaitingForPause, turbinesConditionNotMet);
@@ -495,14 +506,36 @@ namespace Articuno {
         /// Logs the content of the current internal lists in articuno.
         /// </summary>
         private static void LogCurrentTurbineStatusesInArticuno() {
-            turbinesWaitingForPause.Sort();
-            turbinesPausedByArticuno.Sort();
-            turbinesExcludedList.Sort();
-            turbinesConditionNotMet.Sort();
-            ArticunoLogger.DataLogger.Debug("Turbines Waiting for Pause: {0}", string.Join(",", turbinesWaitingForPause.ToArray()));
-            ArticunoLogger.DataLogger.Debug("Turbines paused by Articuno: {0}", string.Join(",", turbinesPausedByArticuno.ToArray()));
-            ArticunoLogger.DataLogger.Debug("Turbines exlucded from Articuno: {0}", string.Join(",", turbinesExcludedList.ToArray()));
-            ArticunoLogger.DataLogger.Debug("Turbines awaiting proper condition: {0}", string.Join(",", turbinesConditionNotMet.ToArray()));
+
+
+            var turbinesWaitingForPause = tm.getTurbinePrefixList().Where(p => { 
+                var t = tm.GetTurbine(p);
+                return t.isTurbineParticipating() == true && Convert.ToBoolean(t.readStoppedByArticunoAlarmValue()) == false;
+            }).ToList();
+            //turbinesWaitingForPause.Sort();
+            var turbinesPausedByArticuno = tm.getTurbinePrefixList().Where(p => {
+                var t = tm.GetTurbine(p);
+                return t.isTurbineParticipating() == true && Convert.ToBoolean(t.readStoppedByArticunoAlarmValue()) == true;
+            }).ToList();
+            //turbinesPausedByArticuno.Sort();
+
+            var turbinesExcludedList = tm.getTurbinePrefixList().Where(p => {
+                var t = tm.GetTurbine(p);
+                return t.isTurbineParticipating() == false;
+            }).ToList();
+            //turbinesExcludedList.Sort();
+
+            var turbinesConditionNotMet = tm.getTurbinePrefixList().Where(p => {
+                var t = tm.GetTurbine(p);
+                return Convert.ToInt32(t.readTurbineOperatingStateValue()) == PAUSE_STATE && Convert.ToBoolean(t.readStoppedByArticunoAlarmValue()) == false;
+            }
+            ).ToList();
+            //turbinesConditionNotMet.Sort();
+
+            ArticunoLogger.DataLogger.Debug("Turbines Waiting for Pause: {0}", string.Join(",", turbinesWaitingForPause));
+            ArticunoLogger.DataLogger.Debug("Turbines paused by Articuno: {0}", string.Join(",", turbinesPausedByArticuno));
+            ArticunoLogger.DataLogger.Debug("Turbines exlucded from Articuno: {0}", string.Join(",", turbinesExcludedList));
+            ArticunoLogger.DataLogger.Debug("Turbines awaiting proper condition: {0}", string.Join(",", turbinesConditionNotMet));
         }
 
         /// <summary>
