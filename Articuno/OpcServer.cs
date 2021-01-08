@@ -131,7 +131,7 @@ namespace Articuno
             catch (Exception e)
             {
                 ArticunoLogger.DataLogger.Error("Write to tag: {0} failed. Does {0} exist on the server? Did the server die?", tag);
-                ArticunoLogger.DataLogger.Error("Error:\n{0}", e);
+                ArticunoLogger.DataLogger.Error(e,"Error:{0}");
             }
         }
 

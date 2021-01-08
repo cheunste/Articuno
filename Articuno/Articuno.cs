@@ -490,7 +490,10 @@ namespace Articuno {
         /// <param name="fromList">The list that turbine Id was in originally</param>
         /// <param name="newList">The list that the turbine Id will be moved to</param>
         private static void updateNumberOfTurbinesPaused() {
-            OpcServer.writeOpcTag(opcServerName, numTurbinesPausedTag, tm.GetTurbineIdsPausedByArticuno().Count);
+            var turbinesPausedByArticuno = tm.GetTurbineIdsPausedByArticuno();
+            var numTurbPaused = turbinesPausedByArticuno.Count;
+            ArticunoLogger.DataLogger.Debug("Turbines paused by Articuno: {0}", string.Join(",", turbinesPausedByArticuno));
+            OpcServer.writeOpcTag(opcServerName, numTurbinesPausedTag, numTurbPaused);
         }
 
     }
