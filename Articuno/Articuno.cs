@@ -384,7 +384,7 @@ namespace Articuno {
                 //If turbine isn't in run or draft, then that means it is derated or in emergency, or something else. 
                 //If the turbine is in either run or draft, then it meets condition. But make sure it also isn't in the list already
                 if ((turbineOperatinoalState == RUN_STATE || turbineOperatinoalState == DRAFT_STATE)) {
-                    TurbineReadyToBePausedByArticuno(turbineId);
+                    //TurbineReadyToBePausedByArticuno(turbineId);
                     tm.setOperatingStateCondition(turbineId, true);
                     tm.ResetCtrValueForTurbine(turbineId);
                 }

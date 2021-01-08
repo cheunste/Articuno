@@ -60,7 +60,7 @@ namespace Articuno {
         public List<MetTower> GetMetTowerList() => metTowerList;
 
         public void UpdateCtrCountdown(int ctrCountdown) {
-            var ctrVal = Convert.ToInt32(OpcServer.readAnalogTag("", MetTowerCtrCountdownTag));
+            var ctrVal = Convert.ToInt32(OpcServer.readAnalogTag(opcServerName, MetTowerCtrCountdownTag));
             OpcServer.writeOpcTag(opcServerName, MetTowerCtrCountdownTag, ctrCountdown);
         }
 

@@ -43,6 +43,9 @@ namespace Articuno {
         private static int RUN_STATE = 100;
         private static int DRAFT_STATE = 75;
         private static int PAUSE_STATE = 50;
+        private static int STOP_STATE = 25;
+        private static int EMERGENCY_STATE = 0;
+        private static int COMMOUT_STATE = 150;
 
         private RotorSpeedFilter filterTable;
 
@@ -89,13 +92,11 @@ namespace Articuno {
             return GetTurbine(p).isTurbineParticipating() == true && Convert.ToBoolean(GetTurbine(p).readStoppedByArticunoAlarmValue()) == false;
         }).ToList();
         public List<String> GetTurbineIdsPausedByArticuno() => getTurbinePrefixList().Where(p => {
-            var t = GetTurbine(p);
-            return t.isTurbineParticipating() == true && Convert.ToBoolean(t.readStoppedByArticunoAlarmValue()) == true;
+            return GetTurbine(p).isTurbineParticipating() == true && Convert.ToBoolean(GetTurbine(p).readStoppedByArticunoAlarmValue()) == true;
         }).ToList();
 
         public List<String> GetTurbineIdsExcludedList() => getTurbinePrefixList().Where(p => {
-            var t = GetTurbine(p);
-            return t.isTurbineParticipating() == false;
+            return GetTurbine(p).isTurbineParticipating() == false;
         }).ToList();
 
         public List<String> GetTurbineIdsConditionNotMet() => getTurbinePrefixList().Where(p => {
