@@ -54,7 +54,8 @@ namespace Articuno {
         /// <summary>
         /// Create the turbines from the database.
         /// </summary>
-        public void createTurbines() {
+        ///<param name="articunoCtrTime"> the CTR time in minutes. Default is one minute if not specified</param>
+        public void createTurbines(int articunoCtrTime = 1) {
             ArticunoLogger.DataLogger.Info("Creating turbine lists");
             ArticunoLogger.GeneralLogger.Info("Creating turbine lists");
             turbineList = new List<Turbine>();
@@ -63,6 +64,8 @@ namespace Articuno {
             createPrefixList();
 
             foreach (string turbinePrefix in turbinePrefixList) { CreateTurbineInstance(turbinePrefix); }
+            writeCtrTime(articunoCtrTime);
+            
         }
 
         public void createPrefixList() {

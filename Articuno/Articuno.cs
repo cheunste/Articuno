@@ -61,7 +61,7 @@ namespace Articuno {
 
             mm.CreateMetTowerObject();
             tm.MaxQueueSize = (HEARTBEAT_POLLING * articunoCtrTime);
-            tm.createTurbines();
+            tm.createTurbines(articunoCtrTime);
 
             SetUpOpcSystemTags();
         }
@@ -79,7 +79,7 @@ namespace Articuno {
             mm.CreateMetTowerObject();
             //The 20 is supposed to be the default CTR time, which is 20
             tm.MaxQueueSize = ((HEARTBEAT_POLLING / 1000) * articunoCtrTime);
-            tm.createTurbines();
+            tm.createTurbines(articunoCtrTime);
 
             //SetUpOpcSystemTags();
             setOpcTagListenerForTurbineAndMetTower();
@@ -367,7 +367,7 @@ namespace Articuno {
                 ArticunoLogger.GeneralLogger.Info("Turbine {0} has started from NCC or site", turbineId);
                 if (IsTurbinePausedByArticuno(turbineId)) {
                     turbineClearedOfIce(turbineId);
-                    TurbineReadyToBePausedByArticuno(turbineId);
+                    LogCurrentTurbineStatusesInArticuno();
                 }
             }
 
@@ -379,17 +379,15 @@ namespace Articuno {
             bool participationStatus = Convert.ToBoolean(tm.readTurbineParticipationStatus(turbineId));
             //If already paused by Articuno, then there's nothing to do
             if (tm.GetTurbineIdsPausedByArticuno().Contains(turbineId)) { }
-            //If not paused by Aritcuno, then you need to check the operating state of the turbine...but NOT for turbines that have arleady been excluded
+            //If not paused by Aritcuno, then you need to check the particpation status and then the operating state of the turbine
             else if (participationStatus) {
                 //If turbine isn't in run or draft, then that means it is derated or in emergency, or something else. 
                 //If the turbine is in either run or draft, then it meets condition. But make sure it also isn't in the list already
                 if ((turbineOperatinoalState == RUN_STATE || turbineOperatinoalState == DRAFT_STATE)) {
-                    //TurbineReadyToBePausedByArticuno(turbineId);
                     tm.setOperatingStateCondition(turbineId, true);
                     tm.ResetCtrValueForTurbine(turbineId);
                 }
                 else {
-                    TurbineWaitingForProperCondition(turbineId);
                     tm.setOperatingStateCondition(turbineId, false);
                 }
             }
@@ -456,14 +454,6 @@ namespace Articuno {
         }
 
         private static bool IsTurbinePausedByArticuno(string turbineId) => tm.getTurbinePrefixList().Where(p => tm.IsTurbinePausedByArticuno(p)).Contains(turbineId);
-
-        private static void TurbineWaitingForProperCondition(string turbineId) {
-            LogCurrentTurbineStatusesInArticuno();
-        }
-
-        private static void TurbineReadyToBePausedByArticuno(string turbineId) {
-            LogCurrentTurbineStatusesInArticuno();
-        }
 
         /// <summary>
         /// Logs the content of the current internal lists in articuno.

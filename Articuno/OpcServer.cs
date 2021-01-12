@@ -127,6 +127,8 @@ namespace Articuno
             {
                 if (isActiveUCC())
                     opcServer.WriteItemValue(serverName, tag, value);
+                else
+                    ArticunoLogger.DataLogger.Info("UCC is currently not active");
             }
             catch (Exception e)
             {
