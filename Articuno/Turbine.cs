@@ -206,15 +206,15 @@ namespace Articuno {
             }
             catch (Exception e) {
                 ArticunoLogger.DataLogger.Error(" No data stored in  {0}'s wind speed queue (size: {1}) or rotor speed queue (size: {2})",
-                    GetTurbinePrefixValue(),windSpeedQueue.Count, rotorSpeedQueue.Count);
+                    GetTurbinePrefixValue(), windSpeedQueue.Count, rotorSpeedQueue.Count);
             }
         }
         /// <summary>
         /// Method call to trim all content of a turbine's wind speed queue and rotor speed queue
         /// </summary>
         public void emptyQueue() {
-            //windSpeedQueue.Clear();
-            //rotorSpeedQueue.Clear();
+            windSpeedQueue.Clear();
+            rotorSpeedQueue.Clear();
         }
 
         /// <summary>
@@ -238,8 +238,8 @@ namespace Articuno {
             resetTurbineCtrTime(startupTime);
         }
 
-        public static double CalculateAverageRotorSpeed(Queue<double> rsq) => rsq.Average();
-        public static double CalculateAverageWindSpeed(Queue<double> wsq) => wsq.Average();
+        public static double CalculateAverageRotorSpeed(Queue<double> rsq) => rsq.Count > 0 ? Math.Round(rsq.Average(), 3) : 0.0;
+        public static double CalculateAverageWindSpeed(Queue<double> wsq) => wsq.Count > 0 ? Math.Round(wsq.Average(), 3) : 0.0;
 
         public void resetTurbineCtrTime(int startupTime = 0) {
             double currentCtr = Convert.ToInt32(readTurbineCtrTimeRemaining());
@@ -297,9 +297,14 @@ namespace Articuno {
 
 
         public double GetAvgRotorSpeed() {
+            double avgRotorSpeed = 0.0;
             try {
-                var avgRotorSpeed = CalculateAverageRotorSpeed(rotorSpeedQueue);
-                OpcServer.writeOpcTag(OpcServerName, AvgRotorSpeedTag, avgRotorSpeed);
+                if (rotorSpeedQueue.Count > 0) {
+                    avgRotorSpeed = CalculateAverageRotorSpeed(rotorSpeedQueue);
+                    OpcServer.writeOpcTag(OpcServerName, AvgRotorSpeedTag, avgRotorSpeed);
+                }
+                else
+                    ArticunoLogger.DataLogger.Debug("No rotor speed samples for {0}. Returning zero",GetTurbinePrefixValue());
                 return avgRotorSpeed;
             }
             catch (Exception e) {
@@ -309,9 +314,15 @@ namespace Articuno {
         }
 
         public double GetAvgWindSpeed() {
+            double avgWindSpeed = 0.0;
             try {
-                var avgWindSpeed = CalculateAverageWindSpeed(windSpeedQueue);
-                OpcServer.writeOpcTag(OpcServerName, AvgWindSpeedTag, avgWindSpeed);
+                if (rotorSpeedQueue.Count > 0) {
+                    avgWindSpeed = CalculateAverageWindSpeed(windSpeedQueue);
+                    OpcServer.writeOpcTag(OpcServerName, AvgWindSpeedTag, avgWindSpeed);
+                }
+                else
+                    ArticunoLogger.DataLogger.Debug("No wind speed samples for {0}. Returning zero",GetTurbinePrefixValue());
+
                 return avgWindSpeed;
             }
             catch (Exception e) {
