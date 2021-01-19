@@ -59,6 +59,7 @@ namespace Articuno {
             mm = MetTowerMediator.Instance;
             tm = TurbineMediator.Instance;
 
+            mm.MaxQueueSize = (HEARTBEAT_POLLING * articunoCtrTime);
             mm.CreateMetTowerObject();
             tm.MaxQueueSize = (HEARTBEAT_POLLING * articunoCtrTime);
             tm.createTurbines(articunoCtrTime);
@@ -76,6 +77,8 @@ namespace Articuno {
             sitePrefix = dbi.getSitePrefixValue();
             SetUpOpcSystemTags();
 
+            //The 20 is supposed to be the default CTR time, which is 20
+            mm.MaxQueueSize = ((HEARTBEAT_POLLING / 1000) * articunoCtrTime);
             mm.CreateMetTowerObject();
             //The 20 is supposed to be the default CTR time, which is 20
             tm.MaxQueueSize = ((HEARTBEAT_POLLING / 1000) * articunoCtrTime);
@@ -258,12 +261,16 @@ namespace Articuno {
                 calculateMetTowerAverages();
 
             //Write the MetTower CTR to the tag
-            mm.UpdateCtrCountdown(ctrCountdown);
-
             if (isArticunoEnabled()) {
 
                 tm.decrementTurbineCtrTime();
                 tm.UpdateDisplayValuesForAllTurbine();
+                mm.GetMetTowerList().ForEach(m => {
+                    var h =mm.calculateCtrAvgHumidity(m);
+                    var t =mm.calculateCtrAvgTemperature(m);
+                    mm.updateDewPoint(m, t, h);
+                });
+                mm.UpdateCtrCountdown(ctrCountdown);
             }
 
             LogCurrentTurbineStatusesInArticuno();
