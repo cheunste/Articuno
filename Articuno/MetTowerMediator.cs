@@ -19,6 +19,11 @@ namespace Articuno {
         private static List<MetTower> metTowerList = new List<MetTower>();
         private static List<String> metPrefixList = new List<String>();
         private static DatabaseInterface dbi;
+        private double tempThreshold;
+        private double deltaThreshold;
+        private double dewPoint;
+        private double delta;
+
         public int MaxQueueSize { get; set; }
 
         private MetTowerMediator() {
@@ -83,72 +88,30 @@ namespace Articuno {
         public void CalculateFrozenMetTowerCondition(MetTower met, double avgTemperature, double avgHumidity) {
             string metId = met.MetId;
 
-            double tempThreshold = ReadTemperatureThresholdForMetTower(metId);
-            double deltaThreshold = readDeltaThreshold(metId);
-            double dewPoint = CalculateDewPointTemperature(avgHumidity, avgTemperature);
-            double delta = CalculateDewTempAmbientTempDelta(avgTemperature, dewPoint);
+            this.tempThreshold = ReadTemperatureThresholdForMetTower(metId);
+            this.deltaThreshold = readDeltaThreshold(metId);
+            this.dewPoint = CalculateDewPointTemperature(avgHumidity, avgTemperature);
+            this.delta = CalculateDewTempAmbientTempDelta(avgTemperature, dewPoint);
 
-            bool isHumidityBad = Convert.ToBoolean(met.getPrimaryHumiditySensor().isSensorBadQuality()) || Convert.ToBoolean(met.getPrimaryHumiditySensor().isSensorOutofRange());
-
-            if (avgTemperature <= tempThreshold) {
-                try {
-                    //If Humidity is bad, then only relie on temperature
-                    if (isHumidityBad) {
-                        ArticunoLogger.DataLogger.Debug("{0} Humidity is bad quality. Ignoring and currently using avg temperature {1}", metId, avgTemperature);
-                        met.IceIndicationValue = true;
-
-                        ArticunoLogger.CurtailmentLogger.Debug("Icing conditions met for {0}. \n" +
-                            "{0} Average Temperature {1}, \n" +
-                            "{0} Temperature threshold {2} \n",
-                            metId, avgTemperature, tempThreshold);
-
-                        ArticunoLogger.DataLogger.Debug("Icing conditions met for {0}. \n" +
-                            "{0} Average Temperature {1}, \n" +
-                            "{0} Temperature threshold {2} \n",
-                            metId, avgTemperature, tempThreshold);
-                    }
-                    //Freezing Conditions met with good humidity(regular case)
-                    else if (delta <= deltaThreshold) {
-                        met.IceIndicationValue = true;
-                        ArticunoLogger.DataLogger.Debug("No Ice detected for met {0}.\n" +
-                            "{0} Average Temperature {1}, \n" + "{0} Temperature threshold {2} \n" +
-                            "{0} Average Humidity {3}, \n" + "{0} Delta threshold {4} \n",
-                            metId, avgTemperature, tempThreshold, avgHumidity, deltaThreshold
-                            );
-                    }
-                    //Reaching here still implies there's no ice. But it shouldn't ever reach here because at this point, avgTemperature should be > tempThreshold
-                    else { }
+            bool isHumidityBad = CheckHumidityQuality(met);
+            bool temperatureCheck = (avgTemperature <= tempThreshold);
+            bool deltaCheck = (delta <= deltaThreshold);
+            if (isHumidityBad) {
+                ArticunoLogger.DataLogger.Debug("{0} Humidity is bad quality. Ignoring and currently using avg temperature {1}", met.MetId, avgTemperature);
+                if (temperatureCheck) {
+                    if (deltaCheck)
+                        SetIcedCondition(met, avgTemperature,avgHumidity);
+                    else
+                        SetNoIceCondition(met, avgTemperature, avgHumidity);
                 }
-                catch (Exception e) {
-                    //in case you can't write to OPC Server
-                    ArticunoLogger.CurtailmentLogger.Debug("Error when writing to the Ice indication tag.\n" +
-                        "Error: {0}. \n" + "Met: {1}, \n" +
-                        "avgTemp: {2}, \n" + "tempThreshold {3}\n",
-                        e, metId, avgTemperature, tempThreshold);
-                    ArticunoLogger.DataLogger.Error("Error when writing to the Ice indication tag.\n" +
-                        "Error: {0}. \n" + "Met: {1}, \n" +
-                        "avgTemp: {2}, \n" + "tempThreshold {3}\n",
-                        e, metId, avgTemperature, tempThreshold);
-                }
+                else
+                    SetNoIceCondition(met, avgTemperature, avgHumidity);
             }
-            //No ice condition
             else {
-                met.IceIndicationValue = false;
-                ArticunoLogger.CurtailmentLogger.Debug("No Ice detected for met {0}.\n" +
-                    "{0} Average Temperature {1}, \n" +
-                    "{0} Temperature threshold {2} \n" +
-                    "{0} Average Humidity {3}, \n" +
-                    "{0} Delta threshold {4} \n",
-                    metId, avgTemperature, tempThreshold, avgHumidity, deltaThreshold
-                    );
-
-                ArticunoLogger.DataLogger.Debug("No Ice detected for met {0}.\n" +
-                    "{0} Average Temperature {1}, \n" +
-                    "{0} Temperature threshold {2} \n" +
-                    "{0} Average Humidity {3}, \n" +
-                    "{0} Delta threshold {4} \n",
-                    metId, avgTemperature, tempThreshold, avgHumidity, deltaThreshold
-                    );
+                if (temperatureCheck)
+                    SetIcedCondition(met, avgTemperature,avgHumidity);
+                else
+                    SetNoIceCondition(met, avgTemperature, avgHumidity);
             }
         }
         public void createPrefixList() {
@@ -270,10 +233,7 @@ namespace Articuno {
         public double readDeltaThreshold(string metTowerId) => GetMetTowerFromId(metTowerId).DeltaTempThreshold;
         public void writePrimTemperature(string metId, double value) => GetMetTowerFromId(metId).PrimTemperatureValue = value;
         public void writeSecTemperature(string metId, double value) => GetMetTowerFromId(metId).SecTemperatureValue = value;
-        public void writeHumidity(string metId, double value) {
-            MetTower met = GetMetTowerFromId(metId);
-            met.RelativeHumidityValue = value;
-        }
+        public void writeHumidity(string metId, double value) => GetMetTowerFromId(metId).RelativeHumidityValue = value;
 
         /// <summary>
         /// Calculates the Dew Point Temperature given the ambient temperature and the the relative humidity. Humidity MUST BE IN DECIMAL FORM
@@ -391,6 +351,47 @@ namespace Articuno {
             return avg < max && avg >= min;
         }
 
+        private bool CheckHumidityQuality(MetTower met) => Convert.ToBoolean(met.getPrimaryHumiditySensor().isSensorBadQuality()) || Convert.ToBoolean(met.getPrimaryHumiditySensor().isSensorOutofRange());
+        private void SetNoIceCondition(MetTower met, double avgTemperature, double avgHumidity) {
+            var metId = met.MetId;
+            met.IceIndicationValue = false;
+            ArticunoLogger.CurtailmentLogger.Debug("No Ice detected for met {0}.\n" +
+                "{0} Average Temperature {1}, \n" +
+                "{0} Temperature threshold {2} \n" +
+                "{0} Average Humidity {3}, \n" +
+                "{0} Delta threshold {4} \n",
+                metId, avgTemperature, tempThreshold, avgHumidity, deltaThreshold
+                );
+
+            ArticunoLogger.DataLogger.Debug("No Ice detected for met {0}.\n" +
+                "{0} Average Temperature {1}, \n" +
+                "{0} Temperature threshold {2} \n" +
+                "{0} Average Humidity {3}, \n" +
+                "{0} Delta threshold {4} \n",
+                metId, avgTemperature, tempThreshold, avgHumidity, deltaThreshold
+                );
+        }
+
+        private void SetIcedCondition(MetTower met, double avgTemperature,double avgHumidity) {
+            met.IceIndicationValue = true;
+            var metId = met.MetId;
+            ArticunoLogger.DataLogger.Debug("No Ice detected for met {0}.\n" +
+                                    "{0} Average Temperature {1}, \n" + "{0} Temperature threshold {2} \n" +
+                                    "{0} Average Humidity {3}, \n" + "{0} Delta threshold {4} \n",
+                                    metId, avgTemperature, tempThreshold, avgHumidity, deltaThreshold
+                                    );
+
+            ArticunoLogger.CurtailmentLogger.Debug("Icing conditions met for {0}. \n" +
+                "{0} Average Temperature {1}, \n" +
+                "{0} Temperature threshold {2} \n",
+                metId, avgTemperature, tempThreshold);
+
+            ArticunoLogger.DataLogger.Debug("Icing conditions met for {0}. \n" +
+                "{0} Average Temperature {1}, \n" +
+                "{0} Temperature threshold {2} \n",
+                metId, avgTemperature, tempThreshold);
+
+        }
         private void InitializeMetTower(string metId) {
             MetTower met = new MetTower(metId, opcServerName);
             met.PrimTemperatureTag = sitePrefix + dbi.GetMetTowerPrimTempValueTag(metId);
