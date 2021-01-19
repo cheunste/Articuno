@@ -54,6 +54,7 @@ namespace Articuno {
         private static MetTowerMediator mm;
         private static TurbineMediator tm;
 
+        //Used a faux proxy for testing until a better stub can  be built
         public Articuno(bool testMode) {
             dbi = DatabaseInterface.Instance;
             mm = MetTowerMediator.Instance;
@@ -77,14 +78,12 @@ namespace Articuno {
             sitePrefix = dbi.getSitePrefixValue();
             SetUpOpcSystemTags();
 
-            //The 20 is supposed to be the default CTR time, which is 20
+            //Queue size is set up so it is depending on the CTR time and the Heartbeat (in sec)
             mm.MaxQueueSize = ((HEARTBEAT_POLLING / 1000) * articunoCtrTime);
             mm.CreateMetTowerObject();
-            //The 20 is supposed to be the default CTR time, which is 20
             tm.MaxQueueSize = ((HEARTBEAT_POLLING / 1000) * articunoCtrTime);
             tm.createTurbines(articunoCtrTime);
 
-            //SetUpOpcSystemTags();
             setOpcTagListenerForTurbineAndMetTower();
             StartArticuno();
         }
@@ -103,7 +102,6 @@ namespace Articuno {
 
             setSystemInputTags();
             setSystemOutputTags();
-            //setOpcTagListenerForTurbineAndMetTower();
         }
 
         /// <summary>
@@ -113,7 +111,6 @@ namespace Articuno {
         public static void turbinePausedByArticuno(string turbineId) {
             ArticunoLogger.DataLogger.Debug("ArticunoMain has detected Turbine {0} has paused. ", turbineId);
             updateNumberOfTurbinesPaused();
-            //LogCurrentTurbineStatusesInArticuno();
         }
 
         /// <summary>
@@ -123,16 +120,13 @@ namespace Articuno {
             ArticunoLogger.DataLogger.Debug("ArticunoMain has detected Turbine {0} has started running from the site.", turbineId);
             ArticunoLogger.DataLogger.Debug("Clearing Articuno Stop Alarm for {0}", turbineId);
             tm.GetTurbine(turbineId).SetPausedByArticunoAlarmValue(false);
-
             updateNumberOfTurbinesPaused();
-            //LogCurrentTurbineStatusesInArticuno();
         }
 
         public static bool isAlreadyPaused(string turbineId) {
             var turbinesPausedByArticuno = tm.GetTurbineIdsPausedByArticuno();
             ArticunoLogger.DataLogger.Info("Turbine {0} Paused status: {1} ", turbineId, turbinesPausedByArticuno.Contains(turbineId));
             ArticunoLogger.GeneralLogger.Info("Turbine {0} Paused status: {1} ", turbineId, turbinesPausedByArticuno.Contains(turbineId));
-            //LogCurrentTurbineStatusesInArticuno();
             return turbinesPausedByArticuno.Contains(turbineId);
         }
 
@@ -255,21 +249,20 @@ namespace Articuno {
         /// Function to handle tasks that should be executed every minute (ie get temperature measurements) and every CTR minute (ie check rotor speed, run calculations, etc.) 
         /// </summary>
         private static void minuteUpdate(object sender, ElapsedEventArgs e) {
-            //For every CTR minute, do the other calculation stuff. Better set up a  member variable here
             ctrCountdown--;
             if (ctrCountdown <= 0)
                 calculateMetTowerAverages();
 
-            //Write the MetTower CTR to the tag
             if (isArticunoEnabled()) {
 
                 tm.decrementTurbineCtrTime();
                 tm.UpdateDisplayValuesForAllTurbine();
                 mm.GetMetTowerList().ForEach(m => {
-                    var h =mm.calculateCtrAvgHumidity(m);
-                    var t =mm.calculateCtrAvgTemperature(m);
+                    var h = mm.calculateCtrAvgHumidity(m);
+                    var t = mm.calculateCtrAvgTemperature(m);
                     mm.updateDewPoint(m, t, h);
                 });
+                //Write the MetTower CTR to the tag
                 mm.UpdateCtrCountdown(ctrCountdown);
             }
 
@@ -463,7 +456,7 @@ namespace Articuno {
         private static bool IsTurbinePausedByArticuno(string turbineId) => tm.getTurbinePrefixList().Where(p => tm.IsTurbinePausedByArticuno(p)).Contains(turbineId);
 
         /// <summary>
-        /// Logs the content of the current internal lists in articuno.
+        /// Logs the current statues of the turbines from Articuno's perspective
         /// </summary>
         private static void LogCurrentTurbineStatusesInArticuno() {
 
