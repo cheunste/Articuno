@@ -29,14 +29,15 @@ namespace Articuno {
         public double MIN_HUMIDITY_VALUE = 0.0;
         public double MAX_HUMIDITY_VALUE = 0.99;
 
-        private Queue<double> temperatureQueue;
-        private Queue<double> humidityQueue;
+        private CircularQueue<double> temperatureQueue;
+        private CircularQueue<double> humidityQueue;
 
         private string metTowerPrefix;
         private Turbine nearestTurbine;
 
         private string opcServerName;
 
+        private static MetTowerMediator mm;
         MetTowerSensor primTempSensor;
         MetTowerSensor secTempSensor;
         MetTowerSensor primHumidSensor;
@@ -45,12 +46,15 @@ namespace Articuno {
             this.opcServerName = opcServerName;
             this.metTowerPrefix = MetId;
 
-            temperatureQueue = new Queue<double>();
-            humidityQueue = new Queue<double>();
+            mm = MetTowerMediator.Instance;
             lastPrimTemp = 0;
             lastSecTemp = 0;
 
             SampleHumidity = 0;
+        }
+        public void initializeQueue() {
+            temperatureQueue = new CircularQueue<double>(mm.MaxQueueSize);
+            humidityQueue = new CircularQueue<double>(mm.MaxQueueSize);
         }
 
         public void createSensors() {

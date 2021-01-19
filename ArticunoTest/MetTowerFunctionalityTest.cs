@@ -41,6 +41,7 @@ namespace ArticunoTest {
             tm.createTurbines();
 
             //Create new met tower mediator
+            mm.MaxQueueSize = 1;
             mm.CreateMetTowerObject();
             opcServer = new OpcServer(opcServerName);
             siteName = dbi.getSitePrefixValue();
@@ -504,6 +505,20 @@ namespace ArticunoTest {
             Assert.IsTrue(stdDev != 0, "Std Dev is not zero as expected. It is showing {0}", stdDev);
 
         }
+        [TestMethod]
+        public void SetCircularQueueSizeTest() {
+            mm.MaxQueueSize = 1;
+            Assert.IsTrue(mm.MaxQueueSize == 1, "");
+            testMetTower.initializeQueue();
+            var val1 = 1.75;
+            var val2 = 3.00;
+            testMetTower.writeToQueue(val1, val1);
+            testMetTower.writeToQueue(val2, val2);
+            var q = testMetTower.getHumidityQueue();
+            Assert.IsTrue(q.Count == 1, "Queue size is {0} and not 1", q.Count);
+            Assert.IsTrue(q.Peek() == val2, "First item in queue is {0} and not {1}", q.Peek(), val2);
+        }
+
 
         private void createStaleData(MetTower met) {
             for (int i = 0; i <= 100; i++) {

@@ -19,6 +19,7 @@ namespace Articuno {
         private static List<MetTower> metTowerList = new List<MetTower>();
         private static List<String> metPrefixList = new List<String>();
         private static DatabaseInterface dbi;
+        public int MaxQueueSize { get; set; }
 
         private MetTowerMediator() {
             metPrefixList = new List<string>();
@@ -45,6 +46,7 @@ namespace Articuno {
             createPrefixList();
 
             foreach (string metPrefix in metPrefixList) { InitializeMetTower(metPrefix); }
+
         }
         /// <summary>
         /// Returns the number of met towers in a project
@@ -414,6 +416,7 @@ namespace Articuno {
             met.SetBackupTurbineForMetTower(tm.GetTurbine(dbi.GetBackupTurbineForMet(metId)));
 
             met.createSensors();
+            met.initializeQueue();
             metTowerList.Add(met);
         }
     }
