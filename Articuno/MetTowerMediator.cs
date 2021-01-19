@@ -86,10 +86,8 @@ namespace Articuno {
         /// Method to check a met tower to see if it meets the freezing condition and set its condition. Returns true if iti s frozen, false otherwise
         /// </summary>
         public void CalculateFrozenMetTowerCondition(MetTower met, double avgTemperature, double avgHumidity) {
-            string metId = met.MetId;
-
-            this.tempThreshold = ReadTemperatureThresholdForMetTower(metId);
-            this.deltaThreshold = readDeltaThreshold(metId);
+            this.tempThreshold = ReadTemperatureThresholdForMetTower(met);
+            this.deltaThreshold = readDeltaThresholdFromMetTower(met);
             this.dewPoint = CalculateDewPointTemperature(avgHumidity, avgTemperature);
             this.delta = CalculateDewTempAmbientTempDelta(avgTemperature, dewPoint);
 
@@ -223,14 +221,14 @@ namespace Articuno {
         /// </summary>
         /// <param name="metTowerId"></param>
         /// <returns></returns>
-        public double ReadTemperatureThresholdForMetTower(string metTowerId) => GetMetTowerFromId(metTowerId).AmbTempThreshold;
+        public double ReadTemperatureThresholdForMetTower(MetTower met) => met.AmbTempThreshold;
 
         /// <summary>
         /// Writes the delta threshold for all the met tower
         /// </summary>
         /// <param name="value">A double vlaue that represents the delta threshold<</param>
         public void writeDeltaThreshold(double value) { foreach (MetTower tower in metTowerList) { tower.DeltaTempThreshold = value; } }
-        public double readDeltaThreshold(string metTowerId) => GetMetTowerFromId(metTowerId).DeltaTempThreshold;
+        public double readDeltaThresholdFromMetTower(MetTower met) => met.DeltaTempThreshold;
         public void writePrimTemperature(string metId, double value) => GetMetTowerFromId(metId).PrimTemperatureValue = value;
         public void writeSecTemperature(string metId, double value) => GetMetTowerFromId(metId).SecTemperatureValue = value;
         public void writeHumidity(string metId, double value) => GetMetTowerFromId(metId).RelativeHumidityValue = value;
@@ -373,24 +371,21 @@ namespace Articuno {
         }
 
         private void SetIcedCondition(MetTower met, double avgTemperature,double avgHumidity) {
-            met.IceIndicationValue = true;
             var metId = met.MetId;
-            ArticunoLogger.DataLogger.Debug("No Ice detected for met {0}.\n" +
-                                    "{0} Average Temperature {1}, \n" + "{0} Temperature threshold {2} \n" +
-                                    "{0} Average Humidity {3}, \n" + "{0} Delta threshold {4} \n",
-                                    metId, avgTemperature, tempThreshold, avgHumidity, deltaThreshold
-                                    );
-
+            met.IceIndicationValue = true;
             ArticunoLogger.CurtailmentLogger.Debug("Icing conditions met for {0}. \n" +
                 "{0} Average Temperature {1}, \n" +
-                "{0} Temperature threshold {2} \n",
-                metId, avgTemperature, tempThreshold);
+                "{0} Temperature threshold {2} \n"+
+                "{0} Average Humidity {3}, \n" +
+                "{0} Delta threshold {4} \n",
+                metId, avgTemperature, tempThreshold,avgHumidity,deltaThreshold);
 
             ArticunoLogger.DataLogger.Debug("Icing conditions met for {0}. \n" +
                 "{0} Average Temperature {1}, \n" +
-                "{0} Temperature threshold {2} \n",
-                metId, avgTemperature, tempThreshold);
-
+                "{0} Temperature threshold {2} \n"+
+                "{0} Average Humidity {3}, \n" +
+                "{0} Delta threshold {4} \n",
+                metId, avgTemperature, tempThreshold,avgHumidity,deltaThreshold);
         }
         private void InitializeMetTower(string metId) {
             MetTower met = new MetTower(metId, opcServerName);
